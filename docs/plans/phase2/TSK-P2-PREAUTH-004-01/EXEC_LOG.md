@@ -2,6 +2,7 @@
 
 **Task:** TSK-P2-PREAUTH-004-01
 **Status:** completed
+**Plan:** docs/plans/phase2/TSK-P2-PREAUTH-004-01/PLAN.md
 
 failure_signature: W4-REM-004-01
 origin_task_id: TSK-P2-PREAUTH-004-01
@@ -42,3 +43,12 @@ This task was remediated by TSK-P2-PREAUTH-004-01-REM to align with the hardened
 ## Notes
 
 Task remediated to align with hardened 0134 migration contract. Original task referenced migration 0119 with 4 columns; remediation updated to 0134 with 11 columns, cryptographic binding, and append-only semantics.
+
+## final summary
+-- policy_decisions table created via migration 0134 with 11 columns including execution_id UUID NOT NULL REFERENCES execution_records(execution_id), entity_type TEXT NOT NULL, entity_id UUID NOT NULL, decision_hash TEXT NOT NULL, signature TEXT NOT NULL.
+-- 5 constraints present: policy_decisions_pk (PRIMARY KEY), policy_decisions_fk_execution (FK to execution_records), policy_decisions_unique_exec_type (UNIQUE), policy_decisions_hash_hex_64 (CHECK on decision_hash), policy_decisions_sig_hex_128 (CHECK on signature).
+-- 2 indexes present: idx_policy_decisions_entity (entity_type, entity_id), idx_policy_decisions_declared_by (declared_by).
+-- Append-only trigger policy_decisions_append_only_trigger with function enforce_policy_decisions_append_only() having SECURITY DEFINER and pinned search_path.
+-- Schema verification script verify_policy_decisions_schema.sh with 12 structural checks (C1-C12) and 5 negative tests (N1-N5) validates the 0134 contract.
+-- Task metadata updated to reference migration 0134 instead of 0119, with invariants=[INV-138].
+-- All artifacts authored and task marked completed.

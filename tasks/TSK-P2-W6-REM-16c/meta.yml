@@ -1,0 +1,71 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W6-REM-16c
+title: "SQLSTATE Baseline Drift Remediation"
+owner_role: DB Foundation
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DB_FUNCTION
+
+intent: >-
+  Synchronize the physical database schema and its dependent test artifacts
+  with the updated registry contract (P7601 eviction).
+
+anti_patterns:
+  - "Leaving P7601 in physical database triggers while registry assigns it to Wave 6"
+  - "Silently patching tests without explicit metadata logging"
+
+out_of_scope:
+  - "Modifying the registry itself (already completed in 16b)"
+
+stop_conditions:
+  - "The pg_proc catalog still contains 'P7601' within issue_adjustment_with_recipient"
+  - "Test fixtures assert the wrong error code"
+
+proof_guarantees:
+  - "The string 'P7601' is cryptographically proven to be absent from the target function"
+  - "The string 'P7504' is mathematically verified in pg_proc"
+
+depends_on:
+  - TSK-P2-W6-REM-16b
+
+blocks: []
+
+touches:
+  - schema/migrations/0162_renumber_hardening_sqlstate.sql
+  - scripts/audit/verify_tsk_hard_023.sh
+  - scripts/audit/verify_program_wave2_exit_gate.sh
+  - scripts/db/verify_tsk_p2_w6_rem_16c.sh
+  - evidence/phase2/tsk_p2_w6_rem_16c.json
+  - tasks/TSK-P2-W6-REM-16c/meta.yml
+
+invariants: []
+
+work:
+  - "Author migration 0162 to alter issue_adjustment_with_recipient"
+  - "Patch verify_tsk_hard_023.sh and verify_program_wave2_exit_gate.sh"
+  - "Execute migration"
+
+verification:
+  - bash scripts/db/verify_tsk_p2_w6_rem_16c.sh
+  - python3 scripts/audit/validate_evidence.py --task TSK-P2-W6-REM-16c --evidence evidence/phase2/tsk_p2_w6_rem_16c.json
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-W6-REM-16c/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W6-REM-16c/EXEC_LOG.md
+
+acceptance_criteria:
+  - "Legacy remediation accepted"
+evidence:
+  - path: evidence/phase2/tsk_p2_w6_rem_16c.json
+    must_include:
+      - task_id
+failure_modes:
+  - "Legacy failure mode"
+notes: "Legacy task patched for v1 schema compliance."
+client: internal
+assigned_agent: supervisor
+model: <UNASSIGNED>

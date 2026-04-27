@@ -165,6 +165,8 @@ else:
 
 # ---- 1) Task meta strict lint ----
 for meta in task_meta_files:
+    if not meta.exists():
+        continue  # Skip deleted files
     data, raw = parse_yaml(meta)
     checked.append(str(meta))
     if data is None:

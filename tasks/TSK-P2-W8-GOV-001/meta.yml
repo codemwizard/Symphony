@@ -1,0 +1,192 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W8-GOV-001
+title: "Wave 8 governance truth repair"
+owner_role: ARCHITECT
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: GOVERNANCE
+
+intent: >-
+  This is the control-plane repair task for Wave 8. It revokes fake completion,
+  anchors the approved `asset_batches` boundary, and makes proof-integrity
+  admissibility part of closure law before any runtime completion claim is
+  accepted.
+
+primary_enforcement_domain: >-
+  governance control plane
+
+anti_patterns:
+  - "Narrative cleanup without a status matrix or revocation ledger"
+  - "Treating legacy REG tasks as true-complete without evidence basis"
+  - "Allowing multiple authoritative Wave 8 boundaries to persist"
+  - "Accepting reflection-only surface proof or toy-crypto proof as closure evidence"
+  - "Leaving old `TSK-P2-W8-DB-007` executable after the `007a/007b/007c` split"
+
+out_of_scope:
+  - "Any work outside the single primary enforcement domain declared for this task."
+  - "Implementation or evidence claims for non-authoritative surfaces unless explicitly routed through the same `asset_batches` boundary."
+
+stop_conditions:
+  - "If the task begins to span more than one primary enforcement domain, stop and split the work into separate task packs."
+  - "If the verifier cannot produce a deterministic fail domain for the task objective, stop and repair the pack before implementation."
+  - "If the verifier cannot prove the contract or control artifact is explicit and complete, stop and repair the pack before implementation."
+
+proof_guarantees:
+  - "The task is constrained to one primary enforcement domain."
+  - "The verifier path is tied to explicit work-item IDs and proof-carrying evidence expectations."
+
+proof_limitations:
+  - "This task alone does not certify Wave 8 complete; it proves only its declared domain."
+
+depends_on: []
+
+blocks:
+  - TSK-P2-W8-ARCH-001
+
+touches:
+  - docs/governance/WAVE8_GOVERNANCE_REMEDIATION_ADR.md
+  - docs/governance/WAVE8_TASK_STATUS_MATRIX.md
+  - docs/governance/WAVE8_FALSE_COMPLETION_REVOCATION_LEDGER.md
+  - docs/governance/WAVE8_MIGRATION_HEAD_TRUTH_TABLE.md
+  - docs/governance/WAVE8_CLOSURE_RUBRIC.md
+  - docs/governance/WAVE8_PROOF_INTEGRITY_THREAT_REGISTER.md
+  - docs/governance/WAVE8_EVIDENCE_ADMISSIBILITY_POLICY.md
+  - docs/governance/WAVE8_FALSE_COMPLETION_PATTERN_CATALOG.md
+  - docs/tasks/PHASE2_TASKS.md
+  - scripts/agent/verify_tsk_p2_w8_gov_001.py
+  - evidence/phase2/tsk_p2_w8_gov_001.json
+  - tasks/TSK-P2-W8-GOV-001/meta.yml
+  - docs/plans/phase2/TSK-P2-W8-GOV-001/PLAN.md
+  - docs/plans/phase2/TSK-P2-W8-GOV-001/EXEC_LOG.md
+
+invariants:
+  - INV-GOV-TEMPLATE-004
+  - INV-GOV-TEMPLATE-005
+
+deliverable_files:
+  - docs/governance/WAVE8_GOVERNANCE_REMEDIATION_ADR.md
+  - docs/governance/WAVE8_TASK_STATUS_MATRIX.md
+  - docs/governance/WAVE8_FALSE_COMPLETION_REVOCATION_LEDGER.md
+  - docs/governance/WAVE8_MIGRATION_HEAD_TRUTH_TABLE.md
+  - docs/governance/WAVE8_CLOSURE_RUBRIC.md
+  - docs/governance/WAVE8_PROOF_INTEGRITY_THREAT_REGISTER.md
+  - docs/governance/WAVE8_EVIDENCE_ADMISSIBILITY_POLICY.md
+  - docs/governance/WAVE8_FALSE_COMPLETION_PATTERN_CATALOG.md
+  - docs/tasks/PHASE2_TASKS.md
+  - scripts/agent/verify_tsk_p2_w8_gov_001.py
+  - evidence/phase2/tsk_p2_w8_gov_001.json
+  - docs/plans/phase2/TSK-P2-W8-GOV-001/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_only
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - evidence/phase2/tsk_p2_w8_gov_001.json
+    - scripts/agent/verify_tsk_p2_w8_gov_001.py
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: false
+
+migration_dependencies:
+  enabled: false
+
+work:
+  - >-
+    [ID w8_gov_001_work_01] Produce a governance remediation ADR that states Wave 8 completion is measured only at the authoritative `asset_batches` boundary and that contract documents outrank implementation drift.
+  - >-
+    [ID w8_gov_001_work_02] Create a corrected Wave 8 task status matrix and false-completion revocation ledger that classify existing `TSK-P2-REG-*` and legacy `TSK-P2-W8-CRYPTO-*` artifacts as scaffold, partial, or true-complete with evidence basis.
+  - >-
+    [ID w8_gov_001_work_03] Create a migration-head truth table and authoritative Wave 8 closure rubric that bind future task creation to the approved DoD control surface.
+  - >-
+    [ID w8_gov_001_work_04] Produce a proof-integrity threat register, evidence admissibility policy, and false-completion pattern catalog that explicitly ban detached function proof, grep proof, reflection-only surface proof, toy-crypto proof, garbage-payload matrix fraud, fake crypto behind real trigger wiring, superuser-only success, and mirrored-vector fraud.
+  - >-
+    [ID w8_gov_001_work_05] Register the governance artifacts in the Phase 2 task index and execution log, and explicitly mark old `TSK-P2-W8-DB-007` as superseded by `007a/007b/007c`.
+
+acceptance_criteria:
+  - >-
+    [ID w8_gov_001_work_01] A governance ADR exists and explicitly states that contracts define Wave 8 semantics while SQL executes them at the `asset_batches` boundary.
+  - >-
+    [ID w8_gov_001_work_02] The corrected status matrix and revocation ledger classify the legacy Wave 8 artifacts using evidence-backed categories rather than inherited status text.
+  - >-
+    [ID w8_gov_001_work_03] The migration-head truth table and closure rubric explicitly name `asset_batches` as the sole authoritative Wave 8 boundary.
+  - >-
+    [ID w8_gov_001_work_04] The threat register, evidence admissibility policy, and false-completion pattern catalog exist and explicitly ban the named inadmissible proof patterns.
+  - >-
+    [ID w8_gov_001_work_05] The Phase 2 index references the Wave 8 closure track and governance artifacts explicitly state that unsplit `W8-DB-007` is non-executable for closure.
+
+negative_tests:
+  - id: TSK-P2-W8-GOV-001-N1
+    description: >-
+      Verifier fails if any governance artifact is missing, if the closure rubric
+      does not explicitly name `asset_batches`, or if inadmissible proof
+      patterns are not named explicitly.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-W8-GOV-001-P1
+    description: >-
+      Verifier passes only when the governance ADR, status matrix, revocation
+      ledger, migration-head truth table, closure rubric, threat register,
+      evidence admissibility policy, false-completion pattern catalog, and index
+      update all exist and align.
+    required: true
+
+verification:
+  - '# [ID w8_gov_001_work_01] [ID w8_gov_001_work_02] [ID w8_gov_001_work_03] [ID w8_gov_001_work_04] [ID w8_gov_001_work_05] test -e scripts/agent/verify_tsk_p2_w8_gov_001.py && python3 scripts/agent/verify_tsk_p2_w8_gov_001.py > evidence/phase2/tsk_p2_w8_gov_001.json || exit 1'
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w8_gov_001.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - "Verifier missing or not executable => FAIL"
+  - "Evidence file missing => FAIL"
+  - "Proof graph not aligned to work and acceptance criteria => CRITICAL_FAIL"
+  - "Structural-only or advisory-only verification claimed as completion => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PLANS-addendum_1.md
+  - tasks/TSK-P1-240/meta.yml
+implementation_plan: docs/plans/phase2/TSK-P2-W8-GOV-001/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W8-GOV-001/EXEC_LOG.md
+notes: >-
+  Generated from the final Wave 8 replacement plan. This pack is valid only for
+  the single domain `governance control plane`, inherits the `asset_batches`
+  authoritative boundary rule, and makes proof-integrity admissibility part of
+  Wave 8 closure law.
+client: codex
+assigned_agent: architect
+model: gpt-5.5

@@ -1,0 +1,160 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-007-19-R2
+title: Replace weak placeholders with meaningful empty indicators
+owner_role: SECURITY_GUARDIAN
+status: planned
+priority: HIGH
+risk_class: SECURITY
+blast_radius: SCRIPTS_ONLY
+
+intent: >-
+  Replace "-" placeholder with a structured empty indicator that distinguishes between "no evidence file"
+  and "legitimate empty hash". The original implementation used "-" which could be confused with a real hash
+  and provided no semantic meaning.
+
+anti_patterns:
+  - "Using '-' as placeholder for empty fields"
+  - "Placeholder that can be confused with real hash"
+  - "Verifier that doesn't validate placeholder format"
+  - "Accepting '-' as valid evidence digest"
+
+out_of_scope:
+  - Changing trace log field structure
+  - Modifying evidence digest computation logic
+  - Changing delimiter format
+
+stop_conditions:
+  - "If placeholder is still '-' → STOP"
+  - "If placeholder can be confused with a real hash → STOP"
+  - "If verifier doesn't validate placeholder format → STOP"
+
+proof_guarantees:
+  - "Empty evidence digest is represented by 'NONE' (uppercase, meaningful)"
+  - "Verifier accepts 'NONE' as valid empty indicator"
+  - "Verifier rejects '-' as invalid evidence digest"
+  - "Verifier validates that 'NONE' only appears when evidence_file is empty"
+
+proof_limitations:
+  - "Only validates at emission time, not during trace log parsing by other tools"
+  - "Relies on convention, not cryptographic guarantee"
+
+depends_on:
+  - TSK-P2-PREAUTH-007-19-R1
+
+blocks:
+  - TSK-P2-PREAUTH-007-19-R3
+
+touches:
+  - scripts/dev/pre_ci.sh
+  - scripts/audit/verify_tsk_p2_preauth_007_19.sh
+  - tasks/TSK-P2-PREAUTH-007-19-R2/meta.yml
+
+deliverable_files:
+  - scripts/dev/pre_ci.sh
+  - scripts/audit/verify_tsk_p2_preauth_007_19.sh
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19-R2/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19-R2/EXEC_LOG.md
+
+invariants:
+  - INV-SEC-002
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/dev/**
+    - scripts/audit/**
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+work:
+  - >-
+    [ID tsk_p2_preauth_007_19_r2_work_01] Replace "-" placeholder with "NONE" in emit_preci_step_with_provenance
+  - >-
+    [ID tsk_p2_preauth_007_19_r2_work_02] Update verifier to validate that evidence_digest is either SHA256 or "NONE"
+  - >-
+    [ID tsk_p2_preauth_007_19_r2_work_03] Add check to ensure "NONE" is only used when evidence_file is empty/missing
+  - >-
+    [ID tsk_p2_preauth_007_19_r2_work_04] Update verifier to reject "-" as invalid evidence_digest
+  - >-
+    [ID tsk_p2_preauth_007_19_r2_work_05] Run verifier and confirm it accepts "NONE" but rejects "-"
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_007_19_r2_work_01] Placeholder is "NONE" (uppercase, meaningful)
+  - >-
+    [ID tsk_p2_preauth_007_19_r2_work_02] Verifier accepts "NONE" as valid empty indicator
+  - >-
+    [ID tsk_p2_preauth_007_19_r2_work_04] Verifier rejects "-" as invalid
+  - >-
+    [ID tsk_p2_preauth_007_19_r2_work_03] Verifier validates that "NONE" only appears when evidence_file is empty
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-007-19-R2-N1
+    description: Verifier rejects "-" as evidence digest
+    required: true
+  - id: TSK-P2-PREAUTH-007-19-R2-N2
+    description: Verifier rejects "none" (lowercase) as evidence digest
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-007-19-R2-P1
+    description: Verifier accepts "NONE" when evidence_file is empty
+    required: true
+  - id: TSK-P2-PREAUTH-007-19-R2-P2
+    description: Verifier accepts SHA256 when evidence_file exists
+    required: true
+
+verification:
+  - >-
+    export DATABASE_URL="postgresql://symphony_admin:symphony_pass@localhost:55432/symphony"
+    bash scripts/audit/verify_tsk_p2_preauth_007_19.sh > evidence/phase2/tsk_p2_preauth_007_19_r2.json
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_007_19_r2.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - placeholder_validation_check
+
+failure_modes:
+  - "Placeholder is still '-' => FAIL"
+  - "Verifier accepts '-' as valid => FAIL"
+  - "Placeholder can be confused with real hash => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19-REMEDIATION/DRD.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19/PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-007-19-R2/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-007-19-R2/EXEC_LOG.md
+
+notes: >-
+  This fix addresses the weak placeholder issue. The original implementation used "-" which is
+  ambiguous and could be confused with a real hash. "NONE" is semantically meaningful and clearly
+  indicates "no evidence file available". This is a prerequisite for R3 (DATABASE_URL fallbacks)
+  and R4 (evidence digest validation).
+client: cursor
+assigned_agent: security_guardian
+model: claude-sonnet-4-20250514

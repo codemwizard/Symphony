@@ -1,0 +1,184 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W8-SEC-000
+title: "Frozen .NET 10 Ed25519 Environment Fidelity Gate"
+owner_role: SECURITY_GUARDIAN
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: SECURITY
+
+intent: >-
+  Prove Wave 8 evidence is generated on the declared production-parity `.NET 10`
+  runtime path and that the declared first-party Ed25519 surface is the one
+  actually executing.
+
+primary_enforcement_domain: >-
+  runtime/provider/evidence honesty
+
+anti_patterns:
+  - "Treating `SEC-000` as API discovery or framework validation"
+  - "Accepting reflection-only surface proof as execution-path proof"
+  - "Accepting toy-crypto sign/verify demos as semantic fidelity"
+  - "Running the probe outside the pinned SDK/runtime images"
+
+out_of_scope:
+  - "Any work outside the single primary enforcement domain declared for this task."
+  - "Implementation or evidence claims for non-authoritative surfaces unless explicitly routed through the same `asset_batches` boundary."
+  - "Primitive correctness, algorithm choice, provider-family choice, or PostgreSQL enforcement."
+
+stop_conditions:
+  - "If the task begins to span more than one primary enforcement domain, stop and split the work into separate task packs."
+  - "If the verifier cannot prove digest fidelity, runtime fidelity, surface fidelity, and semantic fidelity together, stop and repair the pack before implementation."
+  - "If the probe path runs outside the pinned SDK/runtime images, stop and treat the evidence as inadmissible."
+
+proof_guarantees:
+  - "The task is constrained to one primary enforcement domain."
+  - "The verifier path is tied to explicit work-item IDs and proof-carrying evidence expectations."
+
+proof_limitations:
+  - "This task alone does not certify Wave 8 complete; it proves only environment, provider, and evidence honesty."
+  - "This task does not prove primitive correctness or authoritative DB boundary enforcement."
+
+depends_on:
+  - TSK-P2-W8-ARCH-003
+  - TSK-P2-W8-ARCH-006
+
+blocks:
+  - TSK-P2-W8-SEC-001
+
+touches:
+  - scripts/security/probes/w8_ed25519_environment_fidelity/Wave8Ed25519Probe.csproj
+  - scripts/security/probes/w8_ed25519_environment_fidelity/Program.cs
+  - scripts/security/verify_tsk_p2_w8_sec_000.sh
+  - evidence/phase2/tsk_p2_w8_sec_000.json
+  - tasks/TSK-P2-W8-SEC-000/meta.yml
+  - docs/plans/phase2/TSK-P2-W8-SEC-000/PLAN.md
+  - docs/plans/phase2/TSK-P2-W8-SEC-000/EXEC_LOG.md
+
+invariants:
+  - INV-GOV-TEMPLATE-004
+  - INV-GOV-TEMPLATE-005
+
+deliverable_files:
+  - scripts/security/probes/w8_ed25519_environment_fidelity/Wave8Ed25519Probe.csproj
+  - scripts/security/probes/w8_ed25519_environment_fidelity/Program.cs
+  - scripts/security/verify_tsk_p2_w8_sec_000.sh
+  - evidence/phase2/tsk_p2_w8_sec_000.json
+  - docs/plans/phase2/TSK-P2-W8-SEC-000/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_only
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/security/probes/w8_ed25519_environment_fidelity/Wave8Ed25519Probe.csproj
+    - scripts/security/probes/w8_ed25519_environment_fidelity/Program.cs
+    - scripts/security/verify_tsk_p2_w8_sec_000.sh
+    - evidence/phase2/tsk_p2_w8_sec_000.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: false
+
+migration_dependencies:
+  enabled: false
+
+work:
+  - >-
+    [ID w8_sec_000_work_01] Prove the probe builds inside the pinned SDK image and executes inside the pinned ASP.NET runtime image with the exact expected digests.
+  - >-
+    [ID w8_sec_000_work_02] Prove the executing runtime reports the declared `.NET 10` family and Linux/OpenSSL path for the Wave 8 proof cycle.
+  - >-
+    [ID w8_sec_000_work_03] Prove the declared first-party Ed25519 surface is actually invoked through the production-parity runtime path and not satisfied by reflection-only or wrapper-only evidence.
+  - >-
+    [ID w8_sec_000_work_04] Prove sign/verify behavior on Wave 8-shaped contract bytes, including altered-byte, wrong-key, malformed-signature, and runtime/provider-drift failure cases.
+
+acceptance_criteria:
+  - >-
+    [ID w8_sec_000_work_01] Evidence records expected and observed SDK/runtime digests and fails if the probe runs outside the pinned images.
+  - >-
+    [ID w8_sec_000_work_02] Evidence records runtime-family and OpenSSL-path details for the declared proof-cycle environment.
+  - >-
+    [ID w8_sec_000_work_03] Surface fidelity is proven by actual invocation through the first-party execution path; reflection-only surface proof is inadmissible.
+  - >-
+    [ID w8_sec_000_work_04] Semantic fidelity is proven on Wave 8-shaped contract bytes and toy-crypto proof is inadmissible.
+
+negative_tests:
+  - id: TSK-P2-W8-SEC-000-N1
+    description: >-
+      Verifier fails if the probe runs in the wrong image, relies only on type
+      presence or reflection, or accepts altered bytes, wrong keys, or malformed
+      signatures.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-W8-SEC-000-P1
+    description: >-
+      Verifier passes only when digest fidelity, runtime fidelity, surface
+      fidelity, and semantic fidelity are all proven in the pinned environment.
+    required: true
+
+verification:
+  - '# [ID w8_sec_000_work_01] [ID w8_sec_000_work_02] [ID w8_sec_000_work_03] [ID w8_sec_000_work_04] test -e scripts/security/verify_tsk_p2_w8_sec_000.sh && bash scripts/security/verify_tsk_p2_w8_sec_000.sh > evidence/phase2/tsk_p2_w8_sec_000.json || exit 1'
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w8_sec_000.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - sdk_image_digest_expected
+      - sdk_image_digest_observed
+      - runtime_image_digest_expected
+      - runtime_image_digest_observed
+      - dotnet_info
+      - openssl_version
+      - api_invocation_proof
+      - sign_verify_results
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - "Verifier missing or not executable => FAIL"
+  - "Evidence file missing => FAIL"
+  - "Proof graph not aligned to work and acceptance criteria => CRITICAL_FAIL"
+  - "Reflection-only or toy-crypto proof claimed as completion => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PLANS-addendum_1.md
+  - tasks/TSK-P1-240/meta.yml
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+implementation_plan: docs/plans/phase2/TSK-P2-W8-SEC-000/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W8-SEC-000/EXEC_LOG.md
+notes: >-
+  Generated from the final Wave 8 replacement plan. This pack is valid only for
+  the single domain `runtime/provider/evidence honesty`, accepts `.NET 10`
+  first-party Ed25519 as part of the framework contract, and proves only the
+  honesty of the declared production-parity runtime path.
+client: codex
+assigned_agent: security_guardian
+model: gpt-5.5

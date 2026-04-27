@@ -84,6 +84,136 @@ source scripts/audit/strip_bypass_env_vars.sh
 trap pre_ci_on_error ERR
 pre_ci_print_triage_banner
 
+# --- PRECI_TRACE_LOGGING ---
+# CI execution trace logging for sequence verification (TSK-P2-PREAUTH-007-18)
+# Provenance binding for CI execution proof (TSK-P2-PREAUTH-007-19)
+PRECI_TRACE_LOG="/tmp/preci_trace_$(date +%s).log"
+PRECI_STEP_COUNTER=0
+
+capture_env_fingerprint() {
+  if [[ -z "${DATABASE_URL:-}" ]]; then
+    echo "ERROR: DATABASE_URL must be set for provenance capture" >&2
+    return 1
+  fi
+
+  local db_url_hash=""
+  local migration_head=""
+  local schema_checksum=""
+
+  db_url_hash=$(echo -n "$DATABASE_URL" | sha256sum | awk '{print $1}')
+  migration_head=$(ls -1 schema/migrations/*.sql 2>/dev/null | sort | tail -1 | grep -oP '\d+' || echo "unknown")
+  schema_checksum=$(psql "$DATABASE_URL" -t -c \
+    "SELECT md5(string_agg(table_name || column_name || data_type, ',' ORDER BY table_name, column_name))
+     FROM information_schema.columns
+     WHERE table_schema = 'public'" 2>/dev/null | tr -d ' ' || echo "unknown")
+
+  echo "${db_url_hash}:${migration_head}:${schema_checksum}"
+}
+
+capture_executor_identity() {
+  if [[ -z "${DATABASE_URL:-}" ]]; then
+    echo "ERROR: DATABASE_URL must be set for provenance capture" >&2
+    return 1
+  fi
+
+  local principal=$(whoami)
+  local db_role=""
+  local effective_grants=""
+  local search_path=""
+
+  db_role=$(psql "$DATABASE_URL" -t -c "SELECT current_user" 2>/dev/null | tr -d ' ' || echo "unknown")
+  effective_grants=$(psql "$DATABASE_URL" -t -c \
+    "SELECT string_agg(privilege_type, ',' ORDER BY privilege_type)
+     FROM information_schema.role_table_grants
+     WHERE grantee = current_user AND table_schema = 'public'
+     LIMIT 100" 2>/dev/null | tr -d ' ' || echo "unknown")
+  search_path=$(psql "$DATABASE_URL" -t -c "SHOW search_path" 2>/dev/null | tr -d ' ' || echo "unknown")
+
+  echo "${principal}:${db_role}:${effective_grants}:${search_path}"
+}
+
+emit_preci_step() {
+  local step_name="$1"
+  local verifier_script="$2"
+
+  PRECI_STEP_COUNTER=$((PRECI_STEP_COUNTER + 1))
+  local command_digest=$(sha256sum "$verifier_script" | awk '{print $1}')
+  local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+  echo "PRECI_STEP:${PRECI_STEP_COUNTER}:${step_name}:${command_digest}:::${timestamp}" >> "$PRECI_TRACE_LOG"
+}
+
+emit_preci_step_with_provenance() {
+  local step_name="$1"
+  local verifier_script="$2"
+  local evidence_file="$3"
+
+  PRECI_STEP_COUNTER=$((PRECI_STEP_COUNTER + 1))
+
+  local command_digest=$(sha256sum "$verifier_script" | awk '{print $1}')
+  local evidence_digest=""
+  if [ -f "$evidence_file" ]; then
+    evidence_digest=$(sha256sum "$evidence_file" | awk '{print $1}')
+  fi
+  # Use "NONE" placeholder for empty evidence_digest to indicate no evidence file available
+  if [[ -z "$evidence_digest" ]]; then
+    evidence_digest="NONE"
+  fi
+  local env_fingerprint=$(capture_env_fingerprint)
+  local executor_id=$(capture_executor_identity)
+  local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+  # Full provenance line with pipe delimiter to avoid IFS whitespace merging
+  # Format: PRECI_STEP|step_num|step_name|cmd_digest|evidence_digest|env_fingerprint|executor_id|timestamp
+  printf "PRECI_STEP|%s|%s|%s|%s|%s|%s|%s\n" "$PRECI_STEP_COUNTER" "$step_name" "$command_digest" "$evidence_digest" "$env_fingerprint" "$executor_id" "$timestamp" >> "$PRECI_TRACE_LOG"
+}
+
+assert_preci_sequence() {
+  local trace_log="$1"
+  local expected_steps=("run_schema_checks" "run_trigger_checks" "run_inv_175" "run_inv_176" "run_inv_177")
+
+  if [[ ! -f "$trace_log" ]]; then
+    echo "ERROR: PRECI trace log not found at $trace_log" >&2
+    return 1
+  fi
+
+  if [[ ! -s "$trace_log" ]]; then
+    echo "ERROR: PRECI trace log is empty" >&2
+    return 1
+  fi
+
+  local line_num=0
+  while IFS='|' read -r prefix step_num step_name cmd_digest evidence_digest env_fingerprint executor_id timestamp; do
+    line_num=$((line_num + 1))
+    
+    # Verify step number is sequential
+    if [ "$step_num" != "$line_num" ]; then
+      echo "ERROR: Expected step $line_num, got $step_num" >&2
+      return 1
+    fi
+    
+    # Verify step name matches expected (if within expected range)
+    if [ $line_num -le ${#expected_steps[@]} ]; then
+      if [ "$step_name" != "${expected_steps[$((line_num-1))]}" ]; then
+        echo "ERROR: Expected step name '${expected_steps[$((line_num-1))]}', got '$step_name'" >&2
+        return 1
+      fi
+    fi
+    
+    # Verify command digest corresponds to a real file
+    if [[ ! -f "$step_name" ]] && [[ ! -f "scripts/audit/${step_name}.sh" ]] && [[ ! -f "scripts/db/${step_name}.sh" ]]; then
+      # Step name might not be a file path, check if digest is valid format
+      if [[ ! "$cmd_digest" =~ ^[0-9a-f]{64}$ ]]; then
+        echo "ERROR: Invalid command digest format: $cmd_digest" >&2
+        return 1
+      fi
+    fi
+  done < "$trace_log"
+  
+  echo "PRECI sequence validation passed: $line_num steps verified"
+}
+# --- end PRECI_TRACE_LOGGING ---
+
 if [[ -f scripts/audit/env/phase0_flags.sh ]]; then
   # shellcheck disable=SC1090
   source scripts/audit/env/phase0_flags.sh
@@ -673,6 +803,7 @@ fi
 
 echo "==> Phase-2 pre-auth invariant verifiers (Wave 7)"
 if [[ -x scripts/db/verify_tsk_p2_preauth_006a_01.sh ]]; then
+  emit_preci_step_with_provenance "run_schema_checks" "scripts/db/verify_tsk_p2_preauth_006a_01.sh" ""
   PGHOST=localhost PGPORT=5432 PGUSER=symphony_admin PGPASSWORD=symphony_pass PGDATABASE=symphony scripts/db/verify_tsk_p2_preauth_006a_01.sh
 else
   echo "ERROR: scripts/db/verify_tsk_p2_preauth_006a_01.sh not found"
@@ -680,6 +811,7 @@ else
 fi
 
 if [[ -x scripts/db/verify_tsk_p2_preauth_005_08.sh ]]; then
+  emit_preci_step_with_provenance "run_trigger_checks" "scripts/db/verify_tsk_p2_preauth_005_08.sh" ""
   PGHOST=localhost PGPORT=5432 PGUSER=symphony_admin PGPASSWORD=symphony_pass PGDATABASE=symphony scripts/db/verify_tsk_p2_preauth_005_08.sh
 else
   echo "ERROR: scripts/db/verify_tsk_p2_preauth_005_08.sh not found"
@@ -687,9 +819,26 @@ else
 fi
 
 if [[ -x scripts/audit/verify_tsk_p2_preauth_006c_03.sh ]]; then
+  emit_preci_step_with_provenance "run_inv_175" "scripts/audit/verify_tsk_p2_preauth_006c_03.sh" ""
   scripts/audit/verify_tsk_p2_preauth_006c_03.sh
 else
   echo "ERROR: scripts/audit/verify_tsk_p2_preauth_006c_03.sh not found"
+  exit 1
+fi
+
+if [[ -x scripts/audit/verify_tsk_p2_preauth_007_15.sh ]]; then
+  emit_preci_step_with_provenance "run_inv_176" "scripts/audit/verify_tsk_p2_preauth_007_15.sh" ""
+  scripts/audit/verify_tsk_p2_preauth_007_15.sh
+else
+  echo "ERROR: scripts/audit/verify_tsk_p2_preauth_007_15.sh not found"
+  exit 1
+fi
+
+if [[ -x scripts/audit/verify_tsk_p2_preauth_007_16.sh ]]; then
+  emit_preci_step_with_provenance "run_inv_177" "scripts/audit/verify_tsk_p2_preauth_007_16.sh" ""
+  scripts/audit/verify_tsk_p2_preauth_007_16.sh
+else
+  echo "ERROR: scripts/audit/verify_tsk_p2_preauth_007_16.sh not found"
   exit 1
 fi
 
@@ -1160,5 +1309,16 @@ else
   echo "WARN: post-execution manifest not found -- skipping re-check" >&2
 fi
 # --- end TSK_POST_EXEC_INTEGRITY ---
+
+# --- PRECI_SEQUENCE_ASSERTION ---
+# Post-execution sequence verification (TSK-P2-PREAUTH-007-18)
+# This runs AFTER all verifiers to prevent self-verification
+if ! assert_preci_sequence "$PRECI_TRACE_LOG"; then
+  echo "ERROR: PRECI sequence assertion failed" >&2
+  exit 1
+fi
+echo "PRECI trace log: $PRECI_TRACE_LOG"
+# --- end PRECI_SEQUENCE_ASSERTION ---
+
 echo "? Pre-CI local checks PASSED."
 

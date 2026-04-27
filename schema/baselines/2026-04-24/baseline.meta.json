@@ -1,0 +1,10 @@
+{
+  "baseline_date": "2026-04-24",
+  "baseline_path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/baselines/2026-04-24/0001_baseline.sql",
+  "baseline_cutoff": "0153_set_signature_placeholder_posture.sql",
+  "normalized_schema_sha256": "3abc53940e35e840b05825c6c28d920c10d48ee74950e408d5054edff96d2e5d",
+  "pg_dump_version": "pg_dump (PostgreSQL) 18.3 (Debian 18.3-1.pgdg13+1)",
+  "pg_server_version": "18.3 (Debian 18.3-1.pgdg13+1)",
+  "dump_source": "container:symphony-postgres",
+  "generated_at_utc": "2026-04-24T14:57:28.100338+00:00"
+}

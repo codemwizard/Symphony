@@ -20,6 +20,7 @@
     "P72xx": "ingress_invariants",
     "P73xx": "policy_invariants",
     "P74xx": "revocation_invariants",
+    "P76xx": "wave6",
     "P90xx": "developer_guardrails"
   },
   "codes": {
@@ -220,10 +221,16 @@
       "meaning": "orphan or replay event rejected by containment policy",
       "retryable": false
     },
-    "P7601": {
+    "P7504": {
       "class": "B",
       "subsystem": "hardening",
       "meaning": "adjustment recipient input is not permitted; recipient must be inherited from parent instruction",
+      "retryable": false
+    },
+    "P7601": {
+      "class": "B",
+      "subsystem": "wave6",
+      "meaning": "state transition rejected because no matching state rule permits the requested state movement",
       "retryable": false
     },
     "P7701": {

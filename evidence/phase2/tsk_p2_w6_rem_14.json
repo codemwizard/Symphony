@@ -1,0 +1,16 @@
+{
+  "task_id": "TSK-P2-W6-REM-14",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "timestamp_utc": "2026-04-25T04:46:09Z",
+  "status": "PASS",
+  "checks": {
+    "is_nullable": "NO",
+    "attnotnull": "t",
+    "null_row_count_pre_alter": "0",
+    "migration_0151_applied_at": ""
+  },
+  "negative_test_results": {
+    "TSK-P2-W6-REM-14-N1": "pass",
+    "TSK-P2-W6-REM-14-N2": "pass"
+  }
+}

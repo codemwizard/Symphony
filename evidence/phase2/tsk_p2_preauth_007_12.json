@@ -1,0 +1,54 @@
+{
+  "task_id": "TSK-P2-PREAUTH-007-12",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "timestamp_utc": "2026-04-26T07:15:42Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "tsk_p2_preauth_007_12_check_01",
+      "description": "DATABASE_URL is set",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_12_check_02",
+      "description": "asset_batches table exists",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-12-P1",
+      "description": "Positive test: All 4 attestation columns exist",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-12-P2",
+      "description": "Positive test: attestation_source_type enum exists",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-12-P3",
+      "description": "Positive test: All columns accept NULL",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-12-N1",
+      "description": "Negative test: Hash format constraint exists",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-12-N2",
+      "description": "Negative test: Version positive constraint exists",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-12-N3",
+      "description": "Negative test: Hash constraint has correct regex",
+      "result": "PASS"
+    }
+  ],
+  "observed_hashes": [
+    {
+      "path": "scripts/audit/verify_tsk_p2_preauth_007_12.sh",
+      "sha256": "cb22103b6330278fb301346b6b574e418cf2345b0c3251545db951534c4af0b8"
+    }
+  ]
+}

@@ -1,1 +1,1 @@
-{"check_id":"TSK-HARD-023","task_id":"TSK-HARD-023","status":"PASS","pass":true,"recipient_inherited":true,"recipient_parameter_blocked_sqlstate":"P7601","timestamp_utc":"2026-03-05T10:01:26Z","git_sha":"6a33d42e7e2b1ab1f6fcaf0d4b1daa93047d4f42"}
+{"check_id":"TSK-HARD-023","task_id":"TSK-HARD-023","status":"PASS","pass":true,"recipient_inherited":true,"recipient_parameter_blocked_sqlstate":"P7504","timestamp_utc":"2026-04-25T07:52:16Z","git_sha":"d805b3814d01834ad3783eb13f6427508d731d7f"}

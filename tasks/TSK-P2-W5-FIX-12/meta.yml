@@ -1,0 +1,199 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W5-FIX-12
+title: "Convert Wave 5 verifier scripts from structural-only to behavioral live INSERT tests"
+owner_role: QA_VERIFIER
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+
+intent: >-
+  Existing Wave 5 verifier scripts (verify_tsk_p2_preauth_005_*.sh) perform
+  structural existence checks only — they query information_schema for table/
+  column/trigger existence but never execute live INSERTs to prove behavioral
+  correctness. A verifier that says 'table exists' without proving 'INSERT
+  with bad data is rejected' is governance theater. This task upgrades all
+  existing Wave 5 verifiers to include at least one live INSERT behavioral
+  test per the evidence contract established by the FIX-01 through FIX-09
+  verifiers.
+
+anti_patterns:
+  - "Wrapping existing structural checks with a passing wrapper"
+  - "Testing only happy path without negative tests"
+  - "Using static fixtures instead of live DB queries"
+
+out_of_scope:
+  - "Schema changes"
+  - "Creating new verifiers for FIX tasks (those already exist)"
+stop_conditions:
+  - "Any verifier lacks a live INSERT test"
+  - "Any verifier exits 0 without executing a behavioral check"
+
+proof_guarantees:
+  - "All Wave 5 verifiers execute at least one live INSERT"
+  - "All verifiers include at least one negative test"
+proof_limitations:
+  - "Does not prove every possible failure path is covered"
+
+depends_on:
+  - TSK-P2-W5-FIX-11
+
+blocks:
+  - TSK-P2-W5-FIX-13
+
+touches:
+  - scripts/db/verify_tsk_p2_preauth_005_00.sh
+  - scripts/db/verify_tsk_p2_preauth_005_01.sh
+  - scripts/db/verify_tsk_p2_preauth_005_02.sh
+  - scripts/db/verify_tsk_p2_preauth_005_03.sh
+  - scripts/db/verify_tsk_p2_preauth_005_04.sh
+  - scripts/db/verify_tsk_p2_preauth_005_05.sh
+  - scripts/db/verify_tsk_p2_preauth_005_06.sh
+  - scripts/db/verify_tsk_p2_preauth_005_07.sh
+  - scripts/db/verify_tsk_p2_preauth_005_08.sh
+  - evidence/phase2/tsk_p2_w5_fix_12.json
+  - tasks/TSK-P2-W5-FIX-12/meta.yml
+  - docs/plans/phase2/TSK-P2-W5-FIX-12/PLAN.md
+  - docs/plans/phase2/TSK-P2-W5-FIX-12/EXEC_LOG.md
+
+invariants: []
+
+# ── Deliverable files (for churn control) ─────────────────────────────────
+deliverable_files:
+  - scripts/db/verify_tsk_p2_preauth_005_00.sh
+  - scripts/db/verify_tsk_p2_preauth_005_01.sh
+  - scripts/db/verify_tsk_p2_preauth_005_02.sh
+  - scripts/db/verify_tsk_p2_preauth_005_03.sh
+  - scripts/db/verify_tsk_p2_preauth_005_04.sh
+  - scripts/db/verify_tsk_p2_preauth_005_05.sh
+  - scripts/db/verify_tsk_p2_preauth_005_06.sh
+  - scripts/db/verify_tsk_p2_preauth_005_07.sh
+  - scripts/db/verify_tsk_p2_preauth_005_08.sh
+  - evidence/phase2/tsk_p2_w5_fix_12.json
+  - docs/plans/phase2/TSK-P2-W5-FIX-12/EXEC_LOG.md
+
+# ── Regulated Surface Compliance (CRITICAL) ────────────────────────────────
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_only
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/db/verify_tsk_p2_preauth_005_00.sh
+    - scripts/db/verify_tsk_p2_preauth_005_01.sh
+    - scripts/db/verify_tsk_p2_preauth_005_02.sh
+    - scripts/db/verify_tsk_p2_preauth_005_03.sh
+    - scripts/db/verify_tsk_p2_preauth_005_04.sh
+    - scripts/db/verify_tsk_p2_preauth_005_05.sh
+    - scripts/db/verify_tsk_p2_preauth_005_06.sh
+    - scripts/db/verify_tsk_p2_preauth_005_07.sh
+    - scripts/db/verify_tsk_p2_preauth_005_08.sh
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+
+# ── Remediation Trace Compliance (CRITICAL) ────────────────────────────────
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+# ── Database Connection ────────────────────────────────────────────────────
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+# ── Migration Dependencies ─────────────────────────────────────────────────
+migration_dependencies:
+  enabled: false
+
+
+work:
+  - >-
+    [ID w5_fix_12_work_01] Audit all 9 Wave 5 verifiers. For each, determine
+    if it performs structural-only or behavioral checks. Record classification
+    in EXEC_LOG.md.
+  - >-
+    [ID w5_fix_12_work_02] For each structural-only verifier, add at least one
+    live INSERT behavioral test within a transaction (BEGIN/ROLLBACK) using
+    psql "$DATABASE_URL".
+  - >-
+    [ID w5_fix_12_work_03] Add at least one negative test per verifier.
+  - >-
+    [ID w5_fix_12_work_04] Run all upgraded verifiers and generate evidence.
+  - >-
+    [ID w5_fix_12_work_05] Update EXEC_LOG.md with final remediation trace.
+
+acceptance_criteria:
+  - >-
+    [ID w5_fix_12_work_01] EXEC_LOG classifies each verifier as
+    structural-only or behavioral.
+  - >-
+    [ID w5_fix_12_work_02] Each verifier contains at least one psql INSERT.
+  - >-
+    [ID w5_fix_12_work_03] Each verifier contains at least one negative test.
+  - >-
+    [ID w5_fix_12_work_04] All verifiers exit 0 and evidence produced.
+  - >-
+    [ID w5_fix_12_work_05] EXEC_LOG remediation trace complete.
+
+negative_tests:
+  - id: TSK-P2-W5-FIX-12-N1
+    description: >-
+      Each upgraded verifier must reject when the behavior under test is
+      deliberately broken (e.g., column dropped in test transaction).
+    required: true
+
+positive_tests:
+  - id: TSK-P2-W5-FIX-12-P1
+    description: >-
+      All verifiers pass against a correctly configured DB.
+    required: true
+
+verification:
+  - >-
+    for v in scripts/db/verify_tsk_p2_preauth_005_*.sh; do bash "$v" ||
+    exit 1; done
+  - test -f evidence/phase2/tsk_p2_w5_fix_12.json || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w5_fix_12.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - verifiers_upgraded
+      - behavioral_tests_added
+
+failure_modes:
+  - "Any verifier lacks live INSERT test => FAIL"
+  - "Any verifier exits 0 without behavioral check => CRITICAL_FAIL"
+  - "Evidence file missing => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-W5-FIX-12/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W5-FIX-12/EXEC_LOG.md
+
+notes: >-
+  Phase Key: W5-FIX. Phase Name: Wave 5 Stabilization. Twelfth task.
+  Converts governance theater into real behavioral proof.
+client: cursor
+assigned_agent: qa_verifier
+model: <UNASSIGNED>

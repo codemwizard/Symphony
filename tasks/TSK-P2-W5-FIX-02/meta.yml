@@ -1,0 +1,333 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W5-FIX-02
+title: "Add entity_type column to state_rules so that enforce_transition_state_rules() resolves correctly per entity domain"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+# ── Why this task exists ───────────────────────────────────────────────────
+intent: >-
+  Migration 0139 created enforce_transition_state_rules() which queries
+  state_rules with 'WHERE entity_type = NEW.entity_type' (lines 14, 24). But
+  migration 0135 created state_rules with only (from_state, to_state,
+  required_decision_type) — no entity_type column. Every INSERT to
+  state_transitions that fires trg_enforce_transition_state_rules raises a raw
+  PostgreSQL error 'column "entity_type" does not exist'. This is the second
+  runtime crash alongside the column mismatch in FIX-01. Without entity_type,
+  the rule system cannot scope transitions per entity domain — making
+  cross-domain rule leakage inevitable and replay non-deterministic.
+
+# ── What this task must NOT do ─────────────────────────────────────────────
+anti_patterns:
+  - "Editing migration 0135 directly — forward-only migrations are immutable"
+  - "Removing the entity_type predicate from the trigger — destroys domain isolation"
+  - "Adding entity_type as nullable — allows orphaned rules with no domain binding"
+  - "Testing only that the column exists without proving the trigger fires correctly"
+  - "Writing negative test after the fix is applied"
+
+# ── Anti-drift boundaries ──────────────────────────────────────────────────
+out_of_scope:
+  - "SECURITY DEFINER hardening (TSK-P2-W5-FIX-04)"
+  - "Trigger ordering rename (TSK-P2-W5-FIX-05)"
+  - "SQLSTATE assignment (TSK-P2-W5-FIX-08)"
+  - "Modifying enforce_transition_state_rules() function body — the trigger is correct, the table is wrong"
+  - "Seeding production state rules — this task adds the column and constraint only"
+stop_conditions:
+  - "Migration creates entity_type as nullable — violates domain isolation guarantee"
+  - "Migration removes entity_type predicate from trigger — destroys cross-domain rule scoping"
+  - "Unique constraint does not include entity_type — allows duplicate rules per domain"
+  - "Verifier does not exercise two-domain isolation (same transition valid for one, rejected for other)"
+  - "Approval metadata not created before editing regulated surface"
+
+# ── Proof limits ───────────────────────────────────────────────────────────
+proof_guarantees:
+  - "state_rules.entity_type column exists and is NOT NULL"
+  - "UNIQUE constraint includes entity_type: (entity_type, from_state, to_state)"
+  - "enforce_transition_state_rules() trigger resolves entity_type correctly"
+  - "Two-domain test: same (from_state, to_state) accepted for domain A, rejected for domain B"
+proof_limitations:
+  - "Does not prove rule completeness — seeding correct rules is a separate concern"
+  - "Does not prove SECURITY DEFINER correctness (deferred to FIX-04)"
+  - "Cannot prove behavior with production-scale rule sets"
+
+# ── Dependencies ───────────────────────────────────────────────────────────
+depends_on:
+  - TSK-P2-W5-FIX-01
+
+blocks:
+  - TSK-P2-W5-FIX-03
+
+# ── File scope ─────────────────────────────────────────────────────────────
+touches:
+  - schema/migrations/0146_add_entity_type_to_state_rules.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_w5_fix_02.sh
+  - evidence/phase2/tsk_p2_w5_fix_02.json
+  - tasks/TSK-P2-W5-FIX-02/meta.yml
+  - docs/plans/phase2/TSK-P2-W5-FIX-02/PLAN.md
+  - docs/plans/phase2/TSK-P2-W5-FIX-02/EXEC_LOG.md
+  # Post-implementation governance (SYMPHONY_TASK_IMPLEMENTATION_PROCESS Steps 9-13)
+  - docs/architecture/THREAT_MODEL.md
+  - docs/architecture/COMPLIANCE_MAP.md
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - evidence/phase0/baseline_drift.json
+  - evidence/phase0/baseline_governance.json
+  - evidence/phase0/schema_hash.txt
+  - evidence/phase0/structural_doc_linkage.json
+
+# ── Invariants ─────────────────────────────────────────────────────────────
+invariants: []
+
+# ── Deliverable files (for churn control) ─────────────────────────────────
+deliverable_files:
+  - schema/migrations/0146_add_entity_type_to_state_rules.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_w5_fix_02.sh
+  - evidence/phase2/tsk_p2_w5_fix_02.json
+  - docs/plans/phase2/TSK-P2-W5-FIX-02/EXEC_LOG.md
+  - docs/architecture/THREAT_MODEL.md
+  - docs/architecture/COMPLIANCE_MAP.md
+  - schema/baselines/current/0001_baseline.sql
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - evidence/phase0/schema_hash.txt
+  - evidence/phase0/baseline_governance.json
+  - evidence/phase0/baseline_drift.json
+  - evidence/phase0/structural_doc_linkage.json
+
+# ── Regulated Surface Compliance (CRITICAL) ────────────────────────────────
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - schema/migrations/0146_add_entity_type_to_state_rules.sql
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+# ── Remediation Trace Compliance (CRITICAL) ────────────────────────────────
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+# ── Database Connection ────────────────────────────────────────────────────
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+# ── Migration Dependencies ─────────────────────────────────────────────────
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - "0139": "state_rules table and enforce_transition_state_rules() function"
+    - "0145": "enforce_transition_authority() with corrected column (FIX-01)"
+  table_dependencies:
+    - "state_rules": "must exist (from migration 0139)"
+    - "state_transitions": "must exist with entity_type column"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+
+# ── Work items ─────────────────────────────────────────────────────────────
+work:
+  - >-
+    [ID w5_fix_02_work_01] Reproduce the bug: execute a live INSERT into
+    state_transitions that triggers enforce_transition_state_rules(). Capture
+    the raw PostgreSQL error 'column "entity_type" does not exist' from the
+    state_rules lookup. Record in EXEC_LOG.md as failure_signature.
+  - >-
+    [ID w5_fix_02_work_02] Write migration
+    0146_add_entity_type_to_state_rules.sql. The migration must: (a) Add
+    column entity_type TEXT NOT NULL with a DEFAULT for existing rows (use
+    hard precondition check: if rows exist, abort with PRECONDITION FAILED
+    unless a deterministic backfill is provided); (b) Drop the old unique
+    constraint (from_state, to_state, required_decision_type); (c) Create
+    new unique constraint (entity_type, from_state, to_state,
+    required_decision_type); (d) Use IF NOT EXISTS / DO blocks for
+    idempotency.
+  - >-
+    [ID w5_fix_02_work_03] Update MIGRATION_HEAD to 0146.
+  - >-
+    [ID w5_fix_02_work_04] Write verification script
+    scripts/db/verify_tsk_p2_w5_fix_02.sh with live behavioral tests:
+    (1) Verify entity_type column exists and is NOT NULL;
+    (2) Verify unique constraint includes entity_type;
+    (3) Two-domain isolation test: seed a rule for entity_type 'asset' with
+    transition PENDING->APPROVED, then INSERT state_transitions for
+    entity_type 'asset' (must succeed or pass rule check), then INSERT for
+    entity_type 'kyc' (must fail with 'no rule defined').
+  - >-
+    [ID w5_fix_02_work_05] Run verification script and generate evidence JSON
+    at evidence/phase2/tsk_p2_w5_fix_02.json.
+  - >-
+    [ID w5_fix_02_work_06] Post-implementation governance — Structural Change
+    Gate (SYMPHONY_TASK_IMPLEMENTATION_PROCESS Step 9): Append entry to
+    docs/architecture/THREAT_MODEL.md documenting security implications of
+    adding entity_type to state_rules (new attack surface: rule injection per
+    entity domain). Append entry to docs/architecture/COMPLIANCE_MAP.md
+    mapping the change to its compliance control.
+  - >-
+    [ID w5_fix_02_work_07] Post-implementation governance — Schema Baseline
+    Drift (Steps 10-11): Regenerate schema baseline using
+    scripts/db/generate_baseline_snapshot.sh against a clean DB with all
+    migrations through 0146 applied. Update ADR-0010-baseline-policy.md with
+    dated justification entry referencing this task and migration 0146.
+  - >-
+    [ID w5_fix_02_work_08] Post-implementation governance — DDL Lock-Risk
+    (Step 12): ALTER TABLE ADD COLUMN and constraint changes may trigger
+    SEC-DDL-LOCK-RISK linter. Calculate SHA-256 fingerprint and append
+    approved entry to docs/security/ddl_allowlist.json if flagged.
+  - >-
+    [ID w5_fix_02_work_09] Post-implementation governance — Stage Evidence
+    Files (Step 13): Stage all regenerated evidence files:
+    evidence/phase0/schema_hash.txt, evidence/phase0/baseline_governance.json,
+    evidence/phase0/baseline_drift.json,
+    evidence/phase0/structural_doc_linkage.json.
+  - >-
+    [ID w5_fix_02_work_10] Update EXEC_LOG.md with verification_commands_run
+    and final_status markers.
+
+# ── Acceptance criteria ────────────────────────────────────────────────────
+acceptance_criteria:
+  - >-
+    [ID w5_fix_02_work_01] EXEC_LOG.md contains failure_signature with exact
+    PostgreSQL error text 'column "entity_type" does not exist' from
+    state_rules query.
+  - >-
+    [ID w5_fix_02_work_02] Column entity_type exists in state_rules with
+    NOT NULL constraint. Unique constraint is (entity_type, from_state,
+    to_state, required_decision_type).
+  - >-
+    [ID w5_fix_02_work_03] MIGRATION_HEAD contains '0146'.
+  - >-
+    [ID w5_fix_02_work_04] [ID w5_fix_02_work_05] Verification script exits
+    0 with two-domain isolation proof in evidence JSON.
+  - >-
+    [ID w5_fix_02_work_06] THREAT_MODEL.md and COMPLIANCE_MAP.md each contain
+    a dated entry referencing TSK-P2-W5-FIX-02 and migration 0146.
+  - >-
+    [ID w5_fix_02_work_07] schema/baseline.sql and
+    schema/baselines/current/0001_baseline.sql are regenerated. ADR-0010 has
+    a dated entry: 'Baseline regenerated after adding entity_type to
+    state_rules (migration 0146)'.
+  - >-
+    [ID w5_fix_02_work_09] evidence/phase0/schema_hash.txt,
+    evidence/phase0/baseline_governance.json, and
+    evidence/phase0/structural_doc_linkage.json are freshly generated and
+    staged.
+  - >-
+    [ID w5_fix_02_work_10] EXEC_LOG.md contains all 5 remediation trace
+    markers.
+
+# ── Negative tests ─────────────────────────────────────────────────────────
+negative_tests:
+  - id: TSK-P2-W5-FIX-02-N1
+    description: >-
+      BEFORE fix: INSERT into state_transitions must fail with raw PostgreSQL
+      error 'column "entity_type" does not exist' from state_rules lookup.
+      This proves the column is genuinely missing.
+    required: true
+  - id: TSK-P2-W5-FIX-02-N2
+    description: >-
+      AFTER fix: Two-domain isolation. Seed rule for entity_type='asset',
+      PENDING->APPROVED. INSERT state_transitions for entity_type='kyc',
+      PENDING->APPROVED must fail with 'no rule defined'. This proves
+      entity_type scoping works — rules don't leak across domains.
+    required: true
+
+# ── Positive tests ─────────────────────────────────────────────────────────
+positive_tests:
+  - id: TSK-P2-W5-FIX-02-P1
+    description: >-
+      AFTER fix: Seed rule for entity_type='asset', PENDING->APPROVED.
+      INSERT state_transitions for entity_type='asset', PENDING->APPROVED
+      must pass the state_rules check (trigger does not reject).
+    required: true
+
+# ── Verification commands ──────────────────────────────────────────────────
+verification:
+  - >-
+    [ID w5_fix_02_work_02] psql "$DATABASE_URL" -tAc "SELECT column_name FROM
+    information_schema.columns WHERE table_name = 'state_rules' AND
+    column_name = 'entity_type'" | grep -q 'entity_type' || exit 1
+  - >-
+    [ID w5_fix_02_work_02] psql "$DATABASE_URL" -tAc "SELECT is_nullable FROM
+    information_schema.columns WHERE table_name = 'state_rules' AND
+    column_name = 'entity_type'" | grep -q 'NO' || exit 1
+  - >-
+    [ID w5_fix_02_work_03] test "$(cat schema/migrations/MIGRATION_HEAD)" =
+    '0146' || exit 1
+  - >-
+    [ID w5_fix_02_work_04] [ID w5_fix_02_work_05] bash
+    scripts/db/verify_tsk_p2_w5_fix_02.sh || exit 1
+  - >-
+    [ID w5_fix_02_work_05] test -f evidence/phase2/tsk_p2_w5_fix_02.json ||
+    exit 1
+
+# ── Evidence contract ──────────────────────────────────────────────────────
+evidence:
+  - path: evidence/phase2/tsk_p2_w5_fix_02.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - entity_type_column_verified
+      - unique_constraint_verified
+      - negative_test_results
+      - positive_test_results
+      - two_domain_isolation_proof
+
+# ── Failure modes ──────────────────────────────────────────────────────────
+failure_modes:
+  - "entity_type column missing or nullable after migration => CRITICAL_FAIL"
+  - "Unique constraint does not include entity_type => CRITICAL_FAIL"
+  - "Two-domain isolation test fails (cross-domain rule leakage) => CRITICAL_FAIL"
+  - "Verification script does not execute live INSERT => FAIL"
+  - "Evidence file missing => FAIL"
+  - "Negative test N1 not executed (bug not proven before fix) => BLOCKED"
+
+# ── Required reading ───────────────────────────────────────────────────────
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md
+  - docs/operations/REGULATED_SURFACE_PATHS.yml
+  - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+# ── Companion documents ────────────────────────────────────────────────────
+implementation_plan: docs/plans/phase2/TSK-P2-W5-FIX-02/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W5-FIX-02/EXEC_LOG.md
+
+# ── Metadata ───────────────────────────────────────────────────────────────
+notes: >-
+  Second task in Wave 5 stabilization chain. Adds the missing entity_type
+  column to state_rules so that enforce_transition_state_rules() can scope
+  rules per entity domain. Without this, cross-domain rule leakage makes the
+  system non-deterministic and non-replayable — fatal for Wave 6 data
+  authority. Option A (add column) chosen over Option B (remove predicate)
+  per architect decision. Phase Key: W5-FIX. Phase Name: Wave 5 Stabilization.
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

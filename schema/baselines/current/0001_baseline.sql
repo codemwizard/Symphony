@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict uyRTeDkIaCW7u8AQcDtFNAT70IfOliW1yDmh4cKBtfJLoGeAhnyNaB9YqTH1yYM
+\restrict KXa2zGsS7lx9EvCtA2KfEfIlfGlxN0gyPnCu9brkgbtVKXk3IlCfhuWhqwgBJXi
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
@@ -38,6 +38,18 @@ CREATE TYPE public.adjustment_state_enum AS ENUM (
     'executed',
     'denied',
     'blocked_legal_hold'
+);
+
+
+--
+-- Name: attestation_source_type; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.attestation_source_type AS ENUM (
+    'pre_ci_gate',
+    'runtime_gate',
+    'manual_audit',
+    'deferred'
 );
 
 
@@ -300,6 +312,25 @@ BEGIN
     IF TG_OP = 'UPDATE' OR TG_OP = 'DELETE' THEN
         RAISE EXCEPTION 'adapter_registrations is append-only - % operations not allowed', TG_OP;
     END IF;
+    RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: add_signature_placeholder_posture(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.add_signature_placeholder_posture() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    -- If transition_hash doesn't start with the placeholder prefix, add it
+    IF NEW.transition_hash IS NOT NULL AND NEW.transition_hash NOT LIKE 'PLACEHOLDER_PENDING_SIGNING_CONTRACT:%' THEN
+        NEW.transition_hash := 'PLACEHOLDER_PENDING_SIGNING_CONTRACT:' || NEW.transition_hash;
+    END IF;
+    
     RETURN NEW;
 END;
 $$;
@@ -1074,6 +1105,45 @@ $$;
 
 
 --
+-- Name: check_invariant_gate(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.check_invariant_gate() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  failing_count INTEGER;
+  registry_exists BOOLEAN;
+BEGIN
+  BEGIN
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'invariant_registry'
+    ) INTO registry_exists;
+  EXCEPTION WHEN OTHERS THEN
+    RAISE EXCEPTION 'Invariant failure — issuance blocked: cannot read invariant registry';
+  END;
+
+  IF NOT registry_exists THEN
+    RAISE EXCEPTION 'Invariant failure — issuance blocked: invariant_registry table missing';
+  END IF;
+
+  SELECT COUNT(*) INTO failing_count
+  FROM invariant_registry
+  WHERE is_blocking = true
+    AND status = 'failing';
+
+  IF failing_count > 0 THEN
+    RAISE EXCEPTION 'Invariant failure — issuance blocked: % blocking invariant(s) in failing state', failing_count;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: check_reg26_separation(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1649,14 +1719,18 @@ CREATE FUNCTION public.deny_state_transitions_mutation() RETURNS trigger
     SET search_path TO 'pg_catalog', 'public'
     AS $$
 BEGIN
-    -- Prevent UPDATE and DELETE on state_transitions table (append-only)
-    -- This ensures state transitions cannot be modified after insertion
+    -- Prevent UPDATE operations on state_transitions
     IF TG_OP = 'UPDATE' THEN
-        RAISE EXCEPTION 'GF036: state_transitions table is append-only, UPDATE not allowed';
+        RAISE EXCEPTION 'state_transitions is append-only'
+        USING ERRCODE = 'GF008';
     END IF;
+    
+    -- Prevent DELETE operations on state_transitions
     IF TG_OP = 'DELETE' THEN
-        RAISE EXCEPTION 'GF036: state_transitions table is append-only, DELETE not allowed';
+        RAISE EXCEPTION 'state_transitions is append-only'
+        USING ERRCODE = 'GF008';
     END IF;
+    
     RETURN NEW;
 END;
 $$;
@@ -1803,6 +1877,78 @@ $$;
 
 
 --
+-- Name: enforce_attestation_freshness(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_attestation_freshness() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  max_age INTERVAL := INTERVAL '300 seconds';
+BEGIN
+  IF NEW.invariant_attested_at IS NOT NULL THEN
+    IF (NOW() - NEW.invariant_attested_at) > max_age THEN
+      RAISE EXCEPTION 'Attestation is stale: attested at %, current time %, max age %',
+        NEW.invariant_attested_at, NOW(), max_age
+      USING ERRCODE = 'GF073';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: enforce_authority_transition_binding(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_authority_transition_binding(p_execution_id uuid, p_policy_decision_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_pd_execution_id      uuid;
+  v_er_exists            boolean;
+BEGIN
+  -- Step 1: resolve the policy_decisions row. If absent, reject.
+  SELECT execution_id
+    INTO v_pd_execution_id
+    FROM public.policy_decisions
+    WHERE policy_decision_id = p_policy_decision_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION USING
+      ERRCODE = 'P0002',
+      MESSAGE = 'authority_transition_binding: no policy_decision row for policy_decision_id';
+  END IF;
+
+  -- Step 2: confirm the execution_records row exists. execution_records does NOT
+  -- carry entity_type/entity_id on Wave 4 (see "Execution-side entity binding gap"
+  -- in the PLAN); existence-only is the strongest check implementable here.
+  SELECT EXISTS (
+    SELECT 1 FROM public.execution_records WHERE execution_id = p_execution_id
+  ) INTO v_er_exists;
+
+  IF NOT v_er_exists THEN
+    RAISE EXCEPTION USING
+      ERRCODE = 'P0002',
+      MESSAGE = 'authority_transition_binding: no execution_records row for execution_id';
+  END IF;
+
+  -- Step 3: the decision's execution_id must equal the transition's execution_id.
+  -- FK on policy_decisions.execution_id already binds the decision to AN execution;
+  -- this equality ensures it is binding to THIS execution.
+  IF v_pd_execution_id IS DISTINCT FROM p_execution_id THEN
+    RAISE EXCEPTION USING
+      ERRCODE = '22023',
+      MESSAGE = 'authority_transition_binding: execution_id mismatch';
+  END IF;
+END;
+$$;
+
+
+--
 -- Name: enforce_confidence_before_issuance(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1911,13 +2057,49 @@ CREATE FUNCTION public.enforce_execution_binding() RETURNS trigger
     SET search_path TO 'pg_catalog', 'public'
     AS $$
 BEGIN
-    -- Verify execution_id is present for reproducible transitions
-    -- This is a placeholder for the actual execution binding checking logic
-    -- In a full implementation, this would verify execution_id references valid execution records
-    -- For now, we'll allow the transition and raise GF035 if needed
+    -- Ensure execution_id is present for execution binding
     IF NEW.execution_id IS NULL THEN
-        RAISE NOTICE 'Transition execution binding check: execution_id is NULL';
+        RAISE EXCEPTION 'Transition without execution binding for entity %/%', NEW.entity_type, NEW.entity_id
+        USING ERRCODE = 'GF006';
     END IF;
+    
+    -- Validate execution binding by checking execution_records table
+    -- This ensures the execution exists and has interpretation_version_id
+    IF NOT EXISTS (
+        SELECT 1 FROM execution_records
+        WHERE execution_id = NEW.execution_id
+        AND interpretation_version_id IS NOT NULL
+    ) THEN
+        RAISE EXCEPTION 'Invalid execution binding: execution % does not have interpretation_version_id', 
+            NEW.execution_id
+        USING ERRCODE = 'GF007';
+    END IF;
+    
+    RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: enforce_execution_interpretation_temporal_binding(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_execution_interpretation_temporal_binding() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_expected UUID;
+BEGIN
+    SELECT public.resolve_interpretation_pack(NEW.project_id, NEW.execution_timestamp)
+        INTO v_expected;
+
+    IF v_expected IS DISTINCT FROM NEW.interpretation_version_id THEN
+        RAISE EXCEPTION
+            'GF058: execution_records.interpretation_version_id temporal mismatch; expected pack resolved at execution_timestamp'
+            USING ERRCODE = 'GF058';
+    END IF;
+
     RETURN NEW;
 END;
 $$;
@@ -2009,9 +2191,10 @@ CREATE FUNCTION public.enforce_k13_taxonomy_alignment() RETURNS trigger
     SET search_path TO 'pg_catalog', 'public'
     AS $$
 BEGIN
-    -- If taxonomy_aligned is true, spatial_check_execution_id must not be null
-    IF NEW.taxonomy_aligned = true AND NEW.spatial_check_execution_id IS NULL THEN
-        RAISE EXCEPTION 'GF060: K13 violation: taxonomy_aligned=true requires spatial_check_execution_id' USING ERRCODE = 'GF060';
+    -- If taxonomy_aligned is true, it requires spatial_check_execution_id.
+    -- Since the column does not exist on the projects table yet, this is always a violation.
+    IF NEW.taxonomy_aligned = true THEN
+        RAISE EXCEPTION 'GF061: K13 violation: taxonomy_aligned=true requires spatial_check_execution_id' USING ERRCODE = 'GF061';
     END IF;
     
     RETURN NEW;
@@ -2090,6 +2273,46 @@ $$;
 
 
 --
+-- Name: enforce_phase1_boundary(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_phase1_boundary() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  IF NEW.phase = 'phase1' THEN
+    IF NEW.data_authority <> 'phase1_indicative_only' THEN
+      RAISE EXCEPTION 'Phase 1 boundary violation: phase1 rows must have data_authority = phase1_indicative_only, got %', NEW.data_authority
+      USING ERRCODE = 'GF071';
+    END IF;
+    IF NEW.audit_grade <> false THEN
+      RAISE EXCEPTION 'Phase 1 boundary violation: phase1 rows must have audit_grade = false, got %', NEW.audit_grade
+      USING ERRCODE = 'GF072';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: enforce_policy_decisions_append_only(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_policy_decisions_append_only() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    RAISE EXCEPTION 'GF060: policy_decisions is append-only, UPDATE/DELETE not allowed'
+        USING ERRCODE = 'GF060';
+    RETURN NULL;
+END;
+$$;
+
+
+--
 -- Name: enforce_settlement_acknowledgement(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2132,7 +2355,7 @@ BEGIN
             RAISE EXCEPTION 'GF037: Invalid data_authority transition from % to %', OLD.data_authority, NEW.data_authority;
         END IF;
     END IF;
-    
+
     RETURN NEW;
 END;
 $$;
@@ -2147,13 +2370,24 @@ CREATE FUNCTION public.enforce_transition_authority() RETURNS trigger
     SET search_path TO 'pg_catalog', 'public'
     AS $$
 BEGIN
-    -- Verify policy_decision_id is present for authoritative transitions
-    -- This is a placeholder for the actual authority checking logic
-    -- In a full implementation, this would verify policy_decision_id references valid decisions
-    -- For now, we'll allow the transition and raise GF033 if needed
+    -- Ensure policy_decision_id is present for authority tracking
     IF NEW.policy_decision_id IS NULL THEN
-        RAISE NOTICE 'Transition authority check: policy_decision_id is NULL';
+        RAISE EXCEPTION 'Transition without policy decision for entity %/%', NEW.entity_type, NEW.entity_id
+        USING ERRCODE = 'GF009';
     END IF;
+    
+    -- Validate authority by checking policy_decisions table
+    -- This ensures the policy decision exists and matches the entity type
+    IF NOT EXISTS (
+        SELECT 1 FROM policy_decisions
+        WHERE policy_decision_id = NEW.policy_decision_id
+        AND entity_type = NEW.entity_type
+    ) THEN
+        RAISE EXCEPTION 'Invalid authority: policy decision % does not match entity type %', 
+            NEW.policy_decision_id, NEW.entity_type
+        USING ERRCODE = 'GF001';
+    END IF;
+    
     RETURN NEW;
 END;
 $$;
@@ -2168,13 +2402,25 @@ CREATE FUNCTION public.enforce_transition_signature() RETURNS trigger
     SET search_path TO 'pg_catalog', 'public'
     AS $$
 BEGIN
-    -- Verify signature is present for signed transitions
-    -- This is a placeholder for the actual signature checking logic
-    -- In a full implementation, this would verify cryptographic signature
-    -- For now, we'll allow the transition and raise GF034 if needed
+    -- Ensure signature is present for cryptographic verification
     IF NEW.signature IS NULL THEN
-        RAISE NOTICE 'Transition signature check: signature is NULL';
+        RAISE EXCEPTION 'Transition without signature for entity %/%', NEW.entity_type, NEW.entity_id
+        USING ERRCODE = 'GF004';
     END IF;
+    
+    -- Verify transition_hash matches computed hash (REM-10)
+    IF NEW.transition_hash IS NULL THEN
+        RAISE EXCEPTION 'Transition without hash for entity %/%', NEW.entity_type, NEW.entity_id
+        USING ERRCODE = 'GF005';
+    END IF;
+    
+    -- Verify signature using ed25519 (placeholder for actual implementation)
+    -- In production, this would call verify_ed25519_signature with the message, signature, and public key
+    -- IF NOT verify_ed25519_signature(NEW.transition_hash, NEW.signature, NEW.public_key) THEN
+    --     RAISE EXCEPTION 'Invalid signature for transition %', NEW.transition_id
+    --     USING ERRCODE = 'GFxxx';
+    -- END IF;
+    
     RETURN NEW;
 END;
 $$;
@@ -2189,11 +2435,30 @@ CREATE FUNCTION public.enforce_transition_state_rules() RETURNS trigger
     SET search_path TO 'pg_catalog', 'public'
     AS $$
 BEGIN
-    -- Check if state_rules table exists and has valid (from_state, to_state) pair
-    -- This is a placeholder for the actual rule checking logic
-    -- In a full implementation, this would query state_rules table
-    -- For now, we'll allow the transition and raise GF032 if needed
-    RAISE NOTICE 'Transition state rules check: % -> %', NEW.from_state, NEW.to_state;
+    -- Validate state transition against state_rules table
+    -- This ensures only valid transitions are allowed per business logic
+    IF NOT EXISTS (
+        SELECT 1 FROM state_rules
+        WHERE entity_type = NEW.entity_type
+        AND from_state = NEW.from_state
+    ) THEN
+        RAISE EXCEPTION 'Invalid state transition from % to % for entity type %: no rule defined', 
+            NEW.from_state, NEW.to_state, NEW.entity_type
+        USING ERRCODE = 'GF002';
+    END IF;
+    
+    -- Check if the specific transition is allowed
+    IF NOT EXISTS (
+        SELECT 1 FROM state_rules
+        WHERE entity_type = NEW.entity_type
+        AND from_state = NEW.from_state
+        AND to_state = NEW.to_state
+    ) THEN
+        RAISE EXCEPTION 'Invalid state transition from % to % for entity type %: transition not allowed', 
+            NEW.from_state, NEW.to_state, NEW.entity_type
+        USING ERRCODE = 'GF003';
+    END IF;
+    
     RETURN NEW;
 END;
 $$;
@@ -2516,6 +2781,22 @@ $$;
 
 
 --
+-- Name: execution_records_append_only(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.execution_records_append_only() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    RAISE EXCEPTION 'GF056: execution_records is append-only, UPDATE/DELETE not allowed'
+        USING ERRCODE = 'GF056';
+    RETURN NULL;
+END;
+$$;
+
+
+--
 -- Name: expire_escrows(timestamp with time zone, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2742,6 +3023,25 @@ $$;
 
 
 --
+-- Name: invariant_registry_append_only(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.invariant_registry_append_only() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    IF TG_OP = 'UPDATE' THEN
+        RAISE EXCEPTION 'Cannot UPDATE invariant_registry - append-only table';
+    ELSIF TG_OP = 'DELETE' THEN
+        RAISE EXCEPTION 'Cannot DELETE from invariant_registry - append-only table';
+    END IF;
+    RETURN NULL;
+END;
+$$;
+
+
+--
 -- Name: issue_adjustment(text, text, numeric, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2775,7 +3075,7 @@ CREATE FUNCTION public.issue_adjustment_with_recipient(p_parent_instruction_id t
     SET search_path TO 'pg_catalog', 'public'
     AS $$
 BEGIN
-  RAISE EXCEPTION 'ADJUSTMENT_RECIPIENT_NOT_PERMITTED' USING ERRCODE = 'P7601';
+  RAISE EXCEPTION 'ADJUSTMENT_RECIPIENT_NOT_PERMITTED' USING ERRCODE = 'P7504';
 END;
 $$;
 
@@ -5074,13 +5374,14 @@ CREATE FUNCTION public.update_current_state() RETURNS trigger
     SET search_path TO 'pg_catalog', 'public'
     AS $$
 BEGIN
-    -- Update state_current table with the new state for the project
-    -- This ensures state_current table stays in sync with state_transitions
-    INSERT INTO state_current (project_id, current_state, state_since)
-    VALUES (NEW.project_id, NEW.to_state, NEW.transition_timestamp)
-    ON CONFLICT (project_id) DO UPDATE SET
+    -- Insert or update state_current with the latest transition
+    INSERT INTO state_current (entity_type, entity_id, current_state, last_transition_id, updated_at)
+    VALUES (NEW.entity_type, NEW.entity_id, NEW.to_state, NEW.transition_id, NOW())
+    ON CONFLICT (entity_type, entity_id) DO UPDATE SET
         current_state = EXCLUDED.current_state,
-        state_since = EXCLUDED.state_since;
+        last_transition_id = EXCLUDED.last_transition_id,
+        updated_at = NOW();
+    
     RETURN NEW;
 END;
 $$;
@@ -5108,7 +5409,7 @@ BEGIN
             END IF;
         END IF;
     END IF;
-    
+
     RETURN NEW;
 END;
 $$;
@@ -5137,6 +5438,65 @@ CREATE FUNCTION public.uuid_v7_or_random() RETURNS uuid
     AS $$
           SELECT gen_random_uuid();
         $$;
+
+
+--
+-- Name: validate_attestation_gate(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.validate_attestation_gate() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  live_snapshot_hash VARCHAR(64);
+BEGIN
+  -- 1. Structural Validation (Missing Fields)
+  IF NEW.invariant_attestation_hash IS NULL OR
+     NEW.invariant_attestation_version IS NULL OR
+     NEW.invariant_attested_at IS NULL OR
+     NEW.invariant_attestation_source IS NULL OR
+     NEW.attestation_nonce IS NULL OR
+     NEW.registry_snapshot_hash IS NULL THEN
+    RAISE EXCEPTION 'Attestation rejection: structural integrity failed. All attestation fields and registry_snapshot_hash are strictly required.' USING ERRCODE = 'GF074';
+  END IF;
+
+  -- 2. Freshness Validation (Stale/Future Skew)
+  IF NEW.invariant_attested_at < NOW() - INTERVAL '300 seconds' THEN
+    RAISE EXCEPTION 'Attestation rejection: stale timestamp. Decision token is older than 300s TTL.' USING ERRCODE = 'GF075';
+  END IF;
+
+  IF NEW.invariant_attested_at > NOW() + INTERVAL '5 seconds' THEN
+    RAISE EXCEPTION 'Attestation rejection: future timestamp skew.' USING ERRCODE = 'GF076';
+  END IF;
+
+  -- 3. Contract Matching (Live Snapshot Canonicalization)
+  SELECT encode(digest(
+    COALESCE(
+      (
+        SELECT jsonb_agg(
+          jsonb_build_object(
+            'invariant_id', invariant_id,
+            'checksum', checksum,
+            'is_blocking', is_blocking,
+            'severity', severity,
+            'execution_layer', execution_layer,
+            'verifier_type', verifier_type
+          ) ORDER BY invariant_id ASC
+        )
+        FROM invariant_registry 
+        WHERE is_blocking = true
+      ), 
+      '[]'::jsonb
+    )::text, 'sha256'), 'hex') INTO live_snapshot_hash;
+
+  IF NEW.registry_snapshot_hash != live_snapshot_hash THEN
+    RAISE EXCEPTION 'Attestation rejection: registry contract mismatch. Provided snapshot % does not match live contract %.', NEW.registry_snapshot_hash, live_snapshot_hash USING ERRCODE = 'GF077';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
 
 
 --
@@ -5244,6 +5604,22 @@ BEGIN
     VALUES (p_instruction_id, v_stored_hash, v_computed_hash);
     RAISE EXCEPTION 'effect_seal_mismatch' USING ERRCODE = 'P7102';
   END IF;
+END;
+$$;
+
+
+--
+-- Name: verify_ed25519_signature(text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.verify_ed25519_signature(message text, signature text, public_key text) RETURNS boolean
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Verify ed25519 signature using pgcrypto
+    -- This is a placeholder for actual ed25519 verification
+    -- In production, this would use pgcrypto's ed25519_verify function
+    RETURN true;
 END;
 $$;
 
@@ -5656,8 +6032,17 @@ CREATE TABLE public.asset_batches (
     data_authority public.data_authority_level NOT NULL,
     audit_grade boolean NOT NULL,
     authority_explanation text NOT NULL,
+    invariant_attestation_hash character varying(64),
+    invariant_attestation_version integer,
+    invariant_attested_at timestamp with time zone,
+    invariant_attestation_source public.attestation_source_type,
+    attestation_nonce bigint,
+    registry_snapshot_hash character varying(64),
     CONSTRAINT asset_batches_quantity_check CHECK ((quantity > (0)::numeric)),
-    CONSTRAINT asset_batches_status_check CHECK ((status = ANY (ARRAY['PENDING'::text, 'ACTIVE'::text, 'RETIRED'::text, 'CANCELLED'::text])))
+    CONSTRAINT asset_batches_status_check CHECK ((status = ANY (ARRAY['PENDING'::text, 'ACTIVE'::text, 'RETIRED'::text, 'CANCELLED'::text]))),
+    CONSTRAINT attestation_hash_format CHECK (((invariant_attestation_hash IS NULL) OR ((invariant_attestation_hash)::text ~ '^[0-9a-f]{64}$'::text))),
+    CONSTRAINT attestation_version_positive CHECK (((invariant_attestation_version IS NULL) OR (invariant_attestation_version > 0))),
+    CONSTRAINT registry_snapshot_hash_format CHECK (((registry_snapshot_hash IS NULL) OR ((registry_snapshot_hash)::text ~ '^[0-9a-f]{64}$'::text)))
 );
 
 ALTER TABLE ONLY public.asset_batches FORCE ROW LEVEL SECURITY;
@@ -5794,6 +6179,44 @@ CREATE TABLE public.canonicalization_registry (
     immutable boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL
 );
+
+
+--
+-- Name: delegated_signing_grants; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.delegated_signing_grants (
+    id bigint NOT NULL,
+    grant_id character varying(100) NOT NULL,
+    actor_id character varying(100) NOT NULL,
+    scope jsonb NOT NULL,
+    payload_hash character varying(64) NOT NULL,
+    granted_at timestamp with time zone DEFAULT now() NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT expires_after_granted CHECK ((expires_at > granted_at)),
+    CONSTRAINT payload_hash_format CHECK (((payload_hash)::text ~ '^[a-f0-9]{64}$'::text))
+);
+
+
+--
+-- Name: delegated_signing_grants_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.delegated_signing_grants_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: delegated_signing_grants_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.delegated_signing_grants_id_seq OWNED BY public.delegated_signing_grants.id;
 
 
 --
@@ -6055,8 +6478,12 @@ CREATE TABLE public.execution_records (
     project_id uuid NOT NULL,
     execution_timestamp timestamp with time zone DEFAULT now() NOT NULL,
     status character varying DEFAULT 'pending'::character varying NOT NULL,
-    interpretation_version_id uuid,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    interpretation_version_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    input_hash text NOT NULL,
+    output_hash text NOT NULL,
+    runtime_version text NOT NULL,
+    tenant_id uuid NOT NULL
 );
 
 
@@ -6359,6 +6786,47 @@ CREATE TABLE public.interpretation_packs (
 );
 
 ALTER TABLE ONLY public.interpretation_packs FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: invariant_registry; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.invariant_registry (
+    id bigint NOT NULL,
+    invariant_id character varying(50) NOT NULL,
+    verifier_type character varying(100) NOT NULL,
+    severity character varying(20) NOT NULL,
+    execution_layer character varying(50) NOT NULL,
+    is_blocking boolean DEFAULT false NOT NULL,
+    checksum character varying(64) NOT NULL,
+    description text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    superseded_by bigint,
+    CONSTRAINT checksum_format CHECK (((checksum)::text ~ '^[a-f0-9]{64}$'::text)),
+    CONSTRAINT invariant_registry_execution_layer_check CHECK (((execution_layer)::text = ANY ((ARRAY['DB'::character varying, 'API'::character varying, 'CI'::character varying])::text[]))),
+    CONSTRAINT invariant_registry_severity_check CHECK (((severity)::text = ANY ((ARRAY['LOW'::character varying, 'MEDIUM'::character varying, 'HIGH'::character varying, 'CRITICAL'::character varying])::text[]))),
+    CONSTRAINT no_self_supersession CHECK (((id <> superseded_by) OR (superseded_by IS NULL)))
+);
+
+
+--
+-- Name: invariant_registry_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.invariant_registry_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: invariant_registry_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.invariant_registry_id_seq OWNED BY public.invariant_registry.id;
 
 
 --
@@ -6677,7 +7145,8 @@ CREATE TABLE public.monitoring_records (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     data_authority public.data_authority_level NOT NULL,
     audit_grade boolean NOT NULL,
-    authority_explanation text NOT NULL
+    authority_explanation text NOT NULL,
+    phase character varying DEFAULT 'phase1'::character varying NOT NULL
 );
 
 ALTER TABLE ONLY public.monitoring_records FORCE ROW LEVEL SECURITY;
@@ -6946,6 +7415,28 @@ CREATE TABLE public.policy_bundles (
 
 
 --
+-- Name: policy_decisions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.policy_decisions (
+    policy_decision_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    execution_id uuid NOT NULL,
+    decision_type text NOT NULL,
+    authority_scope text NOT NULL,
+    declared_by uuid NOT NULL,
+    entity_type text NOT NULL,
+    entity_id uuid NOT NULL,
+    decision_hash text NOT NULL,
+    signature text NOT NULL,
+    signed_at timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    project_id uuid NOT NULL,
+    CONSTRAINT policy_decisions_hash_hex_64 CHECK ((decision_hash ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT policy_decisions_sig_hex_128 CHECK ((signature ~ '^[0-9a-f]{128}$'::text))
+);
+
+
+--
 -- Name: policy_versions; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -7138,6 +7629,43 @@ CREATE TABLE public.protected_areas (
     geom public.geometry(Polygon,4326) NOT NULL,
     effective_from timestamp with time zone NOT NULL
 );
+
+
+--
+-- Name: public_keys_registry; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.public_keys_registry (
+    id bigint NOT NULL,
+    key_id character varying(100) NOT NULL,
+    actor_id character varying(100) NOT NULL,
+    public_key text NOT NULL,
+    key_type character varying(50) NOT NULL,
+    valid_from timestamp with time zone DEFAULT now() NOT NULL,
+    valid_until timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT public_keys_registry_key_type_check CHECK (((key_type)::text = ANY ((ARRAY['RSA'::character varying, 'ECDSA'::character varying, 'ED25519'::character varying])::text[]))),
+    CONSTRAINT valid_until_after_valid_from CHECK ((valid_until > valid_from))
+);
+
+
+--
+-- Name: public_keys_registry_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.public_keys_registry_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: public_keys_registry_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.public_keys_registry_id_seq OWNED BY public.public_keys_registry.id;
 
 
 --
@@ -7436,9 +7964,27 @@ ALTER TABLE ONLY public.sim_swap_alerts FORCE ROW LEVEL SECURITY;
 --
 
 CREATE TABLE public.state_current (
-    project_id uuid NOT NULL,
+    entity_type character varying NOT NULL,
+    entity_id uuid NOT NULL,
     current_state character varying NOT NULL,
-    state_since timestamp with time zone DEFAULT now() NOT NULL
+    last_transition_id uuid NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: state_rules; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.state_rules (
+    state_rule_id uuid NOT NULL,
+    from_state text NOT NULL,
+    to_state text NOT NULL,
+    required_decision_type text NOT NULL,
+    allowed boolean NOT NULL,
+    rule_priority integer DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    entity_type text NOT NULL
 );
 
 
@@ -7449,15 +7995,19 @@ CREATE TABLE public.state_current (
 CREATE TABLE public.state_transitions (
     transition_id uuid DEFAULT gen_random_uuid() NOT NULL,
     project_id uuid NOT NULL,
+    entity_type character varying NOT NULL,
+    entity_id uuid NOT NULL,
     from_state character varying NOT NULL,
     to_state character varying NOT NULL,
     transition_timestamp timestamp with time zone DEFAULT now() NOT NULL,
-    execution_id uuid,
-    policy_decision_id uuid,
+    execution_id uuid NOT NULL,
+    policy_decision_id uuid NOT NULL,
     signature text,
-    data_authority public.data_authority_level NOT NULL,
-    audit_grade boolean NOT NULL,
-    authority_explanation text NOT NULL
+    transition_hash text NOT NULL,
+    data_authority public.data_authority_level DEFAULT 'non_reproducible'::public.data_authority_level NOT NULL,
+    audit_grade boolean DEFAULT false NOT NULL,
+    authority_explanation text DEFAULT 'No execution context recorded'::text NOT NULL,
+    interpretation_version_id uuid NOT NULL
 );
 
 
@@ -7728,6 +8278,27 @@ ALTER TABLE ONLY public.verifier_registry FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: delegated_signing_grants id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.delegated_signing_grants ALTER COLUMN id SET DEFAULT nextval('public.delegated_signing_grants_id_seq'::regclass);
+
+
+--
+-- Name: invariant_registry id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.invariant_registry ALTER COLUMN id SET DEFAULT nextval('public.invariant_registry_id_seq'::regclass);
+
+
+--
+-- Name: public_keys_registry id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.public_keys_registry ALTER COLUMN id SET DEFAULT nextval('public.public_keys_registry_id_seq'::regclass);
+
+
+--
 -- Name: adapter_circuit_breakers adapter_circuit_breakers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7952,6 +8523,22 @@ ALTER TABLE ONLY public.canonicalization_registry
 
 
 --
+-- Name: delegated_signing_grants delegated_signing_grants_grant_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.delegated_signing_grants
+    ADD CONSTRAINT delegated_signing_grants_grant_id_key UNIQUE (grant_id);
+
+
+--
+-- Name: delegated_signing_grants delegated_signing_grants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.delegated_signing_grants
+    ADD CONSTRAINT delegated_signing_grants_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: dispatch_reference_collision_events dispatch_reference_collision_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -8093,6 +8680,14 @@ ALTER TABLE ONLY public.exchange_rate_audit_log
 
 ALTER TABLE ONLY public.exchange_rate_audit_log
     ADD CONSTRAINT exchange_rate_audit_log_unique_period UNIQUE (from_currency, to_currency, effective_from);
+
+
+--
+-- Name: execution_records execution_records_determinism_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.execution_records
+    ADD CONSTRAINT execution_records_determinism_unique UNIQUE (tenant_id, input_hash, interpretation_version_id, runtime_version);
 
 
 --
@@ -8272,6 +8867,22 @@ ALTER TABLE ONLY public.interpretation_packs
 
 
 --
+-- Name: invariant_registry invariant_registry_invariant_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.invariant_registry
+    ADD CONSTRAINT invariant_registry_invariant_id_key UNIQUE (invariant_id);
+
+
+--
+-- Name: invariant_registry invariant_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.invariant_registry
+    ADD CONSTRAINT invariant_registry_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: jurisdiction_profiles jurisdiction_profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -8448,6 +9059,22 @@ ALTER TABLE ONLY public.monitoring_records
 
 
 --
+-- Name: interpretation_packs no_overlapping_interpretation_packs; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.interpretation_packs
+    ADD CONSTRAINT no_overlapping_interpretation_packs EXCLUDE USING gist (jurisdiction_code WITH =, pack_type WITH =, tstzrange(effective_from, effective_to) WITH &&);
+
+
+--
+-- Name: public_keys_registry no_overlapping_keys; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.public_keys_registry
+    ADD CONSTRAINT no_overlapping_keys EXCLUDE USING gist (actor_id WITH =, tstzrange(valid_from, valid_until) WITH &&);
+
+
+--
 -- Name: offline_safe_mode_windows offline_safe_mode_windows_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -8608,6 +9235,22 @@ ALTER TABLE ONLY public.policy_bundles
 
 
 --
+-- Name: policy_decisions policy_decisions_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.policy_decisions
+    ADD CONSTRAINT policy_decisions_pk PRIMARY KEY (policy_decision_id);
+
+
+--
+-- Name: policy_decisions policy_decisions_unique_exec_type; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.policy_decisions
+    ADD CONSTRAINT policy_decisions_unique_exec_type UNIQUE (execution_id, decision_type);
+
+
+--
 -- Name: policy_versions policy_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -8741,6 +9384,22 @@ ALTER TABLE ONLY public.proof_pack_batches
 
 ALTER TABLE ONLY public.protected_areas
     ADD CONSTRAINT protected_areas_pkey PRIMARY KEY (protected_area_id);
+
+
+--
+-- Name: public_keys_registry public_keys_registry_key_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.public_keys_registry
+    ADD CONSTRAINT public_keys_registry_key_id_key UNIQUE (key_id);
+
+
+--
+-- Name: public_keys_registry public_keys_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.public_keys_registry
+    ADD CONSTRAINT public_keys_registry_pkey PRIMARY KEY (id);
 
 
 --
@@ -8924,7 +9583,31 @@ ALTER TABLE ONLY public.sim_swap_alerts
 --
 
 ALTER TABLE ONLY public.state_current
-    ADD CONSTRAINT state_current_pkey PRIMARY KEY (project_id);
+    ADD CONSTRAINT state_current_pkey PRIMARY KEY (entity_type, entity_id);
+
+
+--
+-- Name: state_rules state_rules_from_state_to_state_required_decision_type_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.state_rules
+    ADD CONSTRAINT state_rules_from_state_to_state_required_decision_type_key UNIQUE (from_state, to_state, required_decision_type);
+
+
+--
+-- Name: state_rules state_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.state_rules
+    ADD CONSTRAINT state_rules_pkey PRIMARY KEY (state_rule_id);
+
+
+--
+-- Name: state_rules state_rules_unique_rule; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.state_rules
+    ADD CONSTRAINT state_rules_unique_rule UNIQUE (entity_type, from_state, to_state);
 
 
 --
@@ -9077,6 +9760,22 @@ ALTER TABLE ONLY public.tenants
 
 ALTER TABLE ONLY public.tenants
     ADD CONSTRAINT tenants_tenant_key_key UNIQUE (tenant_key);
+
+
+--
+-- Name: asset_batches unique_attestation_hash; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.asset_batches
+    ADD CONSTRAINT unique_attestation_hash UNIQUE (invariant_attestation_hash);
+
+
+--
+-- Name: state_transitions unique_entity_hash; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.state_transitions
+    ADD CONSTRAINT unique_entity_hash UNIQUE (entity_type, entity_id, transition_hash);
 
 
 --
@@ -9297,6 +9996,34 @@ CREATE INDEX idx_authority_decisions_jurisdiction ON public.authority_decisions 
 --
 
 CREATE INDEX idx_billing_usage_events_correlation_id ON public.billing_usage_events USING btree (correlation_id);
+
+
+--
+-- Name: idx_delegated_signing_grants_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_delegated_signing_grants_active ON public.delegated_signing_grants USING btree (is_active) WHERE (is_active = true);
+
+
+--
+-- Name: idx_delegated_signing_grants_actor_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_delegated_signing_grants_actor_id ON public.delegated_signing_grants USING btree (actor_id);
+
+
+--
+-- Name: idx_delegated_signing_grants_expiry; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_delegated_signing_grants_expiry ON public.delegated_signing_grants USING btree (expires_at);
+
+
+--
+-- Name: idx_delegated_signing_grants_payload_hash; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_delegated_signing_grants_payload_hash ON public.delegated_signing_grants USING btree (payload_hash);
 
 
 --
@@ -9566,6 +10293,27 @@ CREATE INDEX idx_interpretation_packs_project_time ON public.interpretation_pack
 
 
 --
+-- Name: idx_invariant_registry_execution_layer; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_invariant_registry_execution_layer ON public.invariant_registry USING btree (execution_layer);
+
+
+--
+-- Name: idx_invariant_registry_invariant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_invariant_registry_invariant_id ON public.invariant_registry USING btree (invariant_id);
+
+
+--
+-- Name: idx_invariant_registry_is_blocking; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_invariant_registry_is_blocking ON public.invariant_registry USING btree (is_blocking) WHERE (is_blocking = true);
+
+
+--
 -- Name: idx_jurisdiction_profiles_jurisdiction; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -9734,6 +10482,20 @@ CREATE INDEX idx_pii_purge_requests_subject_requested ON public.pii_purge_reques
 
 
 --
+-- Name: idx_policy_decisions_declared_by; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_policy_decisions_declared_by ON public.policy_decisions USING btree (declared_by);
+
+
+--
+-- Name: idx_policy_decisions_entity; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_policy_decisions_entity ON public.policy_decisions USING btree (entity_type, entity_id);
+
+
+--
 -- Name: idx_policy_versions_is_active; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -9780,6 +10542,27 @@ CREATE INDEX idx_projects_tenant_id ON public.projects USING btree (tenant_id);
 --
 
 CREATE INDEX idx_protected_areas_geom ON public.protected_areas USING gist (geom);
+
+
+--
+-- Name: idx_public_keys_registry_actor_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_public_keys_registry_actor_id ON public.public_keys_registry USING btree (actor_id);
+
+
+--
+-- Name: idx_public_keys_registry_key_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_public_keys_registry_key_id ON public.public_keys_registry USING btree (key_id);
+
+
+--
+-- Name: idx_public_keys_registry_validity; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_public_keys_registry_validity ON public.public_keys_registry USING btree (valid_from, valid_until);
 
 
 --
@@ -9832,6 +10615,27 @@ CREATE INDEX idx_sim_swap_alerts_tenant_member_derived ON public.sim_swap_alerts
 
 
 --
+-- Name: idx_state_current_last_transition; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_state_current_last_transition ON public.state_current USING btree (last_transition_id);
+
+
+--
+-- Name: idx_state_rules_from_priority; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_state_rules_from_priority ON public.state_rules USING btree (from_state, rule_priority DESC);
+
+
+--
+-- Name: idx_state_transitions_entity; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_state_transitions_entity ON public.state_transitions USING btree (entity_type, entity_id);
+
+
+--
 -- Name: idx_state_transitions_project_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -9839,10 +10643,10 @@ CREATE INDEX idx_state_transitions_project_id ON public.state_transitions USING 
 
 
 --
--- Name: idx_state_transitions_transition_timestamp; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_state_transitions_timestamp; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_state_transitions_transition_timestamp ON public.state_transitions USING btree (transition_timestamp);
+CREATE INDEX idx_state_transitions_timestamp ON public.state_transitions USING btree (transition_timestamp);
 
 
 --
@@ -9906,6 +10710,13 @@ CREATE INDEX idx_tenants_parent_tenant_id ON public.tenants USING btree (parent_
 --
 
 CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
+
+
+--
+-- Name: idx_unique_superseded_by; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_unique_superseded_by ON public.invariant_registry USING btree (superseded_by) WHERE (superseded_by IS NOT NULL);
 
 
 --
@@ -10114,6 +10925,13 @@ CREATE TRIGGER adapter_registrations_append_only BEFORE DELETE OR UPDATE ON publ
 
 
 --
+-- Name: state_transitions ai_01_update_current_state; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER ai_01_update_current_state AFTER INSERT ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.update_current_state();
+
+
+--
 -- Name: asset_lifecycle_events asset_lifecycle_confidence_enforcement; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -10125,6 +10943,55 @@ CREATE TRIGGER asset_lifecycle_confidence_enforcement BEFORE INSERT ON public.as
 --
 
 CREATE TRIGGER authority_decisions_append_only BEFORE DELETE OR UPDATE ON public.authority_decisions FOR EACH ROW EXECUTE FUNCTION public.authority_decisions_append_only();
+
+
+--
+-- Name: state_transitions bd_01_deny_state_transitions_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER bd_01_deny_state_transitions_mutation BEFORE DELETE OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.deny_state_transitions_mutation();
+
+
+--
+-- Name: state_transitions bi_01_enforce_transition_authority; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER bi_01_enforce_transition_authority BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_transition_authority();
+
+
+--
+-- Name: state_transitions bi_02_enforce_execution_binding; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER bi_02_enforce_execution_binding BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_execution_binding();
+
+
+--
+-- Name: state_transitions bi_03_enforce_transition_state_rules; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER bi_03_enforce_transition_state_rules BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_transition_state_rules();
+
+
+--
+-- Name: state_transitions bi_04_enforce_transition_signature; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER bi_04_enforce_transition_signature BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_transition_signature();
+
+
+--
+-- Name: state_transitions bi_05_enforce_state_transition_authority; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER bi_05_enforce_state_transition_authority BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_state_transition_authority();
+
+
+--
+-- Name: state_transitions bi_06_upgrade_authority_on_execution_binding; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER bi_06_upgrade_authority_on_execution_binding BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.upgrade_authority_on_execution_binding();
 
 
 --
@@ -10149,10 +11016,38 @@ CREATE TRIGGER exchange_rate_audit_log_append_only_trigger BEFORE DELETE OR UPDA
 
 
 --
+-- Name: execution_records execution_records_append_only_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER execution_records_append_only_trigger BEFORE DELETE OR UPDATE ON public.execution_records FOR EACH ROW EXECUTE FUNCTION public.execution_records_append_only();
+
+
+--
+-- Name: execution_records execution_records_temporal_binding_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER execution_records_temporal_binding_trigger BEFORE INSERT ON public.execution_records FOR EACH ROW EXECUTE FUNCTION public.enforce_execution_interpretation_temporal_binding();
+
+
+--
 -- Name: gf_verifier_read_tokens gf_verifier_read_tokens_append_only; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER gf_verifier_read_tokens_append_only BEFORE DELETE OR UPDATE ON public.gf_verifier_read_tokens FOR EACH ROW EXECUTE FUNCTION public.gf_verifier_read_tokens_append_only();
+
+
+--
+-- Name: invariant_registry invariant_registry_append_only_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER invariant_registry_append_only_trigger BEFORE DELETE OR UPDATE ON public.invariant_registry FOR EACH ROW EXECUTE FUNCTION public.invariant_registry_append_only();
+
+
+--
+-- Name: policy_decisions policy_decisions_append_only_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER policy_decisions_append_only_trigger BEFORE DELETE OR UPDATE ON public.policy_decisions FOR EACH ROW EXECUTE FUNCTION public.enforce_policy_decisions_append_only();
 
 
 --
@@ -10177,45 +11072,10 @@ CREATE TRIGGER statutory_levy_registry_append_only_trigger BEFORE DELETE OR UPDA
 
 
 --
--- Name: state_transitions tr_deny_state_transitions_mutation; Type: TRIGGER; Schema: public; Owner: -
+-- Name: state_transitions tr_add_signature_placeholder; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER tr_deny_state_transitions_mutation BEFORE DELETE OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.deny_state_transitions_mutation();
-
-
---
--- Name: state_transitions tr_enforce_execution_binding; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER tr_enforce_execution_binding BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_execution_binding();
-
-
---
--- Name: state_transitions tr_enforce_transition_authority; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER tr_enforce_transition_authority BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_transition_authority();
-
-
---
--- Name: state_transitions tr_enforce_transition_signature; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER tr_enforce_transition_signature BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_transition_signature();
-
-
---
--- Name: state_transitions tr_enforce_transition_state_rules; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER tr_enforce_transition_state_rules BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_transition_state_rules();
-
-
---
--- Name: state_transitions tr_update_current_state; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER tr_update_current_state AFTER INSERT ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.update_current_state();
+CREATE TRIGGER tr_add_signature_placeholder BEFORE INSERT ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.add_signature_placeholder_posture();
 
 
 --
@@ -10230,6 +11090,13 @@ CREATE TRIGGER trg_adjustment_terminal_immutability BEFORE UPDATE ON public.adju
 --
 
 CREATE TRIGGER trg_anchor_dispatched_outbox_attempt AFTER INSERT ON public.payment_outbox_attempts FOR EACH ROW EXECUTE FUNCTION public.anchor_dispatched_outbox_attempt();
+
+
+--
+-- Name: asset_batches trg_attestation_gate_asset_batches; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_attestation_gate_asset_batches BEFORE INSERT ON public.asset_batches FOR EACH ROW EXECUTE FUNCTION public.validate_attestation_gate();
 
 
 --
@@ -10373,6 +11240,13 @@ CREATE TRIGGER trg_enforce_asset_batch_authority BEFORE INSERT OR UPDATE ON publ
 
 
 --
+-- Name: asset_batches trg_enforce_attestation_freshness; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_enforce_attestation_freshness BEFORE INSERT OR UPDATE ON public.asset_batches FOR EACH ROW EXECUTE FUNCTION public.enforce_attestation_freshness();
+
+
+--
 -- Name: instruction_settlement_finality trg_enforce_instruction_reversal_source; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -10394,17 +11268,17 @@ CREATE TRIGGER trg_enforce_monitoring_authority BEFORE INSERT OR UPDATE ON publi
 
 
 --
+-- Name: monitoring_records trg_enforce_phase1_boundary; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_enforce_phase1_boundary BEFORE INSERT OR UPDATE ON public.monitoring_records FOR EACH ROW EXECUTE FUNCTION public.enforce_phase1_boundary();
+
+
+--
 -- Name: instruction_settlement_finality trg_enforce_settlement_acknowledgement; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_enforce_settlement_acknowledgement BEFORE INSERT ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.enforce_settlement_acknowledgement();
-
-
---
--- Name: state_transitions trg_enforce_state_transition_authority; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER trg_enforce_state_transition_authority BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_state_transition_authority();
 
 
 --
@@ -10489,13 +11363,6 @@ CREATE TRIGGER trg_touch_persons_updated_at BEFORE UPDATE ON public.persons FOR 
 --
 
 CREATE TRIGGER trg_touch_programs_updated_at BEFORE UPDATE ON public.programs FOR EACH ROW EXECUTE FUNCTION public.touch_programs_updated_at();
-
-
---
--- Name: state_transitions trg_upgrade_authority_on_execution_binding; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER trg_upgrade_authority_on_execution_binding BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.upgrade_authority_on_execution_binding();
 
 
 --
@@ -10881,6 +11748,30 @@ ALTER TABLE ONLY public.external_proofs
 
 
 --
+-- Name: state_current fk_last_transition; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.state_current
+    ADD CONSTRAINT fk_last_transition FOREIGN KEY (last_transition_id) REFERENCES public.state_transitions(transition_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: state_transitions fk_st_execution_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.state_transitions
+    ADD CONSTRAINT fk_st_execution_id FOREIGN KEY (execution_id) REFERENCES public.execution_records(execution_id);
+
+
+--
+-- Name: state_transitions fk_st_policy_decision_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.state_transitions
+    ADD CONSTRAINT fk_st_policy_decision_id FOREIGN KEY (policy_decision_id) REFERENCES public.policy_decisions(policy_decision_id);
+
+
+--
 -- Name: gf_verifier_read_tokens gf_verifier_read_tokens_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -10990,6 +11881,14 @@ ALTER TABLE ONLY public.internal_ledger_postings
 
 ALTER TABLE ONLY public.internal_ledger_postings
     ADD CONSTRAINT internal_ledger_postings_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: invariant_registry invariant_registry_superseded_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.invariant_registry
+    ADD CONSTRAINT invariant_registry_superseded_by_fkey FOREIGN KEY (superseded_by) REFERENCES public.invariant_registry(id) ON DELETE SET NULL;
 
 
 --
@@ -11182,6 +12081,14 @@ ALTER TABLE ONLY public.pii_purge_events
 
 ALTER TABLE ONLY public.pii_vault_records
     ADD CONSTRAINT pii_vault_records_purge_request_fk FOREIGN KEY (purge_request_id) REFERENCES public.pii_purge_requests(purge_request_id) DEFERRABLE;
+
+
+--
+-- Name: policy_decisions policy_decisions_fk_execution; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.policy_decisions
+    ADD CONSTRAINT policy_decisions_fk_execution FOREIGN KEY (execution_id) REFERENCES public.execution_records(execution_id) ON DELETE RESTRICT;
 
 
 --
@@ -12090,5 +12997,5 @@ ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict uyRTeDkIaCW7u8AQcDtFNAT70IfOliW1yDmh4cKBtfJLoGeAhnyNaB9YqTH1yYM
+\unrestrict KXa2zGsS7lx9EvCtA2KfEfIlfGlxN0gyPnCu9brkgbtVKXk3IlCfhuWhqwgBJXi
 

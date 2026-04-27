@@ -1,0 +1,168 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W5-FIX-11
+title: "Correct migration references in Wave 5 task metadata to match actual migration numbers"
+owner_role: QA_VERIFIER
+status: planned
+priority: NORMAL
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+
+intent: >-
+  Wave 5 task metadata (meta.yml files for TSK-P2-PREAUTH-005-*) reference
+  migration numbers that may have drifted from the actual applied migration
+  sequence (0137-0144). This creates false audit trails — the metadata
+  claims certain migrations were produced by certain tasks, but the actual
+  mapping may be different. This task reconciles all Wave 5 meta.yml migration
+  references with the actual migration file inventory.
+
+anti_patterns:
+  - "Changing migration files to match metadata"
+  - "Marking reconciled without checking every meta.yml"
+
+out_of_scope:
+  - "Schema changes"
+  - "Creating new migrations"
+stop_conditions:
+  - "Any meta.yml references a migration number that does not exist on disk"
+
+proof_guarantees:
+  - "All Wave 5 meta.yml touches arrays reference actual migration files"
+proof_limitations:
+  - "Does not prove migration content matches metadata description"
+
+depends_on:
+  - TSK-P2-W5-FIX-10
+
+blocks:
+  - TSK-P2-W5-FIX-12
+
+touches:
+  - tasks/TSK-P2-PREAUTH-005-00/meta.yml
+  - tasks/TSK-P2-PREAUTH-005-01/meta.yml
+  - tasks/TSK-P2-PREAUTH-005-02/meta.yml
+  - tasks/TSK-P2-PREAUTH-005-03/meta.yml
+  - tasks/TSK-P2-PREAUTH-005-04/meta.yml
+  - tasks/TSK-P2-PREAUTH-005-05/meta.yml
+  - tasks/TSK-P2-PREAUTH-005-06/meta.yml
+  - tasks/TSK-P2-PREAUTH-005-07/meta.yml
+  - tasks/TSK-P2-PREAUTH-005-08/meta.yml
+  - evidence/phase2/tsk_p2_w5_fix_11.json
+  - tasks/TSK-P2-W5-FIX-11/meta.yml
+  - docs/plans/phase2/TSK-P2-W5-FIX-11/PLAN.md
+  - docs/plans/phase2/TSK-P2-W5-FIX-11/EXEC_LOG.md
+
+invariants: []
+
+# ── Deliverable files (for churn control) ─────────────────────────────────
+deliverable_files:
+  - scripts/audit/verify_meta_migration_refs.sh
+  - evidence/phase2/tsk_p2_w5_fix_11.json
+  - docs/plans/phase2/TSK-P2-W5-FIX-11/EXEC_LOG.md
+
+# ── Regulated Surface Compliance (CRITICAL) ────────────────────────────────
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_only
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/verify_meta_migration_refs.sh
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+
+# ── Remediation Trace Compliance (CRITICAL) ────────────────────────────────
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+# ── Database Connection ────────────────────────────────────────────────────
+database_connection:
+  enabled: false
+
+# ── Migration Dependencies ─────────────────────────────────────────────────
+migration_dependencies:
+  enabled: false
+
+
+work:
+  - >-
+    [ID w5_fix_11_work_01] Audit all 9 Wave 5 meta.yml files. For each,
+    extract migration references from touches array and verify the referenced
+    file exists on disk. Record discrepancies in EXEC_LOG.md.
+  - >-
+    [ID w5_fix_11_work_02] Correct migration references in each meta.yml to
+    match actual migration files (0137-0144).
+  - >-
+    [ID w5_fix_11_work_03] Write verification script: For each meta.yml,
+    extract migration paths and verify file existence. Fail if any path
+    does not resolve.
+  - >-
+    [ID w5_fix_11_work_04] Run verification and generate evidence.
+  - >-
+    [ID w5_fix_11_work_05] Update EXEC_LOG.md with final remediation trace.
+
+acceptance_criteria:
+  - >-
+    [ID w5_fix_11_work_01] EXEC_LOG documents all discrepancies found.
+  - >-
+    [ID w5_fix_11_work_02] All migration references resolve to actual files.
+  - >-
+    [ID w5_fix_11_work_03] [ID w5_fix_11_work_04] Verification exits 0.
+  - >-
+    [ID w5_fix_11_work_05] EXEC_LOG remediation trace complete.
+
+negative_tests:
+  - id: TSK-P2-W5-FIX-11-N1
+    description: >-
+      Introduce a fake migration reference in a test meta.yml — verifier
+      must exit 1.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-W5-FIX-11-P1
+    description: >-
+      All corrected meta.yml files pass reference validation.
+    required: true
+
+verification:
+  - bash scripts/audit/verify_meta_migration_refs.sh || exit 1
+  - test -f evidence/phase2/tsk_p2_w5_fix_11.json || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w5_fix_11.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - discrepancies_found
+      - discrepancies_resolved
+
+failure_modes:
+  - "Any meta.yml still references non-existent migration => FAIL"
+  - "Evidence file missing => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-W5-FIX-11/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W5-FIX-11/EXEC_LOG.md
+
+notes: >-
+  Phase Key: W5-FIX. Phase Name: Wave 5 Stabilization. Eleventh task.
+  Metadata-only — no schema changes.
+client: cursor
+assigned_agent: qa_verifier
+model: <UNASSIGNED>

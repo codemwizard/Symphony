@@ -1,0 +1,167 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-007-19-R4
+title: Add evidence digest validation against file on disk
+owner_role: SECURITY_GUARDIAN
+status: planned
+priority: HIGH
+risk_class: SECURITY
+blast_radius: SCRIPTS_ONLY
+
+intent: >-
+  Add validation to ensure evidence_digest in trace log matches the SHA-256 of the actual evidence file on disk.
+  The original implementation only checked format but never validated that the digest matched the file, allowing
+  fake hashes and tampering.
+
+anti_patterns:
+  - "Only checking evidence digest format, not file match"
+  - "Accepting mismatched digest"
+  - "Not checking file existence"
+  - "Grep theatre for digest validation"
+
+out_of_scope:
+  - Changing evidence digest computation logic
+  - Modifying trace log format
+  - Changing evidence file structure
+
+stop_conditions:
+  - "If verifier only checks format but not file match → STOP"
+  - "If verifier accepts mismatched digest → STOP"
+  - "If verifier doesn't check file existence → STOP"
+
+proof_guarantees:
+  - "Verifier checks evidence file existence when digest is not 'NONE'"
+  - "Verifier computes SHA-256 of evidence file on disk"
+  - "Verifier compares trace digest with file digest"
+  - "Verifier fails if digests don't match"
+  - "Verifier passes when digests match"
+
+proof_limitations:
+  - "Only validates at verification time, not during trace log emission"
+  - "Relies on evidence file not being modified after emission"
+
+depends_on:
+  - TSK-P2-PREAUTH-007-19-R3
+
+blocks:
+  - TSK-P2-PREAUTH-007-19-R5
+
+touches:
+  - scripts/audit/verify_tsk_p2_preauth_007_19.sh
+  - tasks/TSK-P2-PREAUTH-007-19-R4/meta.yml
+
+deliverable_files:
+  - scripts/audit/verify_tsk_p2_preauth_007_19.sh
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19-R4/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19-R4/EXEC_LOG.md
+
+invariants:
+  - INV-SEC-004
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/**
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:55432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:55432/symphony\""
+
+work:
+  - >-
+    [ID tsk_p2_preauth_007_19_r4_work_01] Add check to verify evidence file exists when evidence_digest is not "NONE"
+  - >-
+    [ID tsk_p2_preauth_007_19_r4_work_02] Add check to compute SHA-256 of evidence file on disk
+  - >-
+    [ID tsk_p2_preauth_007_19_r4_work_03] Add check to compare trace log evidence_digest with computed file digest
+  - >-
+    [ID tsk_p2_preauth_007_19_r4_work_04] Update verifier to fail if digests don't match
+  - >-
+    [ID tsk_p2_preauth_007_19_r4_work_05] Run verifier with a real evidence file and confirm digest validation works
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_007_19_r4_work_01] Verifier checks evidence file existence when digest is not "NONE"
+  - >-
+    [ID tsk_p2_preauth_007_19_r4_work_02] Verifier computes SHA-256 of evidence file on disk
+  - >-
+    [ID tsk_p2_preauth_007_19_r4_work_03] Verifier compares trace digest with file digest
+  - >-
+    [ID tsk_p2_preauth_007_19_r4_work_04] Verifier fails if digests don't match
+  - >-
+    [ID tsk_p2_preauth_007_19_r4_work_05] Verifier passes when digests match
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-007-19-R4-N1
+    description: Verifier fails when evidence file doesn't exist
+    required: true
+  - id: TSK-P2-PREAUTH-007-19-R4-N2
+    description: Verifier fails when digests don't match
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-007-19-R4-P1
+    description: Verifier passes when evidence file exists and digests match
+    required: true
+  - id: TSK-P2-PREAUTH-007-19-R4-P2
+    description: Verifier accepts "NONE" when evidence file is empty
+    required: true
+
+verification:
+  - >-
+    export DATABASE_URL="postgresql://symphony_admin:symphony_pass@localhost:55432/symphony"
+    bash scripts/audit/verify_tsk_p2_preauth_007_19.sh > evidence/phase2/tsk_p2_preauth_007_19_r4.json
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_007_19_r4.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - evidence_digest_validation_check
+
+failure_modes:
+  - "Verifier only checks format => FAIL"
+  - "Verifier accepts mismatched digest => FAIL"
+  - "Verifier doesn't check file existence => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19-REMEDIATION/DRD.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19/PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-007-19-R4/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-007-19-R4/EXEC_LOG.md
+
+notes: >-
+  This fix addresses the evidence digest validation gap. The original implementation only checked that the
+  digest was SHA256 format but never validated it against the actual file on disk. This allows fake hashes
+  and tampering. This builds on R2 (placeholder fix) and R3 (DATABASE_URL fix).
+client: cursor
+assigned_agent: security_guardian
+model: claude-sonnet-4-20250514

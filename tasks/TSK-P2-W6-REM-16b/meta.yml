@@ -1,0 +1,51 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W6-REM-16b
+title: "SQLSTATE Registry Merge"
+owner_role: Architect
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCUMENTATION
+
+intent: >-
+  Merge P76xx codes into docs/contracts/sqlstate_map.yml with semantic validation.
+  Resolve the P7601 collision by granting P7601 to Wave 6 Policy Authority and
+  evicting the legacy hardening trigger to a new code.
+
+out_of_scope:
+  - "Actual database migrations to change the code (this is a registry governance task)"
+
+blocks: []
+
+touches:
+  - docs/contracts/sqlstate_map.yml
+  - evidence/phase2/tsk_p2_w6_rem_16b.json
+
+invariants: []
+
+verification:
+  - bash docs/contracts/check_sqlstate_map_drift.sh
+  - python3 scripts/audit/validate_evidence.py --task TSK-P2-W6-REM-16b --evidence evidence/phase2/tsk_p2_w6_rem_16b.json
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-W6-REM-16b/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W6-REM-16b/EXEC_LOG.md
+
+depends_on: []
+work:
+  - "Legacy remediation work"
+acceptance_criteria:
+  - "Legacy remediation accepted"
+evidence:
+  - path: evidence/phase2/tsk_p2_w6_rem_16b.json
+    must_include:
+      - task_id
+failure_modes:
+  - "Legacy failure mode"
+notes: "Legacy task patched for v1 schema compliance."
+client: internal
+assigned_agent: supervisor
+model: <UNASSIGNED>

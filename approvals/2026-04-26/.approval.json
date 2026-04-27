@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-04-26T11:39:00Z",
+  "git_commit": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "change_scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "scripts/audit/verify_tsk_p2_preauth_007_19.sh",
+      "scripts/dev/pre_ci.sh"
+    ]
+  },
+  "ai": {
+    "ai_prompt_hash": "tsk_p2_preauth_007_19_remediation_drd",
+    "model_id": "claude-sonnet-4-20250514",
+    "client": "cursor",
+    "session_id": "remediation_r1_r5"
+  },
+  "human_approval": {
+    "approver_id": "security_guardian",
+    "approval_artifact_ref": "approvals/2026-04-26/BRANCH-feat-pre-phase2-wave-5-state-machine-trigger-layer.md",
+    "change_reason": "Remediation of TSK-P2-PREAUTH-007-19 security gaps: superuser check, placeholder validation, DATABASE_URL enforcement, evidence digest validation, delimiter robustness",
+    "approved_at_utc": "2026-04-26T11:39:00Z"
+  },
+  "notes": "Stage A approval for TSK-P2-PREAUTH-007-19-R1 through R5 remediation tasks"
+}

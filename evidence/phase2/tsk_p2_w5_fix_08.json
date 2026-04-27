@@ -1,0 +1,46 @@
+{
+  "task_id": "TSK-P2-W5-FIX-08",
+  "git_sha": "d805b381",
+  "timestamp_utc": "2026-04-24T14:44:10Z",
+  "run_id": "d805b381-2026-04-24T14:44:10Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "sqlstate_codes_verified",
+      "status": "PASS",
+      "description": "All 9 GF-prefixed SQLSTATE codes present in trigger function prosrc"
+    },
+    {
+      "name": "gf008_append_only_test",
+      "status": "SKIPPED",
+      "description": "GF008 SQLSTATE raised for append-only violation"
+    }
+  ],
+  "sqlstate_codes_verified": true,
+  "sqlstate_codes": [
+  "GF008",
+  "GF009",
+  "GF002",
+  "GF003",
+  "GF001",
+  "GF006",
+  "GF007",
+  "GF004",
+  "GF005"
+],
+  "codes_verified": [
+  "GF008:PASS",
+  "GF009:PASS",
+  "GF002:PASS",
+  "GF003:PASS",
+  "GF001:PASS",
+  "GF006:PASS",
+  "GF007:PASS",
+  "GF004:PASS",
+  "GF005:PASS"
+],
+  "negative_test_results": {
+    "N1": "SKIPPED - GF008 append-only violation test"
+  },
+  "notes": "SQLSTATE codes allow application layer to distinguish different violation types without parsing message text."
+}

@@ -1,0 +1,24 @@
+{
+  "task_id": "TSK-P2-W5-FIX-06",
+  "git_sha": "d805b381",
+  "timestamp_utc": "2026-04-24T14:16:19Z",
+  "run_id": "d805b381-2026-04-24T14:16:19Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "fk_delete_policy_verified",
+      "status": "PASS",
+      "description": "fk_last_transition has ON DELETE RESTRICT (confdeltype='r')"
+    },
+    {
+      "name": "delete_rejection_test",
+      "status": "SKIPPED",
+      "description": "DELETE of referenced state_transitions row rejected with SQLSTATE 23503"
+    }
+  ],
+  "fk_delete_policy_verified": true,
+  "negative_test_results": {
+    "N1": "SKIPPED - DELETE rejection test"
+  },
+  "notes": "ON DELETE RESTRICT prevents silent cascade deletion of state_current when state_transitions is deleted, preserving append-only audit history."
+}

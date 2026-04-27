@@ -1,0 +1,24 @@
+{
+  "task_id": "TSK-P2-PREAUTH-007-15",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "timestamp_utc": "2026-04-26T12:43:39Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "tsk_p2_preauth_007_15_structural",
+      "description": "Verify schema columns and triggers",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_15_behavioral",
+      "description": "Verify logic rejection using Master Canonical IDs",
+      "result": "PASS"
+    }
+  ],
+  "observed_hashes": [
+    {
+      "path": "scripts/audit/verify_tsk_p2_preauth_007_15.sh",
+      "sha256": "0e1916acff9b7f5acc6a52fc628473c885a4eb7dc227392203854cdbf4633ffd"
+    }
+  ]
+}

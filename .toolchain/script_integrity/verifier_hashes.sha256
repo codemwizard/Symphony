@@ -1,5 +1,5 @@
 # Symphony verifier script integrity manifest
-# Generated: 2026-04-18T04:10:23Z
+# Generated: 2026-04-23T23:47:16Z
 # Regenerate: bash _staging/symphony-enforcement-v2/execution-confinement/apply_execution_confinement.sh
 #
 5d2c89391beb18396a1e7a3761a2fc4adf3627922b40ba9ae55b755bcef0a62d  scripts/db/verify_gf_sch_001.sh
@@ -14,7 +14,7 @@ f5b55412da76ec441e5daad9a99ae149a97b363f0d6e679945ae45ee2a6bc8bc  scripts/db/ver
 5556648dfe11cf9a7e1cf0d607dae194a617d7086a40651c8649cb98781b656f  scripts/audit/verify_agent_conformance.sh
 59201d10905effa71d1c52a83da60bf68868fd96eb5023fed5addaf5ec98838c  scripts/audit/verify_remediation_trace.sh
 c0210e50f0e7bd4d7717905b0c60d0aa64109fde3e56beacdaff650873f46b73  scripts/audit/verify_remediation_artifact_freshness.sh
-7b682a1d3e86090a2fc1470e14b476f34c149854d14fa9dececee9a7d3944fca  scripts/audit/verify_task_meta_schema.sh
+d26228e2661a17148f1d7a34b9b59a962d969312d087fc2e7892786dad1c3bd6  scripts/audit/verify_task_meta_schema.sh
 da86445ce38a225836d8aebbc5bf00c02e23e156877eb5d97a045a329edf23b6  scripts/audit/verify_task_plans_present.sh
 3e2509c2d592c165ac5231b96fdb79c4b9d241acc251d25014185d8e577f3e7e  scripts/audit/verify_tsk_p1_206.sh
 0129b3b920a4a4b41a63477e1aff5d32a96dee9896a8f554508c48fe8a571f45  scripts/audit/verify_tsk_p1_207.sh

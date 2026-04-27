@@ -1,0 +1,165 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-007-19-R1
+title: Add superuser check to executor identity validation
+owner_role: SECURITY_GUARDIAN
+status: planned
+priority: CRITICAL
+risk_class: SECURITY
+blast_radius: SCRIPTS_ONLY
+
+intent: >-
+  Add validation to ensure executor identity is not running under postgres superuser or any overprivileged role.
+  This addresses a critical security gap in TSK-P2-PREAUTH-007-19 where the verifier never validated that
+  db_role is NOT postgres or a superuser, allowing potential privilege escalation attacks.
+
+anti_patterns:
+  - "Superuser check that allows postgres role"
+  - "Superuser check that doesn't query pg_roles.rolsuper"
+  - "Superuser check that doesn't query pg_roles.rolcreaterole"
+  - "Grep theatre for superuser validation"
+
+out_of_scope:
+  - Changing executor identity capture logic
+  - Modifying environment fingerprint capture
+  - Changing trace log format
+
+stop_conditions:
+  - "If superuser check is added but allows postgres role → STOP"
+  - "If superuser check is added but doesn't check rolsuper → STOP"
+  - "If superuser check is added but doesn't check rolcreaterole → STOP"
+
+proof_guarantees:
+  - "Executor identity is validated against pg_roles for superuser status"
+  - "Postgres role is explicitly rejected"
+  - "Any role with rolsuper = true is rejected"
+  - "Any role with rolcreaterole = true is rejected"
+
+proof_limitations:
+  - "Check only validates at verification time, not during actual CI execution"
+  - "Relies on DATABASE_URL being set correctly"
+
+depends_on:
+  - TSK-P2-PREAUTH-007-19
+
+blocks:
+  - TSK-P2-PREAUTH-007-19-R2
+
+touches:
+  - scripts/audit/verify_tsk_p2_preauth_007_19.sh
+  - tasks/TSK-P2-PREAUTH-007-19-R1/meta.yml
+
+deliverable_files:
+  - scripts/audit/verify_tsk_p2_preauth_007_19.sh
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19-R1/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19-R1/EXEC_LOG.md
+
+invariants:
+  - INV-SEC-001
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/**
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:55432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:55432/symphony\""
+
+work:
+  - >-
+    [ID tsk_p2_preauth_007_19_r1_work_01] Add check to verify db_role is not "postgres"
+  - >-
+    [ID tsk_p2_preauth_007_19_r1_work_02] Add check to verify db_role is not a superuser (query pg_roles.rolsuper)
+  - >-
+    [ID tsk_p2_preauth_007_19_r1_work_03] Add check to verify db_role is not a role creator (query pg_roles.rolcreaterole)
+  - >-
+    [ID tsk_p2_preauth_007_19_r1_work_04] Update verifier to fail if any superuser condition is met
+  - >-
+    [ID tsk_p2_preauth_007_19_r1_work_05] Run verifier and confirm it fails for postgres role
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_007_19_r1_work_01] Verifier rejects postgres role explicitly
+  - >-
+    [ID tsk_p2_preauth_007_19_r1_work_02] Verifier rejects any role with rolsuper = true
+  - >-
+    [ID tsk_p2_preauth_007_19_r1_work_03] Verifier rejects any role with rolcreaterole = true
+  - >-
+    [ID tsk_p2_preauth_007_19_r1_work_05] Verifier passes for symphony_admin (non-superuser role)
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-007-19-R1-N1
+    description: Verifier rejects postgres role
+    required: true
+  - id: TSK-P2-PREAUTH-007-19-R1-N2
+    description: Verifier rejects role with rolsuper = true
+    required: true
+  - id: TSK-P2-PREAUTH-007-19-R1-N3
+    description: Verifier rejects role with rolcreaterole = true
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-007-19-R1-P1
+    description: Verifier passes for symphony_admin role
+    required: true
+
+verification:
+  - >-
+    export DATABASE_URL="postgresql://symphony_admin:symphony_pass@localhost:55432/symphony"
+    bash scripts/audit/verify_tsk_p2_preauth_007_19.sh > evidence/phase2/tsk_p2_preauth_007_19_r1.json
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_007_19_r1.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - superuser_validation_check
+
+failure_modes:
+  - "Superuser check allows postgres role => CRITICAL_FAIL"
+  - "Superuser check doesn't query pg_roles => CRITICAL_FAIL"
+  - "Verifier uses grep instead of DB query => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19-REMEDIATION/DRD.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19/PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-007-19-R1/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-007-19-R1/EXEC_LOG.md
+
+notes: >-
+  This is a critical security fix. The original TSK-P2-PREAUTH-007-19 implementation never validated
+  that the executor was not running under a superuser role, which could allow privilege escalation
+  attacks in the CI pipeline. This fix adds explicit checks against pg_roles to ensure the executor
+  is not postgres, not a superuser, and not a role creator.
+client: cursor
+assigned_agent: security_guardian
+model: claude-sonnet-4-20250514

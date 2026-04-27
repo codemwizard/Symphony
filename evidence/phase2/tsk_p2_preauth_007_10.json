@@ -1,0 +1,39 @@
+{
+  "task_id": "TSK-P2-PREAUTH-007-10",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "timestamp_utc": "2026-04-26T00:44:54Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "tsk_p2_preauth_007_10_check_01",
+      "description": "DATABASE_URL is set",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_10_check_02",
+      "description": "interpretation_packs table exists",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_10_check_03",
+      "description": "Exclusion constraint no_overlapping_interpretation_packs exists",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-10-N1",
+      "description": "Negative test: Overlapping timestamptz ranges for the same jurisdiction and domain are rejected",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-10-P1",
+      "description": "Positive test: Non-overlapping timestamptz ranges for the same jurisdiction and domain are accepted",
+      "result": "PASS"
+    }
+  ],
+  "observed_hashes": [
+    {
+      "path": "scripts/audit/verify_tsk_p2_preauth_007_10.sh",
+      "sha256": "fc221e4cba54120583d0c2eeb47949817a868298874078d9c7f1bfc1a6fe6c58"
+    }
+  ]
+}

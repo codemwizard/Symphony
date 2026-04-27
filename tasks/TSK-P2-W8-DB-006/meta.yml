@@ -1,0 +1,189 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W8-DB-006
+title: "Authoritative trigger integration of cryptographic primitive"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DB_SCHEMA
+
+intent: >-
+  This is the boundary-enforcement task where Wave 8 stops being helper code and
+  becomes authoritative PostgreSQL behavior.
+
+primary_enforcement_domain: >-
+  cryptographic enforcement wiring
+
+anti_patterns:
+  - "Calling a detached verifier primitive from outside the dispatcher path"
+  - "Allowing structural validation to pass when crypto fails"
+  - "Treating unavailable crypto as temporary acceptance"
+  - "Trusting a service claim or audit row instead of independently validating the exact write"
+  - "Failing a non-crypto branch first and claiming cryptographic enforcement completion"
+
+out_of_scope:
+  - "Any work outside the single primary enforcement domain declared for this task."
+  - "Implementation or evidence claims for non-authoritative surfaces unless explicitly routed through the same `asset_batches` boundary."
+
+stop_conditions:
+  - "If the task begins to span more than one primary enforcement domain, stop and split the work into separate task packs."
+  - "If the verifier cannot produce a deterministic fail domain for the task objective, stop and repair the pack before implementation."
+  - "If a runtime verifier does not physically cause PostgreSQL to accept or reject a write at `asset_batches`, stop and treat the verifier as insufficient."
+
+proof_guarantees:
+  - "The task is constrained to one primary enforcement domain."
+  - "The verifier path is tied to explicit work-item IDs and proof-carrying evidence expectations."
+
+proof_limitations:
+  - "This task alone does not certify Wave 8 complete; it proves only its declared domain."
+
+depends_on:
+  - TSK-P2-W8-DB-004
+  - TSK-P2-W8-DB-005
+  - TSK-P2-W8-SEC-001
+
+blocks:
+  - TSK-P2-W8-DB-007a
+  - TSK-P2-W8-DB-007b
+  - TSK-P2-W8-DB-007c
+  - TSK-P2-W8-DB-008
+  - TSK-P2-W8-DB-009
+  - TSK-P2-W8-QA-001
+
+touches:
+  - schema/migrations/0177_wave8_crypto_boundary_enforcement.sql
+  - scripts/db/verify_w8_crypto_boundary_enforcement.sql
+  - scripts/db/verify_tsk_p2_w8_db_006.sh
+  - evidence/phase2/tsk_p2_w8_db_006.json
+  - tasks/TSK-P2-W8-DB-006/meta.yml
+  - docs/plans/phase2/TSK-P2-W8-DB-006/PLAN.md
+  - docs/plans/phase2/TSK-P2-W8-DB-006/EXEC_LOG.md
+
+invariants:
+  - INV-GOV-TEMPLATE-004
+  - INV-GOV-TEMPLATE-005
+
+deliverable_files:
+  - schema/migrations/0177_wave8_crypto_boundary_enforcement.sql
+  - scripts/db/verify_w8_crypto_boundary_enforcement.sql
+  - scripts/db/verify_tsk_p2_w8_db_006.sh
+  - evidence/phase2/tsk_p2_w8_db_006.json
+  - docs/plans/phase2/TSK-P2-W8-DB-006/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_only
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - schema/migrations/0177_wave8_crypto_boundary_enforcement.sql
+    - scripts/db/verify_w8_crypto_boundary_enforcement.sql
+    - scripts/db/verify_tsk_p2_w8_db_006.sh
+    - evidence/phase2/tsk_p2_w8_db_006.json
+    - schema/migrations/MIGRATION_HEAD
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:55432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:55432/symphony\""
+
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - 0168: "Attestation seam schema baseline present"
+    - 0171: "Attestation kill-switch gate baseline present"
+  table_dependencies:
+    - asset_batches: "authoritative Wave 8 boundary"
+    - schema_migrations: "must track migrations"
+  verification_step: "Confirm the target migration chain and authoritative boundary exist before implementation."
+
+work:
+  - >-
+    [ID w8_db_006_work_01] Integrate the Ed25519 verification primitive into the `asset_batches` dispatcher path so PostgreSQL independently validates the exact write inside the authoritative boundary.
+  - >-
+    [ID w8_db_006_work_02] Enforce fail-closed rejection for invalid signatures and unavailable-crypto states with registered failure modes and explicit cryptographic branch causality.
+  - >-
+    [ID w8_db_006_work_03] Build a verifier that proves PostgreSQL rejects cryptographically invalid writes and unavailable-crypto states at `asset_batches`, does not trust a service claim or audit row, and derives branch provenance from the same production execution path that emits the terminal SQLSTATE.
+
+acceptance_criteria:
+  - >-
+    [ID w8_db_006_work_01] PostgreSQL independently validates the exact `asset_batches` write and the Ed25519 primitive executes inside that authoritative dispatcher path.
+  - >-
+    [ID w8_db_006_work_02] Invalid signatures and unavailable-crypto states are rejected fail-closed with registered failure modes and explicit cryptographic branch causality.
+  - >-
+    [ID w8_db_006_work_03] The verifier proves PostgreSQL physically rejects invalid or unavailable-crypto writes at `asset_batches` without trusting a service claim or audit row, and branch provenance comes from the same production execution path as the terminal SQLSTATE.
+
+negative_tests:
+  - id: TSK-P2-W8-DB-006-N1
+    description: >-
+      Verifier fails if PostgreSQL accepts a structurally valid but cryptographically invalid write at `asset_batches`.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-W8-DB-006-P1
+    description: >-
+      Verifier passes only when cryptographic validity is enforced inside the authoritative boundary.
+    required: true
+
+verification:
+  - '# [ID w8_db_006_work_01] [ID w8_db_006_work_02] [ID w8_db_006_work_03] test -e scripts/db/verify_tsk_p2_w8_db_006.sh && bash scripts/db/verify_tsk_p2_w8_db_006.sh > evidence/phase2/tsk_p2_w8_db_006.json || exit 1'
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w8_db_006.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - "Verifier missing or not executable => FAIL"
+  - "Evidence file missing => FAIL"
+  - "Proof graph not aligned to work and acceptance criteria => CRITICAL_FAIL"
+  - "Structural-only or advisory-only verification claimed as completion => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PLANS-addendum_1.md
+  - tasks/TSK-P1-240/meta.yml
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+implementation_plan: docs/plans/phase2/TSK-P2-W8-DB-006/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W8-DB-006/EXEC_LOG.md
+notes: >-
+  Generated from the final Wave 8 replacement plan. This pack is valid only for
+  the single domain `cryptographic enforcement wiring`, inherits the
+  `asset_batches` authoritative boundary rule, and requires branch provenance
+  from the same production execution path as the terminal SQLSTATE.
+client: codex
+assigned_agent: db_foundation
+model: gpt-5.5

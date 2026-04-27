@@ -156,31 +156,4 @@ notes: >-
 
 client: cursor
 assigned_agent: db_foundation
-regulated_surface_compliance:
-  enabled: true
-  regulated_paths:
-    - schema/migrations/0134_create_policy_decisions.sql
-  approval_required: false
-  approval_metadata: null
-remediation_trace_compliance:
-  enabled: true
-  failure_signature: W4-REM-004-01
-  origin_task_id: TSK-P2-PREAUTH-004-01
-  repro_command: bash scripts/db/verify_policy_decisions_schema.sh
-  verification_commands_run:
-    - verify_policy_decisions_schema.sh
-    - validate_evidence.py
-  final_status: IMPLEMENTED
-database_connection:
-  enabled: true
-  connection_method: DATABASE_URL environment variable
-  verification_step: All psql commands use DATABASE_URL
-migration_dependencies:
-  enabled: true
-  required_migrations:
-    - "0134": "create_policy_decisions table (hardened, 11 columns)"
-    - "0118": "create_execution_records table (dependency for FK)"
-  table_dependencies:
-    - execution_records: "0118"
-  verification_step: Confirm execution_records table exists in migration 0118
 model: <UNASSIGNED>

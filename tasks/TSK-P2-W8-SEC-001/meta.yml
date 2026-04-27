@@ -1,0 +1,169 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W8-SEC-001
+title: "Ed25519 verification primitive"
+owner_role: SECURITY_GUARDIAN
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: SECURITY
+
+intent: >-
+  This task isolates primitive correctness from environment honesty and DB
+  wiring so primitive completion cannot masquerade as enforcement completion.
+
+primary_enforcement_domain: >-
+  cryptographic primitive
+
+anti_patterns:
+  - "Shipping a raw Ed25519 helper that ignores contract-canonical bytes"
+  - "Treating primitive success as authoritative boundary completion"
+  - "Leaving malformed-signature or wrong-key behavior unproven"
+  - "Re-proving runtime/provider parity inside `SEC-001` instead of consuming `SEC-000`"
+
+out_of_scope:
+  - "Any work outside the single primary enforcement domain declared for this task."
+  - "Implementation or evidence claims for non-authoritative surfaces unless explicitly routed through the same `asset_batches` boundary."
+
+stop_conditions:
+  - "If the task begins to span more than one primary enforcement domain, stop and split the work into separate task packs."
+  - "If the verifier cannot produce a deterministic fail domain for the task objective, stop and repair the pack before implementation."
+  - "If the verifier cannot prove the contract or control artifact is explicit and complete, stop and repair the pack before implementation."
+
+proof_guarantees:
+  - "The task is constrained to one primary enforcement domain."
+  - "The verifier path is tied to explicit work-item IDs and proof-carrying evidence expectations."
+
+proof_limitations:
+  - "This task alone does not certify Wave 8 complete; it proves only its declared domain."
+
+depends_on:
+  - TSK-P2-W8-ARCH-003
+  - TSK-P2-W8-ARCH-006
+  - TSK-P2-W8-SEC-000
+
+blocks:
+  - TSK-P2-W8-DB-006
+
+touches:
+  - scripts/security/verify_ed25519_contract_bytes.sh
+  - docs/security/WAVE8_ED25519_IMPLEMENTATION_STANDARD.md
+  - scripts/security/verify_tsk_p2_w8_sec_001.sh
+  - evidence/phase2/tsk_p2_w8_sec_001.json
+  - tasks/TSK-P2-W8-SEC-001/meta.yml
+  - docs/plans/phase2/TSK-P2-W8-SEC-001/PLAN.md
+  - docs/plans/phase2/TSK-P2-W8-SEC-001/EXEC_LOG.md
+
+invariants:
+  - INV-GOV-TEMPLATE-004
+  - INV-GOV-TEMPLATE-005
+
+deliverable_files:
+  - scripts/security/verify_ed25519_contract_bytes.sh
+  - docs/security/WAVE8_ED25519_IMPLEMENTATION_STANDARD.md
+  - scripts/security/verify_tsk_p2_w8_sec_001.sh
+  - evidence/phase2/tsk_p2_w8_sec_001.json
+  - docs/plans/phase2/TSK-P2-W8-SEC-001/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_only
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - evidence/phase2/tsk_p2_w8_sec_001.json
+    - scripts/security/verify_ed25519_contract_bytes.sh
+    - scripts/security/verify_tsk_p2_w8_sec_001.sh
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: false
+
+migration_dependencies:
+  enabled: false
+
+work:
+  - >-
+    [ID w8_sec_001_work_01] Consume the runtime/provider honesty proof from `TSK-P2-W8-SEC-000` and document the authoritative Ed25519 verification implementation standard for Wave 8 inside that proven environment.
+  - >-
+    [ID w8_sec_001_work_02] Implement a verification primitive that verifies signatures over the contract-defined input bytes and rejects non-canonical or differently canonicalized byte streams.
+  - >-
+    [ID w8_sec_001_work_03] Add primitive-level tests for malformed signatures, wrong keys, valid signatures over contract-defined bytes, and fail-closed behavior inside the proven runtime environment.
+
+acceptance_criteria:
+  - >-
+    [ID w8_sec_001_work_01] The authoritative Ed25519 verification standard is documented as consuming the environment/provider honesty proven by `SEC-000`.
+  - >-
+    [ID w8_sec_001_work_02] The primitive verifies signatures over contract-defined bytes and rejects non-canonical byte interpretations.
+  - >-
+    [ID w8_sec_001_work_03] Primitive-level tests prove malformed-signature failure, wrong-key failure, valid-signature success, and fail-closed runtime behavior inside the proven environment.
+
+negative_tests:
+  - id: TSK-P2-W8-SEC-001-N1
+    description: >-
+      Verifier fails if the primitive accepts signatures over bytes that differ from the contract-defined signature input.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-W8-SEC-001-P1
+    description: >-
+      Verifier passes only when valid Ed25519 signatures over contract-defined bytes succeed and malformed, wrong-key, or runtime-failure cases fail inside the `SEC-000`-proven environment.
+    required: true
+
+verification:
+  - '# [ID w8_sec_001_work_01] [ID w8_sec_001_work_02] [ID w8_sec_001_work_03] test -e scripts/security/verify_tsk_p2_w8_sec_001.sh && bash scripts/security/verify_tsk_p2_w8_sec_001.sh > evidence/phase2/tsk_p2_w8_sec_001.json || exit 1'
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w8_sec_001.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - "Verifier missing or not executable => FAIL"
+  - "Evidence file missing => FAIL"
+  - "Proof graph not aligned to work and acceptance criteria => CRITICAL_FAIL"
+  - "Structural-only or advisory-only verification claimed as completion => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PLANS-addendum_1.md
+  - tasks/TSK-P1-240/meta.yml
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+implementation_plan: docs/plans/phase2/TSK-P2-W8-SEC-001/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W8-SEC-001/EXEC_LOG.md
+notes: >-
+  Generated from the final Wave 8 replacement plan. This pack is valid only for
+  the single domain `cryptographic primitive`, inherits the `asset_batches`
+  authoritative boundary rule, and consumes `SEC-000` rather than re-proving
+  runtime/provider parity.
+client: codex
+assigned_agent: security_guardian
+model: gpt-5.5

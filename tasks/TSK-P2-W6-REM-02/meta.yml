@@ -1,9 +1,0 @@
-schema_version: "1.0"
-phase: PRE-PHASE2
-status: planned
-priority: critical
-risk_class: high
-task_id: TSK-P2-W6-REM-02
-title: "Implement derive_data_authority()"
-implementation_plan: docs/plans/phase2/TSK-P2-W6-REM-02/PLAN.md
-implementation_log: docs/plans/phase2/TSK-P2-W6-REM-02/EXEC_LOG.md

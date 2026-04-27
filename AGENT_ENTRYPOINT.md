@@ -2,7 +2,10 @@
 
 Read this file first on every session start, before modifying repository files.
 
-## Pre-Step -- Check for Rejection Context, DRD Lockout, and Evidence Ack
+## Pre-Step 0 -- Mandatory Troubleshooting Context
+If you are entering this session to fix a bug, CI failure, or database connection issue, you MUST read `docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md` before taking any action. It contains the canonical solutions for `DATABASE_URL` configuration, schema drift, and approval metadata logic.
+
+## Pre-Step 1 -- Check for Rejection Context, DRD Lockout, and Evidence Ack
 
 Before mode classification, check for `.agent/rejection_context.md`.
 

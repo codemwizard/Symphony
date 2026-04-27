@@ -1,8 +1,8 @@
 {
   "check_id": "SEC-DDL-LOCK-RISK",
-  "timestamp_utc": "1970-01-01T00:00:00Z",
-  "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "06545fe3f538515080117719d8d8bd0acb0136101bc7d7d61a37f052481dc898",
+  "timestamp_utc": "2026-04-24T14:58:07Z",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "schema_fingerprint": "faee7f9919acdb4bf6007f3f9471e1720ddaddaa270810e47fcbb0417ba42799",
   "status": "PASS",
   "match_count": 0,
   "matches": [],
@@ -13,6 +13,8 @@
     "DDL-ALLOW-0095:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0101_gf_asset_lifecycle.sql:50:ALTER TABLE public.asset_lifecycle_events FORCE ROW LEVEL SECURITY;",
     "DDL-ALLOW-0096:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0101_gf_asset_lifecycle.sql:65:ALTER TABLE public.retirement_events ENABLE ROW LEVEL SECURITY;",
     "DDL-ALLOW-0097:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0101_gf_asset_lifecycle.sql:66:ALTER TABLE public.retirement_events FORCE ROW LEVEL SECURITY;",
+    "DDL-ALLOW-0104:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0150_fix_state_current_fk_restrict.sql:8:ALTER TABLE state_current DROP CONSTRAINT fk_last_transition;",
+    "DDL-ALLOW-0106:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0150_fix_state_current_fk_restrict.sql:11:ALTER TABLE state_current ADD CONSTRAINT fk_last_transition",
     "DDL-ALLOW-0070:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0080_gf_adapter_registrations.sql:46:ALTER TABLE public.adapter_registrations ENABLE ROW LEVEL SECURITY;",
     "DDL-ALLOW-0071:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0080_gf_adapter_registrations.sql:47:ALTER TABLE public.adapter_registrations FORCE ROW LEVEL SECURITY;",
     "DDL-ALLOW-0011:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0020_business_foundation_hooks.sql:25:ALTER TABLE public.tenants",
@@ -28,6 +30,8 @@
     "DDL-ALLOW-0006:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0017_ingress_tenant_attribution.sql:5:ALTER TABLE public.ingress_attestations",
     "DDL-ALLOW-0006:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0017_ingress_tenant_attribution.sql:8:ALTER TABLE public.ingress_attestations",
     "DDL-ALLOW-0006:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0017_ingress_tenant_attribution.sql:11:ALTER TABLE public.ingress_attestations",
+    "DDL-ALLOW-0106:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0147_add_fks_to_state_transitions.sql:20:ALTER TABLE state_transitions",
+    "DDL-ALLOW-0106:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0147_add_fks_to_state_transitions.sql:25:ALTER TABLE state_transitions",
     "DDL-ALLOW-0030:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0074_billable_clients_client_key_constraint.sql:4:DROP INDEX IF EXISTS public.ux_billable_clients_client_key;",
     "DDL-ALLOW-0014:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0074_billable_clients_client_key_constraint.sql:14:        ALTER TABLE public.billable_clients",
     "DDL-ALLOW-0012:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0023_evidence_packs_signing_anchoring_hooks.sql:4:ALTER TABLE public.evidence_packs",
@@ -69,6 +73,10 @@
     "DDL-ALLOW-0026:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0057_hier_010_program_migration_contract_alignment.sql:41:ALTER TABLE public.program_migration_events",
     "DDL-ALLOW-0068:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0110_gf_fn_regulatory_transitions.sql:27:ALTER TABLE public.authority_decisions ENABLE ROW LEVEL SECURITY;",
     "DDL-ALLOW-0069:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0110_gf_fn_regulatory_transitions.sql:28:ALTER TABLE public.authority_decisions FORCE ROW LEVEL SECURITY;",
+    "DDL-ALLOW-0098:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0146_add_entity_type_to_state_rules.sql:17:ALTER TABLE state_rules ADD COLUMN IF NOT EXISTS entity_type TEXT NOT NULL DEFAULT '__UNSET__';",
+    "DDL-ALLOW-0099:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0146_add_entity_type_to_state_rules.sql:20:ALTER TABLE state_rules ALTER COLUMN entity_type DROP DEFAULT;",
+    "DDL-ALLOW-0100:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0146_add_entity_type_to_state_rules.sql:29:        ALTER TABLE state_rules DROP CONSTRAINT state_rules_unique_rule;",
+    "DDL-ALLOW-0101:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0146_add_entity_type_to_state_rules.sql:34:ALTER TABLE state_rules ADD CONSTRAINT state_rules_unique_rule UNIQUE (entity_type, from_state, to_state);",
     "DDL-ALLOW-0088:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0106_gf_verifier_registry.sql:95:ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;",
     "DDL-ALLOW-0089:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0106_gf_verifier_registry.sql:96:ALTER TABLE public.verifier_registry FORCE ROW LEVEL SECURITY;",
     "DDL-ALLOW-0090:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0106_gf_verifier_registry.sql:103:ALTER TABLE public.verifier_project_assignments ENABLE ROW LEVEL SECURITY;",
@@ -126,6 +134,7 @@
     "DDL-ALLOW-0111:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0131_execution_records_determinism_columns.sql:17:ALTER TABLE public.execution_records ADD COLUMN IF NOT EXISTS runtime_version TEXT;",
     "DDL-ALLOW-0112:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0131_execution_records_determinism_columns.sql:18:ALTER TABLE public.execution_records ADD COLUMN IF NOT EXISTS tenant_id       UUID;",
     "DDL-ALLOW-0107:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0128_taxonomy_aligned.sql:5:ALTER TABLE public.projects ADD COLUMN taxonomy_aligned BOOLEAN;",
-    "DDL-ALLOW-0108:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0128_taxonomy_aligned.sql:13:ALTER TABLE public.projects ALTER COLUMN taxonomy_aligned SET NOT NULL;"
+    "DDL-ALLOW-0108:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0128_taxonomy_aligned.sql:13:ALTER TABLE public.projects ALTER COLUMN taxonomy_aligned SET NOT NULL;",
+    "DDL-ALLOW-0107:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0151_verify_not_null_state_current.sql:13:        ALTER TABLE state_current ALTER COLUMN current_state SET NOT NULL;"
   ]
 }

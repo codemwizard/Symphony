@@ -1,10 +1,10 @@
 ---
-exception_id: EXC-000
+exception_id: EXC-20260423-W4REM001
 inv_scope: change-rule
 expiry: 2026-05-07
-follow_up_ticket: PLACEHOLDER-000
-reason: Auto-generated: structural change detected; invariants linkage missing in commit.
-author: system
+follow_up_ticket: TSK-P2-PREAUTH-004-01-REM
+reason: Wave 4 remediation task aligning existing migration 0134 with task metadata; no new migrations added
+author: db_foundation
 created_at: 2026-04-23
 ---
 
@@ -15,7 +15,16 @@ but invariants linkage (manifest/docs with INV-###) was not included in the same
 
 ## Reason
 
-[Describe why this exception is needed]
+This commit implements TSK-P2-PREAUTH-004-01-REM, a Wave 4 remediation task that aligns existing migration 0134 (create_policy_decisions.sql) with its task metadata. The structural change detection is picking up:
+1. The newly created verifier script `scripts/db/verify_policy_decisions_schema.sh` which validates the hardened 0134 contract
+2. Wave4/ staging directory artifacts from previous Wave 4 work
+
+No new migrations are being added - migration 0134 already exists and is hardened. This task only:
+- Creates a verifier script to validate the existing 0134 contract
+- Updates task metadata (meta.yml, PLAN.md, EXEC_LOG.md) to reference the correct migration
+- Adds DAG node for TSK-P2-PREAUTH-004-03
+
+The invariant INV-138 (authority transition binding) is referenced in the updated meta.yml and is already documented in docs/invariants/INVARIANTS_QUICK.md and docs/invariants/INVARIANTS_MANIFEST.yml.
 
 ## Evidence
 
@@ -57,4 +66,8 @@ Top matches:
 
 ## Mitigation
 
-[Describe any mitigating controls in place]
+1. Migration 0134 already exists and is hardened - no new DDL is being introduced
+2. The verifier script `verify_policy_decisions_schema.sh` validates the existing 0134 contract with 12 structural checks and 5 negative tests
+3. INV-138 is referenced in the updated meta.yml and is already documented in docs/invariants/INVARIANTS_QUICK.md (line 116) and docs/invariants/INVARIANTS_MANIFEST.yml (line 959)
+4. Wave4/ staging directory artifacts are legacy from previous Wave 4 work and will be cleaned up in a separate task
+5. The remediation task TSK-P2-PREAUTH-004-01-REM follows the Enhanced Template v3 governance standards with regulated_surface_compliance, remediation_trace_compliance, and database_connection sections

@@ -43,34 +43,7 @@ touches:
   - docs/tasks/PHASE2_TASKS.md
   - tasks/TSK-P2-PREAUTH-004-03-DAG/meta.yml
 
-deliverable_files:
-  - docs/tasks/phase2_pre_atomic_dag.yml
-  - docs/tasks/PHASE2_TASKS.md
-  - docs/plans/phase2/TSK-P2-PREAUTH-004-03-DAG/PLAN.md
-  - docs/plans/phase2/TSK-P2-PREAUTH-004-03-DAG/EXEC_LOG.md
-
 invariants: []
-
-regulated_surface_compliance:
-  enabled: false
-  approval_workflow: none
-  stage_a_required_before_edit: false
-  regulated_paths: []
-  must_read: []
-
-remediation_trace_compliance:
-  enabled: false
-  required_markers: []
-  marker_location: EXEC_LOG.md
-  append_only: true
-  markers_required_at_edit: false
-  must_read: []
-
-database_connection:
-  enabled: false
-
-migration_dependencies:
-  enabled: false
 
 work:
   - >-

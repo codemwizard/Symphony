@@ -1,9 +1,9 @@
 {
   "check_id": "DB-EXPAND-CONTRACT-POLICY",
-  "timestamp_utc": "1970-01-01T00:00:00Z",
-  "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "06545fe3f538515080117719d8d8bd0acb0136101bc7d7d61a37f052481dc898",
-  "status": "PASS",
+  "timestamp_utc": "2026-04-24T15:31:50Z",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "schema_fingerprint": "faee7f9919acdb4bf6007f3f9471e1720ddaddaa270810e47fcbb0417ba42799",
+  "status": "FAIL",
   "scanned_files": [
     "0001_init.sql",
     "0002_outbox_functions.sql",
@@ -109,7 +109,6 @@
     "0116_create_interpretation_packs.sql",
     "0117_create_factor_registry.sql",
     "0118_create_execution_records.sql",
-    "0120_create_state_transitions.sql",
     "0121_create_data_authority_enum.sql",
     "0122_create_data_authority_triggers.sql",
     "0123_create_statutory_levy_registry.sql",
@@ -119,11 +118,41 @@
     "0127_project_boundaries.sql",
     "0128_taxonomy_aligned.sql",
     "0129_enforce_dns_harm_trigger.sql",
-    "0130_k13_taxonomy_alignment_trigger.sql"
+    "0130_k13_taxonomy_alignment_trigger.sql",
+    "0131_execution_records_determinism_columns.sql",
+    "0132_execution_records_determinism_constraints.sql",
+    "0133_execution_records_triggers.sql",
+    "0134_create_policy_decisions.sql",
+    "0135_state_rules.sql",
+    "0136_enforce_authority_transition_binding.sql",
+    "0137_create_state_transitions.sql",
+    "0138_create_state_current.sql",
+    "0139_create_enforce_transition_state_rules.sql",
+    "0140_create_enforce_transition_authority.sql",
+    "0141_create_enforce_transition_signature.sql",
+    "0142_create_enforce_execution_binding.sql",
+    "0143_create_deny_state_transitions_mutation.sql",
+    "0144_create_update_current_state.sql",
+    "0145_fix_enforce_transition_authority_column.sql",
+    "0146_add_entity_type_to_state_rules.sql",
+    "0147_add_fks_to_state_transitions.sql",
+    "0148_harden_trigger_functions_security_definer.sql",
+    "0149_rename_triggers_deterministic_order.sql",
+    "0150_fix_state_current_fk_restrict.sql",
+    "0151_verify_not_null_state_current.sql",
+    "0152_add_sqlstate_codes_to_triggers.sql",
+    "0153_set_signature_placeholder_posture.sql"
   ],
-  "violation_count": 0,
-  "violations": [],
-  "allowlisted_count": 2,
+  "violation_count": 1,
+  "violations": [
+    {
+      "file": "0146_add_entity_type_to_state_rules.sql",
+      "lineno": 17,
+      "kind": "add_column_not_null",
+      "line": "ALTER TABLE state_rules ADD COLUMN IF NOT EXISTS entity_type TEXT NOT NULL DEFAULT '__UNSET__';"
+    }
+  ],
+  "allowlisted_count": 7,
   "allowlisted": [
     {
       "file": "0020_business_foundation_hooks.sql",
@@ -136,6 +165,36 @@
       "lineno": 13,
       "kind": "alter_set_not_null",
       "line": "ALTER TABLE public.projects ALTER COLUMN taxonomy_aligned SET NOT NULL;"
+    },
+    {
+      "file": "0132_execution_records_determinism_constraints.sql",
+      "lineno": 38,
+      "kind": "alter_set_not_null",
+      "line": "ALTER TABLE public.execution_records ALTER COLUMN input_hash                SET NOT NULL;"
+    },
+    {
+      "file": "0132_execution_records_determinism_constraints.sql",
+      "lineno": 39,
+      "kind": "alter_set_not_null",
+      "line": "ALTER TABLE public.execution_records ALTER COLUMN output_hash               SET NOT NULL;"
+    },
+    {
+      "file": "0132_execution_records_determinism_constraints.sql",
+      "lineno": 40,
+      "kind": "alter_set_not_null",
+      "line": "ALTER TABLE public.execution_records ALTER COLUMN runtime_version           SET NOT NULL;"
+    },
+    {
+      "file": "0132_execution_records_determinism_constraints.sql",
+      "lineno": 41,
+      "kind": "alter_set_not_null",
+      "line": "ALTER TABLE public.execution_records ALTER COLUMN tenant_id                 SET NOT NULL;"
+    },
+    {
+      "file": "0132_execution_records_determinism_constraints.sql",
+      "lineno": 42,
+      "kind": "alter_set_not_null",
+      "line": "ALTER TABLE public.execution_records ALTER COLUMN interpretation_version_id SET NOT NULL;"
     }
   ],
   "notes": [

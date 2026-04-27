@@ -1,7 +1,7 @@
 {
   "task_id": "TSK-P2-PREAUTH-003-REM-05",
-  "git_sha": "2e7092a21c7600a2c3938d96ae9a417e2d798bc8",
-  "timestamp_utc": "2026-04-20T16:52:22Z",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "timestamp_utc": "2026-04-24T06:48:45Z",
   "status": "PASS",
   "checks": [
   {"name":"not_null_enforced","result":"pass","observed":5,"expected":5},
@@ -22,10 +22,10 @@
   ],
   "observed_hashes": {
     "migration_0131_sha256": "5faa757a8e5d39befda569217e2bde6189c75084311379f8dadd403b9208361a",
-    "migration_0132_sha256": "50457cb0c90b543e4ced0ddbc6822d0b22d92690343f742e726084f8b8abaee3",
+    "migration_0132_sha256": "1bfb06f8f1460967a8724fb5b99aaab77fd75f1fc67a9af9b5d5e0330df03134",
     "migration_0133_sha256": "cf59659f9f6ef3d094406b5aa71fd6bd2266e10344f64412a23954884513730c",
-    "migration_head_sha256": "d3ec34f92d39a5f461bb2a91c80c08192b6132861072c2022ea3fd4da2440cfd",
-    "verifier_sha256": "3d5bdb9bebeb5a284bc9a89e181e235fc8328da97fa157c4b86b9753a2772a51"
+    "migration_head_sha256": "f1365184d7d14ade273d3ddc7fd19d1cc8cc56e2e8331c9749192df3d958ad01",
+    "verifier_sha256": "9410ccba4014e2eb0725996c9726c2e360102890832a71c6880871c49ab65446"
   },
   "command_outputs": {
     "not_null_rows": "input_hash\ninterpretation_version_id\noutput_hash\nruntime_version\ntenant_id",
@@ -37,8 +37,8 @@
     "behavioural_probe_stderr_tail": "ERROR:  GF058: GF058: execution_records.interpretation_version_id temporal mismatch; expected pack resolved at execution_timestamp\nCONTEXT:  PL/pgSQL function enforce_execution_interpretation_temporal_binding() line 9 at RAISE\nLOCATION:  exec_stmt_raise, pl_exec.c:3909"
   },
   "execution_trace": {
-    "start_utc": "2026-04-20T16:52:22.280Z",
-    "end_utc": "2026-04-20T16:52:22.579Z"
+    "start_utc": "2026-04-24T06:48:45.416Z",
+    "end_utc": "2026-04-24T06:48:46.181Z"
   },
   "not_null_enforced": true,
   "fk_verified": true,
@@ -46,7 +46,7 @@
   "append_only_enforced": true,
   "temporal_binding_enforced": true,
   "columns_verified": ["input_hash","output_hash","runtime_version","tenant_id","interpretation_version_id"],
-  "verification_tool_version": "3d5bdb9bebeb5a284bc9a89e181e235fc8328da97fa157c4b86b9753a2772a51",
-  "verification_input_snapshot": "7b972647cb521dbe1e57b87e1d8e086e3f27642da573c09e9f72581dd8d95579",
-  "verification_run_hash": "503a4ed780ecad8819c895b0741ead558d078d7fea5bfc6956b27c17206ea52e"
+  "verification_tool_version": "9410ccba4014e2eb0725996c9726c2e360102890832a71c6880871c49ab65446",
+  "verification_input_snapshot": "7a466d95a4e3ef35ff2a6a13deb7246aa60c97ffaac3e5c5d81b0909177e710e",
+  "verification_run_hash": "d8d7857d6cae0b2b6e5a97304fefdf47ad5c24049f05e4d36148a79292576648"
 }

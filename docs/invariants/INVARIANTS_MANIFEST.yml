@@ -1476,10 +1476,10 @@
   title: "Every decision record references an interpretation_version_id for replayability"
   owners: ["team-db", "team-platform"]
   sla_days: 7
-  enforcement: "scripts/db/verify_tsk_p2_preauth_006a_01.sh"
+  enforcement: "scripts/audit/verify_tsk_p2_preauth_007_17.sh"
   verification: >-
-    scripts/db/verify_tsk_p2_preauth_006a_01.sh checks interpretation_version_id
-    enforcement in authority_decision_records and lifecycle_checkpoint_evaluations;
+    scripts/audit/verify_tsk_p2_preauth_007_17.sh checks interpretation_version_id
+    enforcement in state_transitions for authoritative rows;
     evidence/phase2/tsk_p2_preauth_006a_01.json (interpretation_versioning: true)
   notes: >-
     Enforces Check 4 (Replayability). Verifies that authority_decision_records,
@@ -1515,9 +1515,9 @@
   title: "Interpretation packs have a single active record per domain per jurisdiction per authority level"
   owners: ["team-platform"]
   sla_days: 7
-  enforcement: "scripts/db/verify_tsk_p2_preauth_006a_01.sh"
+  enforcement: "scripts/audit/verify_tsk_p2_preauth_007_17.sh"
   verification: >-
-    scripts/db/verify_tsk_p2_preauth_006a_01.sh checks interpretation pack uniqueness
+    scripts/audit/verify_tsk_p2_preauth_007_17.sh checks interpretation pack uniqueness
     constraint on interpretation_packs (domain, jurisdiction_code, authority_level)
     WHERE effective_to IS NULL; evidence/phase2/tsk_p2_preauth_006a_01.json (interpretation_pack_uniqueness: true)
   notes: >-

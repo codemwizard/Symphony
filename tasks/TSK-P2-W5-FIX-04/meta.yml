@@ -1,0 +1,284 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W5-FIX-04
+title: "Harden all Wave 5 trigger functions with SECURITY DEFINER and SET search_path = pg_catalog, public"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: SECURITY
+blast_radius: DB_SCHEMA
+
+# ── Why this task exists ───────────────────────────────────────────────────
+intent: >-
+  AGENTS.md mandates: 'SECURITY DEFINER functions must harden: SET search_path
+  = pg_catalog, public'. Migrations 0139-0144 created six trigger functions —
+  all defined as plain SECURITY INVOKER (the default). Without SECURITY
+  DEFINER + hardened search_path, any user with USAGE on the schema can
+  create a shadow function in a preceding schema and hijack trigger execution.
+  The six functions are: enforce_transition_state_rules(),
+  enforce_transition_authority(), generate_transition_hash(),
+  enforce_hash_uniqueness(), set_transitioned_at(),
+  update_current_state().
+
+# ── What this task must NOT do ─────────────────────────────────────────────
+anti_patterns:
+  - "Adding SECURITY DEFINER without SET search_path — creates privilege escalation"
+  - "Editing existing migrations 0139-0144 directly"
+  - "Changing function logic — only adding security posture"
+  - "Bundling trigger ordering rename (FIX-05)"
+
+# ── Anti-drift boundaries ──────────────────────────────────────────────────
+out_of_scope:
+  - "Trigger ordering (TSK-P2-W5-FIX-05)"
+  - "SQLSTATE codes (TSK-P2-W5-FIX-08)"
+  - "Function logic changes"
+stop_conditions:
+  - "SECURITY DEFINER added without SET search_path"
+  - "Any function body logic changed (only security posture should change)"
+  - "Approval metadata not created before editing regulated surface"
+
+# ── Proof limits ───────────────────────────────────────────────────────────
+proof_guarantees:
+  - "All 6 trigger functions have prosecdef = true in pg_proc"
+  - "All 6 trigger functions have proconfig containing 'search_path=pg_catalog, public'"
+proof_limitations:
+  - "Does not prove functions are owned by correct role"
+  - "Cannot prove search_path injection is impossible (proves hardening exists)"
+
+# ── Dependencies ───────────────────────────────────────────────────────────
+depends_on:
+  - TSK-P2-W5-FIX-03
+
+blocks:
+  - TSK-P2-W5-FIX-05
+
+# ── File scope ─────────────────────────────────────────────────────────────
+touches:
+  - schema/migrations/0148_harden_trigger_functions_security_definer.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_w5_fix_04.sh
+  - evidence/phase2/tsk_p2_w5_fix_04.json
+  - tasks/TSK-P2-W5-FIX-04/meta.yml
+  - docs/plans/phase2/TSK-P2-W5-FIX-04/PLAN.md
+  - docs/plans/phase2/TSK-P2-W5-FIX-04/EXEC_LOG.md
+  # Post-implementation governance (SYMPHONY_TASK_IMPLEMENTATION_PROCESS Steps 9-13)
+  - docs/architecture/THREAT_MODEL.md
+  - docs/architecture/COMPLIANCE_MAP.md
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - evidence/phase0/baseline_drift.json
+  - evidence/phase0/baseline_governance.json
+  - evidence/phase0/schema_hash.txt
+  - evidence/phase0/structural_doc_linkage.json
+
+# ── Invariants ─────────────────────────────────────────────────────────────
+invariants: []
+
+# ── Deliverable files (for churn control) ─────────────────────────────────
+deliverable_files:
+  - schema/migrations/0148_harden_trigger_functions_security_definer.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_w5_fix_04.sh
+  - evidence/phase2/tsk_p2_w5_fix_04.json
+  - docs/plans/phase2/TSK-P2-W5-FIX-04/EXEC_LOG.md
+  - docs/architecture/THREAT_MODEL.md
+  - docs/architecture/COMPLIANCE_MAP.md
+  - schema/baselines/current/0001_baseline.sql
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - evidence/phase0/schema_hash.txt
+  - evidence/phase0/baseline_governance.json
+  - evidence/phase0/baseline_drift.json
+  - evidence/phase0/structural_doc_linkage.json
+
+# ── Regulated Surface Compliance (CRITICAL) ────────────────────────────────
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - schema/migrations/0148_harden_trigger_functions_security_definer.sql
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+# ── Remediation Trace Compliance (CRITICAL) ────────────────────────────────
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+# ── Database Connection ────────────────────────────────────────────────────
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+# ── Migration Dependencies ─────────────────────────────────────────────────
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - "0139": "enforce_transition_state_rules()"
+    - "0140": "enforce_transition_authority()"
+    - "0141": "enforce_transition_signature()"
+    - "0142": "enforce_execution_binding()"
+    - "0143": "deny_state_transitions_mutation()"
+    - "0144": "update_current_state()"
+    - "0147": "FK constraints (FIX-03)"
+  table_dependencies:
+    - "state_transitions": "must exist with all triggers attached"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+
+# ── Work items ─────────────────────────────────────────────────────────────
+work:
+  - >-
+    [ID w5_fix_04_work_01] Audit all 6 functions: query pg_proc for prosecdef
+    and proconfig. Confirm all are SECURITY INVOKER (prosecdef=false) and have
+    no proconfig. Record in EXEC_LOG.md.
+  - >-
+    [ID w5_fix_04_work_02] Write migration
+    0148_harden_trigger_functions_security_definer.sql. For each of the 6
+    functions, use CREATE OR REPLACE FUNCTION with the original body plus
+    SECURITY DEFINER SET search_path = pg_catalog, public. The function bodies
+    must be copied from their current pg_proc state (post FIX-01 and FIX-02),
+    not from old migration files.
+  - >-
+    [ID w5_fix_04_work_03] Update MIGRATION_HEAD to 0148.
+  - >-
+    [ID w5_fix_04_work_04] Write verification script
+    scripts/db/verify_tsk_p2_w5_fix_04.sh: For each function, query pg_proc
+    for prosecdef=true and proconfig LIKE '%search_path=pg_catalog, public%'.
+    Fail if any function is missing either attribute.
+  - >-
+    [ID w5_fix_04_work_05] Run verification script and generate evidence JSON.
+  - >-
+    [ID w5_fix_04_work_06] Post-implementation governance — Structural Change
+    Gate (Step 9): Append entries to THREAT_MODEL.md (SECURITY DEFINER reduces
+    search_path hijack surface) and COMPLIANCE_MAP.md.
+  - >-
+    [ID w5_fix_04_work_07] Post-implementation governance — Schema Baseline
+    Drift (Steps 10-11): Regenerate baseline, update ADR-0010.
+  - >-
+    [ID w5_fix_04_work_08] Post-implementation governance — DDL Lock-Risk
+    (Step 12): Verify and allowlist if flagged.
+  - >-
+    [ID w5_fix_04_work_09] Post-implementation governance — Stage Evidence
+    Files (Step 13).
+  - >-
+    [ID w5_fix_04_work_10] Update EXEC_LOG.md with verification_commands_run
+    and final_status markers.
+
+# ── Acceptance criteria ────────────────────────────────────────────────────
+acceptance_criteria:
+  - >-
+    [ID w5_fix_04_work_01] EXEC_LOG.md confirms all 6 functions are SECURITY
+    INVOKER (prosecdef=false) before fix.
+  - >-
+    [ID w5_fix_04_work_02] All 6 functions have prosecdef=true and hardened
+    search_path after migration 0148.
+  - >-
+    [ID w5_fix_04_work_03] MIGRATION_HEAD contains '0148'.
+  - >-
+    [ID w5_fix_04_work_04] [ID w5_fix_04_work_05] Verification script exits 0
+    and evidence JSON produced.
+  - >-
+    [ID w5_fix_04_work_06] THREAT_MODEL.md and COMPLIANCE_MAP.md updated.
+  - >-
+    [ID w5_fix_04_work_07] Baseline regenerated and ADR-0010 updated.
+  - >-
+    [ID w5_fix_04_work_09] Phase0 evidence staged.
+  - >-
+    [ID w5_fix_04_work_10] EXEC_LOG.md contains all 5 remediation trace
+    markers.
+
+# ── Negative tests ─────────────────────────────────────────────────────────
+negative_tests:
+  - id: TSK-P2-W5-FIX-04-N1
+    description: >-
+      BEFORE fix: Query pg_proc confirms all 6 functions have prosecdef=false.
+      This proves SECURITY DEFINER is genuinely missing.
+    required: true
+
+# ── Positive tests ─────────────────────────────────────────────────────────
+positive_tests:
+  - id: TSK-P2-W5-FIX-04-P1
+    description: >-
+      AFTER fix: All 6 functions have prosecdef=true AND proconfig contains
+      'search_path=pg_catalog, public'.
+    required: true
+
+# ── Verification commands ──────────────────────────────────────────────────
+verification:
+  - >-
+    [ID w5_fix_04_work_02] psql "$DATABASE_URL" -tAc "SELECT count(*) FROM
+    pg_proc WHERE proname IN ('enforce_transition_state_rules',
+    'enforce_transition_authority', 'generate_transition_hash',
+    'enforce_hash_uniqueness', 'set_transitioned_at',
+    'update_current_state') AND prosecdef = true" | grep -q '6' || exit 1
+  - >-
+    [ID w5_fix_04_work_03] test "$(cat schema/migrations/MIGRATION_HEAD)" =
+    '0148' || exit 1
+  - >-
+    [ID w5_fix_04_work_04] [ID w5_fix_04_work_05] bash
+    scripts/db/verify_tsk_p2_w5_fix_04.sh || exit 1
+  - >-
+    [ID w5_fix_04_work_05] test -f evidence/phase2/tsk_p2_w5_fix_04.json ||
+    exit 1
+
+# ── Evidence contract ──────────────────────────────────────────────────────
+evidence:
+  - path: evidence/phase2/tsk_p2_w5_fix_04.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - functions_hardened
+      - prosecdef_verified
+      - proconfig_verified
+
+# ── Failure modes ──────────────────────────────────────────────────────────
+failure_modes:
+  - "Any function lacks SECURITY DEFINER after migration => CRITICAL_FAIL"
+  - "Any function has SECURITY DEFINER but missing SET search_path => CRITICAL_FAIL"
+  - "Function body logic changed => FAIL_REVIEW"
+  - "Evidence file missing => FAIL"
+  - "Baseline not regenerated => FAIL"
+  - "ADR-0010 not updated => FAIL"
+
+# ── Required reading ───────────────────────────────────────────────────────
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md
+  - docs/operations/REGULATED_SURFACE_PATHS.yml
+
+# ── Companion documents ────────────────────────────────────────────────────
+implementation_plan: docs/plans/phase2/TSK-P2-W5-FIX-04/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W5-FIX-04/EXEC_LOG.md
+
+# ── Metadata ───────────────────────────────────────────────────────────────
+notes: >-
+  Fourth task in Wave 5 stabilization chain. Enforces AGENTS.md hard
+  constraint on SECURITY DEFINER hardening for all trigger functions. This
+  is the security posture fix — no logic changes. Phase Key: W5-FIX.
+  Phase Name: Wave 5 Stabilization.
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

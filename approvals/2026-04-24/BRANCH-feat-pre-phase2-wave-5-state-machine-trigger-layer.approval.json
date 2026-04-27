@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0",
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "human_reviewer",
+    "change_reason": "Wave 5 Stabilization - 13 forward-only remediation tasks to close state machine audit gaps including column mismatches, missing FK constraints, SECURITY DEFINER hardening, trigger ordering, SQLSTATE codes, and verifier behavioral testing.",
+    "approved_at_utc": "2026-04-24T13:21:48Z",
+    "role_authority": "DB_FOUNDATION, QA_VERIFIER"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "wave5_stabilization_stage_a_20260424",
+    "model_id": "SWE-1.6",
+    "client": "cursor_codex"
+  },
+  "scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "schema/migrations/0145_fix_enforce_transition_authority_column.sql",
+      "schema/migrations/0146_add_entity_type_to_state_rules.sql",
+      "schema/migrations/0147_add_fk_constraints_state_transitions.sql",
+      "schema/migrations/0148_add_security_definer_to_triggers.sql",
+      "schema/migrations/0149_rename_triggers_deterministic_order.sql",
+      "schema/migrations/0150_fix_state_current_fk_restrict.sql",
+      "schema/migrations/0151_add_not_null_state_current.sql",
+      "schema/migrations/0152_add_sqlstate_codes_to_triggers.sql",
+      "schema/migrations/0153_set_signature_placeholder_posture.sql",
+      "scripts/db/verify_tsk_p2_preauth_005_08.sh",
+      "scripts/audit/verify_meta_migration_refs.sh",
+      "scripts/db/verify_tsk_p2_preauth_005_00.sh",
+      "scripts/db/verify_tsk_p2_preauth_005_01.sh",
+      "scripts/db/verify_tsk_p2_preauth_005_02.sh",
+      "scripts/db/verify_tsk_p2_preauth_005_03.sh",
+      "scripts/db/verify_tsk_p2_preauth_005_04.sh",
+      "scripts/db/verify_tsk_p2_preauth_005_05.sh",
+      "scripts/db/verify_tsk_p2_preauth_005_06.sh",
+      "scripts/db/verify_tsk_p2_preauth_005_07.sh",
+      "scripts/db/verify_wave5_state_machine_integration.sh"
+    ],
+    "invariants": [
+      "append-only outbox attempts",
+      "forward-only migrations",
+      "SECURITY DEFINER hardening",
+      "no runtime DDL in production paths"
+    ],
+    "phase_boundary_ok": true
+  },
+  "verification": {
+    "commands": [
+      "bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy",
+      "bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P2-W5-FIX-01"
+    ],
+    "pre_ci_passed": false,
+    "notes": "Stage A approval granted. Stage B approval required after PR opening for FIX-01 through FIX-09 (DB_SCHEMA tasks). FIX-10 through FIX-13 (CI_GATES tasks) require Stage A only."
+  }
+}

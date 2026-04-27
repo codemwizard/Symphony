@@ -1,0 +1,5 @@
+# Stage A Approval
+
+- **Task**: Wave 7-STRICT Enforcement Track (TSK-P2-PREAUTH-007-06 through 007-19) + Remediation (TSK-P2-PREAUTH-007-19-R1 through R5)
+- **Regulated Surface**: schema/migrations/0163_create_invariant_registry.sql, schema/migrations/0164_registry_supersession_constraints.sql, schema/migrations/0165_create_public_keys_registry.sql, schema/migrations/0166_create_delegated_signing_grants.sql, schema/migrations/MIGRATION_HEAD, scripts/audit/verify_tsk_p2_preauth_007_{06..19}.sh, scripts/dev/pre_ci.sh
+- **Reason**: Wave 7-STRICT implementation - tasks 007-06 through 007-14 create database migrations (schema/migrations/) and verification scripts (scripts/audit/) for invariant registry, trust architecture, attestation seams, DB kill switch enforcement. Tasks 007-15 through 007-19 create verification scripts only for CI provenance and identity binding. Remediation tasks R1-R5 fix critical security gaps in TSK-P2-PREAUTH-007-19: superuser check, placeholder validation, DATABASE_URL enforcement, evidence digest validation, delimiter robustness.

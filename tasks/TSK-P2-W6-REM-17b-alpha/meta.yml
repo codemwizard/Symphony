@@ -1,0 +1,94 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W6-REM-17b-alpha
+title: "Backfill interpretation_version_id on state_transitions from execution_records lineage"
+owner_role: DB Foundation
+status: completed
+priority: HIGH
+risk_class: DATA_MIGRATION
+blast_radius: DB_SCHEMA
+
+intent: >-
+  Populate state_transitions.interpretation_version_id from execution_records.interpretation_version_id
+  via the FK on execution_id. Uses a three-phase assert-mutate-reconcile pattern with row accounting.
+
+anti_patterns:
+  - "Backfilling without cardinality assertion"
+  - "Overwriting already-populated values"
+  - "Leaving the append-only trigger disabled after backfill"
+
+out_of_scope:
+  - "Backfilling policy_decisions.project_id (TSK-P2-W6-REM-17b-β)"
+  - "Adding NOT NULL constraint (TSK-P2-W6-REM-17c-α)"
+
+stop_conditions:
+  - "Cardinality assertion fails (ambiguous lineage)"
+  - "Row accounting mismatch"
+  - "Remaining NULL rows after backfill"
+
+proof_guarantees:
+  - "Every state_transitions row has interpretation_version_id populated from authoritative source"
+  - "Row accounting reconciles: pre-update NULL count equals updated count"
+
+proof_limitations:
+  - "On empty tables the backfill is vacuously correct"
+
+depends_on:
+  - TSK-P2-W6-REM-17a
+
+blocks:
+  - TSK-P2-W6-REM-17c-alpha
+
+touches:
+  - schema/migrations/0158_backfill_interpretation_version_id.sql
+  - scripts/db/verify_tsk_p2_w6_rem_17b_alpha.sh
+  - evidence/phase2/tsk_p2_w6_rem_17b_alpha.json
+  - tasks/TSK-P2-W6-REM-17b-alpha/meta.yml
+
+invariants:
+  - INV-BACKFILL-INTEGRITY
+
+work:
+  - "Author migration 0158 implementing the three-phase backfill contract."
+  - "Temporarily disable the append-only trigger during backfill, re-enable immediately after."
+  - "Author verification script asserting zero remaining NULLs and idempotent rerun."
+
+acceptance_criteria:
+  - "Join-cardinality assertion passes"
+  - "Row accounting reconciles"
+  - "Zero rows with NULL interpretation_version_id"
+  - "Rerunnable with zero updates and no errors"
+
+negative_tests: []
+
+positive_tests:
+  - id: TSK-P2-W6-REM-17b-alpha-P1
+    description: "After backfill, SELECT count(*) FROM state_transitions WHERE interpretation_version_id IS NULL must return 0."
+    required: true
+
+verification:
+  - bash scripts/db/verify_tsk_p2_w6_rem_17b_alpha.sh
+  - python3 scripts/audit/validate_evidence.py --task TSK-P2-W6-REM-17b-alpha --evidence evidence/phase2/tsk_p2_w6_rem_17b_alpha.json
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w6_rem_17b_alpha.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+
+failure_modes:
+  - "Cardinality violation => ABORT"
+  - "Row accounting mismatch => ABORT"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-W6-REM-17b-alpha/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W6-REM-17b-alpha/EXEC_LOG.md
+
+notes: "Backfill data migration."
+client: cursor
+assigned_agent: DB Foundation
+model: <UNASSIGNED>

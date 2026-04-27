@@ -1,0 +1,46 @@
+{
+  "task_id": "TSK-P2-W5-FIX-05",
+  "git_sha": "d805b381",
+  "timestamp_utc": "2026-04-24T14:11:17Z",
+  "run_id": "d805b381-2026-04-24T14:11:17Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "old_triggers_removed",
+      "status": "PASS",
+      "description": "All old trigger names removed"
+    },
+    {
+      "name": "new_triggers_exist",
+      "status": "PASS",
+      "description": "All 8 new triggers with bi_XX_/bd_XX_/ai_XX_ prefixes exist"
+    },
+    {
+      "name": "trigger_order_deterministic",
+      "status": "PASS",
+      "description": "Trigger order is deterministic (alphabetical by name)"
+    }
+  ],
+  "trigger_order_before": [
+    "trg_06_update_current",
+    "trg_deny_state_transitions_mutation",
+    "trg_enforce_execution_binding",
+    "trg_enforce_state_transition_authority",
+    "trg_enforce_transition_authority",
+    "trg_enforce_transition_signature",
+    "trg_enforce_transition_state_rules",
+    "trg_upgrade_authority_on_execution_binding"
+  ],
+  "trigger_order_after": [
+  "ai_01_update_current_state",
+  "bd_01_deny_state_transitions_mutation",
+  "bi_01_enforce_transition_authority",
+  "bi_02_enforce_execution_binding",
+  "bi_03_enforce_transition_state_rules",
+  "bi_04_enforce_transition_signature",
+  "bi_05_enforce_state_transition_authority",
+  "bi_06_upgrade_authority_on_execution_binding"
+],
+  "old_triggers_removed": true,
+  "notes": "PostgreSQL fires same-event triggers in alphabetical order. bi_XX_ prefix guarantees deterministic execution order."
+}

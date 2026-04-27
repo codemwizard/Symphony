@@ -1,0 +1,108 @@
+{
+  "task_id": "TSK-P2-PREAUTH-007-19",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "timestamp_utc": "2026-04-26T12:43:41Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C1",
+      "description": "capture_env_fingerprint function exists",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C2",
+      "description": "capture_executor_identity function exists",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C3",
+      "description": "emit_preci_step_with_provenance function exists",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C4",
+      "description": "Provenance emission works",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C5",
+      "description": "Trace line has 8 fields (prefix + 7 provenance fields)",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C6",
+      "description": "Command digest format (SHA256)",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C6a",
+      "description": "Evidence digest format (SHA256 or NONE)",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C6b",
+      "description": "Evidence digest rejects - placeholder",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C6c",
+      "description": "Evidence digest matches file on disk",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C7",
+      "description": "Environment fingerprint non-empty with at least 3 parts",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C7a",
+      "description": "Environment fingerprint rejects unknown",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C8",
+      "description": "Executor identity non-empty with 4 parts",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C8d",
+      "description": "Executor identity rejects unknown",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C8a",
+      "description": "Executor db_role is not postgres",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C8b",
+      "description": "Executor db_role is not superuser",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C8c",
+      "description": "Executor db_role is not role creator",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C9",
+      "description": "Timestamp format (ISO 8601 UTC)",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-19-C10",
+      "description": "emit_preci_step_with_provenance called in pre_ci.sh",
+      "result": "PASS"
+    }
+  ],
+  "observed_hashes": [
+    {
+      "path": "scripts/audit/verify_tsk_p2_preauth_007_19.sh",
+      "sha256": "d66515e8f7a0f642964dd1167e6ac6af1829aa2c5816b4961f6d4d9e23ac5dab"
+    },
+    {
+      "path": "scripts/dev/pre_ci.sh",
+      "sha256": "db1afe457492687b89c457dfa2f7c5f2c377ce7e9ebb97e07363f45a85f1a724"
+    }
+  ]
+}

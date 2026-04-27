@@ -1,0 +1,184 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W8-QA-002
+title: "Behavioral evidence pack"
+owner_role: QA_VERIFIER
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+
+intent: >-
+  This task is the final evidence gate for Wave 8. It collects the rejection matrix and valid-acceptance proof at the authoritative boundary.
+
+primary_enforcement_domain: >-
+  behavioral evidence
+
+anti_patterns:
+  - "Treating schema introspection or helper presence as completion evidence"
+  - "Skipping unavailable-crypto or canonicalization mismatch cases"
+  - "Declaring closure without execution traces and observed hashes"
+  - "Accepting reflection-only surface proof as runtime evidence"
+  - "Accepting toy-crypto proof as semantic evidence"
+  - "Using wrapper-only branch markers instead of production-path provenance"
+
+out_of_scope:
+  - "Any work outside the single primary enforcement domain declared for this task."
+  - "Implementation or evidence claims for non-authoritative surfaces unless explicitly routed through the same `asset_batches` boundary."
+
+stop_conditions:
+  - "If the task begins to span more than one primary enforcement domain, stop and split the work into separate task packs."
+  - "If the verifier cannot produce a deterministic fail domain for the task objective, stop and repair the pack before implementation."
+  - "If a runtime verifier does not physically cause PostgreSQL to accept or reject a write at `asset_batches`, stop and treat the verifier as insufficient."
+
+proof_guarantees:
+  - "The task is constrained to one primary enforcement domain."
+  - "The verifier path is tied to explicit work-item IDs and proof-carrying evidence expectations."
+
+proof_limitations:
+  - "This task alone does not certify Wave 8 complete; it proves only its declared domain."
+
+depends_on:
+  - TSK-P2-W8-DB-006
+  - TSK-P2-W8-DB-007a
+  - TSK-P2-W8-DB-007b
+  - TSK-P2-W8-DB-007c
+  - TSK-P2-W8-DB-008
+  - TSK-P2-W8-DB-009
+  - TSK-P2-W8-QA-001
+
+touches:
+  - scripts/audit/verify_wave8_behavioral_evidence.sh
+  - scripts/audit/verify_tsk_p2_w8_qa_002.sh
+  - evidence/phase2/tsk_p2_w8_qa_002.json
+  - tasks/TSK-P2-W8-QA-002/meta.yml
+  - docs/plans/phase2/TSK-P2-W8-QA-002/PLAN.md
+  - docs/plans/phase2/TSK-P2-W8-QA-002/EXEC_LOG.md
+
+invariants:
+  - INV-GOV-TEMPLATE-004
+  - INV-GOV-TEMPLATE-005
+
+deliverable_files:
+  - scripts/audit/verify_wave8_behavioral_evidence.sh
+  - scripts/audit/verify_tsk_p2_w8_qa_002.sh
+  - evidence/phase2/tsk_p2_w8_qa_002.json
+  - docs/plans/phase2/TSK-P2-W8-QA-002/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_only
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/verify_wave8_behavioral_evidence.sh
+    - scripts/audit/verify_tsk_p2_w8_qa_002.sh
+    - evidence/phase2/tsk_p2_w8_qa_002.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: false
+
+migration_dependencies:
+  enabled: false
+
+work:
+  - >-
+    [ID w8_qa_002_work_01] Build a verifier that executes the full Wave 8 rejection matrix at the authoritative `asset_batches` boundary, including malformed signature, wrong signer, wrong scope, revoked key, expired key, altered payload, altered registry snapshot, altered entity binding, canonicalization mismatch, and unavailable-crypto cases.
+  - >-
+    [ID w8_qa_002_work_02] Add a valid-signature acceptance case that proves the boundary accepts correctly canonicalized, correctly hashed, correctly signed writes under an active authorized key.
+  - >-
+    [ID w8_qa_002_work_03] Emit proof-carrying evidence with `observed_paths`, `observed_hashes`, `command_outputs`, and `execution_trace` for every behavioral case.
+  - >-
+    [ID w8_qa_002_work_04] Refuse completion if any verifier path does not physically cause PostgreSQL to accept or reject a write at `asset_batches`.
+  - >-
+    [ID w8_qa_002_work_05] Reject reflection-only proof, toy-crypto proof, and wrapper-only branch markers as inadmissible evidence for behavioral closure.
+
+acceptance_criteria:
+  - >-
+    [ID w8_qa_002_work_01] The verifier executes the full rejection matrix at the authoritative `asset_batches` boundary.
+  - >-
+    [ID w8_qa_002_work_02] The verifier includes a valid-signature acceptance case at the authoritative boundary.
+  - >-
+    [ID w8_qa_002_work_03] Evidence includes proof-carrying fields for every behavioral case.
+  - >-
+    [ID w8_qa_002_work_04] Completion is blocked if any verifier path does not physically cause PostgreSQL to accept or reject a write at `asset_batches`.
+  - >-
+    [ID w8_qa_002_work_05] Reflection-only proof, toy-crypto proof, and wrapper-only branch markers are inadmissible and cannot satisfy behavioral evidence acceptance.
+
+negative_tests:
+  - id: TSK-P2-W8-QA-002-N1
+    description: >-
+      Verifier fails if any claimed behavioral case does not physically drive PostgreSQL acceptance or rejection at `asset_batches`.
+    required: true
+  - id: TSK-P2-W8-QA-002-N2
+    description: >-
+      Verifier fails if runtime evidence is satisfied only by reflection, toy
+      sign/verify output, or wrapper-only branch markers.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-W8-QA-002-P1
+    description: >-
+      Verifier passes only when the full Wave 8 rejection matrix and
+      valid-acceptance path are proven with execution trace evidence and
+      inadmissible proof forms are rejected.
+    required: true
+
+verification:
+  - '# [ID w8_qa_002_work_01] [ID w8_qa_002_work_02] [ID w8_qa_002_work_03] [ID w8_qa_002_work_04] [ID w8_qa_002_work_05] test -e scripts/audit/verify_tsk_p2_w8_qa_002.sh && bash scripts/audit/verify_tsk_p2_w8_qa_002.sh > evidence/phase2/tsk_p2_w8_qa_002.json || exit 1'
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w8_qa_002.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - "Verifier missing or not executable => FAIL"
+  - "Evidence file missing => FAIL"
+  - "Proof graph not aligned to work and acceptance criteria => CRITICAL_FAIL"
+  - "Structural-only or advisory-only verification claimed as completion => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PLANS-addendum_1.md
+  - tasks/TSK-P1-240/meta.yml
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+implementation_plan: docs/plans/phase2/TSK-P2-W8-QA-002/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W8-QA-002/EXEC_LOG.md
+notes: >-
+  Generated from the final Wave 8 replacement plan. This pack is valid only for
+  the single domain `behavioral evidence`, inherits the `asset_batches`
+  authoritative boundary rule, and rejects reflection-only proof, toy-crypto
+  proof, and wrapper-only branch markers as inadmissible closure evidence.
+client: codex
+assigned_agent: qa_verifier
+model: gpt-5.5

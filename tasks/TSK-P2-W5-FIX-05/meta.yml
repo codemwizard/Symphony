@@ -1,0 +1,264 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W5-FIX-05
+title: "Rename triggers on state_transitions to bi_XX_ prefix for deterministic execution order"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+# ── Why this task exists ───────────────────────────────────────────────────
+intent: >-
+  PostgreSQL fires BEFORE INSERT triggers in alphabetical order by trigger
+  name. The current trigger names (trg_enforce_*, trg_generate_*, trg_set_*)
+  fire in a non-deterministic-looking order that does not match the intended
+  logical sequence: (1) validate authority, (2) validate state rules,
+  (3) generate hash, (4) enforce hash uniqueness, (5) set timestamp,
+  (6) update current state. Without explicit bi_XX_ prefixing (where XX is
+  a two-digit ordering number), trigger firing order depends on alphabetical
+  coincidence and becomes fragile as new triggers are added. This violates
+  the replay determinism guarantee.
+
+# ── What this task must NOT do ─────────────────────────────────────────────
+anti_patterns:
+  - "Editing existing migrations that created triggers"
+  - "Changing function logic — only renaming triggers"
+  - "Using non-padded prefixes (bi_1_ instead of bi_01_)"
+
+# ── Anti-drift boundaries ──────────────────────────────────────────────────
+out_of_scope:
+  - "Function body changes"
+  - "SECURITY DEFINER changes (already done in FIX-04)"
+  - "Adding new triggers"
+stop_conditions:
+  - "Trigger names do not use zero-padded bi_XX_ prefix"
+  - "Trigger ordering does not match logical sequence"
+  - "Approval metadata not created before editing regulated surface"
+
+# ── Proof limits ───────────────────────────────────────────────────────────
+proof_guarantees:
+  - "All 6 triggers renamed with bi_XX_ prefix"
+  - "Alpha sort of trigger names matches intended logical sequence"
+  - "Old trigger names no longer exist in pg_trigger"
+proof_limitations:
+  - "Cannot prove firing order without live trace — relies on PostgreSQL alphabetical guarantee"
+
+# ── Dependencies ───────────────────────────────────────────────────────────
+depends_on:
+  - TSK-P2-W5-FIX-04
+
+blocks:
+  - TSK-P2-W5-FIX-06
+
+# ── File scope ─────────────────────────────────────────────────────────────
+touches:
+  - schema/migrations/0149_rename_triggers_deterministic_order.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_w5_fix_05.sh
+  - evidence/phase2/tsk_p2_w5_fix_05.json
+  - tasks/TSK-P2-W5-FIX-05/meta.yml
+  - docs/plans/phase2/TSK-P2-W5-FIX-05/PLAN.md
+  - docs/plans/phase2/TSK-P2-W5-FIX-05/EXEC_LOG.md
+  # Post-implementation governance (SYMPHONY_TASK_IMPLEMENTATION_PROCESS Steps 9-13)
+  - docs/architecture/THREAT_MODEL.md
+  - docs/architecture/COMPLIANCE_MAP.md
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - evidence/phase0/baseline_drift.json
+  - evidence/phase0/baseline_governance.json
+  - evidence/phase0/schema_hash.txt
+  - evidence/phase0/structural_doc_linkage.json
+
+# ── Invariants ─────────────────────────────────────────────────────────────
+invariants: []
+
+# ── Deliverable files (for churn control) ─────────────────────────────────
+deliverable_files:
+  - schema/migrations/0149_rename_triggers_deterministic_order.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_w5_fix_05.sh
+  - evidence/phase2/tsk_p2_w5_fix_05.json
+  - docs/plans/phase2/TSK-P2-W5-FIX-05/EXEC_LOG.md
+  - docs/architecture/THREAT_MODEL.md
+  - docs/architecture/COMPLIANCE_MAP.md
+  - schema/baselines/current/0001_baseline.sql
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - evidence/phase0/schema_hash.txt
+  - evidence/phase0/baseline_governance.json
+  - evidence/phase0/baseline_drift.json
+  - evidence/phase0/structural_doc_linkage.json
+
+# ── Regulated Surface Compliance (CRITICAL) ────────────────────────────────
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - schema/migrations/0149_rename_triggers_deterministic_order.sql
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+# ── Remediation Trace Compliance (CRITICAL) ────────────────────────────────
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+# ── Database Connection ────────────────────────────────────────────────────
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+# ── Migration Dependencies ─────────────────────────────────────────────────
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - "0137": "state_transitions triggers (trg_enforce_state_transition_authority, trg_upgrade_authority_on_execution_binding)"
+    - "0139": "trg_enforce_transition_state_rules"
+    - "0140": "trg_enforce_transition_authority"
+    - "0141": "trg_enforce_transition_signature"
+    - "0142": "trg_enforce_execution_binding"
+    - "0143": "trg_deny_state_transitions_mutation"
+    - "0144": "trg_06_update_current"
+    - "0148": "SECURITY DEFINER (FIX-04)"
+  table_dependencies:
+    - "state_transitions": "must exist with all 8 triggers attached"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+
+# ── Work items ─────────────────────────────────────────────────────────────
+work:
+  - >-
+    [ID w5_fix_05_work_01] Audit current trigger names and firing order. Query
+    pg_trigger for state_transitions triggers ordered by tgname. Record
+    current alphabetical order in EXEC_LOG.md.
+  - >-
+    [ID w5_fix_05_work_02] Write migration
+    0149_rename_triggers_deterministic_order.sql. The migration must:
+    (a) DROP TRIGGER old_name ON state_transitions;
+    (b) CREATE TRIGGER bi_XX_new_name BEFORE INSERT ON state_transitions;
+    Mapping: bi_01_enforce_transition_authority,
+    bi_02_enforce_transition_state_rules, bi_03_generate_transition_hash,
+    bi_04_enforce_hash_uniqueness, bi_05_set_transitioned_at.
+    update_current_state stays as AFTER INSERT trigger (ai_01_update_current_state).
+  - >-
+    [ID w5_fix_05_work_03] Update MIGRATION_HEAD to 0149.
+  - >-
+    [ID w5_fix_05_work_04] Write verification script
+    scripts/db/verify_tsk_p2_w5_fix_05.sh: Verify new trigger names exist,
+    old trigger names do not exist, and alpha sort matches intended sequence.
+  - >-
+    [ID w5_fix_05_work_05] Run verification script and generate evidence JSON.
+  - >-
+    [ID w5_fix_05_work_06] Post-implementation governance — Steps 9-11.
+  - >-
+    [ID w5_fix_05_work_07] Post-implementation governance — Steps 12-13.
+  - >-
+    [ID w5_fix_05_work_08] Update EXEC_LOG.md with final remediation trace.
+
+# ── Acceptance criteria ────────────────────────────────────────────────────
+acceptance_criteria:
+  - >-
+    [ID w5_fix_05_work_01] EXEC_LOG.md records current non-deterministic order.
+  - >-
+    [ID w5_fix_05_work_02] 5 BEFORE INSERT triggers renamed with bi_XX_ prefix,
+    1 AFTER INSERT trigger renamed with ai_01_ prefix.
+  - >-
+    [ID w5_fix_05_work_03] MIGRATION_HEAD contains '0149'.
+  - >-
+    [ID w5_fix_05_work_04] [ID w5_fix_05_work_05] Verification exits 0.
+  - >-
+    [ID w5_fix_05_work_06] Governance docs updated.
+  - >-
+    [ID w5_fix_05_work_07] Baseline regenerated, evidence staged.
+  - >-
+    [ID w5_fix_05_work_08] EXEC_LOG.md remediation trace complete.
+
+# ── Negative tests ─────────────────────────────────────────────────────────
+negative_tests:
+  - id: TSK-P2-W5-FIX-05-N1
+    description: >-
+      AFTER fix: Old trigger names must not exist in pg_trigger.
+    required: true
+
+# ── Positive tests ─────────────────────────────────────────────────────────
+positive_tests:
+  - id: TSK-P2-W5-FIX-05-P1
+    description: >-
+      AFTER fix: Alpha sort of trigger names on state_transitions matches:
+      bi_01_, bi_02_, bi_03_, bi_04_, bi_05_, ai_01_.
+    required: true
+
+# ── Verification commands ──────────────────────────────────────────────────
+verification:
+  - >-
+    [ID w5_fix_05_work_02] psql "$DATABASE_URL" -tAc "SELECT tgname FROM
+    pg_trigger WHERE tgrelid = 'state_transitions'::regclass AND NOT
+    tgisinternal ORDER BY tgname" | head -1 | grep -q 'bi_01' || exit 1
+  - >-
+    [ID w5_fix_05_work_03] test "$(cat schema/migrations/MIGRATION_HEAD)" =
+    '0149' || exit 1
+  - >-
+    [ID w5_fix_05_work_04] bash scripts/db/verify_tsk_p2_w5_fix_05.sh ||
+    exit 1
+  - >-
+    [ID w5_fix_05_work_05] test -f evidence/phase2/tsk_p2_w5_fix_05.json ||
+    exit 1
+
+# ── Evidence contract ──────────────────────────────────────────────────────
+evidence:
+  - path: evidence/phase2/tsk_p2_w5_fix_05.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - trigger_order_before
+      - trigger_order_after
+      - old_triggers_removed
+
+# ── Failure modes ──────────────────────────────────────────────────────────
+failure_modes:
+  - "Old trigger names still exist => CRITICAL_FAIL"
+  - "Trigger alpha sort does not match logical sequence => CRITICAL_FAIL"
+  - "Non-padded prefix (bi_1_ not bi_01_) => FAIL"
+  - "Evidence file missing => FAIL"
+  - "Baseline not regenerated => FAIL"
+
+# ── Required reading ───────────────────────────────────────────────────────
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md
+
+# ── Companion documents ────────────────────────────────────────────────────
+implementation_plan: docs/plans/phase2/TSK-P2-W5-FIX-05/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W5-FIX-05/EXEC_LOG.md
+
+# ── Metadata ───────────────────────────────────────────────────────────────
+notes: >-
+  Fifth task in Wave 5 stabilization chain. Enforces deterministic trigger
+  execution order via bi_XX_/ai_XX_ naming convention. Phase Key: W5-FIX.
+  Phase Name: Wave 5 Stabilization.
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

@@ -43,7 +43,7 @@ blocks:
   - TSK-P2-PREAUTH-005-08
 
 touches:
-  - schema/migrations/0120_create_state_transitions.sql
+  - schema/migrations/0143_create_deny_state_transitions_mutation.sql
   - scripts/db/verify_tsk_p2_preauth_005_07.sh
   - tasks/TSK-P2-PREAUTH-005-07/meta.yml
 
@@ -51,7 +51,7 @@ invariants: []
 
 work:
   - >-
-    [ID tsk_p2_preauth_005_07_work_item_01] Add deny_state_transitions_mutation() function to migration 0120
+    [ID tsk_p2_preauth_005_07_work_item_01] Add deny_state_transitions_mutation() function to migration 0143
     as SECURITY DEFINER with SET search_path = pg_catalog, public. Function raises GF036
     on any UPDATE or DELETE attempt to enforce append-only behavior.
   - >-

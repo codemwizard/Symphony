@@ -1,0 +1,204 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W5-FIX-09
+title: "Set signature_payload to 'PLACEHOLDER_PENDING_SIGNING_CONTRACT' in generate_transition_hash() to make pre-signing posture explicit"
+owner_role: DB_FOUNDATION
+status: planned
+priority: NORMAL
+risk_class: GOVERNANCE
+blast_radius: DB_SCHEMA
+
+intent: >-
+  Migration 0141 created generate_transition_hash() which uses
+  NEW.entity_type || NEW.entity_id || NEW.from_state || NEW.to_state as the
+  hash input. The DoD specifies a placeholder signature_payload marker that
+  makes it impossible to later mistake this for real signing output. Without
+  a clearly labeled placeholder, a future Wave 6 agent could assume the
+  current hash is the final signature — creating a false authority chain.
+
+anti_patterns:
+  - "Implementing actual Ed25519 signing (blocked behind signing contract)"
+  - "Removing the hash function entirely"
+  - "Using a placeholder that looks like a real signature"
+
+out_of_scope:
+  - "Ed25519 signing implementation (Wave 6 design task)"
+  - "Signature verification logic"
+stop_conditions:
+  - "Placeholder text is not clearly distinguishable from real signature output"
+  - "Hash function logic is changed beyond adding placeholder marker"
+
+proof_guarantees:
+  - "generate_transition_hash() output starts with 'PLACEHOLDER_PENDING_SIGNING_CONTRACT:'"
+proof_limitations:
+  - "Does not prove future signing implementation will replace placeholder correctly"
+
+depends_on:
+  - TSK-P2-W5-FIX-08
+
+blocks:
+  - TSK-P2-W5-FIX-10
+
+touches:
+  - schema/migrations/0153_set_signature_placeholder_posture.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_w5_fix_09.sh
+  - evidence/phase2/tsk_p2_w5_fix_09.json
+  - tasks/TSK-P2-W5-FIX-09/meta.yml
+  - docs/plans/phase2/TSK-P2-W5-FIX-09/PLAN.md
+  - docs/plans/phase2/TSK-P2-W5-FIX-09/EXEC_LOG.md
+  - docs/architecture/THREAT_MODEL.md
+  - docs/architecture/COMPLIANCE_MAP.md
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - evidence/phase0/baseline_drift.json
+  - evidence/phase0/baseline_governance.json
+  - evidence/phase0/schema_hash.txt
+  - evidence/phase0/structural_doc_linkage.json
+
+invariants: []
+
+# ── Deliverable files (for churn control) ─────────────────────────────────
+deliverable_files:
+  - schema/migrations/0153_set_signature_placeholder_posture.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_w5_fix_09.sh
+  - evidence/phase2/tsk_p2_w5_fix_09.json
+  - docs/plans/phase2/TSK-P2-W5-FIX-09/EXEC_LOG.md
+  - docs/architecture/THREAT_MODEL.md
+  - docs/architecture/COMPLIANCE_MAP.md
+  - schema/baselines/current/0001_baseline.sql
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - evidence/phase0/schema_hash.txt
+  - evidence/phase0/baseline_governance.json
+  - evidence/phase0/baseline_drift.json
+  - evidence/phase0/structural_doc_linkage.json
+
+# ── Regulated Surface Compliance (CRITICAL) ────────────────────────────────
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - schema/migrations/0153_set_signature_placeholder_posture.sql
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+# ── Remediation Trace Compliance (CRITICAL) ────────────────────────────────
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+# ── Database Connection ────────────────────────────────────────────────────
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+# ── Migration Dependencies ─────────────────────────────────────────────────
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - "0141": "enforce_transition_signature() and verify_ed25519_signature()"
+    - "0152": "SQLSTATE codes (FIX-08)"
+  table_dependencies:
+    - "state_transitions": "must exist with transition_hash column"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+
+work:
+  - >-
+    [ID w5_fix_09_work_01] Audit current generate_transition_hash() output.
+    Record hash format in EXEC_LOG.md.
+  - >-
+    [ID w5_fix_09_work_02] Write migration
+    0153_set_signature_placeholder_posture.sql: CREATE OR REPLACE
+    generate_transition_hash() to prefix the hash with
+    'PLACEHOLDER_PENDING_SIGNING_CONTRACT:'.
+  - >-
+    [ID w5_fix_09_work_03] Update MIGRATION_HEAD to 0153.
+  - >-
+    [ID w5_fix_09_work_04] Write verification script: INSERT a test row and
+    verify transition_hash starts with placeholder prefix.
+  - >-
+    [ID w5_fix_09_work_05] Run verification and generate evidence.
+  - >-
+    [ID w5_fix_09_work_06] Post-implementation governance — Steps 9-13.
+  - >-
+    [ID w5_fix_09_work_07] Update EXEC_LOG.md with final remediation trace.
+
+acceptance_criteria:
+  - >-
+    [ID w5_fix_09_work_02] transition_hash values start with
+    'PLACEHOLDER_PENDING_SIGNING_CONTRACT:' after migration.
+  - >-
+    [ID w5_fix_09_work_03] MIGRATION_HEAD contains '0153'.
+  - >-
+    [ID w5_fix_09_work_04] [ID w5_fix_09_work_05] Verification exits 0.
+  - >-
+    [ID w5_fix_09_work_06] Governance docs updated, baseline regenerated.
+  - >-
+    [ID w5_fix_09_work_07] EXEC_LOG remediation trace complete.
+
+negative_tests:
+  - id: TSK-P2-W5-FIX-09-N1
+    description: >-
+      BEFORE fix: transition_hash does NOT start with placeholder prefix.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-W5-FIX-09-P1
+    description: >-
+      AFTER fix: INSERT produces transition_hash starting with
+      'PLACEHOLDER_PENDING_SIGNING_CONTRACT:'.
+    required: true
+
+verification:
+  - bash scripts/db/verify_tsk_p2_w5_fix_09.sh || exit 1
+  - test -f evidence/phase2/tsk_p2_w5_fix_09.json || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w5_fix_09.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - placeholder_prefix_verified
+
+failure_modes:
+  - "Hash output does not start with placeholder prefix => FAIL"
+  - "Evidence file missing => FAIL"
+  - "Baseline not regenerated => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-W5-FIX-09/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W5-FIX-09/EXEC_LOG.md
+
+notes: >-
+  Phase Key: W5-FIX. Phase Name: Wave 5 Stabilization. Ninth task.
+  Explicit placeholder prevents false authority chain in Wave 6.
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

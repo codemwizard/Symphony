@@ -1,0 +1,96 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W6-REM-15
+title: "Reassign K13 SQLSTATE from GF060 to GF061 to protect the P76xx series and prevent collision with legacy code"
+owner_role: DB Foundation
+status: completed
+priority: HIGH
+risk_class: REGISTRY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  The K13 exception code was mistakenly assigned GF060, colliding with existing GF060 infrastructure. 
+  This migration reassigns it to GF061 to protect the P76xx SQLSTATE series and cleanly separate the authority subsystem from the hardening subsystem.
+
+anti_patterns:
+  - "Changing the exception code in 0151 (mutating past migration)"
+  - "Updating the trigger without asserting its orientation (FOR EACH ROW vs STATEMENT)"
+
+out_of_scope:
+  - "Migrating legacy data that might have triggered GF060"
+
+stop_conditions:
+  - "Trigger does not exist or has an unexpected definition"
+
+proof_guarantees:
+  - "The trigger correctly raises GF061 when an illegal projects mutation is attempted"
+
+proof_limitations:
+  - "Cannot prove no application code hardcodes GF060"
+
+depends_on:
+  - TSK-P2-W6-REM-14
+
+blocks:
+  - TSK-P2-W6-REM-16b
+
+touches:
+  - schema/migrations/0155_reassign_k13_sqlstate_gf061.sql
+  - scripts/db/verify_tsk_p2_w6_rem_15.sh
+  - evidence/phase2/tsk_p2_w6_rem_15.json
+  - tasks/TSK-P2-W6-REM-15/meta.yml
+
+invariants:
+  - INV-STATE-MACHINE-INTEGRITY
+
+work:
+  - >-
+    Author a forward-only database migration 0155 that CREATE OR REPLACEs the trigger function enforce_k13_taxonomy_alignment() to raise GF061 instead of GF060.
+  - >-
+    Author a verification script that inspects the source code of the trigger function to verify it contains GF061.
+  - >-
+    Include a raw negative test in the verifier demonstrating a direct UPDATE to projects raising GF061.
+
+acceptance_criteria:
+  - >-
+    The source code of enforce_k13_taxonomy_alignment() must contain 'GF061'.
+  - >-
+    A direct UPDATE to projects raises GF061.
+
+negative_tests:
+  - id: TSK-P2-W6-REM-15-N1
+    description: >-
+      A direct UPDATE to projects must fail with SQLSTATE GF061.
+    required: true
+
+positive_tests: []
+
+verification:
+  - bash scripts/db/verify_tsk_p2_w6_rem_15.sh
+  - python3 scripts/audit/validate_evidence.py --task TSK-P2-W6-REM-15 --evidence evidence/phase2/tsk_p2_w6_rem_15.json
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w6_rem_15.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - trigger_source_contains_gf061
+
+failure_modes:
+  - "Exception raised is still GF060 => FAIL_REVIEW"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - WAVE6_CONTRACT_PACK/DATA_AUTHORITY_SYSTEM_DESIGN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-W6-REM-15/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W6-REM-15/EXEC_LOG.md
+
+notes: >-
+  This migration updates the K13 exception code.
+client: cursor
+assigned_agent: DB Foundation
+model: <UNASSIGNED>

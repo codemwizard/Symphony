@@ -1,0 +1,157 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-007-19-R5
+title: Replace tab delimiter with non-whitespace delimiter
+owner_role: SECURITY_GUARDIAN
+status: planned
+priority: MEDIUM
+risk_class: GOVERNANCE
+blast_radius: SCRIPTS_ONLY
+
+intent: >-
+  Replace tab delimiter with a non-whitespace delimiter (e.g., "|") to eliminate IFS whitespace merging
+  fragility. The original implementation used tabs which caused Bash to merge consecutive tabs when fields
+  were empty, requiring a placeholder workaround. A non-whitespace delimiter eliminates this fragility.
+
+anti_patterns:
+  - "Using tab delimiter with IFS whitespace merging"
+  - "Relying on placeholder workarounds for delimiter issues"
+  - "Using whitespace delimiters in trace logs"
+  - "Not testing delimiter parsing with empty fields"
+
+out_of_scope:
+  - Changing trace log field structure or count
+  - Modifying field content or semantics
+  - Changing evidence digest computation
+
+stop_conditions:
+  - "If tab delimiter is still used → STOP"
+  - "If new delimiter is whitespace → STOP"
+  - "If verifier doesn't parse new delimiter correctly → STOP"
+
+proof_guarantees:
+  - "Trace log uses '|' delimiter instead of '\\t'"
+  - "Verifier parses '|' delimiter correctly"
+  - "Empty fields are handled correctly without placeholder workaround"
+  - "All 8 fields are parsed correctly"
+
+proof_limitations:
+  - "Requires updating any external tools that parse the trace log"
+  - "If '|' appears in field content, could cause parsing issues (unlikely)"
+
+depends_on:
+  - TSK-P2-PREAUTH-007-19-R4
+
+blocks:
+  - []
+
+touches:
+  - scripts/dev/pre_ci.sh
+  - scripts/audit/verify_tsk_p2_preauth_007_19.sh
+  - tasks/TSK-P2-PREAUTH-007-19-R5/meta.yml
+
+deliverable_files:
+  - scripts/dev/pre_ci.sh
+  - scripts/audit/verify_tsk_p2_preauth_007_19.sh
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19-R5/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19-R5/EXEC_LOG.md
+
+invariants:
+  - INV-GOV-001
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/dev/**
+    - scripts/audit/**
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+work:
+  - >-
+    [ID tsk_p2_preauth_007_19_r5_work_01] Replace "\\t" with "|" in emit_preci_step_with_provenance
+  - >-
+    [ID tsk_p2_preauth_007_19_r5_work_02] Replace IFS=$'\\t' with IFS="|" in verifier
+  - >-
+    [ID tsk_p2_preauth_007_19_r5_work_03] Replace awk -F'\\t' with awk -F'|' in verifier
+  - >-
+    [ID tsk_p2_preauth_007_19_r5_work_04] Remove placeholder workaround (no longer needed with non-whitespace delimiter)
+  - >-
+    [ID tsk_p2_preauth_007_19_r5_work_05] Run verifier and confirm parsing works with new delimiter
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_007_19_r5_work_01] Trace log uses "|" delimiter instead of "\\t"
+  - >-
+    [ID tsk_p2_preauth_007_19_r5_work_02] Verifier parses "|" delimiter correctly
+  - >-
+    [ID tsk_p2_preauth_007_19_r5_work_04] Empty fields are handled correctly without placeholder workaround
+  - >-
+    [ID tsk_p2_preauth_007_19_r5_work_05] All 8 fields are parsed correctly
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-007-19-R5-N1
+    description: Verifier rejects old tab-delimited trace logs
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-007-19-R5-P1
+    description: Verifier parses pipe-delimited trace logs correctly
+    required: true
+  - id: TSK-P2-PREAUTH-007-19-R5-P2
+    description: Empty fields are parsed correctly without placeholders
+    required: true
+
+verification:
+  - >-
+    export DATABASE_URL="postgresql://symphony_admin:symphony_pass@localhost:55432/symphony"
+    bash scripts/audit/verify_tsk_p2_preauth_007_19.sh > evidence/phase2/tsk_p2_preauth_007_19_r5.json
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_007_19_r5.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - delimiter_parsing_check
+
+failure_modes:
+  - "Tab delimiter still used => FAIL"
+  - "New delimiter is whitespace => FAIL"
+  - "Verifier doesn't parse new delimiter => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19-REMEDIATION/DRD.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19/PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-007-19-R5/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-007-19-R5/EXEC_LOG.md
+
+notes: >-
+  This fix addresses the delimiter fragility issue. The original implementation used tabs which caused Bash
+  IFS whitespace merging when fields were empty, requiring a placeholder workaround. Using "|" (pipe) as
+  a non-whitespace delimiter eliminates this fragility and removes the need for the placeholder workaround.
+  This is a cleanup task after the critical security fixes (R1-R4) are complete.
+client: cursor
+assigned_agent: security_guardian
+model: claude-sonnet-4-20250514

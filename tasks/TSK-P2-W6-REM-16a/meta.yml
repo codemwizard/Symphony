@@ -1,0 +1,91 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W6-REM-16a
+title: "Contract Document Placement"
+owner_role: Architect
+status: completed
+priority: HIGH
+risk_class: DOCUMENTATION
+blast_radius: DOCUMENTATION
+
+intent: >-
+  Place the four Wave 6 contract documents into their canonical locations (docs/contracts and docs/architecture)
+  and verify they contain no unresolved placeholder tokens in normative prose or section bodies,
+  with correct Canonical-Reference headers.
+
+anti_patterns:
+  - "Moving files without updating their Canonical-Reference headers"
+  - "Leaving TODO/FIXME tokens in the document body"
+
+out_of_scope:
+  - "Merging the SQLSTATE registry (TSK-P2-W6-REM-16b)"
+
+stop_conditions:
+  - "Placeholder tokens exist in the normative body"
+
+proof_guarantees:
+  - "Documents exist at canonical paths and contain valid headers"
+
+proof_limitations:
+  - "Cannot guarantee the contents are perfectly coherent, only that placeholders are resolved"
+
+depends_on:
+  - TSK-P2-W6-REM-15
+
+blocks: []
+
+touches:
+  - docs/contracts/TRANSITION_HASH_CONTRACT.md
+  - docs/contracts/ED25519_SIGNING_CONTRACT.md
+  - docs/contracts/DATA_AUTHORITY_DERIVATION_SPEC.md
+  - docs/architecture/DATA_AUTHORITY_SYSTEM_DESIGN.md
+  - tasks/TSK-P2-W6-REM-16a/meta.yml
+  - evidence/phase2/tsk_p2_w6_rem_16a.json
+
+invariants:
+  - INV-DOC-INTEGRITY
+
+work:
+  - "Move the 4 markdown files from WAVE6_CONTRACT_PACK to canonical locations."
+  - "Update each file to ensure the 'Canonical-Reference' header matches the new path."
+  - "Ensure no placeholder tokens (TODO, FIXME, TBD, PLACEHOLDER, XXX) remain in normative prose."
+  - "Write a verification script to assert the presence of these files, correct headers, and lack of tokens."
+
+acceptance_criteria:
+  - "All 4 exist at canonical paths"
+  - "Canonical-Reference header present and matches actual placement path"
+  - "No unresolved placeholder tokens in normative prose"
+
+negative_tests:
+  - id: TSK-P2-W6-REM-16a-N1
+    description: >-
+      Tokens in normative prose must fail validation.
+    required: true
+
+positive_tests: []
+
+verification:
+  - bash scripts/audit/verify_tsk_p2_w6_rem_16a.sh
+  - python3 scripts/audit/validate_evidence.py --task TSK-P2-W6-REM-16a --evidence evidence/phase2/tsk_p2_w6_rem_16a.json
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w6_rem_16a.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+
+failure_modes:
+  - "Missing headers => FAIL_REVIEW"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-W6-REM-16a/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W6-REM-16a/EXEC_LOG.md
+
+notes: "Document placement task."
+client: cursor
+assigned_agent: Architect
+model: <UNASSIGNED>

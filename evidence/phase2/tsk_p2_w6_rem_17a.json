@@ -1,0 +1,17 @@
+{
+  "task_id": "TSK-P2-W6-REM-17a",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "timestamp_utc": "2026-04-25T05:10:37Z",
+  "status": "PASS",
+  "checks": {
+    "interpretation_version_id_type": "uuid",
+    "interpretation_version_id_nullable": "YES",
+    "interpretation_version_id_check": "pass",
+    "policy_decisions_project_id_type": "uuid",
+    "policy_decisions_project_id_nullable": "YES",
+    "policy_decisions_project_id_check": "pass"
+  },
+  "negative_test_results": {
+    "TSK-P2-W6-REM-17a-N1": "pass"
+  }
+}

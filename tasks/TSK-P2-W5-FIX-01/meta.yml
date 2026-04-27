@@ -1,0 +1,333 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W5-FIX-01
+title: "Fix column name mismatch in enforce_transition_authority() so that state_transitions INSERTs resolve correctly"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+# ── Why this task exists ───────────────────────────────────────────────────
+intent: >-
+  Migration 0140 created enforce_transition_authority() which references column
+  'decision_id' in the policy_decisions table (line 19). The actual PK column
+  is 'policy_decision_id' (defined in migration 0134, line 15). PostgreSQL
+  deferred PL/pgSQL column resolution means the function compiled successfully
+  but is silently broken at execution time. Every INSERT to state_transitions
+  that fires trg_enforce_transition_authority raises a raw PostgreSQL error
+  ('column "decision_id" does not exist') instead of the intended authority
+  validation. This is the highest-priority runtime blocker — no other Wave 5
+  trigger can be tested until this crash is eliminated.
+
+# ── What this task must NOT do ─────────────────────────────────────────────
+anti_patterns:
+  - "Editing migration 0140 directly — forward-only migrations are immutable after apply"
+  - "Bundling SECURITY DEFINER hardening — that is TSK-P2-W5-FIX-04's single concern"
+  - "Testing only that the function exists in pg_proc without proving runtime behavioral change"
+  - "Writing negative test after the fix — must prove bug exists before fix is applied"
+  - "Marking completed without before/after INSERT behavioral proof in evidence"
+
+# ── Anti-drift boundaries ──────────────────────────────────────────────────
+out_of_scope:
+  - "SECURITY DEFINER hardening (TSK-P2-W5-FIX-04)"
+  - "Any changes to tables, columns, or indexes"
+  - "Any changes to other trigger functions"
+  - "Signature verification logic"
+  - "Trigger ordering renaming"
+stop_conditions:
+  - "Migration 0145 references any column that does not exist in the target table"
+  - "Verifier script does not execute a live INSERT to prove behavioral change"
+  - "Approval metadata not created before editing regulated surface"
+  - "EXEC_LOG.md missing required remediation trace markers at edit time"
+
+# ── Proof limits ───────────────────────────────────────────────────────────
+proof_guarantees:
+  - "Column reference in enforce_transition_authority() resolves to policy_decisions.policy_decision_id"
+  - "INSERT to state_transitions with valid policy_decision_id no longer raises raw PostgreSQL column error"
+  - "INSERT with non-existent policy_decision_id raises application-level GF exception"
+proof_limitations:
+  - "Does not prove SECURITY DEFINER correctness (deferred to FIX-04)"
+  - "Does not verify the specific GF error code is registered in sqlstate_map.yml"
+  - "Cannot prove behavior under concurrent load without integration testing"
+  - "Negative test ordering is unenforceable mechanically (process discipline only)"
+
+# ── Dependencies ───────────────────────────────────────────────────────────
+depends_on: []
+
+blocks:
+  - TSK-P2-W5-FIX-02
+  - TSK-P2-W5-FIX-03
+  - TSK-P2-W5-FIX-04
+
+# ── File scope ─────────────────────────────────────────────────────────────
+touches:
+  - schema/migrations/0145_fix_enforce_transition_authority_column.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_w5_fix_01.sh
+  - evidence/phase2/tsk_p2_w5_fix_01.json
+  - tasks/TSK-P2-W5-FIX-01/meta.yml
+  - docs/plans/phase2/TSK-P2-W5-FIX-01/PLAN.md
+  - docs/plans/phase2/TSK-P2-W5-FIX-01/EXEC_LOG.md
+  # Post-implementation governance (SYMPHONY_TASK_IMPLEMENTATION_PROCESS Steps 9-13)
+  - docs/architecture/THREAT_MODEL.md
+  - docs/architecture/COMPLIANCE_MAP.md
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - evidence/phase0/baseline_drift.json
+  - evidence/phase0/baseline_governance.json
+  - evidence/phase0/schema_hash.txt
+  - evidence/phase0/structural_doc_linkage.json
+
+# ── Invariants ─────────────────────────────────────────────────────────────
+invariants: []
+
+# ── Deliverable files (for churn control) ─────────────────────────────────
+deliverable_files:
+  - schema/migrations/0145_fix_enforce_transition_authority_column.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_w5_fix_01.sh
+  - evidence/phase2/tsk_p2_w5_fix_01.json
+  - docs/plans/phase2/TSK-P2-W5-FIX-01/EXEC_LOG.md
+  - docs/architecture/THREAT_MODEL.md
+  - docs/architecture/COMPLIANCE_MAP.md
+  - schema/baselines/current/0001_baseline.sql
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - evidence/phase0/schema_hash.txt
+  - evidence/phase0/baseline_governance.json
+  - evidence/phase0/baseline_drift.json
+  - evidence/phase0/structural_doc_linkage.json
+
+# ── Regulated Surface Compliance (CRITICAL) ────────────────────────────────
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - schema/migrations/0145_fix_enforce_transition_authority_column.sql
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+# ── Remediation Trace Compliance (CRITICAL) ────────────────────────────────
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+# ── Database Connection ────────────────────────────────────────────────────
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+# ── Migration Dependencies ─────────────────────────────────────────────────
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - "0134": "policy_decisions table with policy_decision_id PK"
+    - "0137": "state_transitions table with policy_decision_id column"
+    - "0140": "enforce_transition_authority() with broken column reference"
+  table_dependencies:
+    - "policy_decisions": "must exist with column policy_decision_id (PK)"
+    - "state_transitions": "must exist with column policy_decision_id"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+
+# ── Work items ─────────────────────────────────────────────────────────────
+work:
+  - >-
+    [ID w5_fix_01_work_01] Reproduce the bug: execute a live INSERT into
+    state_transitions with a valid policy_decision_id. Capture the raw
+    PostgreSQL error 'column "decision_id" does not exist'. Record exact
+    error output in EXEC_LOG.md as failure_signature.
+  - >-
+    [ID w5_fix_01_work_02] Write migration
+    0145_fix_enforce_transition_authority_column.sql using CREATE OR REPLACE
+    FUNCTION to redefine enforce_transition_authority() with corrected column
+    reference: WHERE policy_decision_id = NEW.policy_decision_id. Do NOT add
+    SECURITY DEFINER (out of scope for this task).
+  - >-
+    [ID w5_fix_01_work_03] Update MIGRATION_HEAD to 0145.
+  - >-
+    [ID w5_fix_01_work_04] Write verification script
+    scripts/db/verify_tsk_p2_w5_fix_01.sh that executes live behavioral
+    tests: (1) INSERT with valid policy_decision_id must succeed or fail
+    with GF-coded exception, never a raw column error; (2) INSERT with
+    non-existent policy_decision_id must fail with application-level
+    exception containing 'Invalid authority'.
+  - >-
+    [ID w5_fix_01_work_05] Run verification script against live DB and
+    generate evidence JSON at evidence/phase2/tsk_p2_w5_fix_01.json.
+  - >-
+    [ID w5_fix_01_work_06] Post-implementation governance — Structural Change
+    Gate (SYMPHONY_TASK_IMPLEMENTATION_PROCESS Step 9): Append entry to
+    docs/architecture/THREAT_MODEL.md documenting security implications of
+    the corrected column reference. Append entry to
+    docs/architecture/COMPLIANCE_MAP.md mapping the change to its compliance
+    control.
+  - >-
+    [ID w5_fix_01_work_07] Post-implementation governance — Schema Baseline
+    Drift (Steps 10-11): Regenerate schema baseline using
+    scripts/db/generate_baseline_snapshot.sh against a clean DB with all
+    migrations through 0145 applied. Update ADR-0010-baseline-policy.md with
+    dated justification entry referencing this task and migration 0145.
+  - >-
+    [ID w5_fix_01_work_08] Post-implementation governance — DDL Lock-Risk
+    (Step 12): If migration 0145 triggers SEC-DDL-LOCK-RISK linter, calculate
+    SHA-256 fingerprint and append approved entry to
+    docs/security/ddl_allowlist.json. CREATE OR REPLACE FUNCTION is not
+    typically flagged, but verify.
+  - >-
+    [ID w5_fix_01_work_09] Post-implementation governance — Stage Evidence
+    Files (Step 13): Stage all regenerated evidence files:
+    evidence/phase0/schema_hash.txt, evidence/phase0/baseline_governance.json,
+    evidence/phase0/baseline_drift.json,
+    evidence/phase0/structural_doc_linkage.json.
+  - >-
+    [ID w5_fix_01_work_10] Update EXEC_LOG.md with verification_commands_run
+    and final_status markers.
+
+# ── Acceptance criteria ────────────────────────────────────────────────────
+acceptance_criteria:
+  - >-
+    [ID w5_fix_01_work_01] EXEC_LOG.md contains failure_signature with exact
+    PostgreSQL error text 'column "decision_id" does not exist'. This proves
+    the bug is real and reproducible before the fix is applied.
+  - >-
+    [ID w5_fix_01_work_02] Function body in pg_proc for
+    'enforce_transition_authority' contains 'policy_decision_id' and does NOT
+    contain the bare string 'WHERE decision_id'.
+  - >-
+    [ID w5_fix_01_work_03] MIGRATION_HEAD contains '0145'.
+  - >-
+    [ID w5_fix_01_work_04] [ID w5_fix_01_work_05] Verification script exits 0
+    and evidence JSON exists at evidence/phase2/tsk_p2_w5_fix_01.json with
+    negative_test_results and positive_test_results blocks.
+  - >-
+    [ID w5_fix_01_work_06] THREAT_MODEL.md and COMPLIANCE_MAP.md each contain
+    a dated entry referencing TSK-P2-W5-FIX-01 and migration 0145.
+  - >-
+    [ID w5_fix_01_work_07] schema/baseline.sql and
+    schema/baselines/current/0001_baseline.sql are regenerated. ADR-0010 has
+    a dated entry: 'Baseline regenerated after fixing column reference in
+    enforce_transition_authority (migration 0145)'.
+  - >-
+    [ID w5_fix_01_work_09] evidence/phase0/schema_hash.txt,
+    evidence/phase0/baseline_governance.json, and
+    evidence/phase0/structural_doc_linkage.json are freshly generated and
+    staged.
+  - >-
+    [ID w5_fix_01_work_10] EXEC_LOG.md contains all 5 remediation trace
+    markers: failure_signature, origin_task_id, repro_command,
+    verification_commands_run, final_status.
+
+# ── Negative tests ─────────────────────────────────────────────────────────
+negative_tests:
+  - id: TSK-P2-W5-FIX-01-N1
+    description: >-
+      BEFORE fix: INSERT into state_transitions with a valid
+      policy_decision_id must fail with raw PostgreSQL error containing
+      'column "decision_id" does not exist'. This proves the bug exists
+      and is not a phantom. Error type is raw runtime (not GF-coded).
+    required: true
+  - id: TSK-P2-W5-FIX-01-N2
+    description: >-
+      AFTER fix: INSERT into state_transitions with a fabricated
+      (non-existent) policy_decision_id must fail with an application-level
+      exception containing 'Invalid authority: policy decision'. It must
+      NOT fail with a raw PostgreSQL column or FK error.
+    required: true
+
+# ── Positive tests ─────────────────────────────────────────────────────────
+positive_tests:
+  - id: TSK-P2-W5-FIX-01-P1
+    description: >-
+      AFTER fix: INSERT into state_transitions with a valid
+      policy_decision_id (one that exists in policy_decisions with matching
+      entity_type) must succeed. Row must be committed.
+    required: true
+
+# ── Verification commands ──────────────────────────────────────────────────
+verification:
+  - >-
+    [ID w5_fix_01_work_02] psql "$DATABASE_URL" -tAc "SELECT prosrc FROM
+    pg_proc WHERE proname = 'enforce_transition_authority'" | grep -q
+    'policy_decision_id' || exit 1
+  - >-
+    [ID w5_fix_01_work_03] test "$(cat schema/migrations/MIGRATION_HEAD)" =
+    '0145' || exit 1
+  - >-
+    [ID w5_fix_01_work_04] [ID w5_fix_01_work_05] bash
+    scripts/db/verify_tsk_p2_w5_fix_01.sh || exit 1
+  - >-
+    [ID w5_fix_01_work_05] test -f evidence/phase2/tsk_p2_w5_fix_01.json ||
+    exit 1
+  - >-
+    [ID w5_fix_01_work_06] grep -q 'failure_signature'
+    docs/plans/phase2/TSK-P2-W5-FIX-01/EXEC_LOG.md && grep -q
+    'origin_task_id' docs/plans/phase2/TSK-P2-W5-FIX-01/EXEC_LOG.md &&
+    grep -q 'repro_command' docs/plans/phase2/TSK-P2-W5-FIX-01/EXEC_LOG.md
+    && grep -q 'verification_commands_run'
+    docs/plans/phase2/TSK-P2-W5-FIX-01/EXEC_LOG.md && grep -q
+    'final_status' docs/plans/phase2/TSK-P2-W5-FIX-01/EXEC_LOG.md || exit 1
+
+# ── Evidence contract ──────────────────────────────────────────────────────
+evidence:
+  - path: evidence/phase2/tsk_p2_w5_fix_01.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - column_reference_verified
+      - negative_test_results
+      - positive_test_results
+
+# ── Failure modes ──────────────────────────────────────────────────────────
+failure_modes:
+  - "Column reference still points to 'decision_id' after migration => CRITICAL_FAIL"
+  - "Verification script does not execute live INSERT => FAIL"
+  - "Negative test N1 not executed (bug not proven before fix) => BLOCKED"
+  - "Evidence file missing => FAIL"
+  - "Approval metadata not created before editing migration => CRITICAL_FAIL"
+  - "EXEC_LOG.md missing remediation trace markers => BLOCKED"
+
+# ── Required reading ───────────────────────────────────────────────────────
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md
+  - docs/operations/REGULATED_SURFACE_PATHS.yml
+  - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+# ── Companion documents ────────────────────────────────────────────────────
+implementation_plan: docs/plans/phase2/TSK-P2-W5-FIX-01/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W5-FIX-01/EXEC_LOG.md
+
+# ── Metadata ───────────────────────────────────────────────────────────────
+notes: >-
+  Root task of the Wave 5 stabilization chain. Fixes a runtime-breaking column
+  name mismatch that makes every INSERT to state_transitions fail with a raw
+  PostgreSQL error. The function compiled due to deferred PL/pgSQL resolution
+  but is broken at execution time. Phase Key: W5-FIX. Phase Name: Wave 5
+  Stabilization.
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

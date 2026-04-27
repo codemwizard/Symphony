@@ -1,0 +1,54 @@
+{
+  "task_id": "TSK-P2-PREAUTH-007-11",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "timestamp_utc": "2026-04-26T06:38:53Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "tsk_p2_preauth_007_11_check_01",
+      "description": "DATABASE_URL is set",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_11_check_02",
+      "description": "monitoring_records table exists",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_11_check_03",
+      "description": "Columns exist on monitoring_records",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_11_check_04",
+      "description": "Trigger trg_enforce_phase1_boundary exists",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-11-P1",
+      "description": "Positive test: Trigger function enforce_phase1_boundary exists",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-11-N1",
+      "description": "Negative test: Trigger contains phase1 boundary logic",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-11-N2",
+      "description": "Negative test: Trigger function uses SECURITY DEFINER",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-11-P2",
+      "description": "Positive test: Trigger function has SET search_path",
+      "result": "PASS"
+    }
+  ],
+  "observed_hashes": [
+    {
+      "path": "scripts/audit/verify_tsk_p2_preauth_007_11.sh",
+      "sha256": "600669a0f64f3241cb935707bf5b4db23bab334dfef2f33027655f9bd138b66b"
+    }
+  ]
+}

@@ -1,0 +1,166 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W5-FIX-10
+title: "Fix verifier script trigger name reference from tr_update_current_state to actual trigger name"
+owner_role: QA_VERIFIER
+status: planned
+priority: NORMAL
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+
+intent: >-
+  scripts/db/verify_tsk_p2_preauth_005_08.sh references trigger name
+  'tr_update_current_state' (line ~40) but the actual trigger created by
+  migration 0144 is 'trg_06_update_current' (and after FIX-05 will be
+  'ai_01_update_current_state'). The verifier silently passes structural
+  checks because it queries for a non-existent trigger and does not fail-
+  closed on missing results. This makes the verifier a false-positive gate.
+
+anti_patterns:
+  - "Hardcoding the post-FIX-05 trigger name without depending on FIX-05"
+  - "Using string matching instead of querying pg_trigger"
+
+out_of_scope:
+  - "Schema changes"
+  - "Trigger function changes"
+stop_conditions:
+  - "Verifier references trigger name that does not exist in pg_trigger"
+  - "Verifier passes when trigger is missing"
+
+proof_guarantees:
+  - "Verifier queries pg_trigger for actual trigger name"
+  - "Verifier fails if trigger does not exist"
+proof_limitations:
+  - "Does not prove trigger fires correctly — only that verifier checks the right name"
+
+depends_on:
+  - TSK-P2-W5-FIX-09
+
+blocks:
+  - TSK-P2-W5-FIX-11
+
+touches:
+  - scripts/db/verify_tsk_p2_preauth_005_08.sh
+  - evidence/phase2/tsk_p2_w5_fix_10.json
+  - tasks/TSK-P2-W5-FIX-10/meta.yml
+  - docs/plans/phase2/TSK-P2-W5-FIX-10/PLAN.md
+  - docs/plans/phase2/TSK-P2-W5-FIX-10/EXEC_LOG.md
+
+invariants: []
+
+# ── Deliverable files (for churn control) ─────────────────────────────────
+deliverable_files:
+  - scripts/db/verify_tsk_p2_preauth_005_08.sh
+  - evidence/phase2/tsk_p2_w5_fix_10.json
+  - docs/plans/phase2/TSK-P2-W5-FIX-10/EXEC_LOG.md
+
+# ── Regulated Surface Compliance (CRITICAL) ────────────────────────────────
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_only
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/db/verify_tsk_p2_preauth_005_08.sh
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+
+# ── Remediation Trace Compliance (CRITICAL) ────────────────────────────────
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+# ── Database Connection ────────────────────────────────────────────────────
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+# ── Migration Dependencies ─────────────────────────────────────────────────
+migration_dependencies:
+  enabled: false
+
+
+work:
+  - >-
+    [ID w5_fix_10_work_01] Identify incorrect trigger name references in
+    verify_tsk_p2_preauth_005_08.sh. Record line numbers in EXEC_LOG.md.
+  - >-
+    [ID w5_fix_10_work_02] Update the verifier to query pg_trigger for the
+    correct trigger name (ai_01_update_current_state after FIX-05).
+  - >-
+    [ID w5_fix_10_work_03] Add fail-closed guard: if pg_trigger query returns
+    zero rows, the verifier must exit 1.
+  - >-
+    [ID w5_fix_10_work_04] Run updated verifier and generate evidence.
+  - >-
+    [ID w5_fix_10_work_05] Update EXEC_LOG.md with final remediation trace.
+
+acceptance_criteria:
+  - >-
+    [ID w5_fix_10_work_01] EXEC_LOG documents incorrect name and line numbers.
+  - >-
+    [ID w5_fix_10_work_02] Verifier references correct trigger name.
+  - >-
+    [ID w5_fix_10_work_03] Verifier exits 1 when trigger is missing.
+  - >-
+    [ID w5_fix_10_work_04] Evidence JSON produced.
+  - >-
+    [ID w5_fix_10_work_05] EXEC_LOG remediation trace complete.
+
+negative_tests:
+  - id: TSK-P2-W5-FIX-10-N1
+    description: >-
+      Temporarily rename trigger in test, run verifier — must exit 1.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-W5-FIX-10-P1
+    description: >-
+      With correct trigger name present, verifier exits 0.
+    required: true
+
+verification:
+  - bash scripts/db/verify_tsk_p2_preauth_005_08.sh || exit 1
+  - test -f evidence/phase2/tsk_p2_w5_fix_10.json || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w5_fix_10.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - trigger_name_corrected
+
+failure_modes:
+  - "Verifier still references wrong trigger name => FAIL"
+  - "Verifier passes when trigger is missing => CRITICAL_FAIL"
+  - "Evidence file missing => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-W5-FIX-10/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W5-FIX-10/EXEC_LOG.md
+
+notes: >-
+  Phase Key: W5-FIX. Phase Name: Wave 5 Stabilization. Tenth task.
+  No schema changes — CI_GATES blast radius only.
+client: cursor
+assigned_agent: qa_verifier
+model: <UNASSIGNED>

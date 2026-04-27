@@ -43,7 +43,7 @@ blocks:
   - TSK-P2-PREAUTH-005-07
 
 touches:
-  - schema/migrations/0120_create_state_transitions.sql
+  - schema/migrations/0142_create_enforce_execution_binding.sql
   - scripts/db/verify_tsk_p2_preauth_005_06.sh
   - tasks/TSK-P2-PREAUTH-005-06/meta.yml
 
@@ -51,7 +51,7 @@ invariants: []
 
 work:
   - >-
-    [ID tsk_p2_preauth_005_06_work_item_01] Add enforce_execution_binding() function to migration 0120
+    [ID tsk_p2_preauth_005_06_work_item_01] Add enforce_execution_binding() function to migration 0142
     as SECURITY DEFINER with SET search_path = pg_catalog, public. Function verifies execution_id
     is present for reproducible transitions and raises GF035 if missing.
   - >-
