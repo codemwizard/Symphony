@@ -60,12 +60,12 @@ regulated_surface_compliance:
   stage_a_required_before_edit: true
   regulated_paths:
     - schema/migrations/MIGRATION_HEAD
-  - schema/migrations/0178_wave8_scope_and_timestamp_enforcement.sql
-  - scripts/db/verify_tsk_p2_w8_db_007b.sql
-  - scripts/db/verify_tsk_p2_w8_db_007b.sh
-  - evidence/phase2/tsk_p2_w8_db_007b.json
+    - schema/migrations/0178_wave8_scope_and_timestamp_enforcement.sql
+    - scripts/db/verify_tsk_p2_w8_db_007b.sql
+    - scripts/db/verify_tsk_p2_w8_db_007b.sh
+    - evidence/phase2/tsk_p2_w8_db_007b.json
   must_read:
-  - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
 remediation_trace_compliance:
   enabled: true
   required_markers:
