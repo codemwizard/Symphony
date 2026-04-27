@@ -1,0 +1,190 @@
+{
+  "version": "1",
+  "description": "Fingerprinted allowlist for DDL operations on hot tables. Per docs/PLANS-addendum_1.md.",
+  "entries": [
+    {
+      "migration_file": "0158_backfill_interpretation_version_id.sql",
+      "line_number": 27,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Trigger disable required for interpretation_version_id backfill operation",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0158_backfill_interpretation_version_id.sql",
+      "line_number": 64,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Trigger re-enable after interpretation_version_id backfill completion",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0154_enforce_last_transition_id_not_null.sql",
+      "line_number": 21,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "NOT NULL constraint enforcement on state_current.last_transition_id after backfill",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0168_attestation_seam_schema.sql",
+      "line_number": 32,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Adding columns to asset_batches for attestation seam",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0168_attestation_seam_schema.sql",
+      "line_number": 48,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Adding columns to asset_batches for attestation seam",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0168_attestation_seam_schema.sql",
+      "line_number": 62,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Adding columns to asset_batches for attestation seam",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0161_enforce_policy_decisions_project_id_not_null.sql",
+      "line_number": 18,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "NOT NULL constraint enforcement on policy_decisions.project_id after backfill",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0170_attestation_anti_replay.sql",
+      "line_number": 18,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Adding columns to asset_batches for anti-replay protection",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0170_attestation_anti_replay.sql",
+      "line_number": 32,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Adding columns to asset_batches for anti-replay protection",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0159_enforce_interpretation_version_id_not_null.sql",
+      "line_number": 12,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "NOT NULL constraint enforcement on state_transitions.interpretation_version_id after backfill",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0157_add_project_id_to_policy_decisions.sql",
+      "line_number": 5,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Adding nullable project_id column to policy_decisions for Wave 6 interpretation tracking",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0164_registry_supersession_constraints.sql",
+      "line_number": 27,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Adding constraint to invariant_registry for supersession tracking",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0160_backfill_policy_decisions_project_id.sql",
+      "line_number": 24,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Trigger disable required for policy_decisions.project_id backfill",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0160_backfill_policy_decisions_project_id.sql",
+      "line_number": 34,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Trigger re-enable after policy_decisions.project_id backfill",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0169_add_phase1_boundary_markers.sql",
+      "line_number": 18,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Adding columns to monitoring_records for Phase 1 boundary markers",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0169_add_phase1_boundary_markers.sql",
+      "line_number": 33,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Adding columns to monitoring_records for Phase 1 boundary markers",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0171_attestation_kill_switch_gate.sql",
+      "line_number": 18,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Adding columns to asset_batches for kill switch gate",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0171_attestation_kill_switch_gate.sql",
+      "line_number": 24,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Adding constraint to asset_batches for kill switch gate",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0171_attestation_kill_switch_gate.sql",
+      "line_number": 27,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Adding constraint to asset_batches for kill switch gate",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0171_attestation_kill_switch_gate.sql",
+      "line_number": 29,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Adding constraint to asset_batches for kill switch gate",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0171_attestation_kill_switch_gate.sql",
+      "line_number": 33,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Adding constraint to asset_batches for kill switch gate",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0171_attestation_kill_switch_gate.sql",
+      "line_number": 35,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Adding constraint to asset_batches for kill switch gate",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0165_create_public_keys_registry.sql",
+      "line_number": 24,
+      "statement_fingerprint": "placeholder_sha256",
+      "reason": "Creating public_keys_registry table",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    }
+  ]
+}

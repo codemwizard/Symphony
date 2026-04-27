@@ -55,3 +55,7 @@ scripts/audit/validate_evidence.py              @codemwizard
 scripts/audit/validate_evidence_json.sh         @codemwizard
 scripts/audit/validate_evidence_schema.sh       @codemwizard
 scripts/ci/check_evidence_required.sh           @codemwizard
+
+# DDL allowlist (requires Security Guardian review per docs/PLANS-addendum_1.md)
+scripts/security/ddl_allowlist.json              @codemwizard
+scripts/security/hot_tables.txt                 @codemwizard

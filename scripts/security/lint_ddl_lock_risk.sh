@@ -6,7 +6,8 @@ MIGRATIONS_DIR="$ROOT_DIR/schema/migrations"
 EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/ddl_lock_risk.json"
 POLICY_EVIDENCE_FILE="$EVIDENCE_DIR/ddl_blocking_policy.json"
-ALLOWLIST_FILE="$ROOT_DIR/docs/security/ddl_allowlist.json"
+ALLOWLIST_FILE="$ROOT_DIR/scripts/security/ddl_allowlist.json"
+HOT_TABLES_FILE="$ROOT_DIR/scripts/security/hot_tables.txt"
 
 mkdir -p "$EVIDENCE_DIR"
 source "$ROOT_DIR/scripts/lib/evidence.sh"
@@ -37,23 +38,24 @@ matches=()
 allowlist_hits=()
 
 declare -A ALLOWLIST_MAP
+declare -A ALLOWLIST_EXPIRY
 if [[ -f "$ALLOWLIST_FILE" ]]; then
-  while IFS='|' read -r fp aid; do
+  while IFS='|' read -r fp expiry; do
     [[ -n "$fp" ]] || continue
-    ALLOWLIST_MAP["$fp"]="$aid"
+    ALLOWLIST_MAP["$fp"]="$expiry"
   done < <(python3 - <<'PY'
 import json
 from pathlib import Path
 
-path = Path("docs/security/ddl_allowlist.json")
+path = Path(os.environ.get("ALLOWLIST_FILE", "scripts/security/ddl_allowlist.json"))
 if not path.exists():
     raise SystemExit(0)
 data = json.loads(path.read_text(encoding="utf-8"))
 for entry in data.get("entries", []):
     fp = entry.get("statement_fingerprint", "")
-    eid = entry.get("id", "")
+    expiry = entry.get("expires_on", "")
     if fp:
-        print(f"{fp}|{eid}")
+        print(f"{fp}|{expiry}")
 PY
 )
 fi
@@ -96,12 +98,13 @@ entry_match() {
 }
 
 # Filter out CREATE INDEX CONCURRENTLY (considered lower risk for Phase-0 lint)
-filtered=()
-hot_tables=(
-  "payment_outbox_pending"
-  "payment_outbox_attempts"
-  "policy_versions"
-)
+# Read hot tables from file
+hot_tables=()
+if [[ -f "$HOT_TABLES_FILE" ]]; then
+  while IFS= read -r line; do
+    [[ -n "$line" && ! "$line" =~ ^# ]] && hot_tables+=("$line")
+  done < "$HOT_TABLES_FILE"
+fi
 for entry in "${matches[@]}"; do
   # Allowlist known-safe indexes in existing baseline migrations.
   if entry_match "$entry" "0001_init\\.sql:165:CREATE INDEX idx_attempts_instruction_idempotency"; then
@@ -143,8 +146,15 @@ for entry in "${matches[@]}"; do
   content="${entry#*:}"
   content="${content#*:}"
   fp="$(fingerprint "$content")"
-  if [[ -n "${ALLOWLIST_MAP[$fp]:-}" ]]; then
-    allowlist_hits+=("${ALLOWLIST_MAP[$fp]}:$entry")
+  expiry="${ALLOWLIST_MAP[$fp]:-}"
+  if [[ -n "$expiry" ]]; then
+    # Check expiry
+    current_date=$(date +%Y-%m-%d)
+    if [[ "$expiry" < "$current_date" ]]; then
+      filtered+=("$entry (EXPIRED: $expiry)")
+      continue
+    fi
+    allowlist_hits+=("$expiry:$entry")
     continue
   fi
   filtered+=("$entry")
@@ -182,13 +192,17 @@ python3 - <<PY
 import hashlib
 import json
 import os
+from datetime import datetime
 from pathlib import Path
 
-hot_tables = [
-    "payment_outbox_pending",
-    "payment_outbox_attempts",
-    "policy_versions",
-]
+# Read hot tables from file
+hot_tables = []
+hot_tables_path = Path("$HOT_TABLES_FILE")
+if hot_tables_path.exists():
+    for line in hot_tables_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            hot_tables.append(line)
 
 allowlist = {}
 allowlist_hits = []
@@ -197,9 +211,9 @@ if allowlist_path.exists():
     data = json.loads(allowlist_path.read_text(encoding="utf-8"))
     for entry in data.get("entries", []):
         fp = entry.get("statement_fingerprint")
-        eid = entry.get("id")
+        expiry = entry.get("expires_on")
         if fp:
-            allowlist[fp] = eid
+            allowlist[fp] = expiry
 
 def fingerprint(text: str) -> str:
     lines = []
@@ -209,6 +223,15 @@ def fingerprint(text: str) -> str:
             lines.append(line)
     norm = " ".join(" ".join(lines).lower().split())
     return hashlib.sha256(norm.encode("utf-8")).hexdigest()
+
+def check_expiry(expiry: str) -> bool:
+    if not expiry:
+        return True
+    try:
+        expiry_date = datetime.strptime(expiry, "%Y-%m-%d")
+        return datetime.now() <= expiry_date
+    except:
+        return False
 
 violations = []
 for p in Path("$MIGRATIONS_DIR").glob("*.sql"):
@@ -228,8 +251,12 @@ for p in Path("$MIGRATIONS_DIR").glob("*.sql"):
                         continue
                     fp = fingerprint(s)
                     if fp in allowlist:
-                        allowlist_hits.append(f"{allowlist[fp]}:{p.name}")
-                        continue
+                        if check_expiry(allowlist[fp]):
+                            allowlist_hits.append(f"{allowlist[fp]}:{p.name}")
+                            continue
+                        else:
+                            violations.append(f"{p.name}: ALTER TABLE on hot table with expired allowlist: {t}")
+                            continue
                     violations.append(f"{p.name}: ALTER TABLE on hot table: {t}")
         # CREATE INDEX on hot tables must be CONCURRENTLY
         if "create index" in s_low and "concurrently" not in s_low:
@@ -240,8 +267,12 @@ for p in Path("$MIGRATIONS_DIR").glob("*.sql"):
                         continue
                     fp = fingerprint(s)
                     if fp in allowlist:
-                        allowlist_hits.append(f"{allowlist[fp]}:{p.name}")
-                        continue
+                        if check_expiry(allowlist[fp]):
+                            allowlist_hits.append(f"{allowlist[fp]}:{p.name}")
+                            continue
+                        else:
+                            violations.append(f"{p.name}: CREATE INDEX without CONCURRENTLY with expired allowlist: {t}")
+                            continue
                     violations.append(f"{p.name}: CREATE INDEX without CONCURRENTLY on hot table: {t}")
 
 out = {
@@ -252,6 +283,7 @@ out = {
     "status": "FAIL" if violations else "PASS",
     "violations": violations,
     "allowlist_hits": allowlist_hits,
+    "hot_tables": hot_tables,
 }
 Path("$POLICY_EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY
