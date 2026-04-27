@@ -4,8 +4,6 @@
 -- Work Item: tsk_p2_preauth_007_14_work_item_01
 -- Depends on: 0163, 0170
 
-BEGIN;
-
 -- Harden Schema (Explicit DDL)
 DO $$
 BEGIN
@@ -106,5 +104,3 @@ COMMENT ON FUNCTION public.validate_attestation_gate() IS
   'SECURITY DEFINER trigger function enforcing structural attestation integrity, temporal bounds, and registry contract matching on authoritative writes.';
 COMMENT ON TRIGGER trg_attestation_gate_asset_batches ON public.asset_batches IS
   'DB attestation kill switch gate - aborts INSERT on missing/malformed/stale/contract-mismatched attestations';
-
-COMMIT;

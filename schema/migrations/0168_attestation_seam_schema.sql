@@ -4,8 +4,6 @@
 -- Work Item: tsk_p2_preauth_007_12_work_item_01
 -- Depends on: 0101 (asset_batches table)
 
-BEGIN;
-
 -- Create attestation source enum
 DO $$
 BEGIN
@@ -79,5 +77,3 @@ COMMENT ON CONSTRAINT attestation_hash_format ON public.asset_batches IS
     'Enforces hex format: SHA-256 (64 chars) or SHA-512 (128 chars) when hash is populated';
 COMMENT ON CONSTRAINT attestation_version_positive ON public.asset_batches IS
     'Enforces positive version numbers when version is populated';
-
-COMMIT;

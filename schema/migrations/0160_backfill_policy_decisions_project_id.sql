@@ -1,8 +1,6 @@
 -- 0160_backfill_policy_decisions_project_id.sql
 -- Backfill policy_decisions.project_id from execution_records lineage
 
-BEGIN;
-
 DO $$
 DECLARE
     v_total_rows INT;
@@ -43,5 +41,3 @@ BEGIN
         RAISE NOTICE 'Idempotent execution: 0 rows need backfill.';
     END IF;
 END $$;
-
-COMMIT;

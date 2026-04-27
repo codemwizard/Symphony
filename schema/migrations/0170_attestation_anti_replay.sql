@@ -4,8 +4,6 @@
 -- Work Item: tsk_p2_preauth_007_13_work_item_01
 -- Depends on: 0168 (attestation seam schema)
 
-BEGIN;
-
 -- Add nonce column for replay prevention
 DO $$
 BEGIN
@@ -72,5 +70,3 @@ COMMENT ON CONSTRAINT unique_attestation_hash ON public.asset_batches IS
     'Anti-replay constraint: prevents the same attestation hash from gating two distinct issuance events';
 COMMENT ON FUNCTION public.enforce_attestation_freshness() IS
     'SECURITY DEFINER trigger function enforcing attestation freshness - rejects attestations older than 300 seconds';
-
-COMMIT;

@@ -1,8 +1,6 @@
 -- 0161_enforce_policy_decisions_project_id_not_null.sql
 -- Enforce NOT NULL on policy_decisions.project_id
 
-BEGIN;
-
 -- 1. ASSERT: Verify no nulls exist before applying constraint
 DO $$
 DECLARE
@@ -30,5 +28,3 @@ BEGIN
         RAISE EXCEPTION 'Constraint application failed. project_id is still nullable.';
     END IF;
 END $$;
-
-COMMIT;

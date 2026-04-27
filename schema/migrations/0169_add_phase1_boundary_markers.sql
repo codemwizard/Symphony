@@ -4,8 +4,6 @@
 -- Work Item: tsk_p2_preauth_007_11_work_item_01, tsk_p2_preauth_007_11_work_item_02
 -- Depends on: 0108 (monitoring_records table), 0121 (data_authority_level enum)
 
-BEGIN;
-
 -- Add phase column to monitoring_records
 DO $$
 BEGIN
@@ -77,5 +75,3 @@ COMMENT ON COLUMN public.monitoring_records.data_authority IS
     'Data authority level using data_authority_level enum. Phase 1 rows must be phase1_indicative_only';
 COMMENT ON FUNCTION public.enforce_phase1_boundary() IS
     'SECURITY DEFINER trigger function enforcing Phase 1 boundary rules: phase1 rows require data_authority=phase1_indicative_only and audit_grade=false';
-
-COMMIT;
