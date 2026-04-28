@@ -489,7 +489,7 @@ jobs:
           sudo apt-get update
           sudo systemctl stop postgresql.service || true
           python3 -c 'import os; [os.system(f"sudo pg_dropcluster {d} main --stop") for d in os.listdir("/etc/postgresql/") if d.isdigit()]' || true
-          sudo apt-get install -y postgresql-18 postgresql-client-18
+          sudo apt-get install -y postgresql-18 postgresql-client-18 postgresql-18-postgis-3
           sudo systemctl start postgresql@18-main || sudo systemctl start postgresql
           sudo -u postgres psql -c "CREATE ROLE symphony LOGIN SUPERUSER PASSWORD 'symphony';" || sudo -u postgres psql -c "ALTER ROLE symphony WITH PASSWORD 'symphony';"
           sudo -u postgres createdb -O symphony symphony || true
