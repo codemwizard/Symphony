@@ -435,17 +435,17 @@
       "sunset_migration_id": null
     },
     {
-      "migration_file": "0134_create_policy_decisions.sql",
-      "line_number": 46,
-      "statement_fingerprint": "93a3a72a37ec2963515ef6f261c180aa9e9f04fb5aea88f65eb33d6a147e9794",
+      "migration_file": "0134_policy_decisions.sql",
+      "line_number": 41,
+      "statement_fingerprint": "0397aceaa5221519ff37e79f56e3466671c63e779275d7617da22711281c2e7a",
       "reason": "DDL on hot table: CREATE INDEX without CONCURRENTLY on hot table: policy_decisions",
       "expires_on": "2026-12-31",
       "sunset_migration_id": null
     },
     {
-      "migration_file": "0134_create_policy_decisions.sql",
-      "line_number": 49,
-      "statement_fingerprint": "7d2ada05ca19a0668c0d3063c2a0506201b7e6c1591a55b9787a9b0232db0192",
+      "migration_file": "0134_policy_decisions.sql",
+      "line_number": 42,
+      "statement_fingerprint": "cc27f012fb31f79b55dbf64b7da55e845ad79190579cabb2a23db933b4832ee4",
       "reason": "DDL on hot table: CREATE INDEX without CONCURRENTLY on hot table: policy_decisions",
       "expires_on": "2026-12-31",
       "sunset_migration_id": null
