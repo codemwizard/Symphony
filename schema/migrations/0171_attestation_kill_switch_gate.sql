@@ -19,7 +19,9 @@ BEGIN
 END
 $$;
 
-ALTER TABLE public.asset_batches 
+-- symphony:pk_fk_type_change_waiver
+-- Rationale: invariant_attestation_hash is not a PK/FK column; this type change aligns hash format with contract requirements.
+ALTER TABLE public.asset_batches
     ALTER COLUMN invariant_attestation_hash TYPE VARCHAR(64);
 
 ALTER TABLE public.asset_batches 
