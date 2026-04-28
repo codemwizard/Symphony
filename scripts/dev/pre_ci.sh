@@ -600,6 +600,8 @@ if [[ "${FRESH_DB}" == "1" ]]; then
   echo "   DATABASE_URL set to ephemeral DB: ${TEMP_DB}"
   echo "   Running migrations on ephemeral DB..."
   scripts/db/migrate.sh >/dev/null
+  echo "   Seeding canonical test data..."
+  psql "$DATABASE_URL" -f scripts/dev/seed_canonical_test_data.sql >/dev/null
 else
   echo "==> Fresh DB parity disabled (FRESH_DB=${FRESH_DB}); using DATABASE_URL as provided"
 fi
@@ -804,7 +806,7 @@ fi
 echo "==> Phase-2 pre-auth invariant verifiers (Wave 7)"
 if [[ -x scripts/db/verify_tsk_p2_preauth_006a_01.sh ]]; then
   emit_preci_step_with_provenance "run_schema_checks" "scripts/db/verify_tsk_p2_preauth_006a_01.sh" ""
-  PGHOST=localhost PGPORT=5432 PGUSER=symphony_admin PGPASSWORD=symphony_pass PGDATABASE=symphony scripts/db/verify_tsk_p2_preauth_006a_01.sh
+  PGHOST=localhost PGPORT=$DB_HOST_PORT PGUSER=symphony_admin PGPASSWORD=symphony_pass PGDATABASE=symphony scripts/db/verify_tsk_p2_preauth_006a_01.sh
 else
   echo "ERROR: scripts/db/verify_tsk_p2_preauth_006a_01.sh not found"
   exit 1
@@ -812,7 +814,7 @@ fi
 
 if [[ -x scripts/db/verify_tsk_p2_preauth_005_08.sh ]]; then
   emit_preci_step_with_provenance "run_trigger_checks" "scripts/db/verify_tsk_p2_preauth_005_08.sh" ""
-  PGHOST=localhost PGPORT=5432 PGUSER=symphony_admin PGPASSWORD=symphony_pass PGDATABASE=symphony scripts/db/verify_tsk_p2_preauth_005_08.sh
+  PGHOST=localhost PGPORT=$DB_HOST_PORT PGUSER=symphony_admin PGPASSWORD=symphony_pass PGDATABASE=symphony scripts/db/verify_tsk_p2_preauth_005_08.sh
 else
   echo "ERROR: scripts/db/verify_tsk_p2_preauth_005_08.sh not found"
   exit 1

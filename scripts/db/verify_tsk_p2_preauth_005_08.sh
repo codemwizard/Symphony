@@ -46,7 +46,7 @@ BEGIN
     INSERT INTO execution_records (execution_id, project_id, tenant_id, interpretation_version_id, input_hash, output_hash, runtime_version, status) 
     VALUES (v_exec, v_proj, v_tenant, v_interp, 'ih', 'oh', 'rv', 'pending');
     INSERT INTO policy_decisions (project_id, policy_decision_id, execution_id, decision_type, authority_scope, declared_by, entity_type, entity_id, decision_hash, signature, signed_at)
-    VALUES (v_proj, v_pol, v_exec, 'STATE_TRANSITION', 'TEST', gen_random_uuid(), 'TEST_ENTITY', gen_random_uuid(), repeat('0', 64), repeat('0', 128), NOW());
+    VALUES (v_proj, v_pol, v_exec, 'ANY', 'TEST', gen_random_uuid(), 'TEST_ENTITY', gen_random_uuid(), repeat('0', 64), repeat('0', 128), NOW());
     INSERT INTO state_rules (state_rule_id, entity_type, from_state, to_state, required_decision_type, allowed) VALUES (gen_random_uuid(), 'TEST_ENTITY', 'A', 'B', 'ANY', true);
     
     EXECUTE 'ALTER TABLE billable_clients ENABLE TRIGGER ALL';

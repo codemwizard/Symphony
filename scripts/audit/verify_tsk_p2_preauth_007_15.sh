@@ -59,8 +59,8 @@ BEGIN
     VALUES (gen_random_uuid(), v_project_id, 'ASSET_BATCH', gen_random_uuid(), 'draft', 'pending', NULL, v_policy_id, v_hash, 'authoritative_signed', v_interpretation_id, v_sig);
     RAISE EXCEPTION 'N1 Failed: Should have rejected NULL execution_id for authoritative_signed';
   EXCEPTION WHEN OTHERS THEN
-    IF SQLERRM NOT LIKE '%Transition without execution binding%' THEN
-        RAISE EXCEPTION 'N1 Failed: Unexpected error message: %', SQLERRM;
+    IF SQLERRM NOT LIKE '%execution-decision binding violation%' THEN
+      RAISE EXCEPTION 'N1 Failed: Unexpected error message: %', SQLERRM;
     END IF;
   END;
 
