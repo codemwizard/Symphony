@@ -52,7 +52,7 @@ Canonical Source: docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
       parent_instruction_id, breach_amount, ceiling_value,
       outcome: CEILING_BREACH
     - recipient_redirect_blocked.json: contains adjustment_id,
-      attempted_recipient, error_code: P7601, outcome: REJECTED
+      attempted_recipient, error_code: P7504, outcome: REJECTED
     - cooling_off_execution_blocked.json: contains adjustment_id,
       state_at_attempt: cooling_off, error_code: P7701, outcome: BLOCKED
     - freeze_flag_*.json: contains adjustment_id, flag_type, error_code: P7702,

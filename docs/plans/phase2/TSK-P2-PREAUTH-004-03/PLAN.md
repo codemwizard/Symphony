@@ -200,81 +200,94 @@ Append a row: `| INV-AUTH-TRANSITION-BINDING-01 | Wave 4 | planned | evidence/ph
 
 ---
 
-## Implementation Steps
+## Work Items (ID-tagged)
 
-### Step 1: Author migration 0136 with the enforcement function
+- [ID tsk_p2_preauth_004_03_work_item_01] Author `schema/migrations/0136_enforce_authority_transition_binding.sql` containing the enforcement function exactly as specified in the *Enforcement Function* section above, with `SECURITY DEFINER` and `SET search_path = pg_catalog, public`. No other DDL in this migration.
 
-- [ID tsk_p2_preauth_004_03_work_item_01] Create `schema/migrations/0136_enforce_authority_transition_binding.sql` with the function above. SECURITY DEFINER. `SET search_path = pg_catalog, public`. No `BEGIN;` / `COMMIT;` (B5). No other DDL — the migration contains exactly one `CREATE OR REPLACE FUNCTION` for `public.enforce_authority_transition_binding`. No helper view, no helper function.
-- **Done when:** `grep -q 'CREATE OR REPLACE FUNCTION public.enforce_authority_transition_binding' schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q 'SECURITY DEFINER' schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q 'SET search_path = pg_catalog, public' schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q "'22023'" schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q "'P0002'" schema/migrations/0136_enforce_authority_transition_binding.sql` exits 0.
+- [ID tsk_p2_preauth_004_03_work_item_02] Update `schema/migrations/MIGRATION_HEAD` to `0136`.
 
-### Step 2: Advance MIGRATION_HEAD
+- [ID tsk_p2_preauth_004_03_work_item_03] Register `INV-AUTH-TRANSITION-BINDING-01` in `docs/invariants/INVARIANTS_MANIFEST.yml` and `docs/invariants/INVARIANTS_IMPLEMENTED.md` per the *Registry Contract* section.
 
-- [ID tsk_p2_preauth_004_03_work_item_02] Write the exact token `0136` to `schema/migrations/MIGRATION_HEAD`.
-- **Done when:** `grep -Fxq '0136' schema/migrations/MIGRATION_HEAD` exits 0.
-
-### Step 3: Register the invariant
-
-- [ID tsk_p2_preauth_004_03_work_item_03] Append the manifest entry to `docs/invariants/INVARIANTS_MANIFEST.yml` and the row to `docs/invariants/INVARIANTS_IMPLEMENTED.md`. Status is `planned` until evidence is fresh. The implemented-registry flip to `implemented` is a separate commit that runs after the verifier has emitted evidence at the same HEAD SHA.
-- **Done when:** `grep -q 'INV-AUTH-TRANSITION-BINDING-01' docs/invariants/INVARIANTS_MANIFEST.yml && grep -q 'INV-AUTH-TRANSITION-BINDING-01' docs/invariants/INVARIANTS_IMPLEMENTED.md` exits 0.
-
-### Step 4: Author the verifier
-
-- [ID tsk_p2_preauth_004_03_work_item_04] Create `scripts/db/verify_authority_transition_binding.sh` that runs V1, V2, V3 as described in the Verifier Contract section. Verifier writes `evidence/phase2/tsk_p2_preauth_004_03.json` with the required fields. V3 (hash recompute) is performed by the verifier script (bash + `jq` / python) — not by a pg-level helper function — because the canonical-JSON serialisation is consumed only at verify time.
-- **Done when:** `bash scripts/db/verify_authority_transition_binding.sh` exits 0 and `jq -e '.status=="PASS" and (.scenarios_passed | index("V1")) and (.scenarios_passed | index("V2")) and (.scenarios_passed | index("V3"))' evidence/phase2/tsk_p2_preauth_004_03.json` exits 0.
+- [ID tsk_p2_preauth_004_03_work_item_04] Author `scripts/db/verify_authority_transition_binding.sh` per the *Verifier Contract* section, exercising V1, V2, V3 and emitting `evidence/phase2/tsk_p2_preauth_004_03.json`.
 
 ---
 
-## Verification
+## Acceptance Criteria
 
-- [ID tsk_p2_preauth_004_03_work_item_04] `test -x scripts/db/verify_authority_transition_binding.sh && bash scripts/db/verify_authority_transition_binding.sh > evidence/phase2/tsk_p2_preauth_004_03.json || exit 1`
-- [ID tsk_p2_preauth_004_03_work_item_01] `test -f schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q 'CREATE OR REPLACE FUNCTION public.enforce_authority_transition_binding' schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q 'SECURITY DEFINER' schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q 'SET search_path = pg_catalog, public' schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q "'22023'" schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q "'P0002'" schema/migrations/0136_enforce_authority_transition_binding.sql || exit 1`
-- [ID tsk_p2_preauth_004_03_work_item_02] `test -f schema/migrations/MIGRATION_HEAD && grep -Fxq '0136' schema/migrations/MIGRATION_HEAD || exit 1`
-- [ID tsk_p2_preauth_004_03_work_item_03] `test -f docs/invariants/INVARIANTS_MANIFEST.yml && grep -q 'INV-AUTH-TRANSITION-BINDING-01' docs/invariants/INVARIANTS_MANIFEST.yml && test -f docs/invariants/INVARIANTS_IMPLEMENTED.md && grep -q 'INV-AUTH-TRANSITION-BINDING-01' docs/invariants/INVARIANTS_IMPLEMENTED.md || exit 1`
-- [ID tsk_p2_preauth_004_03_work_item_04] `test -f evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'scenarios_passed' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'V1' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'V2' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'V3' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'proof_limitations' evidence/phase2/tsk_p2_preauth_004_03.json || exit 1`
+- [ID tsk_p2_preauth_004_03_work_item_01] `grep` confirms migration 0136 contains `CREATE OR REPLACE FUNCTION public.enforce_authority_transition_binding`, `SECURITY DEFINER`, `SET search_path = pg_catalog, public`, and SQLSTATE tokens `'22023'` and `'P0002'`.
+
+- [ID tsk_p2_preauth_004_03_work_item_02] `schema/migrations/MIGRATION_HEAD` contains the exact token `0136`.
+
+- [ID tsk_p2_preauth_004_03_work_item_03] `grep` confirms `INV-AUTH-TRANSITION-BINDING-01` appears in both `INVARIANTS_MANIFEST.yml` and `INVARIANTS_IMPLEMENTED.md`.
+
+- [ID tsk_p2_preauth_004_03_work_item_04] `bash scripts/db/verify_authority_transition_binding.sh` exits 0 and `evidence/phase2/tsk_p2_preauth_004_03.json` contains `status=PASS` and `scenarios_passed` including V1, V2, V3.
 
 ---
 
-## Evidence Contract
+## Verification Commands
 
-| Path | Writer | Must include |
-|---|---|---|
-| `evidence/phase2/tsk_p2_preauth_004_03.json` | `scripts/db/verify_authority_transition_binding.sh` | `task_id`, `git_sha`, `timestamp_utc`, `status`, `checks`, `observed_paths`, `observed_hashes`, `command_outputs`, `execution_trace`, `scenarios_run`, `scenarios_passed`, `proof_limitations` |
+- `bash scripts/db/verify_authority_transition_binding.sh`
 
-Evidence is emitted only by the verifier. `proof_limitations` MUST include the signature-authenticity gap verbatim.
+- `grep -q 'CREATE OR REPLACE FUNCTION public.enforce_authority_transition_binding' schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q 'SECURITY DEFINER' schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q 'SET search_path = pg_catalog, public' schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q "'22023'" schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q "'P0002'" schema/migrations/0136_enforce_authority_transition_binding.sql`
+
+- `grep -Fxq '0136' schema/migrations/MIGRATION_HEAD`
+
+- `grep -q 'INV-AUTH-TRANSITION-BINDING-01' docs/invariants/INVARIANTS_MANIFEST.yml && grep -q 'INV-AUTH-TRANSITION-BINDING-01' docs/invariants/INVARIANTS_IMPLEMENTED.md`
+
+---
+
+## Evidence
+
+Path: `evidence/phase2/tsk_p2_preauth_004_03.json`
+
+Must include: `task_id`, `git_sha`, `timestamp_utc`, `status`, `checks`, `observed_paths`, `observed_hashes`, `command_outputs`, `execution_trace`, `scenarios_run`, `scenarios_passed`, `proof_limitations`.
 
 ---
 
 ## Failure Modes
 
-| Mode | Severity |
-|---|---|
-| Function missing SECURITY DEFINER / `SET search_path` | CRITICAL_FAIL |
-| Migration 0136 contains DDL beyond the `enforce_authority_transition_binding` function (e.g. helper view, helper function) | FAIL_REVIEW |
-| Verifier skips decision_hash recompute | CRITICAL_FAIL |
-| Invariant marked implemented without fresh evidence | FAIL |
-| ALTER targets applied migration | CRITICAL_FAIL |
-| Verifier claims signature authenticity without public-key layer | CRITICAL_FAIL |
-| Any of V1/V2/V3 omitted | FAIL_REVIEW |
+- Enforcement function missing `SECURITY DEFINER` or `SET search_path = pg_catalog, public` → CRITICAL_FAIL (AGENTS.md hardening).
+
+- Migration 0136 contains DDL beyond the enforce_authority_transition_binding function (helper view, helper function, or any other CREATE/ALTER) → FAIL_REVIEW (violates SINGLE_INVARIANT scope and introduces tautological checks).
+
+- Verifier skips decision_hash recompute step → CRITICAL_FAIL (failing open on hash integrity, and silently dropping the entity-tampering guard which V3 subsumes).
+
+- Invariant marked `status=implemented` without fresh `evidence/phase2/tsk_p2_preauth_004_03.json` → FAIL (stale-evidence precondition).
+
+- ALTER statement targets an applied migration (0001-0135) → CRITICAL_FAIL.
+
+- Migration 0136 applied but MIGRATION_HEAD still reads 0135 → FAIL.
+
+- Verifier claims signature authenticity is validated while public-key resolution layer is absent → CRITICAL_FAIL (fabricated proof).
+
+- Any of V1, V2, V3 omitted from the verifier → FAIL_REVIEW.
 
 ---
 
-## Rollback
+## Proof Limitations
 
-Forward-only. Rollback is a new migration that drops the `enforce_authority_transition_binding` function. Do not edit 0136 after merge.
+- Signature authenticity is NOT verified. The verifier validates structural binding (FK + execution_id equality + existence of execution_records + decision_hash recompute) but does not verify Ed25519 signatures because public-key resolution for declared_by is deferred to a later wave. This limitation is declared explicitly, not silently.
 
----
+- Insert-time cross-entity coherence between policy_decisions and execution_records is NOT enforced. execution_records does not yet carry entity_type/entity_id columns on Wave 4 (verified across migrations 0118, 0131, 0132, 0133), so a trigger that rejects a new policy_decisions row whose entity does not match its execution's entity cannot be written until a follow-up task extends execution_records with those columns. Verify-time protection rests on three layers: (a) FK+equality on execution_id plus existence check on execution_records, (b) hash recompute which subsumes entity-column tampering because decision_payload is row-derived, (c) UNIQUE (execution_id, decision_type).
 
-## Risk
+- The enforcement function can only be invoked from whichever trigger or code path the Wave 5 state machine attaches it to. This task installs the function; attachment to a specific trigger point on an authority-bearing transition table is Wave 5's responsibility and is tracked as a follow-up.
 
-| Risk | Mitigation |
-|---|---|
-| Verifier tolerates V3 by treating mismatch as success | V3 is contracted in PLAN, meta, and evidence; harness exits non-zero if V3 is not recorded |
-| Signature verification claimed without key layer | `proof_limitations` is mandatory; verifier writes it literally; stop_conditions flags as CRITICAL_FAIL if the claim appears |
-| Migration ordering gate breaks | MIGRATION_HEAD advance is its own work item with explicit verification |
+- decision_hash recompute requires a canonical_json implementation. This task performs the recompute inside the verifier script (bash + jq / python) rather than via a pg-level helper, because the canonical-JSON serialisation is consumed only at verify time and migration 0136 is constrained to contain exactly the enforce_authority_transition_binding function (no helper view, no helper function). RFC 8785 JCS is applied to the subset of payload types decision_payload is permitted to contain; support for arbitrary nested types is out of scope.
 
 ---
 
-## Approval
+## Must Read
 
-Approved by: INVARIANTS_CURATOR
-Approval metadata: not required for CREATE-TASK authorship; IMPLEMENT-TASK run will require approval metadata on `schema/migrations/**` and `docs/invariants/**` per AGENTS.md.
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md
+- docs/plans/phase2/TSK-P2-PREAUTH-004-01/PLAN.md
+- docs/plans/phase2/TSK-P2-PREAUTH-004-02/PLAN.md
+- docs/invariants/INVARIANTS_QUICK.md
+- docs/invariants/INVARIANTS_IMPLEMENTED.md
+- AGENTS.md
+
+---
+
+## Notes
+
+SINGLE_INVARIANT scope. This task seals Wave 4: the row type (004-01) and the rule type (004-02) are inert without the binding invariant. The enforcement function is SECURITY DEFINER because the state machine (Wave 5) will invoke it from a role that does not have SELECT on execution_records directly; the SET search_path hardening is mandatory per AGENTS.md. Signature authenticity is explicitly NOT claimed; the verifier declares this in proof_limitations so a future auditor can locate the gap.

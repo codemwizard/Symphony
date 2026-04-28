@@ -1,0 +1,60 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-TEST-001
+title: "Temporary Test Task for Assessment"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DATABASE
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON correctly demonstrates enforcement via state evaluation."
+proof_limitations:
+  - "Does not prove runtime API integration (deferred)."
+
+touches:
+  - scripts/audit/verify_tsk_test_001.sh
+  - evidence/phase2/tsk_test_001.json
+  - tasks/TSK-TEST-001/meta.yml
+  - docs/plans/phase2/TSK-TEST-001/PLAN.md
+  - docs/plans/phase2/TSK-TEST-001/EXEC_LOG.md
+
+work:
+  - '[ID tsk_test_001_work_01] Create a dummy test table'
+  - '[ID tsk_test_001_work_02] Add test constraints'
+
+acceptance_criteria:
+  - '[ID tsk_test_001_work_01] Dummy test table exists'
+  - '[ID tsk_test_001_work_02] Test constraints are active'
+
+verification:
+  - '# [ID tsk_test_001_work_01] [ID tsk_test_001_work_02] test -x scripts/audit/verify_tsk_test_001.sh && bash scripts/audit/verify_tsk_test_001.sh > evidence/phase2/tsk_test_001.json || exit 1'
+
+evidence:
+  - path: evidence/phase2/tsk_test_001.json
+    must_include:
+      - task_id
+      - status
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+implementation_plan: docs/plans/phase2/TSK-TEST-001/PLAN.md
+implementation_log: docs/plans/phase2/TSK-TEST-001/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py'
+client: cursor
+assigned_agent: db_foundation
+model: claude-sonnet-4-20250514
+
+depends_on: []
+invariants: []

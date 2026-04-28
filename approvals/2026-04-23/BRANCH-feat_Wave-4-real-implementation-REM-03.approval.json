@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-04-23T07:27:00Z",
+  "git_commit": "current",
+  "change_scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "schema/migrations/0137_create_state_transitions.sql",
+      "schema/migrations/MIGRATION_HEAD"
+    ]
+  },
+  "ai": {
+    "ai_prompt_hash": "rem_03_idempotency_constraint_20260423",
+    "model_id": "SWE-1.6",
+    "client": "cursor_codex"
+  },
+  "human_approval": {
+    "approver_id": "human_reviewer",
+    "approval_artifact_ref": "approvals/2026-04-23/BRANCH-feat_Wave-4-real-implementation-REM-03.md",
+    "change_reason": "REM-03: Replace weak UNIQUE constraint with strong hash-based idempotency constraint as required by Wave-5-for-Devin.md",
+    "approved_at_utc": "2026-04-23T07:27:00Z"
+  },
+  "notes": "Stage A approval for TSK-P2-PREAUTH-005-REM-03. Constraint change from UNIQUE(entity_type, entity_id, execution_id) to UNIQUE(entity_type, entity_id, transition_hash)."
+}

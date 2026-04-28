@@ -1,0 +1,24 @@
+{
+  "task_id": "TSK-P2-PREAUTH-007-08",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "timestamp_utc": "2026-04-26T01:18:17Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "tsk_p2_preauth_007_08_check_01",
+      "description": "DATABASE_URL is set",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_08_work_item_01",
+      "description": "public_keys_registry exists and rejects overlapping temporal bounds",
+      "result": "PASS"
+    }
+  ],
+  "observed_hashes": [
+    {
+      "path": "scripts/audit/verify_tsk_p2_preauth_007_08.sh",
+      "sha256": "0a8211f14ef7dc2a38309754219e3ac4aab1273ba8295cc6f458baedc79fc452"
+    }
+  ]
+}

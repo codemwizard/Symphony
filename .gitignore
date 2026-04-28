@@ -15,7 +15,7 @@ infra/docker/.env
 
 # Audit & Legacy (Optional, typically archived)
 archive/
-
+_scratch/
 # Logs & Build
 *.log
 dist/

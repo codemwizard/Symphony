@@ -1,0 +1,180 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-007-19-R3
+title: Fail meaningless fallbacks when DATABASE_URL unset
+owner_role: SECURITY_GUARDIAN
+status: planned
+priority: HIGH
+risk_class: SECURITY
+blast_radius: SCRIPTS_ONLY
+
+intent: >-
+  Replace "unknown:unknown:unknown" fallbacks with explicit failure when DATABASE_URL is not set,
+  ensuring provenance is never meaningless. The original implementation returned meaningless placeholders
+  when DATABASE_URL was unset, providing no actual provenance and potentially masking configuration errors.
+
+anti_patterns:
+  - "Returning 'unknown' values when DATABASE_URL is unset"
+  - "Silent fallbacks that provide no provenance"
+  - "Accepting 'unknown' in provenance fields"
+  - "Continuing execution without DATABASE_URL"
+
+out_of_scope:
+  - Changing DATABASE_URL format or structure
+  - Modifying environment fingerprint capture logic
+  - Changing executor identity capture logic (except error handling)
+
+stop_conditions:
+  - "If functions still return 'unknown' when DATABASE_URL unset → STOP"
+  - "If verifier accepts 'unknown' values → STOP"
+  - "If DATABASE_URL check is not explicit → STOP"
+
+proof_guarantees:
+  - "Functions fail with clear error when DATABASE_URL is unset"
+  - "Error message explicitly states DATABASE_URL requirement"
+  - "Verifier rejects 'unknown' in any provenance field"
+  - "Verifier passes when DATABASE_URL is set correctly"
+
+proof_limitations:
+  - "Only validates at capture time, not at every step of CI execution"
+  - "Relies on environment variable being set correctly"
+
+depends_on:
+  - TSK-P2-PREAUTH-007-19-R2
+
+blocks:
+  - TSK-P2-PREAUTH-007-19-R4
+
+touches:
+  - scripts/dev/pre_ci.sh
+  - scripts/audit/verify_tsk_p2_preauth_007_19.sh
+  - tasks/TSK-P2-PREAUTH-007-19-R3/meta.yml
+
+deliverable_files:
+  - scripts/dev/pre_ci.sh
+  - scripts/audit/verify_tsk_p2_preauth_007_19.sh
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19-R3/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19-R3/EXEC_LOG.md
+
+invariants:
+  - INV-SEC-003
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/dev/**
+    - scripts/audit/**
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:55432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:55432/symphony\""
+
+work:
+  - >-
+    [ID tsk_p2_preauth_007_19_r3_work_01] Add explicit check in capture_env_fingerprint to fail if DATABASE_URL is unset
+  - >-
+    [ID tsk_p2_preauth_007_19_r3_work_02] Add explicit check in capture_executor_identity to fail if DATABASE_URL is unset
+  - >-
+    [ID tsk_p2_preauth_007_19_r3_work_03] Update error messages to be specific: "DATABASE_URL must be set for provenance capture"
+  - >-
+    [ID tsk_p2_preauth_007_19_r3_work_04] Update verifier to reject "unknown" values in any provenance field
+  - >-
+    [ID tsk_p2_preauth_007_19_r3_work_05] Run verifier without DATABASE_URL and confirm it fails explicitly
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_007_19_r3_work_01] Functions fail with clear error when DATABASE_URL is unset
+  - >-
+    [ID tsk_p2_preauth_007_19_r3_work_03] Error message explicitly states DATABASE_URL requirement
+  - >-
+    [ID tsk_p2_preauth_007_19_r3_work_04] Verifier rejects "unknown" in any provenance field
+  - >-
+    [ID tsk_p2_preauth_007_19_r3_work_05] Verifier passes when DATABASE_URL is set correctly
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-007-19-R3-N1
+    description: Functions fail when DATABASE_URL is unset
+    required: true
+  - id: TSK-P2-PREAUTH-007-19-R3-N2
+    description: Verifier rejects "unknown" in provenance fields
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-007-19-R3-P1
+    description: Functions succeed when DATABASE_URL is set
+    required: true
+  - id: TSK-P2-PREAUTH-007-19-R3-P2
+    description: Verifier passes with valid DATABASE_URL
+    required: true
+
+verification:
+  - >-
+    # Test 1: Without DATABASE_URL (should fail)
+    bash scripts/audit/verify_tsk_p2_preauth_007_19.sh > evidence/phase2/tsk_p2_preauth_007_19_r3_fail.json || true
+  - >-
+    # Test 2: With DATABASE_URL (should pass)
+    export DATABASE_URL="postgresql://symphony_admin:symphony_pass@localhost:55432/symphony"
+    bash scripts/audit/verify_tsk_p2_preauth_007_19.sh > evidence/phase2/tsk_p2_preauth_007_19_r3_pass.json
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_007_19_r3_fail.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - database_url_failure_check
+  - path: evidence/phase2/tsk_p2_preauth_007_19_r3_pass.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - database_url_success_check
+
+failure_modes:
+  - "Functions still return 'unknown' => FAIL"
+  - "Verifier accepts 'unknown' => FAIL"
+  - "Error message is not specific => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19-REMEDIATION/DRD.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-19/PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-007-19-R3/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-007-19-R3/EXEC_LOG.md
+
+notes: >-
+  This fix addresses the meaningless fallback issue. The original implementation returned "unknown:unknown:unknown"
+  when DATABASE_URL was unset, which provides no actual provenance and could mask configuration errors. This is a
+  foundational fix required before R4 (evidence digest validation) can work correctly.
+client: cursor
+assigned_agent: security_guardian
+model: claude-sonnet-4-20250514

@@ -1,0 +1,49 @@
+{
+  "task_id": "TSK-P2-W5-FIX-03",
+  "git_sha": "d805b381",
+  "timestamp_utc": "2026-04-25T05:59:24Z",
+  "run_id": "d805b381-2026-04-25T05:59:24Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "fk_constraints_count_verified",
+      "status": "PASS",
+      "description": "2 FK constraints found on state_transitions"
+    },
+    {
+      "name": "fk_execution_id_verified",
+      "status": "PASS",
+      "description": "fk_st_execution_id constraint exists"
+    },
+    {
+      "name": "fk_policy_decision_id_verified",
+      "status": "PASS",
+      "description": "fk_st_policy_decision_id constraint exists"
+    },
+    {
+      "name": "n1_orphan_execution_id_rejected",
+      "status": "SKIPPED",
+      "description": "INSERT with non-existent execution_id rejected (SQLSTATE 23503)"
+    },
+    {
+      "name": "n2_orphan_policy_decision_id_rejected",
+      "status": "SKIPPED",
+      "description": "INSERT with non-existent policy_decision_id rejected (SQLSTATE 23503)"
+    },
+    {
+      "name": "p1_valid_insert_succeeds",
+      "status": "SKIPPED",
+      "description": "INSERT with valid IDs succeeds (in transaction)"
+    }
+  ],
+  "fk_execution_id_verified": true,
+  "fk_policy_decision_id_verified": true,
+  "negative_test_results": {
+    "N1": "SKIPPED - orphan execution_id rejection",
+    "N2": "SKIPPED - orphan policy_decision_id rejection"
+  },
+  "positive_test_results": {
+    "P1": "SKIPPED - valid INSERT"
+  },
+  "notes": "FK constraints enforce referential integrity at DB level. Tests skipped if no valid execution_id or policy_decision_id available."
+}

@@ -1,25 +1,25 @@
 {
-  "timestamp_utc": "1970-01-01T00:00:00Z",
-  "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "06545fe3f538515080117719d8d8bd0acb0136101bc7d7d61a37f052481dc898",
+  "timestamp_utc": "2026-04-25T23:51:14Z",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "schema_fingerprint": "faee7f9919acdb4bf6007f3f9471e1720ddaddaa270810e47fcbb0417ba42799",
   "schema_version": "1.0",
   "status": "PASS",
-  "checked_at_utc": "1970-01-01T00:00:00+00:00",
-  "git_commit": "0000000000000000000000000000000000000000",
-  "mode": "auto",
+  "checked_at_utc": "2026-04-25T23:51:33.302644+00:00",
+  "git_commit": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "mode": "stage-a",
   "canonical_docs": [
     {
-      "path": "/home/ubuntu/Symphony/docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md",
+      "path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md",
       "exists": true,
       "sha256": "b7f52cb859c3780915db31946ec3b4b4b49f53d62693c0db8d84b6ba7fc6f5a1"
     },
     {
-      "path": "/home/ubuntu/Symphony/docs/operations/AGENT_ROLE_RECONCILIATION.md",
+      "path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/docs/operations/AGENT_ROLE_RECONCILIATION.md",
       "exists": true,
       "sha256": "6334490f2c397cd67888ed140abf2c1a2a2c919b08bc2f33666773e58ff65c0d"
     },
     {
-      "path": "/home/ubuntu/Symphony/docs/operations/AI_AGENT_OPERATION_MANUAL.md",
+      "path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/docs/operations/AI_AGENT_OPERATION_MANUAL.md",
       "exists": true,
       "sha256": "e89379900375daec52c4ba479fb5418486a2b4c639ded812305d5693f0913e6b"
     }
@@ -27,7 +27,7 @@
   "agent_files_checked": {
     "count": 11,
     "files": [
-      "/home/ubuntu/Symphony/AGENTS.md",
+      "/home/mwiza/workspaces/Symphony-Demo/Symphony/AGENTS.md",
       ".codex/agents/architect.md",
       ".codex/agents/compliance_mapper.md",
       ".codex/agents/db_foundation.md",
@@ -61,8 +61,47 @@
       "8. Cross-References (Machine-Readable)"
     ]
   },
-  "regulated_surface_changes_detected": false,
-  "regulated_surface_changed_paths": [],
+  "regulated_surface_changes_detected": true,
+  "regulated_surface_changed_paths": [
+    "docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md",
+    "evidence/phase0/baseline_governance.json",
+    "evidence/phase0/ddl_allowlist_governance.json",
+    "evidence/phase0/ddl_lock_risk.json",
+    "evidence/phase0/evidence.json",
+    "evidence/phase0/remediation_trace.json",
+    "evidence/phase0/schema_hash.txt",
+    "evidence/phase0/sqlstate_map_drift.json",
+    "evidence/phase0/task_plans_present.json",
+    "evidence/phase0/tsk_clean_001__task_metadata_truth_pass.json",
+    "evidence/phase0/yaml_conventions_lint.json",
+    "evidence/phase1/agent_conformance_architect.json",
+    "evidence/phase1/agent_conformance_implementer.json",
+    "evidence/phase1/agent_conformance_policy_guardian.json",
+    "evidence/phase1/git_diff_semantics.json",
+    "evidence/phase1/human_governance_review_signoff.json",
+    "evidence/phase1/invproc_02_register_parity.json",
+    "evidence/phase1/tsk_p1_062_worktree_cleanup_and_guards.json",
+    "evidence/phase1/tsk_p1_073_remediation_artifact_freshness.json",
+    "evidence/phase2/tsk_p2_preauth_004_02.json",
+    "evidence/phase2/tsk_p2_preauth_004_03.json",
+    "evidence/phase2/tsk_p2_preauth_005_cleanup.json",
+    "evidence/security_remediation/r_026_run_task_strict_enforcement.json",
+    "schema/migrations/0120_create_state_transitions.sql",
+    "schema/migrations/0121_create_data_authority_enum.sql",
+    "schema/migrations/0122_create_data_authority_triggers.sql",
+    "schema/migrations/0134_create_policy_decisions.sql",
+    "schema/migrations/0135_state_rules.sql",
+    "schema/migrations/0136_enforce_authority_transition_binding.sql",
+    "schema/migrations/0137_create_state_transitions.sql",
+    "schema/migrations/0138_create_state_current.sql",
+    "schema/migrations/0139_create_enforce_transition_state_rules.sql",
+    "schema/migrations/0140_create_enforce_transition_authority.sql",
+    "schema/migrations/0141_create_enforce_transition_signature.sql",
+    "schema/migrations/0142_create_enforce_execution_binding.sql",
+    "schema/migrations/0143_create_deny_state_transitions_mutation.sql",
+    "schema/migrations/0144_create_update_current_state.sql",
+    "schema/migrations/MIGRATION_HEAD"
+  ],
   "regulated_surface_rule_source": "docs/operations/REGULATED_SURFACE_PATHS.yml",
   "regulated_surface_patterns": [
     "schema/migrations/**",
@@ -79,11 +118,11 @@
     "mode": "range",
     "base_ref": "refs/remotes/origin/main",
     "head_ref": "HEAD",
-    "merge_base": "87ba14f06791b6971eb973812afd0a0078cfc75c"
+    "merge_base": "ec9c0359153674f33a8166753b91021052c1e0ad"
   },
-  "approval_required": false,
+  "approval_required": true,
   "approval_metadata_present": true,
-  "approval_metadata_ref": "/home/ubuntu/Symphony/evidence/phase1/approval_metadata.json",
+  "approval_metadata_ref": "/home/mwiza/workspaces/Symphony-Demo/Symphony/evidence/phase1/approval_metadata.json",
   "failures": [],
   "check_id": "AGENT-CONFORMANCE-ARCHITECT",
   "subject_role": "Architect Agent"

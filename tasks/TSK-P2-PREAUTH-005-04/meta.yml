@@ -43,7 +43,7 @@ blocks:
   - TSK-P2-PREAUTH-005-05
 
 touches:
-  - schema/migrations/0120_create_state_transitions.sql
+  - schema/migrations/0140_create_enforce_transition_authority.sql
   - scripts/db/verify_tsk_p2_preauth_005_04.sh
   - tasks/TSK-P2-PREAUTH-005-04/meta.yml
 
@@ -51,7 +51,7 @@ invariants: []
 
 work:
   - >-
-    [ID tsk_p2_preauth_005_04_work_item_01] Add enforce_transition_authority() function to migration 0120
+    [ID tsk_p2_preauth_005_04_work_item_01] Add enforce_transition_authority() function to migration 0140
     as SECURITY DEFINER with SET search_path = pg_catalog, public. Function verifies policy_decision_id
     is present for authoritative transitions and raises GF033 if missing.
   - >-

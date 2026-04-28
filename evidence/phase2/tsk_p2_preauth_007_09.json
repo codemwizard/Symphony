@@ -1,0 +1,24 @@
+{
+  "task_id": "TSK-P2-PREAUTH-007-09",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "timestamp_utc": "2026-04-26T01:18:46Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "tsk_p2_preauth_007_09_check_01",
+      "description": "DATABASE_URL is set",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_09_work_item_01",
+      "description": "delegated_signing_grants table exists and correctly maps actor scope to payload",
+      "result": "PASS"
+    }
+  ],
+  "observed_hashes": [
+    {
+      "path": "scripts/audit/verify_tsk_p2_preauth_007_09.sh",
+      "sha256": "0e5ad69b8dc246e67bf363828d35502cea2bf7124d77854ca2d89a524467a964"
+    }
+  ]
+}

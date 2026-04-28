@@ -220,15 +220,12 @@ nodes:
   stage: 2-authority-binding
   title: Create state_rules table
   depends_on:
-  - TSK-P2-PREAUTH-004-00
   - TSK-P2-PREAUTH-004-01
   kind: task
 - id: TSK-P2-PREAUTH-004-03
   stage: 2-authority-binding
-  title: Register and enforce INV-AUTH-TRANSITION-BINDING-01 (authority transition binding invariant)
+  title: Enforce authority transition binding (INV-138)
   depends_on:
-  - TSK-P2-PREAUTH-004-00
-  - TSK-P2-PREAUTH-004-01
   - TSK-P2-PREAUTH-004-02
   kind: task
 - id: checkpoint/AUTH-BIND
@@ -236,7 +233,6 @@ nodes:
   title: "Checkpoint AUTH-BIND — authority binding complete"
   kind: checkpoint
   depends_on:
-  - TSK-P2-PREAUTH-004-02
   - TSK-P2-PREAUTH-004-03
 
 # STAGE 3 — State Machine + Trigger Layer (HIGHEST RISK)

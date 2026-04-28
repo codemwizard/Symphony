@@ -1,15 +1,16 @@
 {
   "check_id": "SQLSTATE-MAP-DRIFT",
-  "timestamp_utc": "2026-04-21T11:41:48Z",
-  "git_sha": "b549e68de2f350b8a9197839d8fed5b333a921a4",
-  "schema_fingerprint": "06545fe3f538515080117719d8d8bd0acb0136101bc7d7d61a37f052481dc898",
+  "timestamp_utc": "2026-04-25T06:47:53Z",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "schema_fingerprint": "faee7f9919acdb4bf6007f3f9471e1720ddaddaa270810e47fcbb0417ba42799",
   "status": "PASS",
   "details": {
     "missing_codes": [],
     "invalid_entries": [],
-    "scanned_files": 940,
+    "scanned_files": 993,
     "found_codes": [
       "P0001",
+      "P0002",
       "P7001",
       "P7002",
       "P7003",
@@ -40,6 +41,7 @@
       "P7501",
       "P7502",
       "P7503",
+      "P7504",
       "P7601",
       "P7701",
       "P7702",

@@ -1,0 +1,12 @@
+# Hot Tables List
+# These tables require strict DDL controls per INV-022/INV-040
+# Any ALTER TABLE operation on these tables must be fingerprinted in ddl_allowlist.json
+
+state_transitions
+state_current
+policy_decisions
+outbox
+execution_records
+asset_batches
+monitoring_records
+public_keys_registry

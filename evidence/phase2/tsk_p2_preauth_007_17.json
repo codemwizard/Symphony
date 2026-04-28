@@ -1,0 +1,24 @@
+{
+  "task_id": "TSK-P2-PREAUTH-007-17",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "timestamp_utc": "2026-04-26T12:43:40Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "tsk_p2_preauth_007_17_structural",
+      "description": "Verify schema columns",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_17_behavioral",
+      "description": "Verify client_type constraint",
+      "result": "PASS"
+    }
+  ],
+  "observed_hashes": [
+    {
+      "path": "scripts/audit/verify_tsk_p2_preauth_007_17.sh",
+      "sha256": "8fda7c570820195a308f91b59404c58aaf37c5b71c535f7ba1f8aced768f7f2a"
+    }
+  ]
+}

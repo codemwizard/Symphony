@@ -1,0 +1,29 @@
+{
+  "task_id": "TSK-P2-PREAUTH-007-06",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "timestamp_utc": "2026-04-25T23:01:19Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "tsk_p2_preauth_007_06_check_01",
+      "description": "DATABASE_URL is set",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_06_work_item_01",
+      "description": "invariant_registry table exists with correct schema",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_06_work_item_02",
+      "description": "Append-only trigger correctly blocks UPDATE and DELETE",
+      "result": "PASS"
+    }
+  ],
+  "observed_hashes": [
+    {
+      "path": "scripts/audit/verify_tsk_p2_preauth_007_06.sh",
+      "sha256": "7f4d806ff4bb05da6d076e998ab0b5f0778d79cb65b145a771b88abb5a81f6f1"
+    }
+  ]
+}

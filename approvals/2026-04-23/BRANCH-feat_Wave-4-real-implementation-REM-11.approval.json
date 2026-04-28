@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-04-23T07:32:00Z",
+  "git_commit": "current",
+  "change_scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "schema/migrations/0138_create_state_current.sql",
+      "schema/migrations/0144_create_update_current_state.sql",
+      "schema/migrations/MIGRATION_HEAD"
+    ]
+  },
+  "ai": {
+    "ai_prompt_hash": "rem_11_projection_architecture_20260423",
+    "model_id": "SWE-1.6",
+    "client": "cursor_codex"
+  },
+  "human_approval": {
+    "approver_id": "human_reviewer",
+    "approval_artifact_ref": "approvals/2026-04-23/BRANCH-feat_Wave-4-real-implementation-REM-11.md",
+    "change_reason": "REM-11: Fix PK in state_current from project_id to (entity_type, entity_id) and rename trigger to trg_06_update_current as required by Wave-5-for-Devin.md",
+    "approved_at_utc": "2026-04-23T07:32:00Z"
+  },
+  "notes": "Stage A approval for TSK-P2-PREAUTH-005-REM-11. Changing PK to generic entity model and renaming trigger for explicit ordering."
+}

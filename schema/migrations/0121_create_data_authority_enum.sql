@@ -28,11 +28,6 @@ ADD COLUMN IF NOT EXISTS data_authority public.data_authority_level,
 ADD COLUMN IF NOT EXISTS audit_grade BOOLEAN,
 ADD COLUMN IF NOT EXISTS authority_explanation TEXT;
 
-ALTER TABLE state_transitions
-ADD COLUMN IF NOT EXISTS data_authority public.data_authority_level,
-ADD COLUMN IF NOT EXISTS audit_grade BOOLEAN,
-ADD COLUMN IF NOT EXISTS authority_explanation TEXT;
-
 -- BACKFILL: Set default values for existing data
 UPDATE monitoring_records
 SET data_authority = 'phase1_indicative_only',
@@ -46,12 +41,6 @@ SET data_authority = 'phase1_indicative_only',
     authority_explanation = 'Phase 1 data - no execution binding'
 WHERE data_authority IS NULL;
 
-UPDATE state_transitions
-SET data_authority = 'non_reproducible',
-    audit_grade = false,
-    authority_explanation = 'No execution context recorded'
-WHERE data_authority IS NULL;
-
 -- CONTRACT PHASE: Set NOT NULL constraints
 ALTER TABLE monitoring_records
 ALTER COLUMN data_authority SET NOT NULL,
@@ -59,11 +48,6 @@ ALTER COLUMN audit_grade SET NOT NULL,
 ALTER COLUMN authority_explanation SET NOT NULL;
 
 ALTER TABLE asset_batches
-ALTER COLUMN data_authority SET NOT NULL,
-ALTER COLUMN audit_grade SET NOT NULL,
-ALTER COLUMN authority_explanation SET NOT NULL;
-
-ALTER TABLE state_transitions
 ALTER COLUMN data_authority SET NOT NULL,
 ALTER COLUMN audit_grade SET NOT NULL,
 ALTER COLUMN authority_explanation SET NOT NULL;

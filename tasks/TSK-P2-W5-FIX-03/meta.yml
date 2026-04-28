@@ -1,0 +1,293 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W5-FIX-03
+title: "Add FK constraints on state_transitions.execution_id and policy_decision_id to enforce referential integrity at DB level"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+# ── Why this task exists ───────────────────────────────────────────────────
+intent: >-
+  Migration 0137 created state_transitions with execution_id UUID NOT NULL and
+  policy_decision_id UUID NOT NULL, but declared no FOREIGN KEY constraints
+  pointing to execution_records(execution_id) or policy_decisions(policy_decision_id).
+  The DoD is explicit: 'No soft references. No we validate in code.' Without DB-level
+  FK enforcement, a direct INSERT that bypasses or pre-dates the triggers leaves
+  dangling references with no enforcement. This is a referential integrity gap
+  that makes the authority chain unverifiable.
+
+# ── What this task must NOT do ─────────────────────────────────────────────
+anti_patterns:
+  - "Editing migration 0137 directly — forward-only migrations are immutable"
+  - "Adding FKs without checking for existing orphaned rows — silent constraint failure"
+  - "Bundling SECURITY DEFINER or trigger ordering changes"
+  - "Marking complete without proving FK rejection on orphan INSERT"
+
+# ── Anti-drift boundaries ──────────────────────────────────────────────────
+out_of_scope:
+  - "SECURITY DEFINER hardening (TSK-P2-W5-FIX-04)"
+  - "Trigger ordering (TSK-P2-W5-FIX-05)"
+  - "ON DELETE policy changes on state_current (TSK-P2-W5-FIX-06)"
+stop_conditions:
+  - "Existing orphaned rows prevent FK constraint creation — must abort with PRECONDITION FAILED"
+  - "FK uses ON DELETE CASCADE — append-only table must not cascade deletes"
+  - "Verifier does not attempt INSERT with non-existent execution_id or policy_decision_id"
+  - "Approval metadata not created before editing regulated surface"
+
+# ── Proof limits ───────────────────────────────────────────────────────────
+proof_guarantees:
+  - "FK constraint exists: state_transitions.execution_id REFERENCES execution_records(execution_id)"
+  - "FK constraint exists: state_transitions.policy_decision_id REFERENCES policy_decisions(policy_decision_id)"
+  - "INSERT with non-existent execution_id is rejected by DB constraint (not trigger)"
+  - "INSERT with non-existent policy_decision_id is rejected by DB constraint (not trigger)"
+proof_limitations:
+  - "Does not prove FK behavior under concurrent transactions"
+  - "Does not prove SECURITY DEFINER correctness (deferred to FIX-04)"
+
+# ── Dependencies ───────────────────────────────────────────────────────────
+depends_on:
+  - TSK-P2-W5-FIX-02
+
+blocks:
+  - TSK-P2-W5-FIX-04
+
+# ── File scope ─────────────────────────────────────────────────────────────
+touches:
+  - schema/migrations/0147_add_fks_to_state_transitions.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_w5_fix_03.sh
+  - evidence/phase2/tsk_p2_w5_fix_03.json
+  - tasks/TSK-P2-W5-FIX-03/meta.yml
+  - docs/plans/phase2/TSK-P2-W5-FIX-03/PLAN.md
+  - docs/plans/phase2/TSK-P2-W5-FIX-03/EXEC_LOG.md
+  # Post-implementation governance (SYMPHONY_TASK_IMPLEMENTATION_PROCESS Steps 9-13)
+  - docs/architecture/THREAT_MODEL.md
+  - docs/architecture/COMPLIANCE_MAP.md
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - evidence/phase0/baseline_drift.json
+  - evidence/phase0/baseline_governance.json
+  - evidence/phase0/schema_hash.txt
+  - evidence/phase0/structural_doc_linkage.json
+
+# ── Invariants ─────────────────────────────────────────────────────────────
+invariants: []
+
+# ── Deliverable files (for churn control) ─────────────────────────────────
+deliverable_files:
+  - schema/migrations/0147_add_fks_to_state_transitions.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_w5_fix_03.sh
+  - evidence/phase2/tsk_p2_w5_fix_03.json
+  - docs/plans/phase2/TSK-P2-W5-FIX-03/EXEC_LOG.md
+  - docs/architecture/THREAT_MODEL.md
+  - docs/architecture/COMPLIANCE_MAP.md
+  - schema/baselines/current/0001_baseline.sql
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - evidence/phase0/schema_hash.txt
+  - evidence/phase0/baseline_governance.json
+  - evidence/phase0/baseline_drift.json
+  - evidence/phase0/structural_doc_linkage.json
+
+# ── Regulated Surface Compliance (CRITICAL) ────────────────────────────────
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - schema/migrations/0147_add_fks_to_state_transitions.sql
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+# ── Remediation Trace Compliance (CRITICAL) ────────────────────────────────
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+# ── Database Connection ────────────────────────────────────────────────────
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+# ── Migration Dependencies ─────────────────────────────────────────────────
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - "0134": "policy_decisions table with policy_decision_id PK"
+    - "0137": "state_transitions table with execution_id and policy_decision_id"
+    - "0146": "state_rules entity_type (FIX-02)"
+  table_dependencies:
+    - "execution_records": "must exist with execution_id PK"
+    - "policy_decisions": "must exist with policy_decision_id PK"
+    - "state_transitions": "must exist with execution_id and policy_decision_id columns"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+
+# ── Work items ─────────────────────────────────────────────────────────────
+work:
+  - >-
+    [ID w5_fix_03_work_01] Verify no orphaned rows exist: query
+    state_transitions for execution_id values not in execution_records and
+    policy_decision_id values not in policy_decisions. Record counts in
+    EXEC_LOG.md.
+  - >-
+    [ID w5_fix_03_work_02] Write migration
+    0147_add_fks_to_state_transitions.sql. The migration must: (a) Check
+    for orphaned rows and abort with PRECONDITION FAILED if any exist;
+    (b) Add FK: execution_id REFERENCES execution_records(execution_id);
+    (c) Add FK: policy_decision_id REFERENCES policy_decisions(policy_decision_id);
+    (d) Both FKs must NOT use ON DELETE CASCADE (append-only table);
+    (e) Use IF NOT EXISTS / DO blocks for idempotency.
+  - >-
+    [ID w5_fix_03_work_03] Update MIGRATION_HEAD to 0147.
+  - >-
+    [ID w5_fix_03_work_04] Write verification script
+    scripts/db/verify_tsk_p2_w5_fix_03.sh with live behavioral tests:
+    (1) Verify FK constraints exist in information_schema;
+    (2) N1: INSERT with non-existent execution_id must fail with FK violation;
+    (3) N2: INSERT with non-existent policy_decision_id must fail with FK violation;
+    (4) P1: INSERT with valid FKs must not be rejected by FK constraints.
+  - >-
+    [ID w5_fix_03_work_05] Run verification script and generate evidence JSON.
+  - >-
+    [ID w5_fix_03_work_06] Post-implementation governance — Structural Change
+    Gate (Step 9): Append entries to THREAT_MODEL.md and COMPLIANCE_MAP.md.
+  - >-
+    [ID w5_fix_03_work_07] Post-implementation governance — Schema Baseline
+    Drift (Steps 10-11): Regenerate baseline, update ADR-0010.
+  - >-
+    [ID w5_fix_03_work_08] Post-implementation governance — DDL Lock-Risk
+    (Step 12): ALTER TABLE ADD CONSTRAINT may trigger linter — allowlist if needed.
+  - >-
+    [ID w5_fix_03_work_09] Post-implementation governance — Stage Evidence
+    Files (Step 13).
+  - >-
+    [ID w5_fix_03_work_10] Update EXEC_LOG.md with verification_commands_run
+    and final_status markers.
+
+# ── Acceptance criteria ────────────────────────────────────────────────────
+acceptance_criteria:
+  - >-
+    [ID w5_fix_03_work_01] EXEC_LOG.md confirms zero orphaned rows before FK
+    creation.
+  - >-
+    [ID w5_fix_03_work_02] Two FK constraints exist on state_transitions
+    verified via information_schema.table_constraints.
+  - >-
+    [ID w5_fix_03_work_03] MIGRATION_HEAD contains '0147'.
+  - >-
+    [ID w5_fix_03_work_04] [ID w5_fix_03_work_05] Verification script exits 0
+    with FK rejection proof in evidence JSON.
+  - >-
+    [ID w5_fix_03_work_06] THREAT_MODEL.md and COMPLIANCE_MAP.md contain
+    dated entries referencing TSK-P2-W5-FIX-03 and migration 0147.
+  - >-
+    [ID w5_fix_03_work_07] Baseline regenerated and ADR-0010 updated.
+  - >-
+    [ID w5_fix_03_work_09] Phase0 evidence files freshly generated and staged.
+  - >-
+    [ID w5_fix_03_work_10] EXEC_LOG.md contains all 5 remediation trace
+    markers.
+
+# ── Negative tests ─────────────────────────────────────────────────────────
+negative_tests:
+  - id: TSK-P2-W5-FIX-03-N1
+    description: >-
+      AFTER fix: INSERT into state_transitions with a non-existent
+      execution_id must fail with FK violation error (SQLSTATE 23503).
+    required: true
+  - id: TSK-P2-W5-FIX-03-N2
+    description: >-
+      AFTER fix: INSERT into state_transitions with a non-existent
+      policy_decision_id must fail with FK violation error (SQLSTATE 23503).
+    required: true
+
+# ── Positive tests ─────────────────────────────────────────────────────────
+positive_tests:
+  - id: TSK-P2-W5-FIX-03-P1
+    description: >-
+      AFTER fix: INSERT with valid execution_id and policy_decision_id must
+      not be rejected by FK constraints (may still be rejected by triggers).
+    required: true
+
+# ── Verification commands ──────────────────────────────────────────────────
+verification:
+  - >-
+    [ID w5_fix_03_work_02] psql "$DATABASE_URL" -tAc "SELECT count(*) FROM
+    information_schema.table_constraints WHERE table_name = 'state_transitions'
+    AND constraint_type = 'FOREIGN KEY'" | grep -q '2' || exit 1
+  - >-
+    [ID w5_fix_03_work_03] test "$(cat schema/migrations/MIGRATION_HEAD)" =
+    '0147' || exit 1
+  - >-
+    [ID w5_fix_03_work_04] [ID w5_fix_03_work_05] bash
+    scripts/db/verify_tsk_p2_w5_fix_03.sh || exit 1
+  - >-
+    [ID w5_fix_03_work_05] test -f evidence/phase2/tsk_p2_w5_fix_03.json ||
+    exit 1
+
+# ── Evidence contract ──────────────────────────────────────────────────────
+evidence:
+  - path: evidence/phase2/tsk_p2_w5_fix_03.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - fk_execution_id_verified
+      - fk_policy_decision_id_verified
+      - negative_test_results
+      - positive_test_results
+
+# ── Failure modes ──────────────────────────────────────────────────────────
+failure_modes:
+  - "FK constraints not created after migration => CRITICAL_FAIL"
+  - "Orphaned rows exist blocking FK creation => BLOCKED"
+  - "FK uses ON DELETE CASCADE on append-only table => CRITICAL_FAIL"
+  - "Verification script does not test FK rejection => FAIL"
+  - "Evidence file missing => FAIL"
+  - "Baseline not regenerated => FAIL (pre_ci.sh will flag)"
+  - "ADR-0010 not updated => FAIL (governance gate will flag)"
+
+# ── Required reading ───────────────────────────────────────────────────────
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md
+  - docs/operations/REGULATED_SURFACE_PATHS.yml
+  - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+# ── Companion documents ────────────────────────────────────────────────────
+implementation_plan: docs/plans/phase2/TSK-P2-W5-FIX-03/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W5-FIX-03/EXEC_LOG.md
+
+# ── Metadata ───────────────────────────────────────────────────────────────
+notes: >-
+  Third task in Wave 5 stabilization chain. Adds DB-level FK enforcement to
+  close the 'we validate in the trigger' anti-pattern. FKs must NOT use
+  ON DELETE CASCADE because state_transitions is append-only. Phase Key:
+  W5-FIX. Phase Name: Wave 5 Stabilization.
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

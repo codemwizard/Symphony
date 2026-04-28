@@ -1,30 +1,31 @@
 {
-  "task_id": "TSK-P2-PREAUTH-007-04",
-  "git_sha": "f86dad518cc3419538fbf62f712b227db96ada4c",
-  "timestamp_utc": "2026-04-19T06:56:50Z",
-  "status": "PASS",
-  "checks": [
-    {
-      "id": "tsk_p2_preauth_007_04_work_item_01",
-      "description": "INV-177 exists in INVARIANTS_MANIFEST.yml",
-      "result": "PASS"
-    },
-    {
-      "id": "tsk_p2_preauth_007_04_work_item_01",
-      "description": "INV-177 has status: implemented",
-      "result": "PASS"
-    },
-    {
-      "id": "tsk_p2_preauth_007_04_work_item_01",
-      "description": "INV-177 has enforcement field",
-      "result": "PASS"
-    },
-    {
-      "id": "tsk_p2_preauth_007_04_work_item_02",
-      "description": "INV-177 enforcement points to correct script",
-      "result": "PASS"
-    }
-  ],
-  "inv_177_registered": true,
-  "inv_177_status_implemented": true
+    "task_id": "TSK-P2-PREAUTH-007-04",
+    "git_sha": "f86dad518cc3419538fbf62f712b227db96ada4c",
+    "timestamp_utc": "2026-04-19T06:56:50Z",
+    "status": "VOID",
+    "checks": [
+        {
+            "id": "tsk_p2_preauth_007_04_work_item_01",
+            "description": "INV-177 exists in INVARIANTS_MANIFEST.yml",
+            "result": "PASS"
+        },
+        {
+            "id": "tsk_p2_preauth_007_04_work_item_01",
+            "description": "INV-177 has status: implemented",
+            "result": "PASS"
+        },
+        {
+            "id": "tsk_p2_preauth_007_04_work_item_01",
+            "description": "INV-177 has enforcement field",
+            "result": "PASS"
+        },
+        {
+            "id": "tsk_p2_preauth_007_04_work_item_02",
+            "description": "INV-177 enforcement points to correct script",
+            "result": "PASS"
+        }
+    ],
+    "inv_177_registered": true,
+    "inv_177_status_implemented": true,
+    "certification_standing": "REVOKED_WAVE7_DRAFT"
 }

@@ -1,0 +1,15 @@
+{
+  "stage": "A",
+  "task": "TSK-P2-W5-FIX-12",
+  "approved_paths": [
+    "scripts/db/verify_tsk_p2_preauth_005_00.sh",
+    "scripts/db/verify_tsk_p2_preauth_005_01.sh",
+    "scripts/db/verify_tsk_p2_preauth_005_02.sh",
+    "scripts/db/verify_tsk_p2_preauth_005_03.sh",
+    "scripts/db/verify_tsk_p2_preauth_005_04.sh",
+    "scripts/db/verify_tsk_p2_preauth_005_05.sh",
+    "scripts/db/verify_tsk_p2_preauth_005_06.sh",
+    "scripts/db/verify_tsk_p2_preauth_005_07.sh",
+    "scripts/db/verify_tsk_p2_preauth_005_08.sh"
+  ]
+}

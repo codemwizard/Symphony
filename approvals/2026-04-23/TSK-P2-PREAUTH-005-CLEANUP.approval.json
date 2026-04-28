@@ -1,0 +1,78 @@
+{
+  "approval_id": "APR-2026-04-23-TSK-P2-PREAUTH-005-CLEANUP",
+  "approval_date": "2026-04-23T05:39:00Z",
+  "task_id": "TSK-P2-PREAUTH-005-CLEANUP",
+  "task_title": "Wave 5 Baseline Reconciliation - Delete monolith 0120 and update task plans",
+  "requested_by": "db_foundation_agent",
+  "approved_by": "human_reviewer",
+  "approval_status": "approved",
+  "regulatory_surface": "DB_SCHEMA",
+  "blast_radius": "DOCS_AND_CONFIG",
+  "risk_class": "GOVERNANCE",
+  "changes_summary": {
+    "deleted_files": [
+      "schema/migrations/0120_create_state_transitions.sql",
+      "scripts/db/verify_tsk_p2_preauth_005_01.sh"
+    ],
+    "modified_files": [
+      "docs/plans/phase2/TSK-P2-PREAUTH-005-01/PLAN.md",
+      "tasks/TSK-P2-PREAUTH-005-01/meta.yml",
+      "docs/plans/phase2/TSK-P2-PREAUTH-005-02/PLAN.md",
+      "tasks/TSK-P2-PREAUTH-005-02/meta.yml",
+      "tasks/TSK-P2-PREAUTH-005-03/meta.yml",
+      "tasks/TSK-P2-PREAUTH-005-04/meta.yml",
+      "docs/plans/phase2/TSK-P2-PREAUTH-005-REM-01/PLAN.md",
+      "tasks/TSK-P2-PREAUTH-005-REM-01/meta.yml",
+      "docs/plans/phase2/TSK-P2-PREAUTH-005-REM-02/PLAN.md",
+      "tasks/TSK-P2-PREAUTH-005-REM-02/meta.yml",
+      "docs/plans/phase2/TSK-P2-PREAUTH-005-REM-03/PLAN.md",
+      "tasks/TSK-P2-PREAUTH-005-REM-03/meta.yml",
+      "docs/plans/phase2/TSK-P2-PREAUTH-005-REM-04/PLAN.md",
+      "tasks/TSK-P2-PREAUTH-005-REM-04/meta.yml",
+      "docs/plans/phase2/TSK-P2-PREAUTH-005-REM-05/PLAN.md",
+      "tasks/TSK-P2-PREAUTH-005-REM-05/meta.yml",
+      "docs/plans/phase2/TSK-P2-PREAUTH-005-REM-06/PLAN.md",
+      "tasks/TSK-P2-PREAUTH-005-REM-06/meta.yml",
+      "docs/plans/phase2/TSK-P2-PREAUTH-005-REM-07/PLAN.md",
+      "tasks/TSK-P2-PREAUTH-005-REM-07/meta.yml",
+      "docs/plans/phase2/TSK-P2-PREAUTH-005-REM-08/PLAN.md",
+      "tasks/TSK-P2-PREAUTH-005-REM-08/meta.yml",
+      "docs/plans/phase2/TSK-P2-PREAUTH-005-REM-09/PLAN.md",
+      "tasks/TSK-P2-PREAUTH-005-REM-09/meta.yml",
+      "docs/plans/phase2/TSK-P2-PREAUTH-005-REM-10/PLAN.md",
+      "tasks/TSK-P2-PREAUTH-005-REM-10/meta.yml",
+      "docs/plans/phase2/TSK-P2-PREAUTH-005-REM-11/PLAN.md",
+      "tasks/TSK-P2-PREAUTH-005-REM-11/meta.yml",
+      "Wave05/plans/TSK-P2-PREAUTH-005-REM-01/meta.yml",
+      "Wave05/plans/TSK-P2-PREAUTH-005-REM-01/PLAN.md",
+      "Wave05/plans/TSK-P2-PREAUTH-005-REM-02/meta.yml",
+      "Wave05/plans/TSK-P2-PREAUTH-005-REM-02/PLAN.md",
+      "Wave05/tasks/TSK-P2-PREAUTH-005-REM-01/meta.yml",
+      "Wave05/tasks/TSK-P2-PREAUTH-005-REM-02/meta.yml"
+    ]
+  },
+  "migration_sequence": {
+    "deleted": ["0120"],
+    "new_sequence": ["0137", "0138", "0139", "0140", "0141", "0142", "0143", "0144"]
+  },
+  "dependency_chain_verified": true,
+  "compliance_checks": {
+    "regulated_surface_compliance": true,
+    "approval_metadata_present": true,
+    "forward_only_migration_principle": true,
+    "no_runtime_ddl_in_production": true
+  },
+  "verification_commands": [
+    "test ! -f schema/migrations/0120_create_state_transitions.sql",
+    "test ! -f scripts/db/verify_tsk_p2_preauth_005_01.sh",
+    "grep -q '0137' docs/plans/phase2/TSK-P2-PREAUTH-005-01/PLAN.md",
+    "grep -q '0138' docs/plans/phase2/TSK-P2-PREAUTH-005-02/PLAN.md",
+    "! grep -r '0120_create_state_transitions.sql' tasks/TSK-P2-PREAUTH-005-REM-*/meta.yml"
+  ],
+  "evidence_file": "evidence/phase2/tsk_p2_preauth_005_cleanup.json",
+  "canonical_references": [
+    "docs/operations/AI_AGENT_OPERATION_MANUAL.md",
+    "docs/operations/AGENT_PROMPT_ROUTER.md",
+    "docs/operations/REGULATED_SURFACE_PATHS.yml"
+  ]
+}

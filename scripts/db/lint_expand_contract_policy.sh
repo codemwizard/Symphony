@@ -57,6 +57,23 @@ ALLOWLIST = {
     # Column added as nullable, backfilled, then SET NOT NULL applied. This is the correct
     # expand/contract pattern for Phase-2, but Phase-0 lint forbids SET NOT NULL globally.
     ("0128_taxonomy_aligned.sql", 13, "alter_set_not_null"),
+    # 0132_execution_records_determinism_constraints.sql is the contract phase of expand/contract pair.
+    # It has inline backfill precondition (DO block) and sets NOT NULL on 5 columns after backfill.
+    # This is the correct expand/contract pattern for Phase-2 Wave 4 remediation.
+    ("0132_execution_records_determinism_constraints.sql", 38, "alter_set_not_null"),
+    ("0132_execution_records_determinism_constraints.sql", 39, "alter_set_not_null"),
+    ("0132_execution_records_determinism_constraints.sql", 40, "alter_set_not_null"),
+    ("0132_execution_records_determinism_constraints.sql", 41, "alter_set_not_null"),
+    ("0132_execution_records_determinism_constraints.sql", 42, "alter_set_not_null"),
+    ("0146_add_entity_type_to_state_rules.sql", 17, "add_column_not_null"),
+    # 0159_enforce_interpretation_version_id_not_null.sql is the contract phase of expand/contract pair.
+    # It has precondition check and sets NOT NULL after backfill (0158).
+    # This is the correct expand/contract pattern for Phase-2 Wave 6 remediation.
+    ("0159_enforce_interpretation_version_id_not_null.sql", 12, "alter_set_not_null"),
+    # 0161_enforce_policy_decisions_project_id_not_null.sql is the contract phase of expand/contract pair.
+    # It has precondition check and sets NOT NULL after backfill (0160).
+    # This is the correct expand/contract pattern for Phase-2 Wave 6 remediation.
+    ("0161_enforce_policy_decisions_project_id_not_null.sql", 16, "alter_set_not_null"),
 }
 
 def scan_file(path: Path):

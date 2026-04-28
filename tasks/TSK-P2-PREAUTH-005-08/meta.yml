@@ -43,7 +43,7 @@ blocks:
   - TSK-P2-PREAUTH-006A-00
 
 touches:
-  - schema/migrations/0120_create_state_transitions.sql
+  - schema/migrations/0144_create_update_current_state.sql
   - scripts/db/verify_tsk_p2_preauth_005_08.sh
   - tasks/TSK-P2-PREAUTH-005-08/meta.yml
 
@@ -51,7 +51,7 @@ invariants: []
 
 work:
   - >-
-    [ID tsk_p2_preauth_005_08_work_item_01] Add update_current_state() function to migration 0120
+    [ID tsk_p2_preauth_005_08_work_item_01] Add update_current_state() function to migration 0144
     as SECURITY DEFINER with SET search_path = pg_catalog, public. Function inserts or updates
     state_current table with project_id, to_state, and transition_timestamp.
   - >-

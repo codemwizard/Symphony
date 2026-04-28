@@ -34,14 +34,14 @@ Canonical Source: docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
     recipient field directly — not passed through by the caller
   - any HTTP request body or function call containing a recipient field when
     calling the adjustment endpoint is rejected with a named error
-    (e.g. P7601 ADJUSTMENT_RECIPIENT_NOT_PERMITTED)
+    (e.g. P7504 ADJUSTMENT_RECIPIENT_NOT_PERMITTED)
   - recipient on the produced adjustment record matches parent instruction
     recipient exactly; verified by comparing fields post-execution
   - negative-path test: calling issue_adjustment() with an explicit recipient
     field value different from the parent instruction recipient is rejected
-    with P7601; no adjustment record created
+    with P7504; no adjustment record created
   - negative-path test: calling issue_adjustment() with an explicit recipient
-    field matching the parent instruction recipient is also rejected with P7601
+    field matching the parent instruction recipient is also rejected with P7504
     (the parameter is not permitted regardless of value)
   - EXEC_LOG.md contains Canonical-Reference line
 - failure_modes:

@@ -1,0 +1,122 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-007-14
+title: "DB Kill Switch Gate"
+owner_role: DB_FOUNDATION
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DATABASE
+deliverable_files:
+  - scripts/audit/verify_tsk_p2_preauth_007_14.sh
+  - evidence/phase2/tsk_p2_preauth_007_14.json
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-14/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-14/EXEC_LOG.md
+  - schema/migrations/0171_attestation_kill_switch_gate.sql
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/verify_tsk_p2_preauth_007_14.sh
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:55432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:55432/symphony\""
+
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - 0144: "Wave 5 remediation baseline"
+    - 0171: "Attestation Kill Switch Gate"
+  table_dependencies:
+    - schema_migrations: "must track migrations"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+depends_on:
+  - TSK-P2-PREAUTH-007-06
+invariants:
+  - INV-175
+  - INV-176
+  - INV-177
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON correctly demonstrates DB-level enforcement via negative testing."
+proof_limitations:
+  - "Does not prove runtime API integration (deferred)."
+
+touches:
+  - scripts/audit/verify_tsk_p2_preauth_007_14.sh
+  - evidence/phase2/tsk_p2_preauth_007_14.json
+  - tasks/TSK-P2-PREAUTH-007-14/meta.yml
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-14/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-007-14/EXEC_LOG.md
+
+work:
+  - '[ID tsk_p2_preauth_007_14_work_item_01] Implement BEFORE INSERT trigger on authoritative issuance tables enforcing structural attestation integrity and registry-contract binding.'
+
+acceptance_criteria:
+  - '[ID tsk_p2_preauth_007_14_work_item_01] Trigger correctly rejects issuance when attestation is absent, malformed, stale, or bound to a mismatched registry contract.'
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-007-14-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: Trigger correctly intercepts inserts and raises exception if invariant_registry is failing."
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-007-14-P1
+    description: "Verify that execution exits 0 on success path for: Trigger correctly intercepts inserts and raises exception if invariant_registry is failing."
+    required: true
+
+verification:
+  - '# [ID tsk_p2_preauth_007_14_work_item_01] test -x scripts/audit/verify_tsk_p2_preauth_007_14.sh && bash scripts/audit/verify_tsk_p2_preauth_007_14.sh > evidence/phase2/tsk_p2_preauth_007_14.json || exit 1'
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_007_14.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-007-14/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-007-14/EXEC_LOG.md
+notes: 'Wave 7-STRICT Enforcement Track. Replaces Wave 7-DRAFT.'
+client: cursor
+assigned_agent: db_foundation
+model: antigravity-gemini-3-flash

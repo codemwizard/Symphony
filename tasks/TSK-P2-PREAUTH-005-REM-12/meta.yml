@@ -1,0 +1,109 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-005-REM-12
+title: Fix append-only error string to match verifier requirement
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+depends_on:
+  - TSK-P2-PREAUTH-005-REM-11
+
+touches:
+  - schema/migrations/0143_create_deny_state_transitions_mutation.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_preauth_005_rem_12.sh
+  - evidence/phase2/TSK-P2-PREAUTH-005-REM-12.json
+  - tasks/TSK-P2-PREAUTH-005-REM-12/meta.yml
+
+invariants: []
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/REGULATED_SURFACE_PATHS.yml
+  - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+  - Wave-5-for-Devin.md
+
+anti_patterns:
+  - error_strings_not_matching_verifier_requirements
+  - editing_migrations_without_approval_metadata
+  - missing_remediation_trace_markers
+  - behavioral_negative_tests_missing
+
+out_of_scope:
+  - None (this is the final remediation task)
+
+stop_conditions:
+  - Error string not changed to exact "state_transitions is append-only"
+  - MIGRATION_HEAD not updated
+  - approval metadata not created before editing migration
+  - behavioral negative test not implemented
+
+work:
+  - "[ID rem_12_work_01] Create Stage A approval artifact BEFORE editing migration (approvals/YYYY-MM-DD/BRANCH-<branch-name>.md and .approval.json)"
+  - "[ID rem_12_work_02] Change error string in deny_state_transitions_mutation() to exact 'state_transitions is append-only' in migration 0139"
+  - "[ID rem_12_work_03] Use CREATE OR REPLACE FUNCTION for idempotency in migration 0139"
+  - "[ID rem_12_work_04] Update MIGRATION_HEAD to 0151"
+  - "[ID rem_12_work_05] Write verification script that checks error string matches exactly"
+  - "[ID rem_12_work_06] Write behavioral negative test that UPDATE/DELETE on state_transitions fails with exact error string"
+  - "[ID rem_12_work_07] Run verification script"
+  - "[ID rem_12_work_08] Update EXEC_LOG.md with remediation markers (failure_signature, origin_task_id, repro_command, verification_commands_run, final_status)"
+
+acceptance_criteria:
+  - "[ID rem_12_work_01] Stage A approval artifact created before migration edit and passes approval_metadata.schema.json validation"
+  - "[ID rem_12_work_02] Error string in deny_state_transitions_mutation() is exactly 'state_transitions is append-only'"
+  - "[ID rem_12_work_03] Function uses CREATE OR REPLACE FUNCTION for idempotency"
+  - "[ID rem_12_work_04] MIGRATION_HEAD contains 0151"
+  - "[ID rem_12_work_05] Verification script exists and uses DATABASE_URL"
+  - "[ID rem_12_work_06] Behavioral negative test confirms UPDATE/DELETE on state_transitions fails with exact error string"
+  - "[ID rem_12_work_07] Verification script exits 0"
+  - "[ID rem_12_work_08] EXEC_LOG.md contains all required remediation trace markers (failure_signature, origin_task_id, repro_command, verification_commands_run, final_status)"
+
+negative_tests:
+  - "[ID rem_12_nt_01] UPDATE on state_transitions must fail with RAISE EXCEPTION and exact error string 'state_transitions is append-only'"
+  - "[ID rem_12_nt_02] DELETE on state_transitions must fail with RAISE EXCEPTION and exact error string 'state_transitions is append-only'"
+  - "[ID rem_12_nt_03] INSERT on state_transitions must succeed"
+
+verification:
+  - "[ID rem_12_work_01] test -f approvals/$(date +%Y-%m-%d)/BRANCH-*.approval.json && python3 -m json.tool < approvals/$(date +%Y-%m-%d)/BRANCH-*.approval.json > /dev/null || exit 1"
+  - "[ID rem_12_work_02] psql \"$DATABASE_URL\" -c \"SELECT prosrc FROM pg_proc WHERE proname = 'deny_state_transitions_mutation'\" | grep -q 'state_transitions is append-only' || exit 1"
+  - "[ID rem_12_work_03] psql \"$DATABASE_URL\" -c \"SELECT prosrc FROM pg_proc WHERE proname = 'deny_state_transitions_mutation'\" | grep -q 'CREATE OR REPLACE FUNCTION' || exit 1"
+  - "[ID rem_12_work_04] test $(cat schema/migrations/MIGRATION_HEAD) = '0151' || exit 1"
+  - "[ID rem_12_work_05] [ID rem_12_work_07] test -x scripts/db/verify_tsk_p2_preauth_005_rem_12.sh && bash scripts/db/verify_tsk_p2_preauth_005_rem_12.sh > evidence/phase2/TSK-P2-PREAUTH-005-REM-12.json || exit 1"
+  - "[ID rem_12_work_06] grep -q 'behavioral_negative_test' evidence/phase2/TSK-P2-PREAUTH-005-REM-12.json || exit 1"
+  - "[ID rem_12_work_07] test -f evidence/phase2/TSK-P2-PREAUTH-005-REM-12.json || exit 1"
+  - "[ID rem_12_work_08] grep -q 'failure_signature' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-12/EXEC_LOG.md && grep -q 'origin_task_id' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-12/EXEC_LOG.md && grep -q 'repro_command' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-12/EXEC_LOG.md && grep -q 'verification_commands_run' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-12/EXEC_LOG.md && grep -q 'final_status' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-12/EXEC_LOG.md || exit 1"
+
+failure_modes:
+  - ERROR_STRING_NOT_FIXED
+  - MIGRATION_HEAD_NOT_UPDATED
+  - APPROVAL_METADATA_MISSING
+  - REMEDIATION_TRACE_MARKERS_MISSING
+  - BEHAVIORAL_NEGATIVE_TEST_MISSING
+  - Evidence file missing
+
+evidence:
+  - path: evidence/phase2/TSK-P2-PREAUTH-005-REM-12.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - error_string_verified
+      - migration_head
+      - behavioral_negative_test_results
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-005-REM-12/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-005-REM-12/EXEC_LOG.md
+
+notes: >-
+  Remediation task for Wave 5. Fixes error string to exact 'state_transitions is append-only' for verifier compliance.
+  Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

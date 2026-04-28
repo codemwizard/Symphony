@@ -82,7 +82,7 @@
     "rolreplication": "f",
     "rolsuper": "f"
   },
-  "schema_fingerprint": "06545fe3f538515080117719d8d8bd0acb0136101bc7d7d61a37f052481dc898",
+  "schema_fingerprint": "c314cf4cd496dcd66ab155cc4d4ae8bddbeb5c50e1d15098766fa5b487157784",
   "schema_privileges": {
     "public_create": false,
     "public_usage": true

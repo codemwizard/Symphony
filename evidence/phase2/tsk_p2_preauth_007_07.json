@@ -1,0 +1,34 @@
+{
+  "task_id": "TSK-P2-PREAUTH-007-07",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "timestamp_utc": "2026-04-25T23:27:48Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "tsk_p2_preauth_007_07_check_01",
+      "description": "DATABASE_URL is set",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_07_check_02",
+      "description": "invariant_registry table exists",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_07_work_item_01",
+      "description": "Unique constraints enforce linear supersession (no forks)",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_07_work_item_02",
+      "description": "Registry execution constraints for checksum and freshness",
+      "result": "PASS"
+    }
+  ],
+  "observed_hashes": [
+    {
+      "path": "scripts/audit/verify_tsk_p2_preauth_007_07.sh",
+      "sha256": "8750d72bf0af9abd8062b4859fa1e21aef004fd86753f1e7f1a03eab8414120d"
+    }
+  ]
+}

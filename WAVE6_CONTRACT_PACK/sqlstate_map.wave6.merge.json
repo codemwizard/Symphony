@@ -1,0 +1,168 @@
+{
+  "ranges": {
+    "P76xx": "wave6_authority_signature_hash"
+  },
+  "codes": {
+    "P7601": {
+      "class": "B",
+      "subsystem": "authority",
+      "meaning": "state transition rejected because no matching state rule permits the requested state movement",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7602": {
+      "class": "B",
+      "subsystem": "authority",
+      "meaning": "policy decision required for the transition is missing",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7603": {
+      "class": "B",
+      "subsystem": "authority",
+      "meaning": "policy decision exists but does not match the authority domain required for the transition",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7604": {
+      "class": "B",
+      "subsystem": "authority",
+      "meaning": "cross-table project scope mismatch between state_transitions, execution_records, and policy_decisions",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7605": {
+      "class": "B",
+      "subsystem": "authority",
+      "meaning": "cross-table entity scope mismatch between transition target and policy decision authority target",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7606": {
+      "class": "B",
+      "subsystem": "authority",
+      "meaning": "execution record required for the transition is missing",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7607": {
+      "class": "B",
+      "subsystem": "authority",
+      "meaning": "execution record exists but lacks the required interpretation binding",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7608": {
+      "class": "B",
+      "subsystem": "authority",
+      "meaning": "accepted transition could not be projected into state_current without violating deterministic lineage rules",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7611": {
+      "class": "B",
+      "subsystem": "signature",
+      "meaning": "required signature metadata is missing",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7612": {
+      "class": "B",
+      "subsystem": "signature",
+      "meaning": "signature algorithm is unsupported for the active signing contract version",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7613": {
+      "class": "B",
+      "subsystem": "signature",
+      "meaning": "signed field format is invalid",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7614": {
+      "class": "B",
+      "subsystem": "signature",
+      "meaning": "signature payload canonicalization failed",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7615": {
+      "class": "B",
+      "subsystem": "signature",
+      "meaning": "signing key could not be resolved from key_id and key_version",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7616": {
+      "class": "B",
+      "subsystem": "signature",
+      "meaning": "resolved signing key is not authorized for the project or scoped entity domain of the transition",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7617": {
+      "class": "B",
+      "subsystem": "signature",
+      "meaning": "signature value could not be decoded according to the contract encoding rules",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7618": {
+      "class": "B",
+      "subsystem": "signature",
+      "meaning": "signature verification failed for the reconstructed canonical payload",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7619": {
+      "class": "B",
+      "subsystem": "signature",
+      "meaning": "occurred_at used for signing is missing, was not persisted before signing, or cannot be replayed exactly",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7621": {
+      "class": "B",
+      "subsystem": "transition_hash",
+      "meaning": "transition hash input set is invalid or incomplete",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7622": {
+      "class": "B",
+      "subsystem": "transition_hash",
+      "meaning": "transition hash canonicalization failed",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7623": {
+      "class": "B",
+      "subsystem": "transition_hash",
+      "meaning": "stored transition hash does not match the recomputed deterministic hash",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7631": {
+      "class": "B",
+      "subsystem": "data_authority",
+      "meaning": "data authority derivation input set is invalid or incomplete",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7632": {
+      "class": "B",
+      "subsystem": "data_authority",
+      "meaning": "data authority derivation failed for the authoritative persisted inputs",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    },
+    "P7633": {
+      "class": "B",
+      "subsystem": "data_authority",
+      "meaning": "stored data authority does not match the recomputed deterministic authority fingerprint",
+      "retryable": false,
+      "introduced_by": "wave6_authority_contracts_v1"
+    }
+  }
+}

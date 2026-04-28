@@ -43,7 +43,7 @@ blocks:
   - TSK-P2-PREAUTH-005-06
 
 touches:
-  - schema/migrations/0120_create_state_transitions.sql
+  - schema/migrations/0141_create_enforce_transition_signature.sql
   - scripts/db/verify_tsk_p2_preauth_005_05.sh
   - tasks/TSK-P2-PREAUTH-005-05/meta.yml
 
@@ -51,7 +51,7 @@ invariants: []
 
 work:
   - >-
-    [ID tsk_p2_preauth_005_05_work_item_01] Add enforce_transition_signature() function to migration 0120
+    [ID tsk_p2_preauth_005_05_work_item_01] Add enforce_transition_signature() function to migration 0141
     as SECURITY DEFINER with SET search_path = pg_catalog, public. Function verifies signature
     is present for signed transitions and raises GF034 if missing.
   - >-

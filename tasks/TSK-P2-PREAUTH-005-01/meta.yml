@@ -24,12 +24,12 @@ out_of_scope:
   - "Application layer changes"
 
 stop_conditions:
-  - "If migration 0120 does not create state_transitions table"
+  - "If migration 0137 does not create state_transitions table"
   - "If required indexes are missing"
-  - "If MIGRATION_HEAD is not updated to 0120"
+  - "If MIGRATION_HEAD is not updated to 0137"
 
 proof_guarantees:
-  - "Migration 0120 creates state_transitions table"
+  - "Migration 0137 creates state_transitions table"
   - "Indexes on project_id and transition_timestamp are present"
   - "Verifier script exits 0 and emits evidence"
 
@@ -43,7 +43,7 @@ blocks:
   - TSK-P2-PREAUTH-005-02
 
 touches:
-  - schema/migrations/0120_create_state_transitions.sql
+  - schema/migrations/0137_create_state_transitions.sql
   - schema/migrations/MIGRATION_HEAD
   - scripts/db/verify_tsk_p2_preauth_005_01.sh
   - tasks/TSK-P2-PREAUTH-005-01/meta.yml
@@ -52,12 +52,12 @@ invariants: []
 
 work:
   - >-
-    [ID tsk_p2_preauth_005_01_work_item_01] Write migration 0120 at schema/migrations/0120_create_state_transitions.sql
+    [ID tsk_p2_preauth_005_01_work_item_01] Write migration 0137 at schema/migrations/0137_create_state_transitions.sql
     creating state_transitions table with columns: transition_id UUID PRIMARY KEY, project_id UUID NOT NULL,
     from_state VARCHAR NOT NULL, to_state VARCHAR NOT NULL, transition_timestamp TIMESTAMPTZ NOT NULL,
     execution_id UUID, policy_decision_id UUID, signature TEXT, and indexes on project_id and transition_timestamp.
   - >-
-    [ID tsk_p2_preauth_005_01_work_item_02] Update MIGRATION_HEAD to 0120: echo 0120 > schema/migrations/MIGRATION_HEAD.
+    [ID tsk_p2_preauth_005_01_work_item_02] Update MIGRATION_HEAD to 0137: echo 0137 > schema/migrations/MIGRATION_HEAD.
   - >-
     [ID tsk_p2_preauth_005_01_work_item_03] Write verify_tsk_p2_preauth_005_01.sh that runs psql to verify
     table exists and indexes are present.
@@ -66,9 +66,9 @@ work:
 
 acceptance_criteria:
   - >-
-    [ID tsk_p2_preauth_005_01_work_item_01] Migration 0120 creates state_transitions table.
+    [ID tsk_p2_preauth_005_01_work_item_01] Migration 0137 creates state_transitions table.
   - >-
-    [ID tsk_p2_preauth_005_01_work_item_02] MIGRATION_HEAD contains 0120.
+    [ID tsk_p2_preauth_005_01_work_item_02] MIGRATION_HEAD contains 0137.
   - >-
     [ID tsk_p2_preauth_005_01_work_item_03] verify_tsk_p2_preauth_005_01.sh exists and checks for table existence.
   - >-
@@ -93,7 +93,7 @@ verification:
     test -x scripts/db/verify_tsk_p2_preauth_005_01.sh && bash scripts/db/verify_tsk_p2_preauth_005_01.sh > evidence/phase2/tsk_p2_preauth_005_01.json || exit 1
   - >-
     # [ID tsk_p2_preauth_005_01_work_item_02]
-    test $(cat schema/migrations/MIGRATION_HEAD) = "0120" || exit 1
+    test $(cat schema/migrations/MIGRATION_HEAD) = "0137" || exit 1
   - >-
     # [ID tsk_p2_preauth_005_01_work_item_04]
     test -f evidence/phase2/tsk_p2_preauth_005_01.json || exit 1

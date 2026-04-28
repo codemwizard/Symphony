@@ -1,0 +1,110 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-004-03-DAG
+title: Add missing TSK-P2-PREAUTH-004-03 node to phase2_pre_atomic_dag.yml to complete authority binding checkpoint chain
+owner_role: ARCHITECT
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  Wave 4 audit identified that TSK-P2-PREAUTH-004-03 node is missing from phase2_pre_atomic_dag.yml.
+  The checkpoint/AUTH-BIND depends only on 004-02, but should depend on 004-03 to complete the authority binding chain.
+  This task adds the missing 004-03 node and updates the checkpoint dependency.
+
+anti_patterns:
+  - "Adding DAG node without verifying YAML syntax"
+  - "Breaking existing DAG dependencies"
+
+out_of_scope:
+  - "Modifying task 004-03 implementation (already completed)"
+  - "Creating new tasks"
+  - "Modifying other stages of the DAG"
+
+stop_conditions:
+  - "If DAG syntax validation fails"
+  - "If 004-03 task is not completed"
+
+proof_guarantees:
+  - "DAG contains 004-03 node with correct stage and dependencies"
+  - "checkpoint/AUTH-BIND depends on 004-03 (not just 004-02)"
+
+proof_limitations:
+  - "Cannot verify DAG execution order without running the DAG"
+
+depends_on:
+  - TSK-P2-PREAUTH-004-01-REM
+blocks:
+  - TSK-P2-PREAUTH-004-CLEANUP
+
+touches:
+  - docs/tasks/phase2_pre_atomic_dag.yml
+  - docs/tasks/PHASE2_TASKS.md
+  - tasks/TSK-P2-PREAUTH-004-03-DAG/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_004_03_dag_01] Add TSK-P2-PREAUTH-004-03 node to docs/tasks/phase2_pre_atomic_dag.yml
+    with stage: 2-authority-binding, title: "Register and verify authority transition binding invariant",
+    depends_on: [TSK-P2-PREAUTH-004-02], kind: task.
+  - >-
+    [ID tsk_p2_preauth_004_03_dag_02] Update checkpoint/AUTH-BIND depends_on in docs/tasks/phase2_pre_atomic_dag.yml
+    to include TSK-P2-PREAUTH-004-03 (ordering: 004-01 → 004-02 → 004-03 → checkpoint/AUTH-BIND).
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_004_03_dag_01] DAG contains 004-03 node with correct stage (2-authority-binding),
+    title, and depends_on: [TSK-P2-PREAUTH-004-02].
+  - >-
+    [ID tsk_p2_preauth_004_03_dag_02] checkpoint/AUTH-BIND depends_on includes TSK-P2-PREAUTH-004-03
+    (verified by grep).
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-004-03-DAG-N1
+    description: >-
+      Verify that phase2_pre_atomic_dag.yml does not contain YAML syntax errors.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-004-03-DAG-P1
+    description: >-
+      Verify that grep finds TSK-P2-PREAUTH-004-03 in the DAG file.
+    required: false
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_004_03_dag_01] [ID tsk_p2_preauth_004_03_dag_02]
+    grep 'TSK-P2-PREAUTH-004-03' docs/tasks/phase2_pre_atomic_dag.yml || exit 1
+  - >-
+    # [ID tsk_p2_preauth_004_03_dag_02]
+    grep -A 3 'checkpoint/AUTH-BIND' docs/tasks/phase2_pre_atomic_dag.yml | grep 'TSK-P2-PREAUTH-004-03' || exit 1
+
+evidence:
+  - path: docs/tasks/phase2_pre_atomic_dag.yml
+    must_include:
+      - TSK-P2-PREAUTH-004-03
+
+failure_modes:
+  - "DAG syntax validation fails => FAIL"
+  - "004-03 node not found in DAG => FAIL"
+  - "checkpoint/AUTH-BIND does not depend on 004-03 => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/tasks/phase2_pre_atomic_dag.yml
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-004-03-DAG/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-004-03-DAG/EXEC_LOG.md
+
+notes: >-
+  This is a DAG fix task. TSK-P2-PREAUTH-004-03 is already completed (INV-138 registered and verified).
+  The DAG was missing the node, creating a gap in the dependency chain.
+  Phase Key: W4-REM. Phase Name: Wave 4 Authority Binding Remediation.
+
+client: cursor
+assigned_agent: architect
+model: <UNASSIGNED>

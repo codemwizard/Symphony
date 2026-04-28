@@ -1,0 +1,54 @@
+{
+  "task_id": "TSK-P2-PREAUTH-007-13",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "timestamp_utc": "2026-04-26T08:37:09Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "tsk_p2_preauth_007_13_check_01",
+      "description": "DATABASE_URL is set",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-13-P1",
+      "description": "Positive test: attestation_nonce column exists",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-13-P2",
+      "description": "Positive test: unique_attestation_hash constraint exists",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-13-P3",
+      "description": "Positive test: trg_enforce_attestation_freshness trigger exists",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-13-P4",
+      "description": "Positive test: Fresh attestation within TTL accepted",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-13-N1",
+      "description": "Negative test: Duplicate attestation hash rejected",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-13-N2",
+      "description": "Negative test: Stale attestation (600s) rejected",
+      "result": "PASS"
+    },
+    {
+      "id": "TSK-P2-PREAUTH-007-13-N3",
+      "description": "Negative test: Boundary stale attestation (301s) rejected",
+      "result": "PASS"
+    }
+  ],
+  "observed_hashes": [
+    {
+      "path": "scripts/audit/verify_tsk_p2_preauth_007_13.sh",
+      "sha256": "92cd112659d052e563514025dae59932ea124c70491bc327f46448e2776a329c"
+    }
+  ]
+}

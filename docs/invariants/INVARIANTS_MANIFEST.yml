@@ -952,11 +952,33 @@
   title: "Regulatory timing compliance gate is deterministic and evidence-backed per rail policy"
   owners: ["team-platform", "team-invariants"]
   sla_days: 30
-  enforcement: "scripts/perf/verify_perf_005.sh"
-  verification: "scripts/perf/verify_perf_005.sh --evidence evidence/phase1/perf_005__regulatory_timing_compliance_gate.json; evidence/phase1/perf_005__regulatory_timing_compliance_gate.json"
-  notes: >
-    Computes settlement-window compliance percentage from deterministic Phase-1 perf smoke inputs and
-    fails closed when rails exceed policy windows.
+  enforcement: "scripts/audit/verify_perf_004_regulatory_timing_compliance_gate.sh"
+  verification: "scripts/audit/verify_perf_004_regulatory_timing_compliance_gate.sh; evidence/phase1/perf_004__regulatory_timing_compliance_gate.json"
+  notes: ""
+
+- id: INV-138
+  aliases: ["I-AUTH-TRANSITION-BINDING-01"]
+  status: implemented
+  severity: P1
+  title: "Authority transition binding enforces policy decision reference and execution ID equality"
+  wave: 4
+  statement: >-
+    Any authority-bearing state transition applied via execution_records
+    MUST reference, in the transition payload, exactly one
+    policy_decisions.policy_decision_id whose entity_type, entity_id,
+    and execution_id match the transition's entity and execution.
+    Transitions lacking this reference, or referencing a decision bound
+    to a different entity or execution, are rejected.
+  owners: ["team-platform", "team-invariants"]
+  enforcement:
+    function: public.enforce_authority_transition_binding(uuid, uuid)
+    migration: schema/migrations/0136_enforce_authority_transition_binding.sql
+  verification: "scripts/db/verify_authority_transition_binding.sh; evidence/phase2/tsk_p2_preauth_004_03.json"
+  evidence:
+    path: evidence/phase2/tsk_p2_preauth_004_03.json
+  proof_limitations:
+    - "Signature authenticity is not verified (public-key resolution deferred to a later wave)"
+    - "Cross-entity-replay protection at decision INSERT time is deferred; execution_records does not yet carry entity_type/entity_id columns, so insert-time coherence between policy_decisions.entity_* and execution_records.entity_* cannot be enforced. Transition-apply time is guarded by FK+equality on execution_id, column-vs-payload match, hash recompute, and UNIQUE (execution_id, decision_type)."
 
 - id: INV-125
   aliases: ["I-PERF-FINALITY-SEAM-STUB-01"]
@@ -1454,10 +1476,10 @@
   title: "Every decision record references an interpretation_version_id for replayability"
   owners: ["team-db", "team-platform"]
   sla_days: 7
-  enforcement: "scripts/db/verify_tsk_p2_preauth_006a_01.sh"
+  enforcement: "scripts/audit/verify_tsk_p2_preauth_007_17.sh"
   verification: >-
-    scripts/db/verify_tsk_p2_preauth_006a_01.sh checks interpretation_version_id
-    enforcement in authority_decision_records and lifecycle_checkpoint_evaluations;
+    scripts/audit/verify_tsk_p2_preauth_007_17.sh checks interpretation_version_id
+    enforcement in state_transitions for authoritative rows;
     evidence/phase2/tsk_p2_preauth_006a_01.json (interpretation_versioning: true)
   notes: >-
     Enforces Check 4 (Replayability). Verifies that authority_decision_records,
@@ -1493,9 +1515,9 @@
   title: "Interpretation packs have a single active record per domain per jurisdiction per authority level"
   owners: ["team-platform"]
   sla_days: 7
-  enforcement: "scripts/db/verify_tsk_p2_preauth_006a_01.sh"
+  enforcement: "scripts/audit/verify_tsk_p2_preauth_007_17.sh"
   verification: >-
-    scripts/db/verify_tsk_p2_preauth_006a_01.sh checks interpretation pack uniqueness
+    scripts/audit/verify_tsk_p2_preauth_007_17.sh checks interpretation pack uniqueness
     constraint on interpretation_packs (domain, jurisdiction_code, authority_level)
     WHERE effective_to IS NULL; evidence/phase2/tsk_p2_preauth_006a_01.json (interpretation_pack_uniqueness: true)
   notes: >-

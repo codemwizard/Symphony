@@ -1,0 +1,29 @@
+schema_version: "1.0"
+phase: PRE-PHASE2
+task_id: TSK-P2-PREAUTH-004-03
+title: Register authority transition invariant
+status: planned
+
+priority: critical
+risk_class: high
+blast_radius: invariants
+
+depends_on:
+  - TSK-P2-PREAUTH-004-02
+
+touches:
+  - docs/invariants/INV-AUTH-TRANSITION-BINDING-01.md
+  - scripts/audit/verify_inv_auth_transition.sh
+
+acceptance_criteria:
+  - invariant defined
+  - verifier passes
+
+verification:
+  - bash scripts/audit/verify_inv_auth_transition.sh 2>&1 | grep -q "PASS" || exit 1
+  - python3 scripts/audit/validate_evidence.py --task TSK-P2-PREAUTH-004-03 --evidence evidence/phase2/tsk_p2_preauth_004_03.json || exit 1
+  - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+failure_modes:
+  - INVARIANT_MISSING
+  - VERIFIER_FAIL

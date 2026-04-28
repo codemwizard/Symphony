@@ -43,7 +43,7 @@ blocks:
   - TSK-P2-PREAUTH-005-04
 
 touches:
-  - schema/migrations/0120_create_state_transitions.sql
+  - schema/migrations/0139_create_enforce_transition_state_rules.sql
   - scripts/db/verify_tsk_p2_preauth_005_03.sh
   - tasks/TSK-P2-PREAUTH-005-03/meta.yml
 
@@ -51,7 +51,7 @@ invariants: []
 
 work:
   - >-
-    [ID tsk_p2_preauth_005_03_work_item_01] Add enforce_transition_state_rules() function to migration 0120
+    [ID tsk_p2_preauth_005_03_work_item_01] Add enforce_transition_state_rules() function to migration 0139
     as SECURITY DEFINER with SET search_path = pg_catalog, public. Function checks state_rules table
     for valid (from_state, to_state) pair and raises GF032 if rule not found or condition not met.
   - >-

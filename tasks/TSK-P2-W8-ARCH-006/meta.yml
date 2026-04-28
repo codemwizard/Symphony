@@ -1,0 +1,163 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W8-ARCH-006
+title: "SQLSTATE registration"
+owner_role: ARCHITECT
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCUMENTATION
+
+intent: >-
+  This task keeps the registry as a registry rather than allowing semantics to drift into migrations or trigger code.
+
+primary_enforcement_domain: >-
+  SQLSTATE registry
+
+anti_patterns:
+  - "Replacing the entire registry for a Wave-local change"
+  - "Minting implementation-only codes outside the registry"
+  - "Letting contracts and concrete codes diverge"
+
+out_of_scope:
+  - "Any work outside the single primary enforcement domain declared for this task."
+  - "Implementation or evidence claims for non-authoritative surfaces unless explicitly routed through the same `asset_batches` boundary."
+
+stop_conditions:
+  - "If the task begins to span more than one primary enforcement domain, stop and split the work into separate task packs."
+  - "If the verifier cannot produce a deterministic fail domain for the task objective, stop and repair the pack before implementation."
+  - "If the verifier cannot prove the contract or control artifact is explicit and complete, stop and repair the pack before implementation."
+
+proof_guarantees:
+  - "The task is constrained to one primary enforcement domain."
+  - "The verifier path is tied to explicit work-item IDs and proof-carrying evidence expectations."
+
+proof_limitations:
+  - "This task alone does not certify Wave 8 complete; it proves only its declared domain."
+
+depends_on:
+  - TSK-P2-W8-ARCH-002
+  - TSK-P2-W8-ARCH-003
+  - TSK-P2-W8-ARCH-004
+  - TSK-P2-W8-ARCH-005
+
+blocks:
+  - TSK-P2-W8-SEC-000
+  - TSK-P2-W8-SEC-001
+
+touches:
+  - docs/contracts/sqlstate_map.yml
+  - scripts/agent/verify_tsk_p2_w8_arch_006.py
+  - evidence/phase2/tsk_p2_w8_arch_006.json
+  - tasks/TSK-P2-W8-ARCH-006/meta.yml
+  - docs/plans/phase2/TSK-P2-W8-ARCH-006/PLAN.md
+  - docs/plans/phase2/TSK-P2-W8-ARCH-006/EXEC_LOG.md
+
+invariants:
+  - INV-GOV-TEMPLATE-004
+  - INV-GOV-TEMPLATE-005
+
+deliverable_files:
+  - docs/contracts/sqlstate_map.yml
+  - scripts/agent/verify_tsk_p2_w8_arch_006.py
+  - evidence/phase2/tsk_p2_w8_arch_006.json
+  - docs/plans/phase2/TSK-P2-W8-ARCH-006/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_only
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - evidence/phase2/tsk_p2_w8_arch_006.json
+    - scripts/agent/verify_tsk_p2_w8_arch_006.py
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: false
+
+migration_dependencies:
+  enabled: false
+
+work:
+  - >-
+    [ID w8_arch_006_work_01] Add the Wave 8 failure-class range and concrete code registrations to `docs/contracts/sqlstate_map.yml` as a merge update rather than a whole-file replacement.
+  - >-
+    [ID w8_arch_006_work_02] Register transition-hash, signature, key-scope, timestamp, replay, signer-precedence, unavailable-crypto, provider-path-unavailable, SQLSTATE-provenance-mismatch, branch-provenance-mismatch, data-authority, and authority-mismatch failures.
+  - >-
+    [ID w8_arch_006_work_03] Cross-reference the SQLSTATE registrations from the Wave 8 contracts so implementations inherit one failure-class mapping chain.
+
+acceptance_criteria:
+  - >-
+    [ID w8_arch_006_work_01] `sqlstate_map.yml` contains a Wave 8 merge update rather than a destructive registry replacement.
+  - >-
+    [ID w8_arch_006_work_02] Concrete codes exist for the approved Wave 8 failure classes, including provider-path and provenance mismatch failures.
+  - >-
+    [ID w8_arch_006_work_03] The Wave 8 contracts reference the registry entries consistently.
+
+negative_tests:
+  - id: TSK-P2-W8-ARCH-006-N1
+    description: >-
+      Verifier fails if the registry is replaced wholesale or if required Wave 8 failure classes are missing.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-W8-ARCH-006-P1
+    description: >-
+      Verifier passes only when contracts, registry, and planned implementation failure domains align.
+    required: true
+
+verification:
+  - '# [ID w8_arch_006_work_01] [ID w8_arch_006_work_02] [ID w8_arch_006_work_03] test -e scripts/agent/verify_tsk_p2_w8_arch_006.py && python3 scripts/agent/verify_tsk_p2_w8_arch_006.py > evidence/phase2/tsk_p2_w8_arch_006.json || exit 1'
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w8_arch_006.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - "Verifier missing or not executable => FAIL"
+  - "Evidence file missing => FAIL"
+  - "Proof graph not aligned to work and acceptance criteria => CRITICAL_FAIL"
+  - "Structural-only or advisory-only verification claimed as completion => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PLANS-addendum_1.md
+  - tasks/TSK-P1-240/meta.yml
+implementation_plan: docs/plans/phase2/TSK-P2-W8-ARCH-006/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W8-ARCH-006/EXEC_LOG.md
+notes: >-
+  Generated from the final Wave 8 replacement plan. This pack is valid only for
+  the single domain `SQLSTATE registry`, inherits the `asset_batches`
+  authoritative boundary rule, and registers provider-path and provenance
+  mismatch failures explicitly.
+client: codex
+assigned_agent: architect
+model: gpt-5.5

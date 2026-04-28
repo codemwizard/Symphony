@@ -126,6 +126,7 @@ implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-007-03/EXEC_LOG.md
 
 notes: >-
   This task blocks TSK-P2-PREAUTH-007-04. Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+  CERTIFICATION REVOKED: This task is governance scaffolding only. It carries no enforcement or certification credit for Wave 7.
 
 client: cursor
 assigned_agent: invariants_curator

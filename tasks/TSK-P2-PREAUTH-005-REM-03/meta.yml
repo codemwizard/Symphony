@@ -1,0 +1,104 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-005-REM-03
+title: Add UNIQUE(entity_type, entity_id, execution_id) constraint to state_transitions
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+depends_on:
+  - TSK-P2-PREAUTH-005-REM-02
+
+touches:
+  - schema/migrations/0137_create_state_transitions.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_preauth_005_rem_03.sh
+  - evidence/phase2/TSK-P2-PREAUTH-005-REM-03.json
+  - tasks/TSK-P2-PREAUTH-005-REM-03/meta.yml
+
+invariants: []
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/REGULATED_SURFACE_PATHS.yml
+  - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+  - Wave-5-for-Devin.md
+
+anti_patterns:
+  - missing_unique_constraints_on_critical_tables
+  - editing_migrations_without_approval_metadata
+  - missing_remediation_trace_markers
+
+out_of_scope:
+  - changing trigger logic (deferred to REM-06 through REM-08)
+  - adding transition_hash column (deferred to REM-09)
+
+stop_conditions:
+  - Weak constraint not dropped
+  - Strong constraint not applied
+  - MIGRATION_HEAD not updated
+  - approval metadata not created before editing migration
+
+work:
+  - "[ID rem_03_work_01] Create Stage A approval artifact BEFORE editing migration (approvals/YYYY-MM-DD/BRANCH-<branch-name>.md and .approval.json)"
+  - "[ID rem_03_work_02] Drop weak UNIQUE(entity_type, entity_id, execution_id) constraint from migration 0137"
+  - "[ID rem_03_work_03] Add strong UNIQUE(entity_type, entity_id, transition_hash) constraint to migration 0137"
+  - "[ID rem_03_work_04] Update MIGRATION_HEAD to 0145"
+  - "[ID rem_03_work_05] Write verification script that checks strong UNIQUE constraint"
+  - "[ID rem_03_work_06] Write negative test that verifies duplicate transitions with different hashes are rejected"
+  - "[ID rem_03_work_07] Run verification script"
+  - "[ID rem_03_work_08] Update EXEC_LOG.md with remediation markers (failure_signature, origin_task_id, repro_command, verification_commands_run, final_status)"
+
+acceptance_criteria:
+  - "[ID rem_03_work_01] Stage A approval artifact created and passes schema validation"
+  - "[ID rem_03_work_02] UNIQUE(entity_type, entity_id, execution_id) constraint exists"
+  - "[ID rem_03_work_03] MIGRATION_HEAD contains 0123"
+  - "[ID rem_03_work_04] Verification script exists and uses DATABASE_URL"
+  - "[ID rem_03_work_05] Negative test for duplicate entries fails with correct error"
+  - "[ID rem_03_work_06] Verification script exits 0"
+  - "[ID rem_03_work_07] EXEC_LOG.md contains required remediation trace markers"
+
+negative_tests:
+  - "[ID rem_03_nt_01] INSERT duplicate (entity_type, entity_id, execution_id) must fail with constraint violation"
+
+verification:
+  - "[ID rem_03_work_01] test -f approvals/$(date +%Y-%m-%d)/BRANCH-*.approval.json && python3 -m json.tool < approvals/$(date +%Y-%m-%d)/BRANCH-*.approval.json > /dev/null || exit 1"
+  - "[ID rem_03_work_02] psql \"$DATABASE_URL\" -c \"\\d state_transitions\" | grep -q 'unique.*entity_type.*entity_id.*execution_id' || exit 1"
+  - "[ID rem_03_work_03] test $(cat schema/migrations/MIGRATION_HEAD) = '0123' || exit 1"
+  - "[ID rem_03_work_04] [ID rem_03_work_06] test -x scripts/db/verify_tsk_p2_preauth_005_rem_03.sh && bash scripts/db/verify_tsk_p2_preauth_005_rem_03.sh > evidence/phase2/TSK-P2-PREAUTH-005-REM-03.json || exit 1"
+  - "[ID rem_03_work_05] grep -q 'negative_test' evidence/phase2/TSK-P2-PREAUTH-005-REM-03.json || exit 1"
+  - "[ID rem_03_work_06] test -f evidence/phase2/TSK-P2-PREAUTH-005-REM-03.json || exit 1"
+  - "[ID rem_03_work_07] grep -q 'failure_signature' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-03/EXEC_LOG.md && grep -q 'origin_task_id' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-03/EXEC_LOG.md && grep -q 'repro_command' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-03/EXEC_LOG.md && grep -q 'verification_commands_run' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-03/EXEC_LOG.md && grep -q 'final_status' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-03/EXEC_LOG.md || exit 1"
+
+failure_modes:
+  - UNIQUE_CONSTRAINT_MISSING
+  - MIGRATION_HEAD_NOT_UPDATED
+  - APPROVAL_METADATA_MISSING
+  - REMEDIATION_TRACE_MARKERS_MISSING
+  - Evidence file missing
+
+evidence:
+  - path: evidence/phase2/TSK-P2-PREAUTH-005-REM-03.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - unique_constraint_verified
+      - migration_head
+      - negative_test_results
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-005-REM-03/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-005-REM-03/EXEC_LOG.md
+
+notes: >-
+  Remediation task for Wave 5. Replaces weak UNIQUE constraint with hash-based idempotency.
+  Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

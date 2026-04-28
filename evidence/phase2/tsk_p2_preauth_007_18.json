@@ -1,0 +1,24 @@
+{
+  "task_id": "TSK-P2-PREAUTH-007-18",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "timestamp_utc": "2026-04-26T12:43:40Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "tsk_p2_preauth_007_18_structural",
+      "description": "Verify schema columns",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_18_behavioral",
+      "description": "Verify NOT NULL and K13 Kill Switch logic",
+      "result": "PASS"
+    }
+  ],
+  "observed_hashes": [
+    {
+      "path": "scripts/audit/verify_tsk_p2_preauth_007_18.sh",
+      "sha256": "d081a6cb9b28fd155f103d65cee670ba3b27814a06f4d3c92fabb0d5fe93c8f7"
+    }
+  ]
+}

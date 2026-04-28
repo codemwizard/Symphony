@@ -1,0 +1,82 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W6-REM-19
+title: "Trigger Topology Freeze"
+owner_role: Architect
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCUMENTATION
+
+intent: >-
+  Lock the 9-trigger topology on state_transitions to prevent all structural
+  and behavioral drift until dispatcher consolidation.
+
+anti_patterns:
+  - "Allowing unspecified triggers to exist"
+  - "Allowing timing or event changes to existing triggers"
+
+out_of_scope:
+  - "Consolidating the triggers (that is a future dispatcher phase)"
+
+stop_conditions:
+  - "DB has != 9 triggers on state_transitions"
+  - "DB triggers do not exactly match baseline dimensions"
+
+proof_guarantees:
+  - "Zero unreported trigger modifications can survive CI"
+
+depends_on:
+  - TSK-P2-W6-REM-16a
+
+blocks: []
+
+touches:
+  - docs/architecture/TRIGGER_TOPOLOGY_FREEZE.md
+  - scripts/db/verify_trigger_topology_freeze.sh
+  - evidence/phase2/tsk_p2_w6_rem_19.json
+  - tasks/TSK-P2-W6-REM-19/meta.yml
+
+invariants:
+  - INV-TRIGGER-TOPOLOGY
+
+work:
+  - "Author TRIGGER_TOPOLOGY_FREEZE.md baseline"
+  - "Author verify_trigger_topology_freeze.sh exact-match enforcer"
+
+acceptance_criteria:
+  - "Verifier checks count (9), names, timing, event, orientation, and function binding"
+  - "Verifier passes against current DB"
+
+negative_tests: []
+
+positive_tests:
+  - id: TSK-P2-W6-REM-19-P1
+    description: "Verifier confirms exact match of 9 triggers."
+    required: true
+
+verification:
+  - bash scripts/db/verify_trigger_topology_freeze.sh
+  - python3 scripts/audit/validate_evidence.py --task TSK-P2-W6-REM-19 --evidence evidence/phase2/tsk_p2_w6_rem_19.json
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w6_rem_19.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+
+failure_modes:
+  - "Topology drift detected => ABORT"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-W6-REM-19/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W6-REM-19/EXEC_LOG.md
+
+notes: "Governance drift containment."
+client: cursor
+assigned_agent: Architect
+model: <UNASSIGNED>

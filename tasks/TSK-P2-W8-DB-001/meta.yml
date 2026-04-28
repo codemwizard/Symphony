@@ -1,0 +1,177 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W8-DB-001
+title: "Authoritative Wave 8 dispatcher trigger topology"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DB_SCHEMA
+
+intent: >-
+  Later DB tasks must target one explicit execution topology. This task removes multi-trigger ambiguity at the authoritative issuance boundary.
+
+primary_enforcement_domain: >-
+  dispatcher topology
+
+anti_patterns:
+  - "Keeping multiple independent authority triggers on `asset_batches`"
+  - "Relying on trigger name ordering or creation order"
+  - "Claiming topology completion without proving trigger behavior on write"
+
+out_of_scope:
+  - "Any work outside the single primary enforcement domain declared for this task."
+  - "Implementation or evidence claims for non-authoritative surfaces unless explicitly routed through the same `asset_batches` boundary."
+
+stop_conditions:
+  - "If the task begins to span more than one primary enforcement domain, stop and split the work into separate task packs."
+  - "If the verifier cannot produce a deterministic fail domain for the task objective, stop and repair the pack before implementation."
+  - "If a runtime verifier does not physically cause PostgreSQL to accept or reject a write at `asset_batches`, stop and treat the verifier as insufficient."
+
+proof_guarantees:
+  - "The task is constrained to one primary enforcement domain."
+  - "The verifier path is tied to explicit work-item IDs and proof-carrying evidence expectations."
+
+proof_limitations:
+  - "This task alone does not certify Wave 8 complete; it proves only its declared domain."
+
+depends_on:
+  - TSK-P2-W8-ARCH-005
+
+blocks:
+  - TSK-P2-W8-DB-002
+  - TSK-P2-W8-DB-003
+
+touches:
+  - schema/migrations/0172_wave8_dispatcher_topology.sql
+  - scripts/db/verify_w8_dispatcher_topology.sql
+  - scripts/db/verify_tsk_p2_w8_db_001.sh
+  - evidence/phase2/tsk_p2_w8_db_001.json
+  - tasks/TSK-P2-W8-DB-001/meta.yml
+  - docs/plans/phase2/TSK-P2-W8-DB-001/PLAN.md
+  - docs/plans/phase2/TSK-P2-W8-DB-001/EXEC_LOG.md
+
+invariants:
+  - INV-GOV-TEMPLATE-004
+  - INV-GOV-TEMPLATE-005
+
+deliverable_files:
+  - schema/migrations/0172_wave8_dispatcher_topology.sql
+  - scripts/db/verify_w8_dispatcher_topology.sql
+  - scripts/db/verify_tsk_p2_w8_db_001.sh
+  - evidence/phase2/tsk_p2_w8_db_001.json
+  - docs/plans/phase2/TSK-P2-W8-DB-001/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_only
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - schema/migrations/0172_wave8_dispatcher_topology.sql
+    - scripts/db/verify_w8_dispatcher_topology.sql
+    - scripts/db/verify_tsk_p2_w8_db_001.sh
+    - evidence/phase2/tsk_p2_w8_db_001.json
+    - schema/migrations/MIGRATION_HEAD
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:55432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:55432/symphony\""
+
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - 0168: "Attestation seam schema baseline present"
+    - 0171: "Attestation kill-switch gate baseline present"
+  table_dependencies:
+    - asset_batches: "authoritative Wave 8 boundary"
+    - schema_migrations: "must track migrations"
+  verification_step: "Confirm the target migration chain and authoritative boundary exist before implementation."
+
+work:
+  - >-
+    [ID w8_db_001_work_01] Inventory all current `asset_batches` trigger paths and identify every trigger or function that currently participates in Wave 8-relevant attestation behavior.
+  - >-
+    [ID w8_db_001_work_02] Add a forward-only migration that establishes one authoritative dispatcher trigger on `asset_batches` and removes or bypasses competing authority-trigger chains.
+  - >-
+    [ID w8_db_001_work_03] Build a verifier that proves a write to `asset_batches` runs through one explicit dispatcher path rather than multiple independent triggers.
+
+acceptance_criteria:
+  - >-
+    [ID w8_db_001_work_01] The task records the pre-change `asset_batches` trigger topology and identifies all competing authority paths.
+  - >-
+    [ID w8_db_001_work_02] A forward-only migration establishes one authoritative dispatcher trigger on `asset_batches` without relying on lexical trigger-order behavior.
+  - >-
+    [ID w8_db_001_work_03] The verifier proves PostgreSQL routes a write through one dispatcher path at the authoritative boundary.
+
+negative_tests:
+  - id: TSK-P2-W8-DB-001-N1
+    description: >-
+      Verifier fails if more than one independent authority trigger still participates in the `asset_batches` write path.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-W8-DB-001-P1
+    description: >-
+      Verifier passes only when PostgreSQL demonstrates one dispatcher-trigger path on `asset_batches`.
+    required: true
+
+verification:
+  - '# [ID w8_db_001_work_01] [ID w8_db_001_work_02] [ID w8_db_001_work_03] test -e scripts/db/verify_tsk_p2_w8_db_001.sh && bash scripts/db/verify_tsk_p2_w8_db_001.sh > evidence/phase2/tsk_p2_w8_db_001.json || exit 1'
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w8_db_001.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - "Verifier missing or not executable => FAIL"
+  - "Evidence file missing => FAIL"
+  - "Proof graph not aligned to work and acceptance criteria => CRITICAL_FAIL"
+  - "Structural-only or advisory-only verification claimed as completion => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PLANS-addendum_1.md
+  - tasks/TSK-P1-240/meta.yml
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+implementation_plan: docs/plans/phase2/TSK-P2-W8-DB-001/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W8-DB-001/EXEC_LOG.md
+notes: >-
+  Generated from the approved Wave 8 Gap-to-DoD Task Generation Plan. This pack is valid only for the single domain `dispatcher topology` and inherits the `asset_batches` authoritative boundary rule.
+client: codex
+assigned_agent: db_foundation
+model: gpt-5.5

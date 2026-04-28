@@ -1,0 +1,121 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W6-REM-14
+title: "Enforce NOT NULL on state_current.last_transition_id so that corrupted application state is blocked at the database boundary"
+owner_role: DB Foundation
+status: completed
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  Migration 0151 failed to actually enforce the required invariant on the state_current table, leaving the last_transition_id column nullable.
+  This allows application code to materialize state entries that bypass the full Wave 5 authority tracing. This task repairs that invariant via a corrective migration.
+
+anti_patterns:
+  - "Writing a raw INSERT negative test that passes, while ignoring the canonical trigger-mediated application write path"
+  - "Applying the NOT NULL constraint without a pre-check, silently failing if corrupted data already exists"
+  - "Ignoring concurrent mutation races during invariant repair"
+
+out_of_scope:
+  - "Adding foreign key constraints to state_current or state_transitions (deferred to Wave 6 proper)"
+
+stop_conditions:
+  - "If the precondition check finds rows with NULL last_transition_id, the migration aborts"
+
+proof_guarantees:
+  - "The resulting database schema strictly rejects any row arriving at state_current without a last_transition_id"
+  - "The application write path (via state_transitions) cannot materialize a NULL last_transition_id in state_current"
+
+proof_limitations:
+  - "Cannot prove the application code itself is bug-free, only that the database will block its bad data"
+
+depends_on: []
+
+blocks:
+  - TSK-P2-W6-REM-15
+
+touches:
+  - schema/migrations/0154_enforce_last_transition_id_not_null.sql
+  - scripts/db/verify_tsk_p2_w6_rem_14.sh
+  - evidence/phase2/tsk_p2_w6_rem_14.json
+  - tasks/TSK-P2-W6-REM-14/meta.yml
+
+invariants:
+  - INV-STATE-MACHINE-INTEGRITY
+
+work:
+  - >-
+    Author a forward-only database migration 0154 that first checks for existing NULL values in state_current.last_transition_id and raises an exception if found.
+  - >-
+    If no NULL values exist, alter the column to SET NOT NULL.
+  - >-
+    Author a verification script that inspects information_schema and pg_attribute to verify the NOT NULL property.
+  - >-
+    Include a raw negative test in the verifier demonstrating an INSERT with NULL fails.
+  - >-
+    Include a full-path invariant negative test verifying a trigger-mediated insert via state_transitions cannot materialize a NULL.
+
+acceptance_criteria:
+  - >-
+    information_schema.columns.is_nullable = 'NO' for state_current.last_transition_id.
+  - >-
+    pg_attribute.attnotnull = true for state_current.last_transition_id.
+  - >-
+    A raw INSERT with NULL last_transition_id raises a NOT NULL violation.
+  - >-
+    A full state transition creation through the real application write surface (INSERT into state_transitions with valid authority tuple triggering ai_01_update_current_state) fails if the resulting state_current row would have a NULL last_transition_id.
+  - >-
+    The verifier must extract and include the ledger status of 0151 diagnostically.
+
+negative_tests:
+  - id: TSK-P2-W6-REM-14-N1
+    description: >-
+      Raw INSERT with NULL last_transition_id must raise a NOT NULL violation constraint error.
+    required: true
+  - id: TSK-P2-W6-REM-14-N2
+    description: >-
+      Trigger-mediated application write path via state_transitions must fail to materialize a state_current row with a NULL last_transition_id.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-W6-REM-14-P1
+    description: >-
+      A valid trigger-mediated state transition must still successfully populate state_current with a valid last_transition_id.
+    required: true
+
+verification:
+  - bash scripts/db/verify_tsk_p2_w6_rem_14.sh
+  - python3 scripts/audit/validate_evidence.py --task TSK-P2-W6-REM-14 --evidence evidence/phase2/tsk_p2_w6_rem_14.json
+  - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w6_rem_14.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - migration_0151_applied_at
+      - is_nullable
+      - attnotnull
+      - null_row_count_pre_alter
+
+failure_modes:
+  - "Null rows exist in production blocking the migration => BLOCKED"
+  - "Verifier script does not use isolated transaction or controlled write isolation => FAIL_REVIEW"
+  - "Migration does not raise exception on existing NULLs => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - WAVE6_CONTRACT_PACK/DATA_AUTHORITY_SYSTEM_DESIGN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-W6-REM-14/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W6-REM-14/EXEC_LOG.md
+
+notes: >-
+  Concurrency posture: REM-14 verification MUST run under controlled write isolation (maintenance window or equivalent write freeze). The precondition NULL count, ALTER, and full-path verification must not race with concurrent state_transitions inserts.
+client: cursor
+assigned_agent: DB Foundation
+model: <UNASSIGNED>

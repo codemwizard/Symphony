@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-04-23T07:31:00Z",
+  "git_commit": "current",
+  "change_scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "schema/migrations/0141_create_enforce_transition_signature.sql",
+      "schema/migrations/MIGRATION_HEAD"
+    ]
+  },
+  "ai": {
+    "ai_prompt_hash": "rem_10_cryptographic_verification_20260423",
+    "model_id": "SWE-1.6",
+    "client": "cursor_codex"
+  },
+  "human_approval": {
+    "approver_id": "human_reviewer",
+    "approval_artifact_ref": "approvals/2026-04-23/BRANCH-feat_Wave-4-real-implementation-REM-10.md",
+    "change_reason": "REM-10: Add pgcrypto extension verification and ed25519 cryptographic functions as required by Wave-5-for-Devin.md",
+    "approved_at_utc": "2026-04-23T07:31:00Z"
+  },
+  "notes": "Stage A approval for TSK-P2-PREAUTH-005-REM-10. Adding pgcrypto extension and ed25519 signature verification functions."
+}

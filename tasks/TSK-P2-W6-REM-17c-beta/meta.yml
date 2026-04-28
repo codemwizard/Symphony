@@ -1,0 +1,67 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W6-REM-17c-beta
+title: "Enforce policy_decisions.project_id NOT NULL"
+owner_role: DB Foundation
+status: completed
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  Finalize the contract for policy_decisions by enforcing NOT NULL on project_id,
+  securing the execution-bound lineage structurally.
+
+anti_patterns:
+  - "Allowing policy_decisions rows to be created without a valid project_id"
+
+out_of_scope:
+  - "Backfilling data (handled in 17b-beta)"
+
+stop_conditions:
+  - "Existing data violates the constraint"
+  - "Test fixtures fail to insert due to missing lineage"
+
+proof_guarantees:
+  - "All future policy_decisions rows must have a valid project_id"
+
+depends_on:
+  - TSK-P2-W6-REM-17b-beta
+
+blocks: []
+
+touches:
+  - schema/migrations/0161_enforce_policy_decisions_project_id_not_null.sql
+  - scripts/db/verify_tsk_p2_w6_rem_17c_beta.sh
+  - evidence/phase2/tsk_p2_w6_rem_17c_beta.json
+  - tasks/TSK-P2-W6-REM-17c-beta/meta.yml
+
+invariants: []
+
+work:
+  - "Author migration 0161 to apply NOT NULL"
+  - "Identify and fix any test fixtures that insert policy_decisions directly without project_id"
+  - "Execute migration"
+
+verification:
+  - bash scripts/db/verify_tsk_p2_w6_rem_17c_beta.sh
+  - python3 scripts/audit/validate_evidence.py --task TSK-P2-W6-REM-17c-beta --evidence evidence/phase2/tsk_p2_w6_rem_17c_beta.json
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-W6-REM-17c-beta/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W6-REM-17c-beta/EXEC_LOG.md
+
+acceptance_criteria:
+  - "Legacy remediation accepted"
+evidence:
+  - path: evidence/phase2/tsk_p2_w6_rem_17c_beta.json
+    must_include:
+      - task_id
+failure_modes:
+  - "Legacy failure mode"
+notes: "Legacy task patched for v1 schema compliance."
+client: internal
+assigned_agent: supervisor
+model: <UNASSIGNED>

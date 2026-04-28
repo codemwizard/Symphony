@@ -1,0 +1,70 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W6-REM-17b-beta
+title: "Backfill policy_decisions.project_id"
+owner_role: DB Foundation
+status: completed
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_DATA
+
+intent: >-
+  Safely backfill the newly added project_id column in policy_decisions by deriving
+  its lineage from the parent execution_records row, as per Architect ruling.
+
+anti_patterns:
+  - "Unbounded UPDATE statements"
+  - "Failing to disable the append-only trigger prior to backfill"
+  - "Silent failure of backfill"
+
+out_of_scope:
+  - "Applying the NOT NULL constraint (that is task 17c-beta)"
+
+stop_conditions:
+  - "Row count assertions mismatch"
+  - "Trigger disabled permanently"
+
+proof_guarantees:
+  - "All existing policy_decisions rows inherit correct project_id from execution_records"
+
+depends_on:
+  - TSK-P2-W6-REM-17a
+
+blocks:
+  - TSK-P2-W6-REM-17c-beta
+
+touches:
+  - schema/migrations/0160_backfill_policy_decisions_project_id.sql
+  - scripts/db/verify_tsk_p2_w6_rem_17b_beta.sh
+  - evidence/phase2/tsk_p2_w6_rem_17b_beta.json
+  - tasks/TSK-P2-W6-REM-17b-beta/meta.yml
+
+invariants: []
+
+work:
+  - "Author migration 0160 for the backfill"
+  - "Execute migration"
+  - "Verify idempotent execution"
+
+verification:
+  - bash scripts/db/verify_tsk_p2_w6_rem_17b_beta.sh
+  - python3 scripts/audit/validate_evidence.py --task TSK-P2-W6-REM-17b-beta --evidence evidence/phase2/tsk_p2_w6_rem_17b_beta.json
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-W6-REM-17b-beta/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W6-REM-17b-beta/EXEC_LOG.md
+
+acceptance_criteria:
+  - "Legacy remediation accepted"
+evidence:
+  - path: evidence/phase2/tsk_p2_w6_rem_17b_beta.json
+    must_include:
+      - task_id
+failure_modes:
+  - "Legacy failure mode"
+notes: "Legacy task patched for v1 schema compliance."
+client: internal
+assigned_agent: supervisor
+model: <UNASSIGNED>

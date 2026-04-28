@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0",
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "human_reviewer",
+    "change_reason": "Wave 7-STRICT Enforcement Track - 14 tasks (007-06 through 007-19) implementing invariant registry schema, trust architecture (PK registry, delegated grants), interpretation overlap rejection, Phase 1 boundary markers, attestation seams, anti-replay contracts, DB kill switch gate, and CI provenance/identity binding. Tasks 007-06 through 007-14 create database migrations (schema/migrations/) and verification scripts (scripts/audit/) for DB-level enforcement with negative testing.",
+    "approved_at_utc": "2026-04-26T00:00:00Z",
+    "role_authority": "DB_FOUNDATION, SECURITY_GUARDIAN"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "93856576a8026e82241c49435bbb41bf968ce2da9867f8ea0eba2c81c6785f83",
+    "model_id": "SWE-1.6",
+    "client": "cursor_codex"
+  },
+  "scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "scripts/security/hot_tables.txt",
+      "scripts/security/ddl_allowlist.json",
+      "scripts/security/lint_ddl_lock_risk.sh",
+      ".github/CODEOWNERS",
+      "docs/plans/phase1/REM-2026-04-27_pre_ci-phase0_ordered_checks/DRD.md",
+      "docs/plans/phase1/REM-2026-04-27_pre_ci-phase0_ordered_checks/EXEC_LOG.md",
+      "schema/migrations/0163_create_invariant_registry.sql",
+      "schema/migrations/0164_registry_supersession_constraints.sql",
+      "schema/migrations/0165_create_public_keys_registry.sql",
+      "schema/migrations/0166_create_delegated_signing_grants.sql",
+      "schema/migrations/MIGRATION_HEAD",
+      "scripts/audit/verify_tsk_p2_preauth_007_06.sh",
+      "scripts/audit/verify_tsk_p2_preauth_007_07.sh",
+      "scripts/audit/verify_tsk_p2_preauth_007_08.sh",
+      "scripts/audit/verify_tsk_p2_preauth_007_09.sh",
+      "scripts/audit/verify_tsk_p2_preauth_007_10.sh",
+      "scripts/audit/verify_tsk_p2_preauth_007_11.sh",
+      "scripts/audit/verify_tsk_p2_preauth_007_12.sh",
+      "scripts/audit/verify_tsk_p2_preauth_007_13.sh",
+      "scripts/audit/verify_tsk_p2_preauth_007_14.sh",
+      "scripts/audit/verify_tsk_p2_preauth_007_15.sh",
+      "scripts/audit/verify_tsk_p2_preauth_007_16.sh",
+      "scripts/audit/verify_tsk_p2_preauth_007_17.sh",
+      "scripts/audit/verify_tsk_p2_preauth_007_18.sh",
+      "scripts/audit/verify_tsk_p2_preauth_007_19.sh",
+      "evidence/phase2/tsk_p2_preauth_007_06.json",
+      "evidence/phase2/tsk_p2_preauth_007_07.json",
+      "evidence/phase2/tsk_p2_preauth_007_08.json",
+      "evidence/phase2/tsk_p2_preauth_007_09.json",
+      "evidence/phase2/tsk_p2_preauth_007_10.json",
+      "evidence/phase2/tsk_p2_preauth_007_11.json",
+      "evidence/phase2/tsk_p2_preauth_007_12.json",
+      "evidence/phase2/tsk_p2_preauth_007_13.json",
+      "evidence/phase2/tsk_p2_preauth_007_14.json",
+      "evidence/phase2/tsk_p2_preauth_007_15.json",
+      "evidence/phase2/tsk_p2_preauth_007_16.json",
+      "evidence/phase2/tsk_p2_preauth_007_17.json",
+      "evidence/phase2/tsk_p2_preauth_007_18.json",
+      "evidence/phase2/tsk_p2_preauth_007_19.json"
+    ],
+    "invariants": [
+      "append-only outbox attempts",
+      "forward-only migrations",
+      "SECURITY DEFINER hardening",
+      "no runtime DDL in production paths",
+      "regulated surface compliance",
+      "remediation trace compliance"
+    ],
+    "phase_boundary_ok": true
+  },
+  "verification": {
+    "commands": [
+      "bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy",
+      "bash scripts/audit/verify_approval_metadata.sh --mode=stage-a --branch=feat-pre-phase2-wave-5-state-machine-trigger-layer"
+    ],
+    "pre_ci_passed": true,
+    "notes": "Stage A approval granted for Wave 7-STRICT Enforcement Track tasks 007-06 through 007-19. DDL allowlist implementation completed with 57 fingerprinted entries covering all DDL on hot tables (legacy and Wave 6+). Lint script passes with allowlist enforcement. Stage B approval required after PR opening. Tasks 007-06 through 007-14 create database migrations (schema/migrations/) and verification scripts (scripts/audit/). Tasks 007-15 through 007-19 create verification scripts only (scripts/audit/). All tasks produce evidence output (evidence/phase2/)."
+  }
+}

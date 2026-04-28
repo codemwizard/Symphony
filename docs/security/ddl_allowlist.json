@@ -650,6 +650,96 @@
             "approved_at": "2026-03-26"
         },
         {
+            "id": "DDL-ALLOW-0098",
+            "migration": "schema/migrations/0146_add_entity_type_to_state_rules.sql",
+            "statement_fingerprint": "ade0dd906f13ab7c4bee1619b96dde46106fdb2ef479bd7b08dac55f8fd3eb61",
+            "reason": "Wave 5 Stabilization FIX-02: Add entity_type column to state_rules for domain-isolated rule scoping (non-hot table)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "db_foundation",
+            "approved_at": "2026-04-24"
+        },
+        {
+            "id": "DDL-ALLOW-0099",
+            "migration": "schema/migrations/0146_add_entity_type_to_state_rules.sql",
+            "statement_fingerprint": "622b2d389a1275e5e24ee7d62ab2ae6a7a6c2b6298bd9eebd806354f6e918a4d",
+            "reason": "Wave 5 Stabilization FIX-02: Drop temporary default from entity_type column (non-hot table)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "db_foundation",
+            "approved_at": "2026-04-24"
+        },
+        {
+            "id": "DDL-ALLOW-0100",
+            "migration": "schema/migrations/0146_add_entity_type_to_state_rules.sql",
+            "statement_fingerprint": "5dd6ff891ea47d449cec03f6bbd2e7f3776c8ec21636bd2f871eef5207171b5c",
+            "reason": "Wave 5 Stabilization FIX-02: Drop old unique constraint to rebuild with entity_type (non-hot table)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "db_foundation",
+            "approved_at": "2026-04-24"
+        },
+        {
+            "id": "DDL-ALLOW-0101",
+            "migration": "schema/migrations/0146_add_entity_type_to_state_rules.sql",
+            "statement_fingerprint": "04a2d3847e02a5342bcf7941fc004c8d02da606eeed9b03ff1251a3d9f57cfe0",
+            "reason": "Wave 5 Stabilization FIX-02: Add new unique constraint including entity_type for domain isolation (non-hot table)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "db_foundation",
+            "approved_at": "2026-04-24"
+        },
+        {
+            "id": "DDL-ALLOW-0102",
+            "migration": "schema/migrations/0147_add_fks_to_state_transitions.sql",
+            "statement_fingerprint": "6d4291e617e3af5b4445cc15c6642d2c477e8a35b56fe337ad5b8aec0762d24d",
+            "reason": "Wave 5 Stabilization FIX-03: Add FK constraint for execution_id to enforce referential integrity (non-hot table)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "db_foundation",
+            "approved_at": "2026-04-24"
+        },
+        {
+            "id": "DDL-ALLOW-0103",
+            "migration": "schema/migrations/0147_add_fks_to_state_transitions.sql",
+            "statement_fingerprint": "b7544f3c306741ef6ceaafee415fc3e69b75bed923befb32beba3f7235e3e5c7",
+            "reason": "Wave 5 Stabilization FIX-03: Add FK constraint for policy_decision_id to enforce referential integrity (non-hot table)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "db_foundation",
+            "approved_at": "2026-04-24"
+        },
+        {
+            "id": "DDL-ALLOW-0104",
+            "migration": "schema/migrations/0150_fix_state_current_fk_restrict.sql",
+            "statement_fingerprint": "a4e33298655e151c866a6fae1ec5b91b014cb838314e0b94af86add56376de43",
+            "reason": "Wave 5 Stabilization FIX-06: Drop CASCADE FK constraint to replace with RESTRICT (non-hot table)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "db_foundation",
+            "approved_at": "2026-04-24"
+        },
+        {
+            "id": "DDL-ALLOW-0105",
+            "migration": "schema/migrations/0150_fix_state_current_fk_restrict.sql",
+            "statement_fingerprint": "81f16d8424e290def59a1d83b4517f17ca452843b6841dad15b364188a11cf7a",
+            "reason": "Wave 5 Stabilization FIX-06: Add RESTRICT FK constraint to preserve append-only audit history (non-hot table)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "db_foundation",
+            "approved_at": "2026-04-24"
+        },
+        {
+            "id": "DDL-ALLOW-0106",
+            "migration": "schema/migrations/0150_fix_state_current_fk_restrict.sql",
+            "statement_fingerprint": "61518d01b7e08c31ba629e0c1037cc84a2bee2ae80d8742608af29beb209d4d5",
+            "reason": "Wave 5 Stabilization FIX-06: Add RESTRICT FK constraint line 1 (non-hot table)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "db_foundation",
+            "approved_at": "2026-04-24"
+        },
+        {
+            "id": "DDL-ALLOW-0107",
+            "migration": "schema/migrations/0151_verify_not_null_state_current.sql",
+            "statement_fingerprint": "318f9d22973528ddaf1a46aaa8ec34e6ac59124fcbbbf95d9fd9fdb8d7521e75",
+            "reason": "Wave 5 Stabilization FIX-07: Conditional ALTER TABLE SET NOT NULL (non-hot table, only executes if constraint missing)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "db_foundation",
+            "approved_at": "2026-04-24"
+        },
+        {
             "id": "DDL-ALLOW-0094",
             "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
             "statement_fingerprint": "4ebb677d6777653fa97d2a0d5c7c35d99361fb5f80a32db59d004505555624d2",

@@ -179,6 +179,8 @@ v1 = 0
 
 for p in files:
     rel = p.as_posix()
+    if not p.exists():
+        continue  # Skip deleted files
     try:
         obj = yaml.safe_load(p.read_text(encoding="utf-8"))
     except Exception as ex:

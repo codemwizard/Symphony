@@ -1,0 +1,93 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W6-REM-17a
+title: "Schema Expand — Nullable Prerequisite Columns"
+owner_role: DB Foundation
+status: completed
+priority: HIGH
+risk_class: DB_SCHEMA
+blast_radius: DB_SCHEMA
+
+intent: >-
+  Add 'interpretation_version_id' to state_transitions and 'project_id' to policy_decisions
+  as nullable columns with no defaults to prepare for deterministic backfilling,
+  without breaking existing Wave 5 test fixtures.
+
+anti_patterns:
+  - "Adding columns as NOT NULL, breaking inserts"
+  - "Adding default values which hides lineage gaps"
+
+out_of_scope:
+  - "Backfilling data"
+  - "Adding NOT NULL constraints"
+
+stop_conditions:
+  - "Existing verifiers 005-01 through 005-08 fail"
+  - "Wave 5 integration verifier fails"
+
+proof_guarantees:
+  - "Columns are present and nullable"
+  - "Legacy test fixtures continue to pass"
+
+proof_limitations:
+  - "Does not prove the data exists to populate them"
+
+depends_on:
+  - TSK-P2-W6-REM-16a
+
+blocks:
+  - TSK-P2-W6-REM-17b-alpha
+  - TSK-P2-W6-REM-17b-beta
+
+touches:
+  - schema/migrations/0156_add_interpretation_version_id.sql
+  - schema/migrations/0157_add_project_id_to_policy_decisions.sql
+  - tasks/TSK-P2-W6-REM-17a/meta.yml
+  - evidence/phase2/tsk_p2_w6_rem_17a.json
+
+invariants:
+  - INV-SCHEMA-EXPAND-COMPATIBILITY
+
+work:
+  - "Author migration 0156 to add interpretation_version_id (uuid, nullable) to state_transitions."
+  - "Author migration 0157 to add project_id (uuid, nullable) to policy_decisions."
+  - "Author verification script to ensure columns are nullable and exist."
+  - "Execute the script and ensure legacy verifiers pass."
+
+acceptance_criteria:
+  - "Both columns visible in schema (nullable)"
+  - "Existing verifiers 005-01 through 005-08 pass"
+  - "Wave 5 integration verifier passes"
+
+negative_tests:
+  - id: TSK-P2-W6-REM-17a-N1
+    description: "Inserting without the new columns must not fail."
+    required: true
+
+positive_tests: []
+
+verification:
+  - bash scripts/db/verify_tsk_p2_w6_rem_17a.sh
+  - python3 scripts/audit/validate_evidence.py --task TSK-P2-W6-REM-17a --evidence evidence/phase2/tsk_p2_w6_rem_17a.json
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w6_rem_17a.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+
+failure_modes:
+  - "Columns NOT NULL => FAIL_REVIEW"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-W6-REM-17a/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W6-REM-17a/EXEC_LOG.md
+
+notes: "Schema expansion."
+client: cursor
+assigned_agent: DB Foundation
+model: <UNASSIGNED>

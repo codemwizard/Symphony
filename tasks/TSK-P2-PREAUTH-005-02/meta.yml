@@ -43,7 +43,7 @@ blocks:
   - TSK-P2-PREAUTH-005-03
 
 touches:
-  - schema/migrations/0120_create_state_transitions.sql
+  - schema/migrations/0138_create_state_current.sql
   - scripts/db/verify_tsk_p2_preauth_005_02.sh
   - tasks/TSK-P2-PREAUTH-005-02/meta.yml
 
@@ -51,7 +51,7 @@ invariants: []
 
 work:
   - >-
-    [ID tsk_p2_preauth_005_02_work_item_01] Add state_current table to migration 0120 with columns:
+    [ID tsk_p2_preauth_005_02_work_item_01] Add state_current table to migration 0138 with columns:
     project_id UUID PRIMARY KEY, current_state VARCHAR NOT NULL, state_since TIMESTAMPTZ NOT NULL.
   - >-
     [ID tsk_p2_preauth_005_02_work_item_02] Write verify_tsk_p2_preauth_005_02.sh that runs psql to verify
@@ -86,7 +86,7 @@ verification:
     test -x scripts/db/verify_tsk_p2_preauth_005_02.sh && bash scripts/db/verify_tsk_p2_preauth_005_02.sh > evidence/phase2/tsk_p2_preauth_005_02.json || exit 1
   - >-
     # [ID tsk_p2_preauth_005_02_work_item_01]
-    test -f schema/migrations/0120_create_state_transitions.sql || exit 1
+    test -f schema/migrations/0138_create_state_current.sql || exit 1
   - >-
     # [ID tsk_p2_preauth_005_02_work_item_03]
     test -f evidence/phase2/tsk_p2_preauth_005_02.json || exit 1

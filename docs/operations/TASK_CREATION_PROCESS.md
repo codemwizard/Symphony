@@ -36,9 +36,13 @@ Do not require DRD for `L0` trivial fixes.
 
 Follow this exact order. Do not skip or reorder steps.
 
-### Step 1 — Create minimal meta stub
-- Path: `tasks/<TASK_ID>/meta.yml`
-- Minimum fields: `schema_version`, `phase`, `task_id`, `title`, `owner_role`, `status: planned`
+### Step 1 — Define the Task (Mandatory Anti-Drift Generation)
+Instead of manually creating and syncing `meta.yml`, `PLAN.md`, and `EXEC_LOG.md`, you **MUST** use the automated task generator. This guarantees Wave 5 Regulated Surface and Remediation Trace markers are injected and the proof graph matches.
+1. Create a JSON definition file (e.g. `my_task.json`) containing `task_id`, `title`, `owner`, `phase`, `blast_radius`, `is_regulated`, `work` items, `acceptance_criteria`, `verifiers`, and `evidence`.
+2. Run the generator: `python3 scripts/agent/generate_task_pack.py --config my_task.json`
+3. The generator will create the `meta.yml`, `PLAN.md`, and `EXEC_LOG.md`.
+
+> **Note**: The generator will fail fast if you omit actual implementation details (`work`, `acceptance_criteria`, etc.) to prevent empty template reliance.
 
 ### Step 2 — Validate lifecycle phase key
 - Confirm phase key is valid per `docs/operations/PHASE_LIFECYCLE.md` (`0`,`1`,`2`,`3`,`4` only).
@@ -79,9 +83,8 @@ Follow this exact order. Do not skip or reorder steps.
 ### Step 7 — Begin implementation
 - Implementation may begin only after Steps 1-6 exist and meta paths resolve.
 - Before calling a task `ready to implement`, run:
-  - `bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy`
+  - `bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy tasks/<TASK_ID>/meta.yml`
   - `bash scripts/audit/verify_task_pack_readiness.sh --task <TASK_ID>`
-- Use the task meta template from `tasks/_template/meta.yml`.
 
 ## 3) Agent assignment (permissions + roles)
 

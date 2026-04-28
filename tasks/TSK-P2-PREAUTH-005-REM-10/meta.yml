@@ -1,0 +1,106 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-005-REM-10
+title: Add enforce_transition_signature trigger to verify transition_hash
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+depends_on:
+  - TSK-P2-PREAUTH-005-REM-09
+
+touches:
+  - schema/migrations/0141_create_enforce_transition_signature.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_preauth_005_rem_10.sh
+  - evidence/phase2/TSK-P2-PREAUTH-005-REM-10.json
+  - tasks/TSK-P2-PREAUTH-005-REM-10/meta.yml
+
+invariants: []
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/REGULATED_SURFACE_PATHS.yml
+  - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+  - Wave-5-for-Devin.md
+
+anti_patterns:
+  - missing_signature_verification
+  - editing_migrations_without_approval_metadata
+  - missing_remediation_trace_markers
+  - behavioral_negative_tests_missing
+
+out_of_scope:
+  - generic entity model (deferred to REM-11)
+
+stop_conditions:
+  - pgcrypto extension not verified/enabled
+  - cryptographic functions not added
+  - MIGRATION_HEAD not updated
+  - approval metadata not created before editing migration
+  - behavioral negative test not implemented
+
+work:
+  - "[ID rem_10_work_01] Create approval artifact before editing migration"
+  - "[ID rem_10_work_02] Add enforce_transition_signature() trigger to verify transition_hash in migration 0141"
+  - "[ID rem_10_work_03] Update MIGRATION_HEAD to 0126"
+  - "[ID rem_10_work_04] Write verification script that checks trigger exists and uses RAISE EXCEPTION"
+  - "[ID rem_10_work_05] Write behavioral negative test that invalid transition_hash is rejected"
+  - "[ID rem_10_work_06] Run verification script"
+  - "[ID rem_10_work_07] Update EXEC_LOG.md with remediation markers"
+
+acceptance_criteria:
+  - "[ID rem_10_work_01] Stage A approval artifact created and passes schema validation"
+  - "[ID rem_10_work_02] enforce_transition_signature() trigger exists and uses RAISE EXCEPTION"
+  - "[ID rem_10_work_03] MIGRATION_HEAD contains 0126"
+  - "[ID rem_10_work_04] Verification script exists and uses DATABASE_URL"
+  - "[ID rem_10_work_05] Behavioral negative test confirms invalid transition_hash is rejected with exception"
+  - "[ID rem_10_work_06] Verification script exits 0"
+  - "[ID rem_10_work_07] EXEC_LOG.md contains required remediation trace markers"
+
+negative_tests:
+  - "[ID rem_10_nt_01] INSERT with invalid transition_hash must fail with RAISE EXCEPTION"
+
+verification:
+  - "[ID rem_10_work_01] test -f approvals/$(date +%Y-%m-%d)/BRANCH-*.approval.json && python3 -m json.tool < approvals/$(date +%Y-%m-%d)/BRANCH-*.approval.json > /dev/null || exit 1"
+  - "[ID rem_10_work_02] psql \"$DATABASE_URL\" -c \"SELECT prosrc FROM pg_proc WHERE proname = 'enforce_transition_signature'\" | grep -q 'RAISE EXCEPTION' || exit 1"
+  - "[ID rem_10_work_03] test $(cat schema/migrations/MIGRATION_HEAD) = '0126' || exit 1"
+  - "[ID rem_10_work_04] [ID rem_10_work_06] test -x scripts/db/verify_tsk_p2_preauth_005_rem_10.sh && bash scripts/db/verify_tsk_p2_preauth_005_rem_10.sh > evidence/phase2/TSK-P2-PREAUTH-005-REM-10.json || exit 1"
+  - "[ID rem_10_work_05] grep -q 'behavioral_negative_test' evidence/phase2/TSK-P2-PREAUTH-005-REM-10.json || exit 1"
+  - "[ID rem_10_work_06] test -f evidence/phase2/TSK-P2-PREAUTH-005-REM-10.json || exit 1"
+  - "[ID rem_10_work_07] grep -q 'failure_signature' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-10/EXEC_LOG.md && grep -q 'origin_task_id' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-10/EXEC_LOG.md && grep -q 'repro_command' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-10/EXEC_LOG.md && grep -q 'verification_commands_run' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-10/EXEC_LOG.md && grep -q 'final_status' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-10/EXEC_LOG.md || exit 1"
+
+failure_modes:
+  - PGCRYPTO_NOT_ENABLED
+  - CRYPTO_FUNCTIONS_NOT_ADDED
+  - MIGRATION_HEAD_NOT_UPDATED
+  - APPROVAL_METADATA_MISSING
+  - REMEDIATION_TRACE_MARKERS_MISSING
+  - BEHAVIORAL_NEGATIVE_TEST_MISSING
+  - Evidence file missing
+
+evidence:
+  - path: evidence/phase2/TSK-P2-PREAUTH-005-REM-10.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - trigger_exists_verified
+      - migration_head
+      - behavioral_negative_test_results
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-005-REM-10/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-005-REM-10/EXEC_LOG.md
+
+notes: >-
+  Remediation task for Wave 5. Adds pgcrypto extension and ed25519 signature verification functions.
+  Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

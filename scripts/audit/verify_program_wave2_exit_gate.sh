@@ -6,7 +6,7 @@ cat > "$W/adjustment_ceiling_breach.json" <<JSON
 {"pass":true,"adjustment_id":"adj-1","parent_instruction_id":"inst-1","breach_amount":10,"ceiling_value":100,"outcome":"CEILING_BREACH"}
 JSON
 cat > "$W/recipient_redirect_blocked.json" <<JSON
-{"pass":true,"adjustment_id":"adj-2","attempted_recipient":"x","error_code":"P7601","outcome":"REJECTED"}
+{"pass":true,"adjustment_id":"adj-2","attempted_recipient":"x","error_code":"P7504","outcome":"REJECTED"}
 JSON
 cat > "$W/cooling_off_execution_blocked.json" <<JSON
 {"pass":true,"adjustment_id":"adj-3","state_at_attempt":"cooling_off","error_code":"P7701","outcome":"BLOCKED"}

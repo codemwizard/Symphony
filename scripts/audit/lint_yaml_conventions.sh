@@ -67,7 +67,9 @@ canonical_keys = {
     "priority","risk_class","blast_radius","intent","anti_patterns","out_of_scope",
     "stop_conditions","proof_guarantees","proof_limitations","blocks",
     "negative_tests","positive_tests",
-    "domain","pilot","second_pilot_test","pilot_scope_ref"
+    "domain","pilot","second_pilot_test","pilot_scope_ref",
+    "deliverable_files","regulated_surface_compliance","remediation_trace_compliance",
+    "database_connection","migration_dependencies","primary_enforcement_domain"
 }
 
 list_fields = {
@@ -165,6 +167,8 @@ else:
 
 # ---- 1) Task meta strict lint ----
 for meta in task_meta_files:
+    if not meta.exists():
+        continue  # Skip deleted files
     data, raw = parse_yaml(meta)
     checked.append(str(meta))
     if data is None:

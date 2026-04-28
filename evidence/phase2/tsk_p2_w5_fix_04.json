@@ -1,0 +1,46 @@
+{
+  "task_id": "TSK-P2-W5-FIX-04",
+  "git_sha": "d805b381",
+  "timestamp_utc": "2026-04-24T14:04:31Z",
+  "run_id": "d805b381-2026-04-24T14:04:31Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "prosecdef_verified",
+      "status": "PASS",
+      "description": "All 6 trigger functions have prosecdef=true"
+    },
+    {
+      "name": "proconfig_verified",
+      "status": "PASS",
+      "description": "All 6 trigger functions have search_path = pg_catalog, public"
+    }
+  ],
+  "functions_hardened": [
+    "enforce_transition_state_rules",
+    "enforce_transition_authority",
+    "enforce_transition_signature",
+    "enforce_execution_binding",
+    "deny_state_transitions_mutation",
+    "update_current_state"
+  ],
+  "prosecdef_verified": true,
+  "proconfig_verified": true,
+  "prosecdef_results": [
+  "enforce_transition_state_rules:PASS",
+  "enforce_transition_authority:PASS",
+  "enforce_transition_signature:PASS",
+  "enforce_execution_binding:PASS",
+  "deny_state_transitions_mutation:PASS",
+  "update_current_state:PASS"
+],
+  "proconfig_results": [
+  "enforce_transition_state_rules:PASS",
+  "enforce_transition_authority:PASS",
+  "enforce_transition_signature:PASS",
+  "enforce_execution_binding:PASS",
+  "deny_state_transitions_mutation:PASS",
+  "update_current_state:PASS"
+],
+  "notes": "SECURITY DEFINER hardening applied to all Wave 5 trigger functions per AGENTS.md mandate"
+}

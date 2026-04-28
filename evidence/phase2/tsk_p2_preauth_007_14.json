@@ -1,0 +1,18 @@
+{
+  "task_id": "TSK-P2-PREAUTH-007-14",
+  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
+  "timestamp_utc": "2026-04-26T10:36:15Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "migration_0171_registered",
+      "description": "Verify 0171 is in schema_migrations",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_14_origin_behavioral",
+      "description": "Verify trigger enforcement without replica bypass",
+      "result": "PASS"
+    }
+  ]
+}
