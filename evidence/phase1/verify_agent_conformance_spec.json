@@ -4,7 +4,7 @@
   "git_sha": "0000000000000000000000000000000000000000",
   "schema_fingerprint": "c314cf4cd496dcd66ab155cc4d4ae8bddbeb5c50e1d15098766fa5b487157784",
   "status": "PASS",
-  "spec_file": "/home/mwiza/workspaces/Symphony-Demo/Symphony/docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md",
+  "spec_file": "/home/ubuntu/Symphony/docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md",
   "required_headers": [
     "## Purpose",
     "## Canonical Inputs",

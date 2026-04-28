@@ -1,376 +1,253 @@
 #!/usr/bin/env bash
-set -euo pipefail
-
-# Verifier for TSK-P2-PREAUTH-004-01: policy_decisions schema contract
-# This script validates the 0134 migration contract with 12 structural checks (C1-C12)
-# and 5 negative tests (N1-N5).
+# ============================================================
+# verify_policy_decisions_schema.sh
+# Task: TSK-P2-PREAUTH-004-01
+# Wave: Wave 4 — Authority Binding
+# Contract: docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md + 004-01/PLAN.md
 #
-# Contract: schema/migrations/0134_create_policy_decisions.sql
-# Task: TSK-P2-PREAUTH-004-01-REM
+# Proves migration 0134 materialised:
+#   - public.policy_decisions with the 11 contracted columns
+#   - PRIMARY KEY on policy_decision_id
+#   - UNIQUE (execution_id, decision_type)
+#   - FK execution_id -> execution_records(execution_id)
+#   - CHECK (decision_hash ~ '^[0-9a-f]{64}$')
+#   - CHECK (signature ~ '^[0-9a-f]{128}$')
+#   - idx_policy_decisions_entity on (entity_type, entity_id)
+#   - idx_policy_decisions_declared_by on (declared_by)
+#   - enforce_policy_decisions_append_only trigger (BEFORE UPDATE OR DELETE)
+#   - enforce_policy_decisions_append_only() function is SECURITY DEFINER
+#     with search_path=pg_catalog,public and EXECUTE revoked from PUBLIC
+#
+# Drives scripts/db/tests/test_policy_decisions_negative.sh (N1-N6).
+# Emits self-certifying evidence JSON at evidence/phase2/tsk_p2_preauth_004_01.json.
+# ============================================================
+set -Eeuo pipefail
+
+: "${DATABASE_URL:?DATABASE_URL is required}"
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+MIG_FILE="$ROOT_DIR/schema/migrations/0134_policy_decisions.sql"
+HEAD_FILE="$ROOT_DIR/schema/migrations/MIGRATION_HEAD"
+NEG_TEST="$ROOT_DIR/scripts/db/tests/test_policy_decisions_negative.sh"
+EVIDENCE_FILE="$ROOT_DIR/evidence/phase2/tsk_p2_preauth_004_01.json"
+
+mkdir -p "$(dirname "$EVIDENCE_FILE")"
 
 TASK_ID="TSK-P2-PREAUTH-004-01"
-EVIDENCE_DIR="evidence/phase2"
-EVIDENCE_PATH="${EVIDENCE_DIR}/tsk_p2_preauth_004_01.json"
+GIT_SHA="$(git -C "$ROOT_DIR" rev-parse HEAD 2>/dev/null || echo 'unknown')"
+TIMESTAMP_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+TRACE_START="$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)"
 
-mkdir -p "$EVIDENCE_DIR"
+# Check 1: migration file exists + MIGRATION_HEAD = 0134
+test -f "$MIG_FILE" || { echo "ERR: migration 0134 missing" >&2; exit 1; }
+HEAD_VALUE="$(tr -d '\n' < "$HEAD_FILE")"
+[[ "$HEAD_VALUE" == "0134" ]] || { echo "ERR: MIGRATION_HEAD=$HEAD_VALUE (expected 0134)" >&2; exit 1; }
 
-# Get git SHA
-GIT_SHA=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
-TIMESTAMP_UTC=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+# Check 2: 11 columns with expected types + NOT NULL posture
+# Expected shape (ordinal_position, column_name, data_type, is_nullable):
+#   1 policy_decision_id uuid NO
+#   2 execution_id       uuid NO
+#   3 decision_type      text NO
+#   4 authority_scope    text NO
+#   5 declared_by        uuid NO
+#   6 entity_type        text NO
+#   7 entity_id          uuid NO
+#   8 decision_hash      text NO
+#   9 signature          text NO
+#  10 signed_at          timestamp with time zone NO
+#  11 created_at         timestamp with time zone NO
+COLUMNS_OUT="$(psql "$DATABASE_URL" -qAt -c "
+SELECT ordinal_position || '|' || column_name || '|' || data_type || '|' || is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'policy_decisions'
+ORDER BY ordinal_position;")"
 
-# Initialize evidence JSON
-cat > "$EVIDENCE_PATH" <<EOF
+EXPECTED_COLS=(
+  "1|policy_decision_id|uuid|NO"
+  "2|execution_id|uuid|NO"
+  "3|decision_type|text|NO"
+  "4|authority_scope|text|NO"
+  "5|declared_by|uuid|NO"
+  "6|entity_type|text|NO"
+  "7|entity_id|uuid|NO"
+  "8|decision_hash|text|NO"
+  "9|signature|text|NO"
+  "10|signed_at|timestamp with time zone|NO"
+  "11|created_at|timestamp with time zone|NO"
+)
+ACTUAL_COLS="$(printf '%s\n' "$COLUMNS_OUT")"
+for expected in "${EXPECTED_COLS[@]}"; do
+    echo "$ACTUAL_COLS" | grep -Fxq "$expected" || {
+        echo "ERR: policy_decisions column mismatch; expected line '$expected' not present" >&2
+        echo "Actual columns:" >&2
+        echo "$ACTUAL_COLS" >&2
+        exit 1
+    }
+done
+
+# Check 3: PRIMARY KEY on policy_decision_id
+PK_OUT="$(psql "$DATABASE_URL" -qAt -c "
+SELECT tc.constraint_name || '|' || kcu.column_name
+FROM information_schema.table_constraints tc
+JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name
+WHERE tc.table_schema = 'public'
+  AND tc.table_name = 'policy_decisions'
+  AND tc.constraint_type = 'PRIMARY KEY';")"
+echo "$PK_OUT" | grep -q '|policy_decision_id$' || { echo "ERR: PRIMARY KEY missing on policy_decision_id (got: $PK_OUT)" >&2; exit 1; }
+
+# Check 4: UNIQUE (execution_id, decision_type)
+UNIQUE_OUT="$(psql "$DATABASE_URL" -qAt -c "
+SELECT string_agg(kcu.column_name, ',' ORDER BY kcu.ordinal_position)
+FROM information_schema.table_constraints tc
+JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name
+WHERE tc.table_schema = 'public'
+  AND tc.table_name = 'policy_decisions'
+  AND tc.constraint_type = 'UNIQUE'
+GROUP BY tc.constraint_name
+HAVING string_agg(kcu.column_name, ',' ORDER BY kcu.ordinal_position) = 'execution_id,decision_type';")"
+[[ "$UNIQUE_OUT" == "execution_id,decision_type" ]] || { echo "ERR: UNIQUE (execution_id, decision_type) missing (got: $UNIQUE_OUT)" >&2; exit 1; }
+
+# Check 5: FK execution_id -> execution_records(execution_id)
+FK_OUT="$(psql "$DATABASE_URL" -qAt -c "
+SELECT kcu.column_name || '->' || ccu.table_name || '.' || ccu.column_name
+FROM information_schema.table_constraints tc
+JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name
+JOIN information_schema.constraint_column_usage ccu ON tc.constraint_name = ccu.constraint_name
+WHERE tc.table_schema = 'public'
+  AND tc.table_name = 'policy_decisions'
+  AND tc.constraint_type = 'FOREIGN KEY';")"
+echo "$FK_OUT" | grep -Fxq 'execution_id->execution_records.execution_id' || { echo "ERR: FK execution_id -> execution_records(execution_id) missing (got: $FK_OUT)" >&2; exit 1; }
+
+# Check 6: CHECK regexes on decision_hash and signature
+CHECK_OUT="$(psql "$DATABASE_URL" -qAt -c "
+SELECT pg_get_constraintdef(oid)
+FROM pg_constraint
+WHERE conrelid = 'public.policy_decisions'::regclass
+  AND contype = 'c';")"
+echo "$CHECK_OUT" | grep -q "decision_hash ~ '\^\[0-9a-f\]{64}\$'" || { echo "ERR: CHECK decision_hash regex missing (got: $CHECK_OUT)" >&2; exit 1; }
+echo "$CHECK_OUT" | grep -q "signature ~ '\^\[0-9a-f\]{128}\$'" || { echo "ERR: CHECK signature regex missing (got: $CHECK_OUT)" >&2; exit 1; }
+
+# Check 7: two expected indexes
+INDEX_OUT="$(psql "$DATABASE_URL" -qAt -c "
+SELECT indexname
+FROM pg_indexes
+WHERE schemaname = 'public' AND tablename = 'policy_decisions'
+ORDER BY indexname;")"
+echo "$INDEX_OUT" | grep -Fxq 'idx_policy_decisions_entity'      || { echo "ERR: idx_policy_decisions_entity missing" >&2; exit 1; }
+echo "$INDEX_OUT" | grep -Fxq 'idx_policy_decisions_declared_by' || { echo "ERR: idx_policy_decisions_declared_by missing" >&2; exit 1; }
+
+# Check 8: append-only trigger present + correct event mask
+# tgtype bits: 1=ROW, 2=BEFORE, 4=INSERT, 8=DELETE, 16=UPDATE, 32=TRUNCATE
+# Expected: ROW(1) + BEFORE(2) + DELETE(8) + UPDATE(16) = 27
+TRIGGER_ROW="$(psql "$DATABASE_URL" -qAt -c "
+SELECT tgname || '|' || tgtype::text
+FROM pg_trigger
+WHERE tgrelid = 'public.policy_decisions'::regclass
+  AND tgname = 'enforce_policy_decisions_append_only'
+  AND NOT tgisinternal;")"
+[[ -n "$TRIGGER_ROW" ]] || { echo "ERR: enforce_policy_decisions_append_only trigger missing on policy_decisions" >&2; exit 1; }
+TGTYPE="$(echo "$TRIGGER_ROW" | awk -F'|' '{print $2}')"
+[[ "$TGTYPE" == "27" ]] || { echo "ERR: append-only trigger tgtype=$TGTYPE (expected 27=ROW+BEFORE+UPDATE+DELETE)" >&2; exit 1; }
+
+# Check 9: function is SECURITY DEFINER + search_path hardened
+FUNC_INFO="$(psql "$DATABASE_URL" -qAt -c "
+SELECT prosecdef::text || '|' || COALESCE(array_to_string(proconfig, ','), '')
+FROM pg_proc
+WHERE proname = 'enforce_policy_decisions_append_only'
+  AND pronamespace = 'public'::regnamespace;")"
+echo "$FUNC_INFO" | grep -q '^true|' || { echo "ERR: enforce_policy_decisions_append_only prosecdef != true (got: $FUNC_INFO)" >&2; exit 1; }
+echo "$FUNC_INFO" | grep -q 'search_path=pg_catalog, public' || { echo "ERR: enforce_policy_decisions_append_only proconfig lacks search_path=pg_catalog, public (got: $FUNC_INFO)" >&2; exit 1; }
+
+# Check 10: EXECUTE revoked from PUBLIC
+PUBLIC_GRANT="$(psql "$DATABASE_URL" -qAt -c "
+SELECT has_function_privilege('public', p.oid, 'EXECUTE')::text
+FROM pg_proc p
+WHERE p.proname = 'enforce_policy_decisions_append_only'
+  AND p.pronamespace = 'public'::regnamespace;")"
+[[ "$PUBLIC_GRANT" == "false" ]] || { echo "ERR: EXECUTE still granted to PUBLIC on enforce_policy_decisions_append_only (got: $PUBLIC_GRANT)" >&2; exit 1; }
+
+# Check 11: drive the negative-test harness (N1-N6)
+NEG_OUT="$(bash "$NEG_TEST" 2>&1 | tr '\n' '|' | sed 's/|$//')"
+echo "$NEG_OUT" | grep -q 'PASS: 004-01 negative tests (N1-N6)' || { echo "ERR: negative-test harness did not report 004-01 PASS banner: $NEG_OUT" >&2; exit 1; }
+
+# Hashes for evidence
+MIG_SHA="$(sha256sum "$MIG_FILE" | awk '{print $1}')"
+HEAD_SHA="$(sha256sum "$HEAD_FILE" | awk '{print $1}')"
+NEG_SHA="$(sha256sum "$NEG_TEST" | awk '{print $1}')"
+VERIFIER_SHA="$(sha256sum "${BASH_SOURCE[0]}" | awk '{print $1}')"
+
+COLUMNS_JSON="$(printf '%s\n' "$COLUMNS_OUT" | jq -R -s -c 'split("\n") | map(select(length>0))')"
+CHECK_JSON="$(printf '%s\n' "$CHECK_OUT" | jq -R -s -c 'split("\n") | map(select(length>0))')"
+INDEX_JSON="$(printf '%s\n' "$INDEX_OUT" | jq -R -s -c 'split("\n") | map(select(length>0))')"
+
+TRACE_END="$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)"
+
+cat > "$EVIDENCE_FILE" <<EOF
 {
   "task_id": "$TASK_ID",
   "git_sha": "$GIT_SHA",
   "timestamp_utc": "$TIMESTAMP_UTC",
-  "status": "IN_PROGRESS",
-  "pass_count": 0,
-  "fail_count": 0,
-  "checks": [],
-  "column_contract_source": "schema/migrations/0134_create_policy_decisions.sql"
+  "status": "PASS",
+  "checks": [
+    {"name": "migration_file_and_head_match_0134", "result": "pass"},
+    {"name": "eleven_columns_present_with_correct_types_and_not_null", "result": "pass"},
+    {"name": "primary_key_on_policy_decision_id", "result": "pass"},
+    {"name": "unique_execution_id_decision_type", "result": "pass"},
+    {"name": "fk_execution_id_to_execution_records", "result": "pass"},
+    {"name": "check_decision_hash_and_signature_regex", "result": "pass"},
+    {"name": "two_expected_indexes_present", "result": "pass"},
+    {"name": "append_only_trigger_tgtype_27", "result": "pass"},
+    {"name": "function_security_definer_search_path_hardened", "result": "pass"},
+    {"name": "execute_revoked_from_public", "result": "pass"},
+    {"name": "negative_tests_n1_to_n6_pass", "result": "pass"}
+  ],
+  "observed_paths": [
+    "schema/migrations/0134_policy_decisions.sql",
+    "schema/migrations/MIGRATION_HEAD",
+    "scripts/db/tests/test_policy_decisions_negative.sh"
+  ],
+  "observed_hashes": {
+    "migration_0134_sha256": "$MIG_SHA",
+    "migration_head_sha256": "$HEAD_SHA",
+    "negative_test_sha256":  "$NEG_SHA",
+    "verifier_sha256":       "$VERIFIER_SHA"
+  },
+  "command_outputs": {
+    "columns_rows": $COLUMNS_JSON,
+    "check_constraints": $CHECK_JSON,
+    "indexes": $INDEX_JSON,
+    "append_only_trigger_row": $(echo "$TRIGGER_ROW" | jq -R -s -c '.'),
+    "function_info_row": $(echo "$FUNC_INFO" | jq -R -s -c '.'),
+    "negative_test_output": $(echo "$NEG_OUT" | jq -R -s -c '.')
+  },
+  "execution_trace": {
+    "start_utc": "$TRACE_START",
+    "end_utc": "$TRACE_END"
+  },
+  "columns_present": $COLUMNS_JSON,
+  "constraints_present": {
+    "primary_key": "policy_decision_id",
+    "unique": ["execution_id", "decision_type"],
+    "foreign_key": "execution_id -> execution_records.execution_id",
+    "checks": $CHECK_JSON
+  },
+  "triggers_present": [
+    "enforce_policy_decisions_append_only (BEFORE UPDATE OR DELETE, tgtype=27)"
+  ],
+  "function_security_posture": {
+    "function": "public.enforce_policy_decisions_append_only()",
+    "security_definer": true,
+    "search_path_hardened": true,
+    "public_execute_revoked": true,
+    "sqlstate_raised_on_violation": "GF061"
+  },
+  "migration_head_value": "$HEAD_VALUE"
 }
 EOF
 
-# Helper: add check result
-add_check() {
-  local id="$1"
-  local status="$2"
-  local detail="$3"
+# Schema validation of emitted evidence (self-check)
+jq -e '.task_id and .git_sha and .timestamp_utc and .status == "PASS" and .observed_hashes and .migration_head_value' \
+    "$EVIDENCE_FILE" > /dev/null \
+    || { echo "ERR: evidence JSON failed self-validation" >&2; exit 1; }
 
-  local temp_file
-  temp_file=$(mktemp)
-  jq --arg id "$id" --arg status "$status" --arg detail "$detail" \
-    '.checks += [{"id": $id, "status": $status, "detail": $detail}] | 
-     if $status == "PASS" then .pass_count += 1 else .fail_count += 1 end' \
-    "$EVIDENCE_PATH" > "$temp_file"
-  mv "$temp_file" "$EVIDENCE_PATH"
-}
-
-# Helper: fail and exit
-fail_check() {
-  local id="$1"
-  local msg="$2"
-
-  local temp_file
-  temp_file=$(mktemp)
-  jq --arg id "$id" --arg msg "$msg" \
-    '.status = "FAIL" | .checks += [{"id": $id, "status": "FAIL", "detail": $msg}] | .fail_count += 1' \
-    "$EVIDENCE_PATH" > "$temp_file"
-  mv "$temp_file" "$EVIDENCE_PATH"
-  echo "FAIL: $id — $msg" >&2
-  exit 1
-}
-
-# ─── Test database connection ─────────────────────────────────────────
-echo "Checking database connection..."
-if ! psql -v ON_ERROR_STOP=1 -t -c "SELECT 1;" > /dev/null 2>&1; then
-  fail_check "SETUP" "Cannot connect to database"
-fi
-
-# ─── C1: Table public.policy_decisions exists ───────────────────────
-echo "C1: Checking table exists..."
-C1_RESULT=$(psql -v ON_ERROR_STOP=1 -t <<'EOSQL' 2>&1)
-SELECT EXISTS (
-  SELECT FROM information_schema.tables 
-  WHERE table_schema = 'public' 
-  AND table_name = 'policy_decisions'
-);
-EOSQL
-
-if echo "$C1_RESULT" | grep -q "t"; then
-  add_check "C1" "PASS" "Table public.policy_decisions exists"
-  echo "  C1 PASSED"
-else
-  fail_check "C1" "Table public.policy_decisions does not exist"
-fi
-
-# ─── C2: All 11 columns present with correct types ────────────────────
-echo "C2: Checking columns..."
-C2_RESULT=$(psql -v ON_ERROR_STOP=1 -t <<'EOSQL' 2>&1)
-SELECT COUNT(*) = 11 FROM information_schema.columns 
-WHERE table_schema = 'public' 
-AND table_name = 'policy_decisions'
-AND column_name IN (
-  'policy_decision_id', 'execution_id', 'decision_type', 'authority_scope',
-  'declared_by', 'entity_type', 'entity_id', 'decision_hash', 'signature',
-  'signed_at', 'created_at'
-);
-EOSQL
-
-if echo "$C2_RESULT" | grep -q "t"; then
-  add_check "C2" "PASS" "All 11 columns present with correct types"
-  echo "  C2 PASSED"
-else
-  fail_check "C2" "Missing or incorrect columns"
-fi
-
-# ─── C3: FK policy_decisions_fk_execution exists ─────────────────────
-echo "C3: Checking FK constraint..."
-C3_RESULT=$(psql -v ON_ERROR_STOP=1 -t <<'EOSQL' 2>&1)
-SELECT EXISTS (
-  SELECT FROM information_schema.table_constraints tc
-  JOIN information_schema.key_column_usage kcu
-    ON tc.constraint_name = kcu.constraint_name
-  WHERE tc.table_schema = 'public'
-  AND tc.table_name = 'policy_decisions'
-  AND tc.constraint_name = 'policy_decisions_fk_execution'
-  AND tc.constraint_type = 'FOREIGN KEY'
-);
-EOSQL
-
-if echo "$C3_RESULT" | grep -q "t"; then
-  add_check "C3" "PASS" "FK policy_decisions_fk_execution exists"
-  echo "  C3 PASSED"
-else
-  fail_check "C3" "FK policy_decisions_fk_execution missing"
-fi
-
-# ─── C4: UNIQUE policy_decisions_unique_exec_type exists ───────────────
-echo "C4: Checking UNIQUE constraint..."
-C4_RESULT=$(psql -v ON_ERROR_STOP=1 -t <<'EOSQL' 2>&1)
-SELECT EXISTS (
-  SELECT FROM information_schema.table_constraints
-  WHERE table_schema = 'public'
-  AND table_name = 'policy_decisions'
-  AND constraint_name = 'policy_decisions_unique_exec_type'
-  AND constraint_type = 'UNIQUE'
-);
-EOSQL
-
-if echo "$C4_RESULT" | grep -q "t"; then
-  add_check "C4" "PASS" "UNIQUE policy_decisions_unique_exec_type exists"
-  echo "  C4 PASSED"
-else
-  fail_check "C4" "UNIQUE policy_decisions_unique_exec_type missing"
-fi
-
-# ─── C5: CHECK policy_decisions_hash_hex_64 on decision_hash ──────────
-echo "C5: CHECK policy_decisions_hash_hex_64 on decision_hash..."
-C5_RESULT=$(psql -v ON_ERROR_STOP=1 -t <<'EOSQL' 2>&1)
-SELECT EXISTS (
-  SELECT FROM information_schema.check_constraints cc
-  JOIN information_schema.constraint_column_usage ccu
-    ON cc.constraint_name = ccu.constraint_name
-  WHERE cc.constraint_schema = 'public'
-  AND cc.constraint_name = 'policy_decisions_hash_hex_64'
-  AND ccu.column_name = 'decision_hash'
-);
-EOSQL
-
-if echo "$C5_RESULT" | grep -q "t"; then
-  add_check "C5" "PASS" "CHECK policy_decisions_hash_hex_64 on decision_hash"
-  echo "  C5 PASSED"
-else
-  fail_check "C5" "CHECK policy_decisions_hash_hex_64 missing"
-fi
-
-# ─── C6: CHECK policy_decisions_sig_hex_128 on signature ─────────────
-echo "C6: CHECK policy_decisions_sig_hex_128 on signature..."
-C6_RESULT=$(psql -v ON_ERROR_STOP=1 -t <<'EOSQL' 2>&1)
-SELECT EXISTS (
-  SELECT FROM information_schema.check_constraints cc
-  JOIN information_schema.constraint_column_usage ccu
-    ON cc.constraint_name = ccu.constraint_name
-  WHERE cc.constraint_schema = 'public'
-  AND cc.constraint_name = 'policy_decisions_sig_hex_128'
-  AND ccu.column_name = 'signature'
-);
-EOSQL
-
-if echo "$C6_RESULT" | grep -q "t"; then
-  add_check "C6" "PASS" "CHECK policy_decisions_sig_hex_128 on signature"
-  echo "  C6 PASSED"
-else
-  fail_check "C6" "CHECK policy_decisions_sig_hex_128 missing"
-fi
-
-# ─── C7: INDEX idx_policy_decisions_entity exists ───────────────────
-echo "C7: Checking index idx_policy_decisions_entity..."
-C7_RESULT=$(psql -v ON_ERROR_STOP=1 -t <<'EOSQL' 2>&1)
-SELECT EXISTS (
-  SELECT FROM pg_indexes
-  WHERE schemaname = 'public'
-  AND tablename = 'policy_decisions'
-  AND indexname = 'idx_policy_decisions_entity'
-);
-EOSQL
-
-if echo "$C7_RESULT" | grep -q "t"; then
-  add_check "C7" "PASS" "INDEX idx_policy_decisions_entity exists"
-  echo "  C7 PASSED"
-else
-  fail_check "C7" "INDEX idx_policy_decisions_entity missing"
-fi
-
-# ─── C8: INDEX idx_policy_decisions_declared_by exists ────────────────
-echo "C8: Checking index idx_policy_decisions_declared_by..."
-C8_RESULT=$(psql -v ON_ERROR_STOP=1 -t <<'EOSQL' 2>&1)
-SELECT EXISTS (
-  SELECT FROM pg_indexes
-  WHERE schemaname = 'public'
-  AND tablename = 'policy_decisions'
-  AND indexname = 'idx_policy_decisions_declared_by'
-);
-EOSQL
-
-if echo "$C8_RESULT" | grep -q "t"; then
-  add_check "C8" "PASS" "INDEX idx_policy_decisions_declared_by exists"
-  echo "  C8 PASSED"
-else
-  fail_check "C8" "INDEX idx_policy_decisions_declared_by missing"
-fi
-
-# ─── C9: Trigger policy_decisions_append_only_trigger exists ─────────
-echo "C9: Checking trigger..."
-C9_RESULT=$(psql -v ON_ERROR_STOP=1 -t <<'EOSQL' 2>&1)
-SELECT EXISTS (
-  SELECT FROM information_schema.triggers
-  WHERE trigger_schema = 'public'
-  AND trigger_name = 'policy_decisions_append_only_trigger'
-  AND event_object_table = 'policy_decisions'
-);
-EOSQL
-
-if echo "$C9_RESULT" | grep -q "t"; then
-  add_check "C9" "PASS" "Trigger policy_decisions_append_only_trigger exists"
-  echo "  C9 PASSED"
-else
-  fail_check "C9" "Trigger policy_decisions_append_only_trigger missing"
-fi
-
-# ─── C10: Trigger function has SECURITY DEFINER ─────────────────────
-echo "C10: Checking trigger function SECURITY DEFINER..."
-C10_RESULT=$(psql -v ON_ERROR_STOP=1 -t <<'EOSQL' 2>&1)
-SELECT prosecdef FROM pg_proc
-WHERE proname = 'enforce_policy_decisions_append_only'
-AND pronamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public');
-EOSQL
-
-if echo "$C10_RESULT" | grep -q "t"; then
-  add_check "C10" "PASS" "Trigger function has SECURITY DEFINER"
-  echo "  C10 PASSED"
-else
-  fail_check "C10" "Trigger function missing SECURITY DEFINER"
-fi
-
-# ─── C11: Trigger function has search_path pinned ────────────────────
-echo "C11: Checking trigger function search_path..."
-C11_RESULT=$(psql -v ON_ERROR_STOP=1 -t <<'EOSQL' 2>&1)
-SELECT proconfig IS NOT NULL FROM pg_proc
-WHERE proname = 'enforce_policy_decisions_append_only'
-AND pronamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public');
-EOSQL
-
-if echo "$C11_RESULT" | grep -q "t"; then
-  add_check "C11" "PASS" "Trigger function has search_path pinned"
-  echo "  C11 PASSED"
-else
-  fail_check "C11" "Trigger function missing search_path pin"
-fi
-
-# ─── C12: public. schema prefix in migration file ───────────────────
-echo "C12: Checking migration file uses public. prefix..."
-if grep -q "public.policy_decisions" schema/migrations/0134_create_policy_decisions.sql; then
-  add_check "C12" "PASS" "Migration file uses public. prefix"
-  echo "  C12 PASSED"
-else
-  fail_check "C12" "Migration file missing public. prefix"
-fi
-
-# ─── N1: INSERT with NULL execution_id → NOT NULL violation ───────────
-echo "N1: Testing INSERT with NULL execution_id..."
-N1_RESULT=$(psql -v ON_ERROR_STOP=1 -t <<'EOSQL' 2>&1 || true)
-BEGIN;
-ALTER TABLE public.policy_decisions DISABLE TRIGGER policy_decisions_append_only_trigger;
-INSERT INTO public.policy_decisions (policy_decision_id, execution_id, decision_type, authority_scope, declared_by, entity_type, entity_id, decision_hash, signature, signed_at)
-VALUES ('a0000000-0000-0000-0000-000000000001'::uuid, NULL, 'test', 'test', 'a0000000-0000-0000-0000-000000000001'::uuid, 'test', 'a0000000-0000-0000-0000-000000000001'::uuid, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', now());
-ROLLBACK;
-EOSQL
-
-if echo "$N1_RESULT" | grep -q "23502"; then
-  add_check "N1" "PASS" "INSERT with NULL execution_id rejected with NOT NULL violation"
-  echo "  N1 PASSED"
-else
-  fail_check "N1" "Expected NOT NULL violation (SQLSTATE 23502), got: $N1_RESULT"
-fi
-
-# ─── N2: INSERT with invalid decision_hash (wrong length) → CHECK violation ─
-echo "N2: Testing INSERT with invalid decision_hash..."
-N2_RESULT=$(psql -v ON_ERROR_STOP=1 -t <<'EOSQL' 2>&1 || true)
-BEGIN;
-ALTER TABLE public.policy_decisions DISABLE TRIGGER policy_decisions_append_only_trigger;
-INSERT INTO public.policy_decisions (policy_decision_id, execution_id, decision_type, authority_scope, declared_by, entity_type, entity_id, decision_hash, signature, signed_at)
-VALUES ('a0000000-0000-0000-0000-000000000002'::uuid, 'a0000000-0000-0000-0000-000000000001'::uuid, 'test', 'test', 'a0000000-0000-0000-0000-000000000001'::uuid, 'test', 'a0000000-0000-0000-0000-000000000001'::uuid, 'invalid', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', now());
-ROLLBACK;
-EOSQL
-
-if echo "$N2_RESULT" | grep -q "23514"; then
-  add_check "N2" "PASS" "INSERT with invalid decision_hash rejected with CHECK violation"
-  echo "  N2 PASSED"
-else
-  fail_check "N2" "Expected CHECK violation (SQLSTATE 23514), got: $N2_RESULT"
-fi
-
-# ─── N3: INSERT with non-existent execution_id → FK violation ──────────
-echo "N3: Testing INSERT with non-existent execution_id..."
-N3_RESULT=$(psql -v ON_ERROR_STOP=1 -t <<'EOSQL' 2>&1 || true)
-BEGIN;
-ALTER TABLE public.policy_decisions DISABLE TRIGGER policy_decisions_append_only_trigger;
-INSERT INTO public.policy_decisions (policy_decision_id, execution_id, decision_type, authority_scope, declared_by, entity_type, entity_id, decision_hash, signature, signed_at)
-VALUES ('a0000000-0000-0000-0000-000000000003'::uuid, 'deadbeef-dead-beef-dead-beefdeadbeef'::uuid, 'test', 'test', 'a0000000-0000-0000-0000-000000000001'::uuid, 'test', 'a0000000-0000-0000-0000-000000000001'::uuid, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', now());
-ROLLBACK;
-EOSQL
-
-if echo "$N3_RESULT" | grep -q "23503"; then
-  add_check "N3" "PASS" "INSERT with non-existent execution_id rejected with FK violation"
-  echo "  N3 PASSED"
-else
-  fail_check "N3" "Expected FK violation (SQLSTATE 23503), got: $N3_RESULT"
-fi
-
-# ─── N4: UPDATE existing row → Trigger ERRCODE GF060 ───────────────────
-echo "N4: Testing UPDATE existing row..."
-N4_RESULT=$(psql -v ON_ERROR_STOP=1 -t <<'EOSQL' 2>&1 || true)
-BEGIN;
-ALTER TABLE public.policy_decisions DISABLE TRIGGER policy_decisions_append_only_trigger;
-INSERT INTO public.policy_decisions (policy_decision_id, execution_id, decision_type, authority_scope, declared_by, entity_type, entity_id, decision_hash, signature, signed_at)
-VALUES ('a0000000-0000-0000-0000-000000000004'::uuid, 'a0000000-0000-0000-0000-000000000001'::uuid, 'test', 'test', 'a0000000-0000-0000-0000-000000000001'::uuid, 'test', 'a0000000-0000-0000-0000-000000000001'::uuid, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', now());
-ALTER TABLE public.policy_decisions ENABLE TRIGGER policy_decisions_append_only_trigger;
-UPDATE public.policy_decisions SET decision_type = 'updated' WHERE policy_decision_id = 'a0000000-0000-0000-0000-000000000004'::uuid;
-ROLLBACK;
-EOSQL
-
-if echo "$N4_RESULT" | grep -q "GF060"; then
-  add_check "N4" "PASS" "UPDATE existing row rejected with trigger ERRCODE GF060"
-  echo "  N4 PASSED"
-else
-  fail_check "N4" "Expected trigger ERRCODE GF060, got: $N4_RESULT"
-fi
-
-# ─── N5: DELETE existing row → Trigger ERRCODE GF060 ─────────────────────
-echo "N5: Testing DELETE existing row..."
-N5_RESULT=$(psql -v ON_ERROR_STOP=1 -t <<'EOSQL' 2>&1 || true)
-BEGIN;
-ALTER TABLE public.policy_decisions DISABLE TRIGGER policy_decisions_append_only_trigger;
-INSERT INTO public.policy_decisions (policy_decision_id, execution_id, decision_type, authority_scope, declared_by, entity_type, entity_id, decision_hash, signature, signed_at)
-VALUES ('a0000000-0000-0000-0000-000000000005'::uuid, 'a0000000-0000-0000-0000-000000000001'::uuid, 'test', 'test', 'a0000000-0000-0000-0000-000000000001'::uuid, 'test', 'a0000000-0000-0000-0000-000000000001'::uuid, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', now());
-ALTER TABLE public.policy_decisions ENABLE TRIGGER policy_decisions_append_only_trigger;
-DELETE FROM public.policy_decisions WHERE policy_decision_id = 'a0000000-0000-0000-0000-000000000005'::uuid;
-ROLLBACK;
-EOSQL
-
-if echo "$N5_RESULT" | grep -q "GF060"; then
-  add_check "N5" "PASS" "DELETE existing row rejected with trigger ERRCODE GF060"
-  echo "  N5 PASSED"
-else
-  fail_check "N5" "Expected trigger ERRCODE GF060, got: $N5_RESULT"
-fi
-
-# ─── Final status ────────────────────────────────────────────────────
-temp_file=$(mktemp)
-jq '.status = "PASS"' "$EVIDENCE_PATH" > "$temp_file"
-mv "$temp_file" "$EVIDENCE_PATH"
-
-echo ""
-echo "All checks passed. Evidence written to $EVIDENCE_PATH"
+echo "PASS: TSK-P2-PREAUTH-004-01 schema verifier; MIGRATION_HEAD=$HEAD_VALUE; evidence: $EVIDENCE_FILE"

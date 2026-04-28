@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-PREAUTH-004-03
 title: "Register and enforce INV-AUTH-TRANSITION-BINDING-01: bind every authority-bearing execution_records transition to exactly one policy_decisions row whose entity and execution match"
 owner_role: INVARIANTS_CURATOR
-status: completed
+status: planned
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: SINGLE_INVARIANT

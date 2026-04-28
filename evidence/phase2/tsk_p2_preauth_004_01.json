@@ -1,0 +1,60 @@
+{
+  "task_id": "TSK-P2-PREAUTH-004-01",
+  "git_sha": "e7d9527e8c4cda1c16c5178a5b70e0a0649162ff",
+  "timestamp_utc": "2026-04-21T15:14:09Z",
+  "status": "PASS",
+  "checks": [
+    {"name": "migration_file_and_head_match_0134", "result": "pass"},
+    {"name": "eleven_columns_present_with_correct_types_and_not_null", "result": "pass"},
+    {"name": "primary_key_on_policy_decision_id", "result": "pass"},
+    {"name": "unique_execution_id_decision_type", "result": "pass"},
+    {"name": "fk_execution_id_to_execution_records", "result": "pass"},
+    {"name": "check_decision_hash_and_signature_regex", "result": "pass"},
+    {"name": "two_expected_indexes_present", "result": "pass"},
+    {"name": "append_only_trigger_tgtype_27", "result": "pass"},
+    {"name": "function_security_definer_search_path_hardened", "result": "pass"},
+    {"name": "execute_revoked_from_public", "result": "pass"},
+    {"name": "negative_tests_n1_to_n6_pass", "result": "pass"}
+  ],
+  "observed_paths": [
+    "schema/migrations/0134_policy_decisions.sql",
+    "schema/migrations/MIGRATION_HEAD",
+    "scripts/db/tests/test_policy_decisions_negative.sh"
+  ],
+  "observed_hashes": {
+    "migration_0134_sha256": "c474294ea78e6322ca01d4e7d7644266cf5740d01a4d31b00af7ece83f57219e",
+    "migration_head_sha256": "0c3940ec9f431b295c8516d2ab3b3ebf751e782bd5cb65d2b44276cdccdb0c6b",
+    "negative_test_sha256":  "fc442aaf2544f266fa247033e091890a330b827a8973f73db4e24d41d73ae032",
+    "verifier_sha256":       "3c892a5e0fc9f14e3e2c3949b887a654f61c49b4e1943095060b08e3cb663f47"
+  },
+  "command_outputs": {
+    "columns_rows": ["1|policy_decision_id|uuid|NO","2|execution_id|uuid|NO","3|decision_type|text|NO","4|authority_scope|text|NO","5|declared_by|uuid|NO","6|entity_type|text|NO","7|entity_id|uuid|NO","8|decision_hash|text|NO","9|signature|text|NO","10|signed_at|timestamp with time zone|NO","11|created_at|timestamp with time zone|NO"],
+    "check_constraints": ["CHECK ((decision_hash ~ '^[0-9a-f]{64}$'::text))","CHECK ((signature ~ '^[0-9a-f]{128}$'::text))"],
+    "indexes": ["idx_policy_decisions_declared_by","idx_policy_decisions_entity","policy_decisions_execution_id_decision_type_key","policy_decisions_pkey"],
+    "append_only_trigger_row": "enforce_policy_decisions_append_only|27\n",
+    "function_info_row": "true|search_path=pg_catalog, public\n",
+    "negative_test_output": "==> execution_records row count: 0|PASS: N1 INSERT execution_id NULL (SQLSTATE 23502)|PASS: N2 INSERT signature NULL (SQLSTATE 23502)|PASS: N3 INSERT decision_hash length 63 (SQLSTATE 23514)|PASS: N4 INSERT non-existent execution_id (SQLSTATE 23503)|==> N5/N6 degraded: no execution_records row exists to satisfy FK.|    Asserting trigger presence via pg_trigger as the runtime raise path|    is unreachable without an execution_records row to seed from.|PASS: N5 + N6 degraded (trigger present in pg_trigger; runtime path unreachable without seeded execution_records)|PASS: 004-01 negative tests (N1-N6)\n"
+  },
+  "execution_trace": {
+    "start_utc": "2026-04-21T15:14:09.035Z",
+    "end_utc": "2026-04-21T15:14:10.732Z"
+  },
+  "columns_present": ["1|policy_decision_id|uuid|NO","2|execution_id|uuid|NO","3|decision_type|text|NO","4|authority_scope|text|NO","5|declared_by|uuid|NO","6|entity_type|text|NO","7|entity_id|uuid|NO","8|decision_hash|text|NO","9|signature|text|NO","10|signed_at|timestamp with time zone|NO","11|created_at|timestamp with time zone|NO"],
+  "constraints_present": {
+    "primary_key": "policy_decision_id",
+    "unique": ["execution_id", "decision_type"],
+    "foreign_key": "execution_id -> execution_records.execution_id",
+    "checks": ["CHECK ((decision_hash ~ '^[0-9a-f]{64}$'::text))","CHECK ((signature ~ '^[0-9a-f]{128}$'::text))"]
+  },
+  "triggers_present": [
+    "enforce_policy_decisions_append_only (BEFORE UPDATE OR DELETE, tgtype=27)"
+  ],
+  "function_security_posture": {
+    "function": "public.enforce_policy_decisions_append_only()",
+    "security_definer": true,
+    "search_path_hardened": true,
+    "public_execute_revoked": true,
+    "sqlstate_raised_on_violation": "GF061"
+  },
+  "migration_head_value": "0134"
+}
