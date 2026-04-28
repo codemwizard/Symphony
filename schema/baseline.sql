@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict KXa2zGsS7lx9EvCtA2KfEfIlfGlxN0gyPnCu9brkgbtVKXk3IlCfhuWhqwgBJXi
+\restrict obcrq9IQSdMbdUCzr4CiaTSalF5ENh7coaA81qfmRVg2aoCG9lIsigQMvcahjjr
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
@@ -2375,7 +2375,7 @@ BEGIN
         RAISE EXCEPTION 'Transition without policy decision for entity %/%', NEW.entity_type, NEW.entity_id
         USING ERRCODE = 'GF009';
     END IF;
-    
+
     -- Validate authority by checking policy_decisions table
     -- This ensures the policy decision exists and matches the entity type
     IF NOT EXISTS (
@@ -2383,11 +2383,23 @@ BEGIN
         WHERE policy_decision_id = NEW.policy_decision_id
         AND entity_type = NEW.entity_type
     ) THEN
-        RAISE EXCEPTION 'Invalid authority: policy decision % does not match entity type %', 
+        RAISE EXCEPTION 'Invalid authority: policy decision % does not match entity type %',
             NEW.policy_decision_id, NEW.entity_type
         USING ERRCODE = 'GF001';
     END IF;
-    
+
+    -- Validate execution-decision binding: ensure policy decision belongs to the same execution
+    -- This prevents pairing execution A with a policy decision from execution B
+    IF NOT EXISTS (
+        SELECT 1 FROM policy_decisions
+        WHERE policy_decision_id = NEW.policy_decision_id
+        AND execution_id = NEW.execution_id
+    ) THEN
+        RAISE EXCEPTION 'Invalid authority: policy decision % does not belong to execution % (execution-decision binding violation)',
+            NEW.policy_decision_id, NEW.execution_id
+        USING ERRCODE = 'GF081';
+    END IF;
+
     RETURN NEW;
 END;
 $$;
@@ -2442,23 +2454,55 @@ BEGIN
         WHERE entity_type = NEW.entity_type
         AND from_state = NEW.from_state
     ) THEN
-        RAISE EXCEPTION 'Invalid state transition from % to % for entity type %: no rule defined', 
+        RAISE EXCEPTION 'Invalid state transition from % to % for entity type %: no rule defined',
             NEW.from_state, NEW.to_state, NEW.entity_type
         USING ERRCODE = 'GF002';
     END IF;
-    
-    -- Check if the specific transition is allowed
+
+    -- Check if the specific transition is allowed and not explicitly denied
     IF NOT EXISTS (
         SELECT 1 FROM state_rules
         WHERE entity_type = NEW.entity_type
         AND from_state = NEW.from_state
         AND to_state = NEW.to_state
+        AND allowed = true
     ) THEN
-        RAISE EXCEPTION 'Invalid state transition from % to % for entity type %: transition not allowed', 
+        RAISE EXCEPTION 'Invalid state transition from % to % for entity type %: transition not allowed or explicitly denied',
             NEW.from_state, NEW.to_state, NEW.entity_type
         USING ERRCODE = 'GF003';
     END IF;
-    
+
+    -- Enforce required decision type if specified
+    IF EXISTS (
+        SELECT 1 FROM state_rules
+        WHERE entity_type = NEW.entity_type
+        AND from_state = NEW.from_state
+        AND to_state = NEW.to_state
+        AND required_decision_type IS NOT NULL
+    ) THEN
+        DECLARE
+            req_type VARCHAR(50);
+        BEGIN
+            SELECT required_decision_type INTO req_type
+            FROM state_rules
+            WHERE entity_type = NEW.entity_type
+            AND from_state = NEW.from_state
+            AND to_state = NEW.to_state
+            AND required_decision_type IS NOT NULL
+            LIMIT 1;
+
+            IF NOT EXISTS (
+                SELECT 1 FROM policy_decisions
+                WHERE policy_decision_id = NEW.policy_decision_id
+                AND decision_type = req_type
+            ) THEN
+                RAISE EXCEPTION 'Invalid state transition: required decision type % not found in policy decision %',
+                    req_type, NEW.policy_decision_id
+                USING ERRCODE = 'GF080';
+            END IF;
+        END;
+    END IF;
+
     RETURN NEW;
 END;
 $$;
@@ -10974,13 +11018,6 @@ CREATE TRIGGER bi_03_enforce_transition_state_rules BEFORE INSERT OR UPDATE ON p
 
 
 --
--- Name: state_transitions bi_04_enforce_transition_signature; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER bi_04_enforce_transition_signature BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_transition_signature();
-
-
---
 -- Name: state_transitions bi_05_enforce_state_transition_authority; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -10992,6 +11029,13 @@ CREATE TRIGGER bi_05_enforce_state_transition_authority BEFORE INSERT OR UPDATE 
 --
 
 CREATE TRIGGER bi_06_upgrade_authority_on_execution_binding BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.upgrade_authority_on_execution_binding();
+
+
+--
+-- Name: state_transitions bi_07_enforce_transition_signature; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER bi_07_enforce_transition_signature BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_transition_signature();
 
 
 --
@@ -12997,5 +13041,5 @@ ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict KXa2zGsS7lx9EvCtA2KfEfIlfGlxN0gyPnCu9brkgbtVKXk3IlCfhuWhqwgBJXi
+\unrestrict obcrq9IQSdMbdUCzr4CiaTSalF5ENh7coaA81qfmRVg2aoCG9lIsigQMvcahjjr
 
