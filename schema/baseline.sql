@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict obcrq9IQSdMbdUCzr4CiaTSalF5ENh7coaA81qfmRVg2aoCG9lIsigQMvcahjjr
+\restrict t8LUD6fWRHpdZlHAgPpe7d15zG10G6ygWGPlme2ReSuWrWg9Mv013fMD1Chl3jX
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
@@ -1105,45 +1105,6 @@ $$;
 
 
 --
--- Name: check_invariant_gate(); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.check_invariant_gate() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public'
-    AS $$
-DECLARE
-  failing_count INTEGER;
-  registry_exists BOOLEAN;
-BEGIN
-  BEGIN
-    SELECT EXISTS (
-      SELECT 1 FROM information_schema.tables
-      WHERE table_schema = 'public' AND table_name = 'invariant_registry'
-    ) INTO registry_exists;
-  EXCEPTION WHEN OTHERS THEN
-    RAISE EXCEPTION 'Invariant failure — issuance blocked: cannot read invariant registry';
-  END;
-
-  IF NOT registry_exists THEN
-    RAISE EXCEPTION 'Invariant failure — issuance blocked: invariant_registry table missing';
-  END IF;
-
-  SELECT COUNT(*) INTO failing_count
-  FROM invariant_registry
-  WHERE is_blocking = true
-    AND status = 'failing';
-
-  IF failing_count > 0 THEN
-    RAISE EXCEPTION 'Invariant failure — issuance blocked: % blocking invariant(s) in failing state', failing_count;
-  END IF;
-
-  RETURN NEW;
-END;
-$$;
-
-
---
 -- Name: check_reg26_separation(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1887,6 +1848,7 @@ CREATE FUNCTION public.enforce_attestation_freshness() RETURNS trigger
 DECLARE
   max_age INTERVAL := INTERVAL '300 seconds';
 BEGIN
+  -- Only enforce when attestation timestamp is populated
   IF NEW.invariant_attested_at IS NOT NULL THEN
     IF (NOW() - NEW.invariant_attested_at) > max_age THEN
       RAISE EXCEPTION 'Attestation is stale: attested at %, current time %, max age %',
@@ -2305,8 +2267,8 @@ CREATE FUNCTION public.enforce_policy_decisions_append_only() RETURNS trigger
     SET search_path TO 'pg_catalog', 'public'
     AS $$
 BEGIN
-    RAISE EXCEPTION 'GF060: policy_decisions is append-only, UPDATE/DELETE not allowed'
-        USING ERRCODE = 'GF060';
+    RAISE EXCEPTION 'GF061: policy_decisions is append-only, UPDATE/DELETE not allowed'
+        USING ERRCODE = 'GF061';
     RETURN NULL;
 END;
 $$;
@@ -7463,7 +7425,7 @@ CREATE TABLE public.policy_bundles (
 --
 
 CREATE TABLE public.policy_decisions (
-    policy_decision_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    policy_decision_id uuid NOT NULL,
     execution_id uuid NOT NULL,
     decision_type text NOT NULL,
     authority_scope text NOT NULL,
@@ -7475,8 +7437,8 @@ CREATE TABLE public.policy_decisions (
     signed_at timestamp with time zone NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     project_id uuid NOT NULL,
-    CONSTRAINT policy_decisions_hash_hex_64 CHECK ((decision_hash ~ '^[0-9a-f]{64}$'::text)),
-    CONSTRAINT policy_decisions_sig_hex_128 CHECK ((signature ~ '^[0-9a-f]{128}$'::text))
+    CONSTRAINT policy_decisions_decision_hash_check CHECK ((decision_hash ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT policy_decisions_signature_check CHECK ((signature ~ '^[0-9a-f]{128}$'::text))
 );
 
 
@@ -9279,19 +9241,19 @@ ALTER TABLE ONLY public.policy_bundles
 
 
 --
--- Name: policy_decisions policy_decisions_pk; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: policy_decisions policy_decisions_execution_id_decision_type_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.policy_decisions
-    ADD CONSTRAINT policy_decisions_pk PRIMARY KEY (policy_decision_id);
+    ADD CONSTRAINT policy_decisions_execution_id_decision_type_key UNIQUE (execution_id, decision_type);
 
 
 --
--- Name: policy_decisions policy_decisions_unique_exec_type; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: policy_decisions policy_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.policy_decisions
-    ADD CONSTRAINT policy_decisions_unique_exec_type UNIQUE (execution_id, decision_type);
+    ADD CONSTRAINT policy_decisions_pkey PRIMARY KEY (policy_decision_id);
 
 
 --
@@ -11053,6 +11015,13 @@ CREATE TRIGGER enforce_k13_taxonomy_alignment_trigger BEFORE INSERT OR UPDATE ON
 
 
 --
+-- Name: policy_decisions enforce_policy_decisions_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER enforce_policy_decisions_append_only BEFORE DELETE OR UPDATE ON public.policy_decisions FOR EACH ROW EXECUTE FUNCTION public.enforce_policy_decisions_append_only();
+
+
+--
 -- Name: exchange_rate_audit_log exchange_rate_audit_log_append_only_trigger; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -11085,13 +11054,6 @@ CREATE TRIGGER gf_verifier_read_tokens_append_only BEFORE DELETE OR UPDATE ON pu
 --
 
 CREATE TRIGGER invariant_registry_append_only_trigger BEFORE DELETE OR UPDATE ON public.invariant_registry FOR EACH ROW EXECUTE FUNCTION public.invariant_registry_append_only();
-
-
---
--- Name: policy_decisions policy_decisions_append_only_trigger; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER policy_decisions_append_only_trigger BEFORE DELETE OR UPDATE ON public.policy_decisions FOR EACH ROW EXECUTE FUNCTION public.enforce_policy_decisions_append_only();
 
 
 --
@@ -12128,11 +12090,11 @@ ALTER TABLE ONLY public.pii_vault_records
 
 
 --
--- Name: policy_decisions policy_decisions_fk_execution; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: policy_decisions policy_decisions_execution_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.policy_decisions
-    ADD CONSTRAINT policy_decisions_fk_execution FOREIGN KEY (execution_id) REFERENCES public.execution_records(execution_id) ON DELETE RESTRICT;
+    ADD CONSTRAINT policy_decisions_execution_id_fkey FOREIGN KEY (execution_id) REFERENCES public.execution_records(execution_id);
 
 
 --
@@ -13041,5 +13003,5 @@ ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict obcrq9IQSdMbdUCzr4CiaTSalF5ENh7coaA81qfmRVg2aoCG9lIsigQMvcahjjr
+\unrestrict t8LUD6fWRHpdZlHAgPpe7d15zG10G6ygWGPlme2ReSuWrWg9Mv013fMD1Chl3jX
 
