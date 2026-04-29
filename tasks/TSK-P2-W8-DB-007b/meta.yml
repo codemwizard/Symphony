@@ -101,11 +101,15 @@ work:
   so replay uses the exact authoritative timestamp rather than a regenerated value.'
 - '[ID w8_db_007b_work_02] Build a verifier that distinguishes regenerated-timestamp
   failures.'
+- '[ID w8_db_007b_work_03] Produce evidence artifact proving timestamp-integrity enforcement
+  with distinct SQLSTATE at the authoritative boundary.'
 acceptance_criteria:
 - '[ID w8_db_007b_work_01] PostgreSQL rejects writes whose verification path uses
   a regenerated or non-authoritative `occurred_at` value.'
 - '[ID w8_db_007b_work_02] The verifier distinguishes regenerated-timestamp failures
   at `asset_batches`.'
+- '[ID w8_db_007b_work_03] Evidence artifact proves timestamp-integrity enforcement at the
+  authoritative `asset_batches` boundary with distinct SQLSTATE for regenerated-timestamp failures.'
 negative_tests:
 - id: TSK-P2-W8-DB-007b-N1
   description: Verifier fails if a valid signature with the wrong authoritative timestamp
@@ -117,9 +121,11 @@ positive_tests:
     at the authoritative boundary.
   required: true
 verification:
-- '# [ID w8_db_007b_work_01] [ID w8_db_007b_work_02] test -e scripts/db/verify_tsk_p2_w8_db_007b.sh
+- '# [ID w8_db_007b_work_01] [ID w8_db_007b_work_02] [ID w8_db_007b_work_03] test -e scripts/db/verify_tsk_p2_w8_db_007b.sh
   && bash scripts/db/verify_tsk_p2_w8_db_007b.sh > evidence/phase2/tsk_p2_w8_db_007b.json
   || exit 1'
+- 'bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P2-W8-DB-007b'
+- 'python3 scripts/audit/validate_evidence.py --task TSK-P2-W8-DB-007b --evidence evidence/phase2/tsk_p2_w8_db_007b.json'
 evidence:
 - path: evidence/phase2/tsk_p2_w8_db_007b.json
   must_include:

@@ -1,9 +1,9 @@
 {
   "check_id": "DB-EXPAND-CONTRACT-POLICY",
-  "timestamp_utc": "2026-04-24T15:31:50Z",
-  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
-  "schema_fingerprint": "faee7f9919acdb4bf6007f3f9471e1720ddaddaa270810e47fcbb0417ba42799",
-  "status": "FAIL",
+  "timestamp_utc": "2026-04-29T05:26:48Z",
+  "git_sha": "6dd3ac818d560ee37d813d1b75b23bc9040e043a",
+  "schema_fingerprint": "c0581fe4b9ad97b0721e0cb4d8438f171e6dce8f4c4fbede320253006294868a",
+  "status": "PASS",
   "scanned_files": [
     "0001_init.sql",
     "0002_outbox_functions.sql",
@@ -122,7 +122,7 @@
     "0131_execution_records_determinism_columns.sql",
     "0132_execution_records_determinism_constraints.sql",
     "0133_execution_records_triggers.sql",
-    "0134_create_policy_decisions.sql",
+    "0134_policy_decisions.sql",
     "0135_state_rules.sql",
     "0136_enforce_authority_transition_binding.sql",
     "0137_create_state_transitions.sql",
@@ -141,18 +141,31 @@
     "0150_fix_state_current_fk_restrict.sql",
     "0151_verify_not_null_state_current.sql",
     "0152_add_sqlstate_codes_to_triggers.sql",
-    "0153_set_signature_placeholder_posture.sql"
+    "0153_set_signature_placeholder_posture.sql",
+    "0154_enforce_last_transition_id_not_null.sql",
+    "0155_reassign_k13_sqlstate_gf061.sql",
+    "0156_add_interpretation_version_id.sql",
+    "0157_add_project_id_to_policy_decisions.sql",
+    "0158_backfill_interpretation_version_id.sql",
+    "0159_enforce_interpretation_version_id_not_null.sql",
+    "0160_backfill_policy_decisions_project_id.sql",
+    "0161_enforce_policy_decisions_project_id_not_null.sql",
+    "0162_renumber_hardening_sqlstate.sql",
+    "0163_create_invariant_registry.sql",
+    "0164_registry_supersession_constraints.sql",
+    "0165_create_public_keys_registry.sql",
+    "0166_create_delegated_signing_grants.sql",
+    "0167_interpretation_overlap_exclusion.sql",
+    "0168_attestation_seam_schema.sql",
+    "0169_add_phase1_boundary_markers.sql",
+    "0170_attestation_anti_replay.sql",
+    "0171_attestation_kill_switch_gate.sql",
+    "0172_fix_trigger_authority_and_ordering.sql",
+    "0173_baseline_postgis_regen.sql"
   ],
-  "violation_count": 1,
-  "violations": [
-    {
-      "file": "0146_add_entity_type_to_state_rules.sql",
-      "lineno": 17,
-      "kind": "add_column_not_null",
-      "line": "ALTER TABLE state_rules ADD COLUMN IF NOT EXISTS entity_type TEXT NOT NULL DEFAULT '__UNSET__';"
-    }
-  ],
-  "allowlisted_count": 7,
+  "violation_count": 0,
+  "violations": [],
+  "allowlisted_count": 10,
   "allowlisted": [
     {
       "file": "0020_business_foundation_hooks.sql",
@@ -195,6 +208,24 @@
       "lineno": 42,
       "kind": "alter_set_not_null",
       "line": "ALTER TABLE public.execution_records ALTER COLUMN interpretation_version_id SET NOT NULL;"
+    },
+    {
+      "file": "0146_add_entity_type_to_state_rules.sql",
+      "lineno": 17,
+      "kind": "add_column_not_null",
+      "line": "ALTER TABLE state_rules ADD COLUMN IF NOT EXISTS entity_type TEXT NOT NULL DEFAULT '__UNSET__';"
+    },
+    {
+      "file": "0159_enforce_interpretation_version_id_not_null.sql",
+      "lineno": 12,
+      "kind": "alter_set_not_null",
+      "line": "ALTER TABLE state_transitions ALTER COLUMN interpretation_version_id SET NOT NULL;"
+    },
+    {
+      "file": "0161_enforce_policy_decisions_project_id_not_null.sql",
+      "lineno": 16,
+      "kind": "alter_set_not_null",
+      "line": "ALTER TABLE policy_decisions ALTER COLUMN project_id SET NOT NULL;"
     }
   ],
   "notes": [

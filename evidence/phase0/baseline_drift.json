@@ -1,10 +1,10 @@
 {
   "check_id": "DB-BASELINE-DRIFT",
-  "timestamp_utc": "2026-04-29T03:16:08Z",
-  "git_sha": "7d77ce70ccbb54cd9323d96ce4615bdeef9637da",
+  "timestamp_utc": "2026-04-29T05:27:29Z",
+  "git_sha": "6dd3ac818d560ee37d813d1b75b23bc9040e043a",
   "schema_fingerprint": "c0581fe4b9ad97b0721e0cb4d8438f171e6dce8f4c4fbede320253006294868a",
   "status": "PASS",
-  "baseline_path": "/home/ubuntu/repos/Symphony/schema/baselines/current/0001_baseline.sql",
+  "baseline_path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/baselines/current/0001_baseline.sql",
   "baseline_hash": "920921ad2d580491abd19bbe67c8c8d4fe1e6133acbb3fba6f83e6dc2f948009",
   "current_hash": "920921ad2d580491abd19bbe67c8c8d4fe1e6133acbb3fba6f83e6dc2f948009",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.3 (Debian 18.3-1.pgdg13+1)",

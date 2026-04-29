@@ -69,7 +69,7 @@
   "dml_privileges_present": [],
   "errors": [],
   "gate_id": "INT-G23",
-  "git_sha": "0000000000000000000000000000000000000000",
+  "git_sha": "6dd3ac818d560ee37d813d1b75b23bc9040e043a",
   "invariant_id": "INV-111",
   "missing_select": [],
   "ok": true,
@@ -82,11 +82,11 @@
     "rolreplication": "f",
     "rolsuper": "f"
   },
-  "schema_fingerprint": "c314cf4cd496dcd66ab155cc4d4ae8bddbeb5c50e1d15098766fa5b487157784",
+  "schema_fingerprint": "c0581fe4b9ad97b0721e0cb4d8438f171e6dce8f4c4fbede320253006294868a",
   "schema_privileges": {
     "public_create": false,
     "public_usage": true
   },
   "status": "PASS",
-  "timestamp_utc": "1970-01-01T00:00:00Z"
+  "timestamp_utc": "2026-04-29T05:27:10Z"
 }
