@@ -100,11 +100,13 @@ work:
 - '[ID w8_db_007c_work_01] Enforce replay law from the signing contract as a distinct
   failure domain at the `asset_batches` boundary.'
 - '[ID w8_db_007c_work_02] Build a verifier that distinguishes replay-invalid failures.'
+- '[ID w8_db_007c_work_03] Produce evidence artifact proving replay-law enforcement
+  with distinct SQLSTATE at the authoritative boundary.'
 acceptance_criteria:
 - '[ID w8_db_007c_work_01] Replay-invalid submissions fail with a distinct failure
   mode aligned to the signing contract.'
 - '[ID w8_db_007c_work_02] The verifier distinguishes replay-invalid failures at `asset_batches`.'
-- '[ID w8_db_007c_work_01] Evidence artifact proves replay-law enforcement at the
+- '[ID w8_db_007c_work_03] Evidence artifact proves replay-law enforcement at the
   authoritative `asset_batches` boundary with distinct SQLSTATE for replay-invalid submissions.'
 negative_tests:
 - id: TSK-P2-W8-DB-007c-N1
@@ -116,11 +118,11 @@ positive_tests:
     at the authoritative boundary.
   required: true
 verification:
-- '# [ID w8_db_007c_work_01] [ID w8_db_007c_work_02] test -e scripts/db/verify_tsk_p2_w8_db_007c.sh
+- '# [ID w8_db_007c_work_01] [ID w8_db_007c_work_02] [ID w8_db_007c_work_03] test -e scripts/db/verify_tsk_p2_w8_db_007c.sh
   && bash scripts/db/verify_tsk_p2_w8_db_007c.sh > evidence/phase2/tsk_p2_w8_db_007c.json
   || exit 1'
 - 'bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P2-W8-DB-007c'
-- 'python3 scripts/audit/validate_evidence.py --task TSK-P2-W8-DB-007c'
+- 'python3 scripts/audit/validate_evidence.py --task TSK-P2-W8-DB-007c --evidence evidence/phase2/tsk_p2_w8_db_007c.json'
 evidence:
 - path: evidence/phase2/tsk_p2_w8_db_007c.json
   must_include:
