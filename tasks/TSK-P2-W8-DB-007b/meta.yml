@@ -106,6 +106,8 @@ acceptance_criteria:
   a regenerated or non-authoritative `occurred_at` value.'
 - '[ID w8_db_007b_work_02] The verifier distinguishes regenerated-timestamp failures
   at `asset_batches`.'
+- '[ID w8_db_007b_work_01] Evidence artifact proves timestamp-integrity enforcement at the
+  authoritative `asset_batches` boundary with distinct SQLSTATE for regenerated-timestamp failures.'
 negative_tests:
 - id: TSK-P2-W8-DB-007b-N1
   description: Verifier fails if a valid signature with the wrong authoritative timestamp
@@ -120,6 +122,8 @@ verification:
 - '# [ID w8_db_007b_work_01] [ID w8_db_007b_work_02] test -e scripts/db/verify_tsk_p2_w8_db_007b.sh
   && bash scripts/db/verify_tsk_p2_w8_db_007b.sh > evidence/phase2/tsk_p2_w8_db_007b.json
   || exit 1'
+- 'bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P2-W8-DB-007b'
+- 'python3 scripts/audit/validate_evidence.py --task TSK-P2-W8-DB-007b'
 evidence:
 - path: evidence/phase2/tsk_p2_w8_db_007b.json
   must_include:

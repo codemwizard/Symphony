@@ -104,6 +104,8 @@ acceptance_criteria:
 - '[ID w8_db_007a_work_01] PostgreSQL rejects writes signed by keys outside the authorized
   project or entity scope.'
 - '[ID w8_db_007a_work_02] The verifier distinguishes wrong-scope failures at `asset_batches`.'
+- '[ID w8_db_007a_work_01] Evidence artifact proves scope-authorization enforcement at the
+  authoritative `asset_batches` boundary with distinct SQLSTATE for wrong-scope failures.'
 negative_tests:
 - id: TSK-P2-W8-DB-007a-N1
   description: Verifier fails if a valid signature with the wrong scope can still
@@ -118,6 +120,8 @@ verification:
 - '# [ID w8_db_007a_work_01] [ID w8_db_007a_work_02] test -e scripts/db/verify_tsk_p2_w8_db_007a.sh
   && bash scripts/db/verify_tsk_p2_w8_db_007a.sh > evidence/phase2/tsk_p2_w8_db_007a.json
   || exit 1'
+- 'bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P2-W8-DB-007a'
+- 'python3 scripts/audit/validate_evidence.py --task TSK-P2-W8-DB-007a'
 evidence:
 - path: evidence/phase2/tsk_p2_w8_db_007a.json
   must_include:
