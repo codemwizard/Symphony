@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict t8LUD6fWRHpdZlHAgPpe7d15zG10G6ygWGPlme2ReSuWrWg9Mv013fMD1Chl3jX
+\restrict TPiX6542sAOPhffH4H9dzAGdAUNikbfl1tSUSGs0odOldsdvhpfdxiiQhgjNrX8
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
@@ -13003,5 +13003,5 @@ ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict t8LUD6fWRHpdZlHAgPpe7d15zG10G6ygWGPlme2ReSuWrWg9Mv013fMD1Chl3jX
+\unrestrict TPiX6542sAOPhffH4H9dzAGdAUNikbfl1tSUSGs0odOldsdvhpfdxiiQhgjNrX8
 

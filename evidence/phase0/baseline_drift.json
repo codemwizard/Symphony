@@ -1,8 +1,8 @@
 {
   "check_id": "DB-BASELINE-DRIFT",
-  "timestamp_utc": "2026-04-29T02:26:21Z",
-  "git_sha": "20a4d30ad8660336da44a3c9fd88c9b0c6cf7ea9",
-  "schema_fingerprint": "fd16b49535340cd31f38954aee64c0a2f5ddfc286fb45051d8dcdf0dcc40472b",
+  "timestamp_utc": "2026-04-29T03:16:08Z",
+  "git_sha": "7d77ce70ccbb54cd9323d96ce4615bdeef9637da",
+  "schema_fingerprint": "c0581fe4b9ad97b0721e0cb4d8438f171e6dce8f4c4fbede320253006294868a",
   "status": "PASS",
   "baseline_path": "/home/ubuntu/repos/Symphony/schema/baselines/current/0001_baseline.sql",
   "baseline_hash": "920921ad2d580491abd19bbe67c8c8d4fe1e6133acbb3fba6f83e6dc2f948009",
