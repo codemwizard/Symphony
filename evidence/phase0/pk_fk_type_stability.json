@@ -1,8 +1,8 @@
 {
   "check_id": "DB-PK-FK-TYPE-STABILITY",
-  "timestamp_utc": "1970-01-01T00:00:00Z",
-  "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "c314cf4cd496dcd66ab155cc4d4ae8bddbeb5c50e1d15098766fa5b487157784",
+  "timestamp_utc": "2026-04-29T05:26:49Z",
+  "git_sha": "6dd3ac818d560ee37d813d1b75b23bc9040e043a",
+  "schema_fingerprint": "c0581fe4b9ad97b0721e0cb4d8438f171e6dce8f4c4fbede320253006294868a",
   "status": "PASS",
   "scanned_files": [
     "0001_init.sql",
@@ -122,7 +122,7 @@
     "0131_execution_records_determinism_columns.sql",
     "0132_execution_records_determinism_constraints.sql",
     "0133_execution_records_triggers.sql",
-    "0134_create_policy_decisions.sql",
+    "0134_policy_decisions.sql",
     "0135_state_rules.sql",
     "0136_enforce_authority_transition_binding.sql",
     "0137_create_state_transitions.sql",
@@ -132,9 +132,38 @@
     "0141_create_enforce_transition_signature.sql",
     "0142_create_enforce_execution_binding.sql",
     "0143_create_deny_state_transitions_mutation.sql",
-    "0144_create_update_current_state.sql"
+    "0144_create_update_current_state.sql",
+    "0145_fix_enforce_transition_authority_column.sql",
+    "0146_add_entity_type_to_state_rules.sql",
+    "0147_add_fks_to_state_transitions.sql",
+    "0148_harden_trigger_functions_security_definer.sql",
+    "0149_rename_triggers_deterministic_order.sql",
+    "0150_fix_state_current_fk_restrict.sql",
+    "0151_verify_not_null_state_current.sql",
+    "0152_add_sqlstate_codes_to_triggers.sql",
+    "0153_set_signature_placeholder_posture.sql",
+    "0154_enforce_last_transition_id_not_null.sql",
+    "0155_reassign_k13_sqlstate_gf061.sql",
+    "0156_add_interpretation_version_id.sql",
+    "0157_add_project_id_to_policy_decisions.sql",
+    "0158_backfill_interpretation_version_id.sql",
+    "0159_enforce_interpretation_version_id_not_null.sql",
+    "0160_backfill_policy_decisions_project_id.sql",
+    "0161_enforce_policy_decisions_project_id_not_null.sql",
+    "0162_renumber_hardening_sqlstate.sql",
+    "0163_create_invariant_registry.sql",
+    "0164_registry_supersession_constraints.sql",
+    "0165_create_public_keys_registry.sql",
+    "0166_create_delegated_signing_grants.sql",
+    "0167_interpretation_overlap_exclusion.sql",
+    "0168_attestation_seam_schema.sql",
+    "0169_add_phase1_boundary_markers.sql",
+    "0170_attestation_anti_replay.sql",
+    "0171_attestation_kill_switch_gate.sql",
+    "0172_fix_trigger_authority_and_ordering.sql",
+    "0173_baseline_postgis_regen.sql"
   ],
-  "type_changes_found": 1,
+  "type_changes_found": 2,
   "violations": [],
   "allowlisted": [
     {
@@ -143,7 +172,14 @@
       "sql": "-- 0017_ingress_tenant_attribution.sql"
     }
   ],
-  "waived": [],
+  "waived": [
+    {
+      "file": "0171_attestation_kill_switch_gate.sql",
+      "start_lineno": 24,
+      "sql": "-- symphony:pk_fk_type_change_waiver",
+      "waiver": "symphony:pk_fk_type_change_waiver"
+    }
+  ],
   "notes": [
     "Conservative lint: any ALTER COLUMN ... TYPE is treated as key-type churn unless explicitly waived.",
     "Legacy allowlist is explicit and intentionally small."

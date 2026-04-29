@@ -139,6 +139,8 @@ positive_tests:
 
 verification:
   - '# [ID w8_db_004_work_01] [ID w8_db_004_work_02] [ID w8_db_004_work_03] test -e scripts/db/verify_tsk_p2_w8_db_004.sh && bash scripts/db/verify_tsk_p2_w8_db_004.sh > evidence/phase2/tsk_p2_w8_db_004.json || exit 1'
+  - 'bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P2-W8-DB-004'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P2-W8-DB-004 --evidence evidence/phase2/tsk_p2_w8_db_004.json'
 
 evidence:
   - path: evidence/phase2/tsk_p2_w8_db_004.json

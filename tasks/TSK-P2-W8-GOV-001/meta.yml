@@ -152,6 +152,8 @@ positive_tests:
 
 verification:
   - '# [ID w8_gov_001_work_01] [ID w8_gov_001_work_02] [ID w8_gov_001_work_03] [ID w8_gov_001_work_04] [ID w8_gov_001_work_05] test -e scripts/agent/verify_tsk_p2_w8_gov_001.py && python3 scripts/agent/verify_tsk_p2_w8_gov_001.py > evidence/phase2/tsk_p2_w8_gov_001.json || exit 1'
+  - 'bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P2-W8-GOV-001'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P2-W8-GOV-001 --evidence evidence/phase2/tsk_p2_w8_gov_001.json'
 
 evidence:
   - path: evidence/phase2/tsk_p2_w8_gov_001.json
