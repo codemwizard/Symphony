@@ -90,7 +90,7 @@ migration_dependencies:
   enabled: true
   required_migrations:
   - 0168: Attestation seam schema baseline present
-  - 0171: Attestation kill-switch gate baseline present
+  - '0171': Attestation kill-switch gate baseline present
   table_dependencies:
   - asset_batches: authoritative Wave 8 boundary
   - schema_migrations: must track migrations
