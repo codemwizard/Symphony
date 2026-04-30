@@ -90,14 +90,8 @@ ed25519_verify(PG_FUNCTION_ARGS)
         (const unsigned char *) VARDATA(pubkey_data)
     );
     
-    if (result < 0) {
-        /* libsodium error */
-        ereport(ERROR,
-                (errcode(ERRCODE_INTERNAL_ERROR),
-                 errmsg("Ed25519 verification failed: libsodium error")));
-    }
-    
-    /* Return result (0 = success, -1 = failure) */
+    /* crypto_sign_verify_detached returns 0 on valid, -1 on invalid */
+    /* Return boolean result directly; -1 (invalid) is not a library error */
     PG_RETURN_BOOL(result == 0);
 }
 

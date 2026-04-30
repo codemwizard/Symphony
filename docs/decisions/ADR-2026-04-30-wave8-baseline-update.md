@@ -59,5 +59,5 @@ The following migrations were added in this PR:
 ## Baseline Metadata
 - Baseline date: 2026-04-30
 - Baseline cutoff: 0187_wave8_integrate_ed25519_verification.sql
-- Normalized schema SHA256: 8ca013d598b5743aad3271edc47a7849062c6683673fd6ffadf9c04df3227501
+- Normalized schema SHA256: e57fa8a5c7f424f5998c9a551fdb0683e7267c2ece47807ea40763a1190b16c7
 - Dump source: container:symphony-postgres

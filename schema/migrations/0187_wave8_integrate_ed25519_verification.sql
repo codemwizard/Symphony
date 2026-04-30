@@ -97,25 +97,25 @@ BEGIN
     IF payload_entity_id IS NOT NULL AND payload_entity_id::text != NEW.entity_id::text THEN
         RAISE EXCEPTION 'Context binding violation: canonical payload entity_id=% does not match persisted entity_id=%',
             payload_entity_id, NEW.entity_id
-        USING ERRCODE = 'P7812'; -- Wave 8: context binding failure
+        USING ERRCODE = 'P7814'; -- Wave 8: context binding failure
     END IF;
     
     IF payload_execution_id IS NOT NULL AND payload_execution_id::text != NEW.execution_id::text THEN
         RAISE EXCEPTION 'Context binding violation: canonical payload execution_id=% does not match persisted execution_id=%',
             payload_execution_id, NEW.execution_id
-        USING ERRCODE = 'P7812';
+        USING ERRCODE = 'P7814';
     END IF;
     
     IF payload_policy_decision_id IS NOT NULL AND payload_policy_decision_id::text != NEW.policy_decision_id::text THEN
         RAISE EXCEPTION 'Context binding violation: canonical payload policy_decision_id=% does not match persisted policy_decision_id=%',
             payload_policy_decision_id, NEW.policy_decision_id
-        USING ERRCODE = 'P7812';
+        USING ERRCODE = 'P7814';
     END IF;
     
     IF payload_interpretation_version_id IS NOT NULL AND payload_interpretation_version_id::text != NEW.interpretation_version_id::text THEN
         RAISE EXCEPTION 'Context binding violation: canonical payload interpretation_version_id=% does not match persisted interpretation_version_id=%',
             payload_interpretation_version_id, NEW.interpretation_version_id
-        USING ERRCODE = 'P7812';
+        USING ERRCODE = 'P7814';
     END IF;
     
     -- SEC-002: Ed25519 verification using PostgreSQL native primitive

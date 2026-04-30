@@ -647,10 +647,10 @@
         USING ERRCODE = 'P7809';
         USING ERRCODE = 'P7811';
         USING ERRCODE = 'P7811';
-        USING ERRCODE = 'P7812';
-        USING ERRCODE = 'P7812';
-        USING ERRCODE = 'P7812';
-        USING ERRCODE = 'P7812';
+        USING ERRCODE = 'P7814';
+        USING ERRCODE = 'P7814';
+        USING ERRCODE = 'P7814';
+        USING ERRCODE = 'P7814';
         USING ERRCODE = 'P7815';
         WHERE ST_Intersects(NEW.geom, pa.geom)
         WHERE entity_type = NEW.entity_type
