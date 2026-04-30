@@ -101,7 +101,7 @@ capture_env_fingerprint() {
   local schema_checksum=""
 
   db_url_hash=$(echo -n "$DATABASE_URL" | sha256sum | awk '{print $1}')
-  migration_head=$(ls -1 schema/migrations/*.sql 2>/dev/null | sort | tail -1 | grep -oP '\d+' || echo "unknown")
+  migration_head=$(ls -1 schema/migrations/*.sql 2>/dev/null | sort | tail -1 | grep -oP '\d+' | head -1 || echo "unknown")
   schema_checksum=$(psql "$DATABASE_URL" -t -c \
     "SELECT md5(string_agg(table_name || column_name || data_type, ',' ORDER BY table_name, column_name))
      FROM information_schema.columns
@@ -598,6 +598,13 @@ if [[ "${FRESH_DB}" == "1" ]]; then
   DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${DB_HOST_PORT}/${TEMP_DB}"
   export DATABASE_URL
   echo "   DATABASE_URL set to ephemeral DB: ${TEMP_DB}"
+  echo "   Linting migrations before applying..."
+  if [[ -x scripts/db/lint_migrations.sh ]]; then
+    scripts/db/lint_migrations.sh
+  else
+    echo "ERROR: scripts/db/lint_migrations.sh not found"
+    exit 1
+  fi
   echo "   Running migrations on ephemeral DB..."
   scripts/db/migrate.sh >/dev/null
   echo "   Seeding canonical test data..."
@@ -841,6 +848,24 @@ if [[ -x scripts/audit/verify_tsk_p2_preauth_007_16.sh ]]; then
   scripts/audit/verify_tsk_p2_preauth_007_16.sh
 else
   echo "ERROR: scripts/audit/verify_tsk_p2_preauth_007_16.sh not found"
+  exit 1
+fi
+
+echo "==> Wave 8 SEC-002 binary build and runtime verification"
+if [[ -x scripts/audit/verify_tsk_p2_w8_sec_002.sh ]]; then
+  emit_preci_step_with_provenance "run_sec_002" "scripts/audit/verify_tsk_p2_w8_sec_002.sh" ""
+  scripts/audit/verify_tsk_p2_w8_sec_002.sh
+else
+  echo "ERROR: scripts/audit/verify_tsk_p2_w8_sec_002.sh not found"
+  exit 1
+fi
+
+echo "==> Wave 8 SQL migrations verification (0182-0186)"
+if [[ -x scripts/db/verify_wave8_migrations.sh ]]; then
+  emit_preci_step_with_provenance "run_wave8_migrations" "scripts/db/verify_wave8_migrations.sh" ""
+  scripts/db/verify_wave8_migrations.sh
+else
+  echo "ERROR: scripts/db/verify_wave8_migrations.sh not found"
   exit 1
 fi
 

@@ -21,6 +21,7 @@
     "P73xx": "policy_invariants",
     "P74xx": "revocation_invariants",
     "P76xx": "wave6",
+    "P78xx": "wave8",
     "P90xx": "developer_guardrails"
   },
   "codes": {
@@ -261,6 +262,84 @@
       "class": "B",
       "subsystem": "hardening",
       "meaning": "attempted in-place update of active reference strategy policy",
+      "retryable": false
+    },
+    "P7804": {
+      "class": "B",
+      "subsystem": "wave8",
+      "meaning": "transition hash input invalid or canonicalization failure",
+      "retryable": false
+    },
+    "P7805": {
+      "class": "B",
+      "subsystem": "wave8",
+      "meaning": "transition hash mismatch during replay verification",
+      "retryable": false
+    },
+    "P7806": {
+      "class": "B",
+      "subsystem": "wave8",
+      "meaning": "signature metadata missing or invalid",
+      "retryable": false
+    },
+    "P7807": {
+      "class": "B",
+      "subsystem": "wave8",
+      "meaning": "signature key scope violation",
+      "retryable": false
+    },
+    "P7808": {
+      "class": "B",
+      "subsystem": "wave8",
+      "meaning": "signature timestamp invalid or regenerated",
+      "retryable": false
+    },
+    "P7809": {
+      "class": "B",
+      "subsystem": "wave8",
+      "meaning": "signature replay verification failed due to missing artifacts",
+      "retryable": false
+    },
+    "P7810": {
+      "class": "B",
+      "subsystem": "wave8",
+      "meaning": "signer precedence conflict with multiple active keys",
+      "retryable": false
+    },
+    "P7811": {
+      "class": "B",
+      "subsystem": "wave8",
+      "meaning": "unavailable crypto (verifier, key lookup, or signer surface)",
+      "retryable": false
+    },
+    "P7812": {
+      "class": "B",
+      "subsystem": "wave8",
+      "meaning": "provider path unavailable or dependency load failure",
+      "retryable": false
+    },
+    "P7813": {
+      "class": "B",
+      "subsystem": "wave8",
+      "meaning": "SQLSTATE provenance mismatch between contract and registry",
+      "retryable": false
+    },
+    "P7814": {
+      "class": "B",
+      "subsystem": "wave8",
+      "meaning": "branch provenance mismatch during verification",
+      "retryable": false
+    },
+    "P7815": {
+      "class": "B",
+      "subsystem": "wave8",
+      "meaning": "data authority derivation failure",
+      "retryable": false
+    },
+    "P7816": {
+      "class": "B",
+      "subsystem": "wave8",
+      "meaning": "data authority mismatch during replay",
       "retryable": false
     },
     "P7901": {

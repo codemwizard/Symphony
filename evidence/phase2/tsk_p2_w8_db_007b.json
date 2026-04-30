@@ -1,0 +1,55 @@
+{
+  "task_id": "TSK-P2-W8-DB-007b",
+  "git_sha": "6dbab49ffc6ace36ff8b270e91c6377df671617c",
+  "timestamp_utc": "2026-04-29T07:49:15.816Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "[ID w8_db_007b_work_01] Migration exists",
+      "status": "PASS",
+      "detail": "Migration found at schema/migrations/0178_wave8_scope_and_timestamp_enforcement.sql"
+    },
+    {
+      "check": "[ID w8_db_007b_work_01] Migration enforces persisted-before-signing occurred_at semantics",
+      "status": "PASS",
+      "detail": "Migration enforces timestamp integrity with P7811 failure mode"
+    },
+    {
+      "check": "[ID w8_db_007b_work_02] Verification SQL exists",
+      "status": "PASS",
+      "detail": "Verification SQL found at scripts/db/verify_tsk_p2_w8_db_007b.sql"
+    },
+    {
+      "check": "[ID w8_db_007b_work_02] Verification SQL distinguishes regenerated-timestamp failures",
+      "status": "PASS",
+      "detail": "Verification SQL includes physical write test for timestamp integrity failure"
+    },
+    {
+      "check": "[ID w8_db_007b_work_02] Verification SQL distinguishes valid timestamp acceptance",
+      "status": "PASS",
+      "detail": "Verification SQL includes physical write test for valid timestamp acceptance"
+    }
+  ],
+  "observed_paths": [],
+  "observed_hashes": {},
+  "command_outputs": [
+    "✓ Migration exists",
+    "✓ Migration enforces persisted-before-signing occurred_at semantics",
+    "✓ Verification SQL exists",
+    "✓ Verification SQL distinguishes regenerated-timestamp failures",
+    "✓ Verification SQL distinguishes valid timestamp acceptance",
+    "✓ All checks passed"
+  ],
+  "execution_trace": [
+    "verify_tsk_p2_w8_db_007b.sh executed",
+    "Checking migration file",
+    "Checking migration enforces persisted-before-signing occurred_at semantics",
+    "Checking verification SQL",
+    "Checking verification SQL distinguishes regenerated-timestamp failures",
+    "Checking verification SQL distinguishes valid timestamp acceptance",
+    "Verification complete",
+    "Total checks: 5",
+    "Passed: 5",
+    "Failed: 0"
+  ]
+}

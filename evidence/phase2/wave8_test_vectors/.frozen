@@ -1,0 +1,4 @@
+# Wave 8 Attestation Test Vectors
+# These test vectors are frozen independently of runtime implementation logic.
+# They define canonical bytes, expected hash, and expected verification outcomes.
+# DO NOT regenerate these vectors from implementation logic.

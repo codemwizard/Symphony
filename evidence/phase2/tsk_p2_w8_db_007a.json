@@ -1,0 +1,62 @@
+{
+  "task_id": "TSK-P2-W8-DB-007a",
+  "git_sha": "6dbab49ffc6ace36ff8b270e91c6377df671617c",
+  "timestamp_utc": "2026-04-29T07:45:49.796Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "[ID w8_db_007a_work_01] Migration exists",
+      "status": "PASS",
+      "detail": "Migration found at schema/migrations/0178_wave8_scope_and_timestamp_enforcement.sql"
+    },
+    {
+      "check": "[ID w8_db_007a_work_01] Migration enforces project scope authorization",
+      "status": "PASS",
+      "detail": "Migration enforces scope authorization with P7810 failure mode"
+    },
+    {
+      "check": "[ID w8_db_007a_work_01] Migration enforces entity-type scope authorization",
+      "status": "PASS",
+      "detail": "Migration enforces entity-type scope authorization"
+    },
+    {
+      "check": "[ID w8_db_007a_work_02] Verification SQL exists",
+      "status": "PASS",
+      "detail": "Verification SQL found at scripts/db/verify_tsk_p2_w8_db_007a.sql"
+    },
+    {
+      "check": "[ID w8_db_007a_work_02] Verification SQL distinguishes wrong-scope failures",
+      "status": "PASS",
+      "detail": "Verification SQL includes physical write test for wrong-scope rejection"
+    },
+    {
+      "check": "[ID w8_db_007a_work_02] Verification SQL distinguishes correct-scope acceptance",
+      "status": "PASS",
+      "detail": "Verification SQL includes physical write test for correct-scope acceptance"
+    }
+  ],
+  "observed_paths": [],
+  "observed_hashes": {},
+  "command_outputs": [
+    "✓ Migration exists",
+    "✓ Migration enforces project scope authorization",
+    "✓ Migration enforces entity-type scope authorization",
+    "✓ Verification SQL exists",
+    "✓ Verification SQL distinguishes wrong-scope failures",
+    "✓ Verification SQL distinguishes correct-scope acceptance",
+    "✓ All checks passed"
+  ],
+  "execution_trace": [
+    "verify_tsk_p2_w8_db_007a.sh executed",
+    "Checking migration file",
+    "Checking migration enforces project scope authorization",
+    "Checking migration enforces entity-type scope authorization",
+    "Checking verification SQL",
+    "Checking verification SQL distinguishes wrong-scope failures",
+    "Checking verification SQL distinguishes correct-scope acceptance",
+    "Verification complete",
+    "Total checks: 6",
+    "Passed: 6",
+    "Failed: 0"
+  ]
+}

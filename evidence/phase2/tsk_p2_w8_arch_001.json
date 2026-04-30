@@ -1,0 +1,57 @@
+{
+  "task_id": "TSK-P2-W8-ARCH-001",
+  "git_sha": "6dbab49ffc6ace36ff8b270e91c6377df671617c",
+  "timestamp_utc": "2026-04-29T06:45:08.238353+00:00",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "Canonical attestation payload contract exists",
+      "status": "PASS",
+      "detail": "Hash: 6cd9144401db2bcad8103e356032a6d176d813e64f7c60a6c24ca76be99772b1"
+    },
+    {
+      "check": "[ID w8_arch_001_work_01] Field set defined",
+      "status": "PASS",
+      "detail": "All 12 fields present"
+    },
+    {
+      "check": "[ID w8_arch_001_work_02] Canonicalization rules defined",
+      "status": "PASS",
+      "detail": "Null, UUID, timestamp, UTF-8, and canonicalization rules present"
+    },
+    {
+      "check": "[ID w8_arch_001_work_03] Byte-level test vectors present",
+      "status": "PASS",
+      "detail": "Test vectors with canonical JSON and byte representation present"
+    },
+    {
+      "check": "[ID w8_arch_001_work_04] Linked to Wave 8 closure rubric",
+      "status": "PASS",
+      "detail": "Contract references closure rubric as authoritative source"
+    }
+  ],
+  "observed_paths": [
+    "docs/contracts/CANONICAL_ATTESTATION_PAYLOAD_v1.md"
+  ],
+  "observed_hashes": {
+    "docs/contracts/CANONICAL_ATTESTATION_PAYLOAD_v1.md": "6cd9144401db2bcad8103e356032a6d176d813e64f7c60a6c24ca76be99772b1"
+  },
+  "command_outputs": [
+    "\u2713 Contract exists at docs/contracts/CANONICAL_ATTESTATION_PAYLOAD_v1.md",
+    "\u2713 [ID w8_arch_001_work_01] Field set defined with all 12 fields",
+    "\u2713 [ID w8_arch_001_work_02] Canonicalization rules defined",
+    "\u2713 [ID w8_arch_001_work_03] Byte-level test vectors present",
+    "\u2713 [ID w8_arch_001_work_04] Linked to Wave 8 closure rubric"
+  ],
+  "execution_trace": [
+    "verify_tsk_p2_w8_arch_001.py executed",
+    "Checked contract at docs/contracts/CANONICAL_ATTESTATION_PAYLOAD_v1.md",
+    "Verified work item 01: field set definition",
+    "Verified work item 02: canonicalization rules",
+    "Verified work item 03: byte-level test vectors",
+    "Verified work item 04: closure rubric link",
+    "Total checks: 5",
+    "Passed: 5",
+    "Failed: 0"
+  ]
+}

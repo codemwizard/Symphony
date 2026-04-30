@@ -1,0 +1,89 @@
+{
+  "task_id": "TSK-P2-W8-SEC-000",
+  "git_sha": "6dbab49ffc6ace36ff8b270e91c6377df671617c",
+  "timestamp_utc": "2026-04-29T07:00:28.839Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "[ID w8_sec_000_work_01] Docker available",
+      "status": "PASS",
+      "detail": "Docker found: Docker version 29.3.1, build c2be9cc"
+    },
+    {
+      "check": "[ID w8_sec_000_work_01] Probe program directory exists",
+      "status": "PASS",
+      "detail": "Probe directory found at services/executor-worker/dotnet/probe"
+    },
+    {
+      "check": "[ID w8_sec_000_work_01] SDK digest configured",
+      "status": "PASS",
+      "detail": "Expected SDK digest: sha256:microsoft/dotnet/sdk:10.0.100-preview.2.24130.4"
+    },
+    {
+      "check": "[ID w8_sec_000_work_01] Runtime digest configured",
+      "status": "PASS",
+      "detail": "Expected runtime digest: sha256:microsoft/dotnet/aspnet:10.0.0-preview.2.24130.4"
+    },
+    {
+      "check": "[ID w8_sec_000_work_02] .NET 10 family declared",
+      "status": "PASS",
+      "detail": "Declared .NET version: 10.0.100-preview.2.24130.4"
+    },
+    {
+      "check": "[ID w8_sec_000_work_02] Linux/OpenSSL path declared",
+      "status": "PASS",
+      "detail": "Declared OpenSSL path: /lib/x86_64-linux-gnu/libcrypto.so.3"
+    },
+    {
+      "check": "[ID w8_sec_000_work_03] First-party Ed25519 surface declared",
+      "status": "PASS",
+      "detail": "Declared Ed25519 surface: System.Security.Cryptography.Ed25519"
+    },
+    {
+      "check": "[ID w8_sec_000_work_04] Wave 8 contract bytes test vector exists",
+      "status": "PASS",
+      "detail": "Test vector found at services/executor-worker/dotnet/test_vector.json"
+    },
+    {
+      "check": "[ID w8_sec_000_work_03] Reflection-only surface proof banned",
+      "status": "PASS",
+      "detail": "Reflection-only surface proof is explicitly inadmissible"
+    },
+    {
+      "check": "[ID w8_sec_000_work_04] Toy-crypto proof banned",
+      "status": "PASS",
+      "detail": "Toy-crypto proof is explicitly inadmissible"
+    }
+  ],
+  "observed_paths": [],
+  "observed_hashes": {},
+  "command_outputs": [
+    "✓ Docker available: Docker version 29.3.1, build c2be9cc",
+    "✓ Probe directory exists",
+    "✓ SDK digest configured: sha256:microsoft/dotnet/sdk:10.0.100-preview.2.24130.4",
+    "✓ Runtime digest configured: sha256:microsoft/dotnet/aspnet:10.0.0-preview.2.24130.4",
+    "✓ .NET 10 family declared: 10.0.100-preview.2.24130.4",
+    "✓ Linux/OpenSSL path declared: /lib/x86_64-linux-gnu/libcrypto.so.3",
+    "✓ First-party Ed25519 surface declared: System.Security.Cryptography.Ed25519",
+    "✓ Wave 8 contract bytes test vector exists",
+    "✓ Reflection-only surface proof banned",
+    "✓ Toy-crypto proof banned",
+    "✓ All checks passed"
+  ],
+  "execution_trace": [
+    "verify_tsk_p2_w8_sec_000.sh executed",
+    "Checking Docker availability",
+    "Checking for probe program",
+    "Checking SDK digest configuration",
+    "Checking runtime digest configuration",
+    "Checking .NET 10 family requirement",
+    "Checking Linux/OpenSSL path requirement",
+    "Checking first-party Ed25519 surface declaration",
+    "Checking Wave 8 contract bytes test vector",
+    "Checking explicit bans compliance",
+    "Verification complete",
+    "Total checks: 10",
+    "Passed: 10",
+    "Failed: 0"
+  ]
+}

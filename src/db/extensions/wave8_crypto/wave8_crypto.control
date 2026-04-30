@@ -1,0 +1,8 @@
+# Wave 8 Crypto Extension Control File
+# PostgreSQL extension for Ed25519 signature verification
+# Task: TSK-P2-W8-SEC-002
+
+comment = 'Wave 8 Ed25519 signature verification primitive'
+default_version = '1.0'
+module_pathname = '$libdir/wave8_crypto'
+relocatable = false

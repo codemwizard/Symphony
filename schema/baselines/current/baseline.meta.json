@@ -1,10 +1,10 @@
 {
-  "baseline_date": "2026-04-28",
-  "baseline_path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/baselines/2026-04-28/0001_baseline.sql",
-  "baseline_cutoff": "0172_fix_trigger_authority_and_ordering.sql",
-  "normalized_schema_sha256": "c55ed2c8a518f77149a1839288212b3e2c0f6f899cb81877ebdc2ffbf62e7040",
+  "baseline_date": "2026-04-30",
+  "baseline_path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/baselines/2026-04-30/0001_baseline.sql",
+  "baseline_cutoff": "0198_fix_canonical_payload_jsonb_spacing.sql",
+  "normalized_schema_sha256": "e57fa8a5c7f424f5998c9a551fdb0683e7267c2ece47807ea40763a1190b16c7",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.3 (Debian 18.3-1.pgdg13+1)",
   "pg_server_version": "18.3 (Debian 18.3-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-04-28T05:53:31.421938+00:00"
+  "generated_at_utc": "2026-04-30T07:16:18.871242+00:00"
 }

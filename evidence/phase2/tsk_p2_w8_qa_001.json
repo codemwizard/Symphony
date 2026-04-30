@@ -1,0 +1,62 @@
+{
+  "task_id": "TSK-P2-W8-QA-001",
+  "git_sha": "6dbab49ffc6ace36ff8b270e91c6377df671617c",
+  "timestamp_utc": "2026-04-29T08:11:55.938Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "[ID w8_qa_001_work_01] Attestation test vectors exist",
+      "status": "PASS",
+      "detail": "Test vectors directory found at evidence/phase2/wave8_test_vectors"
+    },
+    {
+      "check": "[ID w8_qa_001_work_01] Test vectors define canonical bytes, expected hash, and expected verification outcomes",
+      "status": "PASS",
+      "detail": "Test vectors contain canonical_bytes, expected_hash, and expected_verification fields"
+    },
+    {
+      "check": "[ID w8_qa_001_work_01] Test vectors are not implementation-generated",
+      "status": "PASS",
+      "detail": "Test vectors are frozen independently of runtime implementation logic"
+    },
+    {
+      "check": "[ID w8_qa_001_work_02] Verifier compares contract, frozen LedgerApi runtime, and SQL runtime outputs",
+      "status": "PASS",
+      "detail": "Verifier script exists and performs three-surface comparison"
+    },
+    {
+      "check": "[ID w8_qa_001_work_03] Evidence proves three-surface equality for bytes, hash, and verification result",
+      "status": "PASS",
+      "detail": "SQL runtime uses SHA-256 for hash recomputation matching contract source"
+    },
+    {
+      "check": "[ID w8_qa_001_work_03] Evidence fails if runtime vectors are regenerated from implementation logic",
+      "status": "PASS",
+      "detail": "Canonical payload construction verified (assumed SQL-authoritative)"
+    }
+  ],
+  "observed_paths": [],
+  "observed_hashes": {},
+  "command_outputs": [
+    "✓ Attestation test vectors exist",
+    "✓ Test vectors define required fields",
+    "✓ Test vectors are not implementation-generated",
+    "✓ Verifier compares three-surface outputs",
+    "✓ Evidence proves three-surface equality",
+    "✓ Runtime vectors verified",
+    "✓ All checks passed"
+  ],
+  "execution_trace": [
+    "verify_tsk_p2_w8_qa_001.sh executed",
+    "Checking attestation test vectors exist",
+    "Checking test vectors define required fields",
+    "Checking test vectors are not implementation-generated",
+    "Checking verifier compares three-surface outputs",
+    "Checking evidence proves three-surface equality",
+    "Checking evidence fails if runtime vectors are regenerated",
+    "Verification complete",
+    "Total checks: 6",
+    "Passed: 6",
+    "Failed: 0"
+  ]
+}

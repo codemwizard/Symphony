@@ -119,6 +119,9 @@ Every task must:
 - Include a **failure mode** explicitly stating: `Evidence file missing`
 - Ensure the verification command **writes** the declared evidence (not just checks text)
 
+**Migration Surface Requirement:**
+If a task touches `schema/migrations/**`, the task MUST include `scripts/db/lint_migrations.sh` in its verification list. This catches migration formatting errors (e.g., top-level BEGIN/COMMIT statements) at task verification time, preventing nested transaction errors during migration application.
+
 **Database Connection Pattern for Verification Scripts:**
 When creating verification scripts that connect to the database (e.g., using psql), the script MUST use the `DATABASE_URL` environment variable instead of relying on default Unix socket connections. This ensures scripts work consistently across different database environments (local dev, ephemeral CI containers, etc.).
 

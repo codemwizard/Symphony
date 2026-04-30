@@ -457,6 +457,22 @@
       "reason": "DDL on hot table: CREATE INDEX without CONCURRENTLY on hot table: state_current",
       "expires_on": "2026-12-31",
       "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0173_wave8_placeholder_cleanup.sql",
+      "line_number": 16,
+      "statement_fingerprint": "5790c504f7f2294b5f2e120b6599854cce9a1ebe5e32d910a97834547c81e058",
+      "reason": "DDL on hot table: Wave 8 placeholder cleanup - add CHECK constraint to reject placeholder transition_hash values",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0173_wave8_placeholder_cleanup.sql",
+      "line_number": 22,
+      "statement_fingerprint": "5790c504f7f2294b5f2e120b6599854cce9a1ebe5e32d910a97834547c81e058",
+      "reason": "DDL on hot table: Wave 8 placeholder cleanup - add CHECK constraint to reject non_reproducible data_authority values",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
     }
   ]
 }
