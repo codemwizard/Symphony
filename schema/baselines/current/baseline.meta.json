@@ -1,7 +1,7 @@
 {
   "baseline_date": "2026-04-30",
   "baseline_path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/baselines/2026-04-30/0001_baseline.sql",
-  "baseline_cutoff": "0190_wave8_cryptographic_enforcement_full_restore.sql",
+  "baseline_cutoff": "0193_fix_canonical_payload_timestamp_validation.sql",
   "normalized_schema_sha256": "e57fa8a5c7f424f5998c9a551fdb0683e7267c2ece47807ea40763a1190b16c7",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.3 (Debian 18.3-1.pgdg13+1)",
   "pg_server_version": "18.3 (Debian 18.3-1.pgdg13+1)",
