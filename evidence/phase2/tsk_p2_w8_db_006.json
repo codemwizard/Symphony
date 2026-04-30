@@ -1,0 +1,69 @@
+{
+  "task_id": "TSK-P2-W8-DB-006",
+  "git_sha": "6dbab49ffc6ace36ff8b270e91c6377df671617c",
+  "timestamp_utc": "2026-04-29T07:41:27.143Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "[ID w8_db_006_work_01] Migration exists",
+      "status": "PASS",
+      "detail": "Migration found at schema/migrations/0177_wave8_cryptographic_enforcement_wiring.sql"
+    },
+    {
+      "check": "[ID w8_db_006_work_01] Migration integrates Ed25519 verification into dispatcher path",
+      "status": "PASS",
+      "detail": "Migration creates cryptographic enforcement function and trigger on asset_batches"
+    },
+    {
+      "check": "[ID w8_db_006_work_02] Migration enforces fail-closed rejection with registered failure modes",
+      "status": "PASS",
+      "detail": "Migration uses registered failure modes P7807, P7808, P7809"
+    },
+    {
+      "check": "[ID w8_db_006_work_03] Verification SQL exists",
+      "status": "PASS",
+      "detail": "Verification SQL found at scripts/db/verify_w8_cryptographic_enforcement_wiring.sql"
+    },
+    {
+      "check": "[ID w8_db_006_work_03] Verification SQL proves PostgreSQL rejects cryptographically invalid writes",
+      "status": "PASS",
+      "detail": "Verification SQL includes physical write tests for cryptographic rejection"
+    },
+    {
+      "check": "[ID w8_db_006_work_03] Verification SQL proves PostgreSQL does not trust service claim or audit row",
+      "status": "PASS",
+      "detail": "Verification SQL tests direct PostgreSQL trigger enforcement"
+    },
+    {
+      "check": "[ID w8_db_006_work_03] Verification SQL derives branch provenance from same production execution path",
+      "status": "PASS",
+      "detail": "Verification SQL verifies trigger function in production execution path"
+    }
+  ],
+  "observed_paths": [],
+  "observed_hashes": {},
+  "command_outputs": [
+    "✓ Migration exists",
+    "✓ Migration integrates Ed25519 verification into dispatcher path",
+    "✓ Migration enforces fail-closed rejection with registered failure modes",
+    "✓ Verification SQL exists",
+    "✓ Verification SQL proves PostgreSQL rejects cryptographically invalid writes",
+    "✓ Verification SQL proves PostgreSQL does not trust service claim or audit row",
+    "✓ Verification SQL derives branch provenance from same production execution path",
+    "✓ All checks passed"
+  ],
+  "execution_trace": [
+    "verify_tsk_p2_w8_db_006.sh executed",
+    "Checking migration file",
+    "Checking migration integrates Ed25519 verification into dispatcher path",
+    "Checking migration enforces fail-closed rejection with registered failure modes",
+    "Checking verification SQL",
+    "Checking verification SQL proves PostgreSQL rejects cryptographically invalid writes",
+    "Checking verification SQL proves PostgreSQL does not trust service claim or audit row",
+    "Checking verification SQL derives branch provenance from same production execution path",
+    "Verification complete",
+    "Total checks: 7",
+    "Passed: 7",
+    "Failed: 0"
+  ]
+}

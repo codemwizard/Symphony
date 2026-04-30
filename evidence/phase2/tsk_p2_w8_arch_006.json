@@ -1,0 +1,50 @@
+{
+  "task_id": "TSK-P2-W8-ARCH-006",
+  "git_sha": "6dbab49ffc6ace36ff8b270e91c6377df671617c",
+  "timestamp_utc": "2026-04-29T06:58:04.682297+00:00",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "SQLSTATE registry exists",
+      "status": "PASS",
+      "detail": "Hash: 702a21196e0360d406eaf8a57d9e1ce5867dc15af0c41232cf943533ce68aac8"
+    },
+    {
+      "check": "[ID w8_arch_006_work_01] Wave 8 failure-class range added",
+      "status": "PASS",
+      "detail": "P78xx range for wave8 added to registry"
+    },
+    {
+      "check": "[ID w8_arch_006_work_02] Wave 8 concrete failure classes registered",
+      "status": "PASS",
+      "detail": "Concrete codes for transition-hash, signature, key-scope, timestamp, replay, signer-precedence, unavailable-crypto, provider-path, provenance-mismatch, data-authority, authority-mismatch registered"
+    },
+    {
+      "check": "[ID w8_arch_006_work_03] Wave 8 SQLSTATE registrations cross-referenced",
+      "status": "PASS",
+      "detail": "Wave 8 codes have subsystem designation for contract cross-reference"
+    }
+  ],
+  "observed_paths": [
+    "docs/contracts/sqlstate_map.yml"
+  ],
+  "observed_hashes": {
+    "docs/contracts/sqlstate_map.yml": "702a21196e0360d406eaf8a57d9e1ce5867dc15af0c41232cf943533ce68aac8"
+  },
+  "command_outputs": [
+    "\u2713 Registry exists at docs/contracts/sqlstate_map.yml",
+    "\u2713 [ID w8_arch_006_work_01] Wave 8 failure-class range added",
+    "\u2713 [ID w8_arch_006_work_02] Wave 8 concrete failure classes registered",
+    "\u2713 [ID w8_arch_006_work_03] Wave 8 SQLSTATE registrations cross-referenced"
+  ],
+  "execution_trace": [
+    "verify_tsk_p2_w8_arch_006.py executed",
+    "Checked registry at docs/contracts/sqlstate_map.yml",
+    "Verified work item 01: Wave 8 range",
+    "Verified work item 02: Wave 8 concrete codes",
+    "Verified work item 03: cross-reference",
+    "Total checks: 4",
+    "Passed: 4",
+    "Failed: 0"
+  ]
+}

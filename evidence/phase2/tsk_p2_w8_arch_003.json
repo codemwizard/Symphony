@@ -1,0 +1,71 @@
+{
+  "task_id": "TSK-P2-W8-ARCH-003",
+  "git_sha": "6dbab49ffc6ace36ff8b270e91c6377df671617c",
+  "timestamp_utc": "2026-04-29T06:50:33.517269+00:00",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "Ed25519 signing contract exists",
+      "status": "PASS",
+      "detail": "Hash: 7bece7ad8862bdd780e6fee168b2180e71853e56976c14188d9262bed815a7d0"
+    },
+    {
+      "check": "[ID w8_arch_003_work_01] Signature input bytes defined",
+      "status": "PASS",
+      "detail": "Ed25519 signs canonical UTF-8 bytes directly, rejects non-canonical interpretations"
+    },
+    {
+      "check": "[ID w8_arch_003_work_02] Timestamp and scope authorization rules defined",
+      "status": "PASS",
+      "detail": "Persisted-before-signing timestamp, scope authorization, and key lifecycle rules present"
+    },
+    {
+      "check": "[ID w8_arch_003_work_03] Replay law centralized",
+      "status": "PASS",
+      "detail": "Replay semantics centralized in signing contract"
+    },
+    {
+      "check": "[ID w8_arch_003_work_04] Implementation gate conditions defined",
+      "status": "PASS",
+      "detail": "Implementation gate conditions specify stability requirements"
+    },
+    {
+      "check": "[ID w8_arch_003_work_05] Fail-closed unavailable-crypto semantics defined",
+      "status": "PASS",
+      "detail": "Absent replay artifacts cause verification to fail closed"
+    },
+    {
+      "check": "[ID w8_arch_003_work_06] Named failure classes registered",
+      "status": "PASS",
+      "detail": "Named failure classes for scope, timestamp, and verification failures present"
+    }
+  ],
+  "observed_paths": [
+    "docs/contracts/ED25519_SIGNING_CONTRACT.md"
+  ],
+  "observed_hashes": {
+    "docs/contracts/ED25519_SIGNING_CONTRACT.md": "7bece7ad8862bdd780e6fee168b2180e71853e56976c14188d9262bed815a7d0"
+  },
+  "command_outputs": [
+    "\u2713 Contract exists at docs/contracts/ED25519_SIGNING_CONTRACT.md",
+    "\u2713 [ID w8_arch_003_work_01] Signature input bytes defined",
+    "\u2713 [ID w8_arch_003_work_02] Timestamp and scope authorization rules defined",
+    "\u2713 [ID w8_arch_003_work_03] Replay law centralized",
+    "\u2713 [ID w8_arch_003_work_04] Implementation gate conditions defined",
+    "\u2713 [ID w8_arch_003_work_05] Fail-closed unavailable-crypto semantics defined",
+    "\u2713 [ID w8_arch_003_work_06] Named failure classes registered"
+  ],
+  "execution_trace": [
+    "verify_tsk_p2_w8_arch_003.py executed",
+    "Checked contract at docs/contracts/ED25519_SIGNING_CONTRACT.md",
+    "Verified work item 01: signature input bytes",
+    "Verified work item 02: timestamp and scope authorization",
+    "Verified work item 03: replay law",
+    "Verified work item 04: implementation gate conditions",
+    "Verified work item 05: unavailable-crypto semantics",
+    "Verified work item 06: failure classes",
+    "Total checks: 7",
+    "Passed: 7",
+    "Failed: 0"
+  ]
+}

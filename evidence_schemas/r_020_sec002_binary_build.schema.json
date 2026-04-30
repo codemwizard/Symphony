@@ -1,0 +1,202 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SEC-002 Binary Build Evidence Schema",
+  "description": "Evidence schema for TSK-P2-W8-SEC-002 PostgreSQL native Ed25519 verification primitive. Captures binary build, install, load, and runtime verification proof.",
+  "type": "object",
+  "required": [
+    "task_id",
+    "git_sha",
+    "timestamp_utc",
+    "status",
+    "pg_version",
+    "pg_config_path",
+    "pkglibdir",
+    "sharedir",
+    "libsodium_version",
+    "extension_checksum",
+    "corpus_checksum",
+    "ldd_output",
+    "nm_output",
+    "objdump_output",
+    "readelf_output",
+    "create_extension_output",
+    "known_good_result",
+    "known_bad_result",
+    "parity_subset_results",
+    "command_outputs",
+    "execution_trace"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "description": "Task identifier (TSK-P2-W8-SEC-002)"
+    },
+    "git_sha": {
+      "type": "string",
+      "description": "Git commit SHA of the source tree"
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp of evidence generation"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["partial", "admissible"],
+      "description": "Evidence status - partial if any verification step failed, admissible only if all steps passed"
+    },
+    "pg_version": {
+      "type": "string",
+      "description": "PostgreSQL version (e.g., PostgreSQL 18.3)"
+    },
+    "pg_config_path": {
+      "type": "string",
+      "description": "Absolute path to pg_config (e.g., /usr/lib/postgresql/18/bin/pg_config)"
+    },
+    "pkglibdir": {
+      "type": "string",
+      "description": "PostgreSQL package library directory where wave8_crypto.so is installed"
+    },
+    "sharedir": {
+      "type": "string",
+      "description": "PostgreSQL shared directory where extension control and SQL files are installed"
+    },
+    "libsodium_version": {
+      "type": "string",
+      "description": "libsodium version (from pkg-config --modversion libsodium)"
+    },
+    "extension_checksum": {
+      "type": "string",
+      "description": "SHA-256 checksum of wave8_crypto.so binary"
+    },
+    "corpus_checksum": {
+      "type": "string",
+      "description": "SHA-256 checksum of the source corpus (all .c, .control, .sql, Makefile files)"
+    },
+    "ldd_output": {
+      "type": "string",
+      "description": "Output of ldd wave8_crypto.so showing libsodium linkage"
+    },
+    "nm_output": {
+      "type": "string",
+      "description": "Output of nm -D wave8_crypto.so | grep ed25519_verify showing exported symbol"
+    },
+    "objdump_output": {
+      "type": "string",
+      "description": "Output of objdump -T wave8_crypto.so showing dynamic symbol table"
+    },
+    "readelf_output": {
+      "type": "string",
+      "description": "Output of readelf -d wave8_crypto.so showing dynamic section"
+    },
+    "create_extension_output": {
+      "type": "string",
+      "description": "Output of CREATE EXTENSION wave8_crypto command"
+    },
+    "known_good_result": {
+      "type": "boolean",
+      "description": "Result of known-good vector test (should be true)"
+    },
+    "known_bad_result": {
+      "type": "boolean",
+      "description": "Result of known-bad vector test (should be false)"
+    },
+    "parity_subset_results": {
+      "type": "object",
+      "description": "Parity subset results matching SEC-001 test vectors",
+      "properties": {
+        "total_vectors": {
+          "type": "integer",
+          "description": "Total number of parity vectors tested"
+        },
+        "passed": {
+          "type": "integer",
+          "description": "Number of vectors that passed parity check"
+        },
+        "failed": {
+          "type": "integer",
+          "description": "Number of vectors that failed parity check"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "vector_id": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "boolean"
+              },
+              "actual": {
+                "type": "boolean"
+              },
+              "matched": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "command_outputs": {
+      "type": "object",
+      "description": "Raw outputs of all verification commands",
+      "properties": {
+        "toolchain_check": {
+          "type": "string",
+          "description": "Output of toolchain presence verification"
+        },
+        "build": {
+          "type": "string",
+          "description": "Output of make PG_CONFIG=... build command"
+        },
+        "install": {
+          "type": "string",
+          "description": "Output of make PG_CONFIG=... install command"
+        },
+        "load": {
+          "type": "string",
+          "description": "Output of CREATE EXTENSION command"
+        },
+        "runtime_good": {
+          "type": "string",
+          "description": "Output of known-good vector test"
+        },
+        "runtime_bad": {
+          "type": "string",
+          "description": "Output of known-bad vector test"
+        }
+      }
+    },
+    "execution_trace": {
+      "type": "array",
+      "description": "Chronological trace of verification steps executed",
+      "items": {
+        "type": "object",
+        "properties": {
+          "step": {
+            "type": "string",
+            "description": "Step identifier (e.g., toolchain_check, build, install, load, verify)"
+          },
+          "timestamp_utc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "command": {
+            "type": "string",
+            "description": "Command executed"
+          },
+          "exit_code": {
+            "type": "integer",
+            "description": "Exit code of command (0 = success)"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether step succeeded"
+          }
+        }
+      }
+    }
+  }
+}

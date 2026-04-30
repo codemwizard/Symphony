@@ -1,0 +1,69 @@
+{
+  "task_id": "TSK-P2-W8-DB-003",
+  "git_sha": "6dbab49ffc6ace36ff8b270e91c6377df671617c",
+  "timestamp_utc": "2026-04-29T07:15:13.666Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "[ID w8_db_003_work_01] Migration exists",
+      "status": "PASS",
+      "detail": "Migration found at schema/migrations/0174_wave8_canonical_payload.sql"
+    },
+    {
+      "check": "[ID w8_db_003_work_01] Migration implements SQL-side canonical payload construction",
+      "status": "PASS",
+      "detail": "Migration creates construct_canonical_attestation_payload() function"
+    },
+    {
+      "check": "[ID w8_db_003_work_01] Migration uses exact contract-defined field set",
+      "status": "PASS",
+      "detail": "Migration includes all 12 contract-defined fields"
+    },
+    {
+      "check": "[ID w8_db_003_work_02] Migration materializes canonical bytes at authoritative boundary",
+      "status": "PASS",
+      "detail": "Migration adds canonical_payload_bytes column to asset_batches"
+    },
+    {
+      "check": "[ID w8_db_003_work_03] Verification SQL exists",
+      "status": "PASS",
+      "detail": "Verification SQL found at scripts/db/verify_w8_canonical_payload.sql"
+    },
+    {
+      "check": "[ID w8_db_003_work_03] Verification SQL proves SQL canonical bytes match contract vector",
+      "status": "PASS",
+      "detail": "Verification SQL compares SQL output to frozen contract vector"
+    },
+    {
+      "check": "[ID w8_db_003_work_03] Verification SQL includes null field rejection test",
+      "status": "PASS",
+      "detail": "Verification SQL tests null field rejection"
+    }
+  ],
+  "observed_paths": [],
+  "observed_hashes": {},
+  "command_outputs": [
+    "✓ Migration exists",
+    "✓ Migration implements SQL-side canonical payload construction",
+    "✓ Migration uses exact contract-defined field set",
+    "✓ Migration materializes canonical bytes at authoritative boundary",
+    "✓ Verification SQL exists",
+    "✓ Verification SQL proves SQL canonical bytes match contract vector",
+    "✓ Verification SQL includes null field rejection test",
+    "✓ All checks passed"
+  ],
+  "execution_trace": [
+    "verify_tsk_p2_w8_db_003.sh executed",
+    "Checking migration file",
+    "Checking migration implements SQL-side canonical payload construction",
+    "Checking migration uses exact contract-defined field set",
+    "Checking migration materializes canonical bytes at authoritative boundary",
+    "Checking verification SQL",
+    "Checking verification SQL proves SQL canonical bytes match contract vector",
+    "Checking verification SQL includes null field rejection test",
+    "Verification complete",
+    "Total checks: 7",
+    "Passed: 7",
+    "Failed: 0"
+  ]
+}

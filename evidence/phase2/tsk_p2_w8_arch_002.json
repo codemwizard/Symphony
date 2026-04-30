@@ -1,0 +1,50 @@
+{
+  "task_id": "TSK-P2-W8-ARCH-002",
+  "git_sha": "6dbab49ffc6ace36ff8b270e91c6377df671617c",
+  "timestamp_utc": "2026-04-29T06:46:44.790377+00:00",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "Transition hash contract exists",
+      "status": "PASS",
+      "detail": "Hash: 0ae6003179606e8fe607ce3d6cd05b2efa06d47470ca35ed2bfea2e37872f9f9"
+    },
+    {
+      "check": "[ID w8_arch_002_work_01] Field set and prohibited extras defined",
+      "status": "PASS",
+      "detail": "Input fields and prohibited extras explicitly defined"
+    },
+    {
+      "check": "[ID w8_arch_002_work_02] SHA-256, encoding, and ordering defined",
+      "status": "PASS",
+      "detail": "RFC 8785 canonicalization, SHA-256, lowercase hex, hash-before-signature ordering present"
+    },
+    {
+      "check": "[ID w8_arch_002_work_03] Mismatch semantics and failure classes defined",
+      "status": "PASS",
+      "detail": "Fail-closed mismatch semantics and named failure classes present"
+    }
+  ],
+  "observed_paths": [
+    "docs/contracts/TRANSITION_HASH_CONTRACT.md"
+  ],
+  "observed_hashes": {
+    "docs/contracts/TRANSITION_HASH_CONTRACT.md": "0ae6003179606e8fe607ce3d6cd05b2efa06d47470ca35ed2bfea2e37872f9f9"
+  },
+  "command_outputs": [
+    "\u2713 Contract exists at docs/contracts/TRANSITION_HASH_CONTRACT.md",
+    "\u2713 [ID w8_arch_002_work_01] Field set and prohibited extras defined",
+    "\u2713 [ID w8_arch_002_work_02] SHA-256, encoding, and ordering defined",
+    "\u2713 [ID w8_arch_002_work_03] Mismatch semantics and failure classes defined"
+  ],
+  "execution_trace": [
+    "verify_tsk_p2_w8_arch_002.py executed",
+    "Checked contract at docs/contracts/TRANSITION_HASH_CONTRACT.md",
+    "Verified work item 01: field set and prohibited extras",
+    "Verified work item 02: SHA-256, encoding, and ordering",
+    "Verified work item 03: mismatch semantics and failure classes",
+    "Total checks: 4",
+    "Passed: 4",
+    "Failed: 0"
+  ]
+}

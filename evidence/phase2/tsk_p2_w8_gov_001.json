@@ -1,0 +1,140 @@
+{
+  "task_id": "TSK-P2-W8-GOV-001",
+  "git_sha": "6dbab49ffc6ace36ff8b270e91c6377df671617c",
+  "timestamp_utc": "2026-04-29T06:42:59.578721+00:00",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "Governance remediation ADR exists",
+      "status": "PASS",
+      "detail": "Hash: 6352a9c961700a0e3d021ce994613c355289ccf198d33718c6febc47206059ad"
+    },
+    {
+      "check": "Governance remediation ADR content validation",
+      "status": "PASS",
+      "detail": "All required strings present"
+    },
+    {
+      "check": "Task status matrix exists",
+      "status": "PASS",
+      "detail": "Hash: d9019b26b00f592db96d588ab3ea0592c099c10eb9699017accb79a54aa0e5c5"
+    },
+    {
+      "check": "Task status matrix content validation",
+      "status": "PASS",
+      "detail": "All required strings present"
+    },
+    {
+      "check": "False completion revocation ledger exists",
+      "status": "PASS",
+      "detail": "Hash: f1b9b169d05163e81c2b8a0a1f4b298ed87834c05fd9a9b6c986a3dab251ec3c"
+    },
+    {
+      "check": "False completion revocation ledger content validation",
+      "status": "PASS",
+      "detail": "All required strings present"
+    },
+    {
+      "check": "Migration head truth table exists",
+      "status": "PASS",
+      "detail": "Hash: 46913c901bf9e67f764e4f17417decca4588acfd215c5932084f1e898ab5c6bd"
+    },
+    {
+      "check": "Migration head truth table content validation",
+      "status": "PASS",
+      "detail": "All required strings present"
+    },
+    {
+      "check": "Closure rubric exists",
+      "status": "PASS",
+      "detail": "Hash: b6cad91ceee85785a207c6a6bcbaf3aa34c94041b478d3eff93b541f000fbd47"
+    },
+    {
+      "check": "Closure rubric content validation",
+      "status": "PASS",
+      "detail": "All required strings present"
+    },
+    {
+      "check": "Proof integrity threat register exists",
+      "status": "PASS",
+      "detail": "Hash: c308c39b629d6324aa3104ff563f2bd89b061e36fcd7ce5507a9e0b49da5ce0e"
+    },
+    {
+      "check": "Proof integrity threat register content validation",
+      "status": "PASS",
+      "detail": "All required strings present"
+    },
+    {
+      "check": "Evidence admissibility policy exists",
+      "status": "PASS",
+      "detail": "Hash: 982967d11506c0a27084be07f3345201cfd5f3f8d92abb5c21607249c9579ca7"
+    },
+    {
+      "check": "Evidence admissibility policy content validation",
+      "status": "PASS",
+      "detail": "All required strings present"
+    },
+    {
+      "check": "False completion pattern catalog exists",
+      "status": "PASS",
+      "detail": "Hash: 740d26156654665a9729a7fddae146a7033f30805f0a3bb5643b6a712ebaf84c"
+    },
+    {
+      "check": "False completion pattern catalog content validation",
+      "status": "PASS",
+      "detail": "All required strings present"
+    },
+    {
+      "check": "PHASE2_TASKS.md updated",
+      "status": "PASS",
+      "detail": "Wave 8 Closure Track registered"
+    }
+  ],
+  "observed_paths": [
+    "docs/governance/WAVE8_GOVERNANCE_REMEDIATION_ADR.md",
+    "docs/governance/WAVE8_TASK_STATUS_MATRIX.md",
+    "docs/governance/WAVE8_FALSE_COMPLETION_REVOCATION_LEDGER.md",
+    "docs/governance/WAVE8_MIGRATION_HEAD_TRUTH_TABLE.md",
+    "docs/governance/WAVE8_CLOSURE_RUBRIC.md",
+    "docs/governance/WAVE8_PROOF_INTEGRITY_THREAT_REGISTER.md",
+    "docs/governance/WAVE8_EVIDENCE_ADMISSIBILITY_POLICY.md",
+    "docs/governance/WAVE8_FALSE_COMPLETION_PATTERN_CATALOG.md"
+  ],
+  "observed_hashes": {
+    "docs/governance/WAVE8_GOVERNANCE_REMEDIATION_ADR.md": "6352a9c961700a0e3d021ce994613c355289ccf198d33718c6febc47206059ad",
+    "docs/governance/WAVE8_TASK_STATUS_MATRIX.md": "d9019b26b00f592db96d588ab3ea0592c099c10eb9699017accb79a54aa0e5c5",
+    "docs/governance/WAVE8_FALSE_COMPLETION_REVOCATION_LEDGER.md": "f1b9b169d05163e81c2b8a0a1f4b298ed87834c05fd9a9b6c986a3dab251ec3c",
+    "docs/governance/WAVE8_MIGRATION_HEAD_TRUTH_TABLE.md": "46913c901bf9e67f764e4f17417decca4588acfd215c5932084f1e898ab5c6bd",
+    "docs/governance/WAVE8_CLOSURE_RUBRIC.md": "b6cad91ceee85785a207c6a6bcbaf3aa34c94041b478d3eff93b541f000fbd47",
+    "docs/governance/WAVE8_PROOF_INTEGRITY_THREAT_REGISTER.md": "c308c39b629d6324aa3104ff563f2bd89b061e36fcd7ce5507a9e0b49da5ce0e",
+    "docs/governance/WAVE8_EVIDENCE_ADMISSIBILITY_POLICY.md": "982967d11506c0a27084be07f3345201cfd5f3f8d92abb5c21607249c9579ca7",
+    "docs/governance/WAVE8_FALSE_COMPLETION_PATTERN_CATALOG.md": "740d26156654665a9729a7fddae146a7033f30805f0a3bb5643b6a712ebaf84c"
+  },
+  "command_outputs": [
+    "\u2713 Governance remediation ADR exists at docs/governance/WAVE8_GOVERNANCE_REMEDIATION_ADR.md",
+    "\u2713 Governance remediation ADR contains required content",
+    "\u2713 Task status matrix exists at docs/governance/WAVE8_TASK_STATUS_MATRIX.md",
+    "\u2713 Task status matrix contains required content",
+    "\u2713 False completion revocation ledger exists at docs/governance/WAVE8_FALSE_COMPLETION_REVOCATION_LEDGER.md",
+    "\u2713 False completion revocation ledger contains required content",
+    "\u2713 Migration head truth table exists at docs/governance/WAVE8_MIGRATION_HEAD_TRUTH_TABLE.md",
+    "\u2713 Migration head truth table contains required content",
+    "\u2713 Closure rubric exists at docs/governance/WAVE8_CLOSURE_RUBRIC.md",
+    "\u2713 Closure rubric contains required content",
+    "\u2713 Proof integrity threat register exists at docs/governance/WAVE8_PROOF_INTEGRITY_THREAT_REGISTER.md",
+    "\u2713 Proof integrity threat register contains required content",
+    "\u2713 Evidence admissibility policy exists at docs/governance/WAVE8_EVIDENCE_ADMISSIBILITY_POLICY.md",
+    "\u2713 Evidence admissibility policy contains required content",
+    "\u2713 False completion pattern catalog exists at docs/governance/WAVE8_FALSE_COMPLETION_PATTERN_CATALOG.md",
+    "\u2713 False completion pattern catalog contains required content",
+    "\u2713 PHASE2_TASKS.md updated with Wave 8 Closure Track"
+  ],
+  "execution_trace": [
+    "verify_tsk_p2_w8_gov_001.py executed",
+    "Checked 8 governance deliverables",
+    "Checked PHASE2_TASKS.md update",
+    "Total checks: 17",
+    "Passed: 17",
+    "Failed: 0"
+  ]
+}

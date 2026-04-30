@@ -313,3 +313,53 @@ Wave 6 authority work MUST NOT:
 - introduce non-deterministic signature payload construction
 - rely on unregistered error codes
 - weaken append-only guarantees
+
+## 17. Wave 8 Authoritative Boundary
+
+For Wave 8, the sole authoritative boundary is `asset_batches`.
+
+Wave 8 completion is measured **only** at the `asset_batches` boundary. No other table or surface may claim Wave 8 completion authority.
+
+**Contract Authority vs SQL Runtime:**
+- Contract documents (CANONICAL_ATTESTATION_PAYLOAD_v1.md, TRANSITION_HASH_CONTRACT.md, ED25519_SIGNING_CONTRACT.md, DATA_AUTHORITY_DERIVATION_SPEC.md) define Wave 8 semantics
+- SQL runtime behavior must conform to these contracts, not the reverse
+- Contract authority outranks implementation authority
+- No implementation may claim Wave 8 completion without satisfying contract-defined semantics
+
+## 18. Wave 8 Dispatcher Trigger Model
+
+Wave 8 requires one dispatcher trigger at the `asset_batches` boundary.
+
+**Single Dispatcher Trigger:**
+- One authoritative dispatcher trigger for `asset_batches` writes
+- No multiple independent authority triggers are permitted
+- The dispatcher trigger enforces all Wave 8 gates in sequence
+
+**Explicit Cross-Table Equality Invariants:**
+- `asset_batches.project_id = execution_records.project_id`
+- `asset_batches.project_id = policy_decisions.project_id`
+- `asset_batches.entity_type = policy_decisions.entity_type`
+- `asset_batches.entity_id = policy_decisions.entity_id` when entity-specific
+- Equality invariants must be explicit, not emergent from trigger behavior
+
+**Zero Lexical Trigger-Order Reliance:**
+- Implementation MUST NOT rely on trigger creation order for determinism
+- Implementation MUST NOT rely on lexical name ordering for determinism
+- Determinism must come from explicit invocation order within the dispatcher trigger
+
+## 19. Wave 8 No-Credit and No-Fallback Rules
+
+**No-Credit Rule:**
+- No completion credit is permitted unless the artifacts or behavior declared in Wave 8 task plans are fully delivered
+- Partial implementation without full verification does not count toward Wave 8 completion
+- All Wave 8 tasks must satisfy the Wave 8 Closure Rubric
+
+**No Advisory Fallback Rule:**
+- Wave 8 completion work does not permit advisory fallback behavior
+- All enforcement must be fail-closed at the authoritative boundary
+- Advisory or warning-only behavior is inadmissible for Wave 8 closure
+
+**Unavailable-Crypto Hard-Fail Rule:**
+- Unavailable crypto is itself a hard verification failure
+- Verifier unavailability, key lookup unavailability, signer-surface unavailability, unresolved functions/extensions, and dependency load failure MUST all cause verification to fail closed
+- No graceful degradation or fallback behavior is permitted for unavailable crypto

@@ -1,0 +1,55 @@
+{
+  "task_id": "TSK-P2-W8-DB-007c",
+  "git_sha": "6dbab49ffc6ace36ff8b270e91c6377df671617c",
+  "timestamp_utc": "2026-04-29T07:53:22.810Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "[ID w8_db_007c_work_01] Migration exists",
+      "status": "PASS",
+      "detail": "Migration found at schema/migrations/0178_wave8_scope_and_timestamp_enforcement.sql"
+    },
+    {
+      "check": "[ID w8_db_007c_work_01] Migration enforces replay law from signing contract",
+      "status": "PASS",
+      "detail": "Migration enforces replay prevention with P7812 failure mode"
+    },
+    {
+      "check": "[ID w8_db_007c_work_02] Verification SQL exists",
+      "status": "PASS",
+      "detail": "Verification SQL found at scripts/db/verify_tsk_p2_w8_db_007c.sql"
+    },
+    {
+      "check": "[ID w8_db_007c_work_02] Verification SQL distinguishes replay-invalid failures",
+      "status": "PASS",
+      "detail": "Verification SQL includes physical write test for replay prevention failure"
+    },
+    {
+      "check": "[ID w8_db_007c_work_02] Verification SQL distinguishes valid nonce acceptance",
+      "status": "PASS",
+      "detail": "Verification SQL includes physical write test for valid nonce acceptance"
+    }
+  ],
+  "observed_paths": [],
+  "observed_hashes": {},
+  "command_outputs": [
+    "✓ Migration exists",
+    "✓ Migration enforces replay law from signing contract",
+    "✓ Verification SQL exists",
+    "✓ Verification SQL distinguishes replay-invalid failures",
+    "✓ Verification SQL distinguishes valid nonce acceptance",
+    "✓ All checks passed"
+  ],
+  "execution_trace": [
+    "verify_tsk_p2_w8_db_007c.sh executed",
+    "Checking migration file",
+    "Checking migration enforces replay law from signing contract",
+    "Checking verification SQL",
+    "Checking verification SQL distinguishes replay-invalid failures",
+    "Checking verification SQL distinguishes valid nonce acceptance",
+    "Verification complete",
+    "Total checks: 5",
+    "Passed: 5",
+    "Failed: 0"
+  ]
+}

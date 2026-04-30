@@ -1,0 +1,57 @@
+task_id: TSK-P2-W8-SEC-002
+title: "PostgreSQL native Ed25519 verification primitive"
+owner_role: SECURITY_GUARDIAN
+status: completed
+primary_enforcement_domain: postgresql binary build contract
+depends_on:
+  - TSK-P2-W8-SEC-001
+blocks:
+  - TSK-P2-W8-DB-006
+external_sources_used: false
+scope:
+  - extension source (wave8_crypto.c, wave8_crypto.control, wave8_crypto--1.0.sql, Makefile)
+  - PGXS build
+  - install path verification
+  - PostgreSQL load test
+  - binary linkage and ABI inspection (ldd, nm, objdump, readelf)
+  - parity subset verification
+  - binary evidence artifact emission
+exclusions:
+  - DB-006 trigger integration
+  - signer cross-bind
+  - replay, timestamp, or context enforcement
+  - application-side .NET primitive behavior (covered by SEC-001)
+invariants:
+  - id: w8_sec_002_invariant_001
+    description: "PostgreSQL C extension must expose ed25519_verify(message bytea, sig bytea, pubkey bytea) returns boolean"
+    enforcement: "Extension build verification and function existence check"
+  - id: w8_sec_002_invariant_002
+    description: "Extension must be backed by libsodium or equivalent cryptographic library"
+    enforcement: "Build dependency verification"
+  - id: w8_sec_002_invariant_003
+    description: "Extension must prove parity against SEC-001 test vectors"
+    enforcement: "Test vector comparison verification"
+  - id: w8_sec_002_invariant_004
+    description: "PG_CONFIG must be pinned to absolute PostgreSQL 18 path"
+    enforcement: "Build contract verification"
+  - id: w8_sec_002_invariant_005
+    description: "Compiler and linker must include hardening flags (-Wall -Wextra -Werror -O2 -fPIC -Wl,-z,relro -Wl,-z,now)"
+    enforcement: "Makefile verification"
+verifiers:
+  - id: w8_sec_002_verifier_001
+    description: "Extension build and load verification"
+    script: "scripts/audit/verify_tsk_p2_w8_sec_002.sh"
+    evidence_path: "evidence/phase2/tsk_p2_w8_sec_002.json"
+evidence:
+  - id: w8_sec_002_evidence_001
+    description: "Extension build artifacts"
+    path: "evidence/phase2/tsk_p2_w8_sec_002.json"
+  - id: w8_sec_002_evidence_002
+    description: "Parity test results against SEC-001 vectors"
+    path: "evidence/phase2/tsk_p2_w8_sec_002_parity.json"
+implementation_plan: "docs/plans/phase2/TSK-P2-W8-SEC-002/PLAN.md"
+implementation_log: "docs/plans/phase2/TSK-P2-W8-SEC-002/EXEC_LOG.md"
+notes: >-
+  SEC-002 is a binary build contract task, not a coding task. Source creation satisfies only the source-preparation boundary.
+  SEC-002 closure requires crossing the binary proof boundary on a pinned PostgreSQL 18 build surface that emits full binary evidence.
+  Any SEC-002 evidence emitted without successful install, load, symbol proof, and runtime proof is partial evidence and inadmissible for closure.

@@ -103,7 +103,7 @@ if [[ "$status" == "PASS" && "${#targets[@]}" -gt 0 ]]; then
     else
       rc=$?
     fi
-    if [[ "$rc" -eq 124 ]]; then
+    if [[ "$rc" -eq 124 || "$rc" -eq 137 || "$rc" -eq 143 ]]; then
       echo "TIMEOUT: dotnet restore (${DOTNET_LINT_TIMEOUT_SEC}s)" >> "$tmp_out"
       status="FAIL"
       note="dotnet_restore_timeout"
@@ -120,7 +120,7 @@ if [[ "$status" == "PASS" && "${#targets[@]}" -gt 0 ]]; then
       rc=$?
     fi
     if [[ "$rc" -ne 0 ]]; then
-      if [[ "$rc" -eq 124 ]]; then
+      if [[ "$rc" -eq 124 || "$rc" -eq 137 || "$rc" -eq 143 ]]; then
         echo "TIMEOUT: dotnet format --verify-no-changes (${DOTNET_LINT_TIMEOUT_SEC}s)" >> "$tmp_out"
         if [[ "${GITHUB_ACTIONS:-}" != "true" ]]; then
           format_env_blocked=1
@@ -152,7 +152,7 @@ if [[ "$status" == "PASS" && "${#targets[@]}" -gt 0 ]]; then
     else
       rc=$?
     fi
-    if [[ "$rc" -eq 124 ]]; then
+    if [[ "$rc" -eq 124 || "$rc" -eq 137 || "$rc" -eq 143 ]]; then
       echo "TIMEOUT: dotnet build -warnaserror (${DOTNET_LINT_TIMEOUT_SEC}s)" >> "$tmp_out"
       status="FAIL"
       note="dotnet_build_timeout"

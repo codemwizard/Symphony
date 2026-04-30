@@ -1,0 +1,50 @@
+{
+  "task_id": "TSK-P2-W8-ARCH-005",
+  "git_sha": "6dbab49ffc6ace36ff8b270e91c6377df671617c",
+  "timestamp_utc": "2026-04-29T06:55:32.711235+00:00",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "Data authority system design exists",
+      "status": "PASS",
+      "detail": "Hash: 1dc390ef49ea6bfe66888c91839c0538af991c32392e39a97fc6816796045c5f"
+    },
+    {
+      "check": "[ID w8_arch_005_work_01] Wave 8 authoritative boundary defined",
+      "status": "PASS",
+      "detail": "asset_batches named as sole authoritative Wave 8 boundary, contract authority distinguished from SQL runtime"
+    },
+    {
+      "check": "[ID w8_arch_005_work_02] One dispatcher trigger and equality invariants defined",
+      "status": "PASS",
+      "detail": "One dispatcher trigger, explicit equality invariants, zero lexical trigger-order reliance present"
+    },
+    {
+      "check": "[ID w8_arch_005_work_03] Wave 8 rules recorded",
+      "status": "PASS",
+      "detail": "No-credit, no advisory fallback, and unavailable-crypto hard-fail rules recorded"
+    }
+  ],
+  "observed_paths": [
+    "docs/architecture/DATA_AUTHORITY_SYSTEM_DESIGN.md"
+  ],
+  "observed_hashes": {
+    "docs/architecture/DATA_AUTHORITY_SYSTEM_DESIGN.md": "1dc390ef49ea6bfe66888c91839c0538af991c32392e39a97fc6816796045c5f"
+  },
+  "command_outputs": [
+    "\u2713 Design exists at docs/architecture/DATA_AUTHORITY_SYSTEM_DESIGN.md",
+    "\u2713 [ID w8_arch_005_work_01] Wave 8 authoritative boundary defined",
+    "\u2713 [ID w8_arch_005_work_02] One dispatcher trigger and equality invariants defined",
+    "\u2713 [ID w8_arch_005_work_03] Wave 8 rules recorded"
+  ],
+  "execution_trace": [
+    "verify_tsk_p2_w8_arch_005.py executed",
+    "Checked design at docs/architecture/DATA_AUTHORITY_SYSTEM_DESIGN.md",
+    "Verified work item 01: Wave 8 authoritative boundary",
+    "Verified work item 02: dispatcher trigger and equality invariants",
+    "Verified work item 03: Wave 8 rules",
+    "Total checks: 4",
+    "Passed: 4",
+    "Failed: 0"
+  ]
+}
