@@ -1,0 +1,167 @@
+-- Migration: 0196_fix_canonical_payload_rfc8785_key_order.sql
+-- Task: Devin Review remediation
+-- Purpose: Fix JSON key ordering to comply with RFC 8785 (JCS)
+-- Dependencies: 0193_fix_canonical_payload_timestamp_validation.sql
+-- Type: Forward-only migration
+--
+-- Bug: construct_canonical_attestation_payload() uses json_build_object which
+-- preserves insertion order, not lexicographic order. RFC 8785 (JSON
+-- Canonicalization Scheme) mandates lexicographic key sorting.
+-- For example, json_build_object produces:
+--   {"contract_version":1,"canonicalization_version":...}
+-- but RFC 8785 requires:
+--   {"canonicalization_version":"JCS-RFC8785-V1","contract_version":1,...}
+-- because "ca" < "co" lexicographically.
+--
+-- This causes SHA-256 hash mismatches between PostgreSQL and any external
+-- implementation that correctly follows RFC 8785, breaking cross-surface
+-- determinism and causing transition hash enforcement to reject valid attestations.
+--
+-- Fix: Use jsonb_build_object instead of json_build_object. PostgreSQL jsonb
+-- automatically sorts keys lexicographically, which is exactly what RFC 8785
+-- mandates. Cast the result to text for canonical JSON output.
+
+CREATE OR REPLACE FUNCTION public.construct_canonical_attestation_payload(
+    p_project_id uuid,
+    p_entity_type text,
+    p_entity_id uuid,
+    p_from_state text,
+    p_to_state text,
+    p_execution_id uuid,
+    p_interpretation_version_id uuid,
+    p_policy_decision_id uuid,
+    p_transition_hash text,
+    p_occurred_at timestamp with time zone
+)
+RETURNS bytea
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    payload_jsonb jsonb;
+    canonical_json text;
+    canonical_bytes bytea;
+    formatted_ts text;
+BEGIN
+    -- Validate required fields are not null
+    IF p_project_id IS NULL THEN
+        RAISE EXCEPTION 'project_id is required for canonical payload'
+        USING ERRCODE = '23502';
+    END IF;
+    
+    IF p_entity_type IS NULL OR p_entity_type = '' THEN
+        RAISE EXCEPTION 'entity_type is required and must be non-empty'
+        USING ERRCODE = '23502';
+    END IF;
+    
+    IF p_entity_id IS NULL THEN
+        RAISE EXCEPTION 'entity_id is required for canonical payload'
+        USING ERRCODE = '23502';
+    END IF;
+    
+    IF p_from_state IS NULL OR p_from_state = '' THEN
+        RAISE EXCEPTION 'from_state is required and must be non-empty'
+        USING ERRCODE = '23502';
+    END IF;
+    
+    IF p_to_state IS NULL OR p_to_state = '' THEN
+        RAISE EXCEPTION 'to_state is required and must be non-empty'
+        USING ERRCODE = '23502';
+    END IF;
+    
+    IF p_execution_id IS NULL THEN
+        RAISE EXCEPTION 'execution_id is required for canonical payload'
+        USING ERRCODE = '23502';
+    END IF;
+    
+    IF p_interpretation_version_id IS NULL THEN
+        RAISE EXCEPTION 'interpretation_version_id is required for canonical payload'
+        USING ERRCODE = '23502';
+    END IF;
+    
+    IF p_policy_decision_id IS NULL THEN
+        RAISE EXCEPTION 'policy_decision_id is required for canonical payload'
+        USING ERRCODE = '23502';
+    END IF;
+    
+    IF p_transition_hash IS NULL OR p_transition_hash = '' THEN
+        RAISE EXCEPTION 'transition_hash is required and must be non-empty'
+        USING ERRCODE = '23502';
+    END IF;
+    
+    IF p_occurred_at IS NULL THEN
+        RAISE EXCEPTION 'occurred_at is required for canonical payload'
+        USING ERRCODE = '23502';
+    END IF;
+    
+    -- Validate UUIDs are in lowercase canonical form
+    IF p_project_id::text != lower(p_project_id::text) THEN
+        RAISE EXCEPTION 'project_id must be in lowercase canonical form'
+        USING ERRCODE = 'P7804';
+    END IF;
+    
+    IF p_entity_id::text != lower(p_entity_id::text) THEN
+        RAISE EXCEPTION 'entity_id must be in lowercase canonical form'
+        USING ERRCODE = 'P7804';
+    END IF;
+    
+    IF p_execution_id::text != lower(p_execution_id::text) THEN
+        RAISE EXCEPTION 'execution_id must be in lowercase canonical form'
+        USING ERRCODE = 'P7804';
+    END IF;
+    
+    IF p_interpretation_version_id::text != lower(p_interpretation_version_id::text) THEN
+        RAISE EXCEPTION 'interpretation_version_id must be in lowercase canonical form'
+        USING ERRCODE = 'P7804';
+    END IF;
+    
+    IF p_policy_decision_id::text != lower(p_policy_decision_id::text) THEN
+        RAISE EXCEPTION 'policy_decision_id must be in lowercase canonical form'
+        USING ERRCODE = 'P7804';
+    END IF;
+    
+    -- Validate transition_hash is lowercase hex and exactly 64 characters
+    IF p_transition_hash !~ '^[0-9a-f]{64}$' THEN
+        RAISE EXCEPTION 'transition_hash must be lowercase hexadecimal string, exactly 64 characters'
+        USING ERRCODE = 'P7804';
+    END IF;
+    
+    -- Validate occurred_at round-trips through RFC 3339 canonical format
+    formatted_ts := to_char(p_occurred_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"');
+    IF formatted_ts::timestamptz != p_occurred_at THEN
+        RAISE EXCEPTION 'occurred_at must survive RFC 3339 round-trip with exactly six fractional digits'
+        USING ERRCODE = 'P7808';
+    END IF;
+    
+    -- Construct the JSON payload using jsonb_build_object.
+    -- RFC 8785 (JSON Canonicalization Scheme) mandates lexicographic key ordering.
+    -- PostgreSQL jsonb automatically sorts keys lexicographically, satisfying RFC 8785.
+    -- json_build_object (used previously) preserves insertion order, violating RFC 8785.
+    payload_jsonb := jsonb_build_object(
+        'contract_version', 1,
+        'canonicalization_version', 'JCS-RFC8785-V1',
+        'project_id', lower(p_project_id::text),
+        'entity_type', p_entity_type,
+        'entity_id', lower(p_entity_id::text),
+        'from_state', p_from_state,
+        'to_state', p_to_state,
+        'execution_id', lower(p_execution_id::text),
+        'interpretation_version_id', lower(p_interpretation_version_id::text),
+        'policy_decision_id', lower(p_policy_decision_id::text),
+        'transition_hash', lower(p_transition_hash),
+        'occurred_at', formatted_ts
+    );
+    
+    -- jsonb::text produces lexicographically sorted keys per RFC 8785
+    canonical_json := payload_jsonb::text;
+    
+    -- Encode as UTF-8 bytes
+    canonical_bytes := convert_to(canonical_json, 'UTF8');
+    
+    RETURN canonical_bytes;
+END;
+$$;
+
+COMMENT ON FUNCTION public.construct_canonical_attestation_payload(uuid, text, uuid, text, text, uuid, uuid, uuid, text, timestamp with time zone) IS
+    'Wave 8 canonical payload construction function - fixed in 0196 to use jsonb_build_object for RFC 8785 compliant lexicographic key ordering. Constructs canonical attestation payload bytes according to CANONICAL_ATTESTATION_PAYLOAD_v1.md contract.';
