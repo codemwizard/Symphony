@@ -1,13 +1,41 @@
+schema_version: 1
+phase: '2'
 task_id: TSK-P2-W8-SEC-002
 title: "PostgreSQL native Ed25519 verification primitive"
 owner_role: SECURITY_GUARDIAN
 status: completed
-primary_enforcement_domain: postgresql binary build contract
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DB_EXTENSION
+
+intent: >-
+  Build and verify a PostgreSQL C extension (wave8_crypto) that exposes
+  ed25519_verify(message bytea, sig bytea, pubkey bytea) returns boolean,
+  backed by libsodium, for use as the authoritative signature verification
+  primitive in Wave 8 cryptographic enforcement.
+
+primary_enforcement_domain: >-
+  postgresql binary build contract
+
 depends_on:
   - TSK-P2-W8-SEC-001
+
 blocks:
   - TSK-P2-W8-DB-006
+
 external_sources_used: false
+
+touches:
+  - src/db/extensions/wave8_crypto/wave8_crypto.c
+  - src/db/extensions/wave8_crypto/wave8_crypto.control
+  - src/db/extensions/wave8_crypto/wave8_crypto--1.0.sql
+  - src/db/extensions/wave8_crypto/Makefile
+  - scripts/audit/verify_tsk_p2_w8_sec_002.sh
+  - evidence/phase2/tsk_p2_w8_sec_002.json
+  - tasks/TSK-P2-W8-SEC-002/meta.yml
+  - docs/plans/phase2/TSK-P2-W8-SEC-002/PLAN.md
+  - docs/plans/phase2/TSK-P2-W8-SEC-002/EXEC_LOG.md
+
 scope:
   - extension source (wave8_crypto.c, wave8_crypto.control, wave8_crypto--1.0.sql, Makefile)
   - PGXS build
@@ -16,42 +44,81 @@ scope:
   - binary linkage and ABI inspection (ldd, nm, objdump, readelf)
   - parity subset verification
   - binary evidence artifact emission
+
 exclusions:
   - DB-006 trigger integration
   - signer cross-bind
   - replay, timestamp, or context enforcement
   - application-side .NET primitive behavior (covered by SEC-001)
+
 invariants:
-  - id: w8_sec_002_invariant_001
-    description: "PostgreSQL C extension must expose ed25519_verify(message bytea, sig bytea, pubkey bytea) returns boolean"
-    enforcement: "Extension build verification and function existence check"
-  - id: w8_sec_002_invariant_002
-    description: "Extension must be backed by libsodium or equivalent cryptographic library"
-    enforcement: "Build dependency verification"
-  - id: w8_sec_002_invariant_003
-    description: "Extension must prove parity against SEC-001 test vectors"
-    enforcement: "Test vector comparison verification"
-  - id: w8_sec_002_invariant_004
-    description: "PG_CONFIG must be pinned to absolute PostgreSQL 18 path"
-    enforcement: "Build contract verification"
-  - id: w8_sec_002_invariant_005
-    description: "Compiler and linker must include hardening flags (-Wall -Wextra -Werror -O2 -fPIC -Wl,-z,relro -Wl,-z,now)"
-    enforcement: "Makefile verification"
-verifiers:
-  - id: w8_sec_002_verifier_001
-    description: "Extension build and load verification"
-    script: "scripts/audit/verify_tsk_p2_w8_sec_002.sh"
-    evidence_path: "evidence/phase2/tsk_p2_w8_sec_002.json"
+  - INV-GOV-TEMPLATE-004
+  - INV-GOV-TEMPLATE-005
+
+work:
+  - >-
+    [ID w8_sec_002_work_01] Build a PostgreSQL C extension (wave8_crypto) that
+    exposes ed25519_verify(message bytea, sig bytea, pubkey bytea) returns boolean,
+    using libsodium for cryptographic operations via PGXS build.
+  - >-
+    [ID w8_sec_002_work_02] Verify extension binary linkage, ABI correctness,
+    and successful PostgreSQL load on a pinned PostgreSQL 18 build surface.
+  - >-
+    [ID w8_sec_002_work_03] Prove parity against SEC-001 .NET test vectors to
+    confirm cross-platform signature verification consistency.
+
+acceptance_criteria:
+  - >-
+    [ID w8_sec_002_work_01] PostgreSQL C extension exposes ed25519_verify and
+    returns boolean for valid/invalid signatures without raising internal errors
+    for verification failures.
+  - >-
+    [ID w8_sec_002_work_02] Extension loads successfully on PostgreSQL 18,
+    binary linkage is verified, and ABI is correct per ldd/nm/objdump/readelf.
+  - >-
+    [ID w8_sec_002_work_03] Parity test vectors from SEC-001 produce identical
+    results in the PostgreSQL extension.
+
+verification:
+  - '# [ID w8_sec_002_work_01] [ID w8_sec_002_work_02] [ID w8_sec_002_work_03] test -e scripts/audit/verify_tsk_p2_w8_sec_002.sh && bash scripts/audit/verify_tsk_p2_w8_sec_002.sh > evidence/phase2/tsk_p2_w8_sec_002.json || exit 1'
+  - 'bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P2-W8-SEC-002'
+
 evidence:
-  - id: w8_sec_002_evidence_001
-    description: "Extension build artifacts"
-    path: "evidence/phase2/tsk_p2_w8_sec_002.json"
-  - id: w8_sec_002_evidence_002
-    description: "Parity test results against SEC-001 vectors"
-    path: "evidence/phase2/tsk_p2_w8_sec_002_parity.json"
-implementation_plan: "docs/plans/phase2/TSK-P2-W8-SEC-002/PLAN.md"
-implementation_log: "docs/plans/phase2/TSK-P2-W8-SEC-002/EXEC_LOG.md"
+  - path: evidence/phase2/tsk_p2_w8_sec_002.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+  - path: evidence/phase2/tsk_p2_w8_sec_002_parity.json
+    must_include:
+      - task_id
+      - parity_result
+
+failure_modes:
+  - "Extension build fails on PostgreSQL 18 => FAIL"
+  - "Extension load fails (CREATE EXTENSION) => FAIL"
+  - "ed25519_verify raises ERROR on invalid signature instead of returning false => CRITICAL_FAIL"
+  - "Parity test vectors produce different results than SEC-001 => FAIL"
+  - "Binary linkage missing libsodium => FAIL"
+  - "Evidence file missing or incomplete => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-W8-SEC-002/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W8-SEC-002/EXEC_LOG.md
 notes: >-
   SEC-002 is a binary build contract task, not a coding task. Source creation satisfies only the source-preparation boundary.
   SEC-002 closure requires crossing the binary proof boundary on a pinned PostgreSQL 18 build surface that emits full binary evidence.
   Any SEC-002 evidence emitted without successful install, load, symbol proof, and runtime proof is partial evidence and inadmissible for closure.
+client: codex
+assigned_agent: security_guardian
+model: gpt-5.5
