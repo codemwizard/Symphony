@@ -1,7 +1,7 @@
 {
   "task_id": "TSK-P2-PREAUTH-003-REM-05",
-  "git_sha": "1bc0ea5acffd6fb8c1ed27d935c108e5217328de",
-  "timestamp_utc": "2026-05-02T11:39:52Z",
+  "git_sha": "cdfa575bd1168a86823981df5f372c26d3060215",
+  "timestamp_utc": "2026-05-02T15:01:47Z",
   "status": "PASS",
   "checks": [
   {"name":"not_null_enforced","result":"pass","observed":5,"expected":5},
@@ -37,8 +37,8 @@
     "behavioural_probe_stderr_tail": "ERROR:  GF058: GF058: execution_records.interpretation_version_id temporal mismatch; expected pack resolved at execution_timestamp\nCONTEXT:  PL/pgSQL function enforce_execution_interpretation_temporal_binding() line 9 at RAISE\nLOCATION:  exec_stmt_raise, pl_exec.c:3909"
   },
   "execution_trace": {
-    "start_utc": "2026-05-02T11:39:52.433Z",
-    "end_utc": "2026-05-02T11:39:53.326Z"
+    "start_utc": "2026-05-02T15:01:47.375Z",
+    "end_utc": "2026-05-02T15:01:48.153Z"
   },
   "not_null_enforced": true,
   "fk_verified": true,
