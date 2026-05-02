@@ -9,20 +9,6 @@ and Remediation Trace compliance markers mechanically injected.
 
 Usage:
   python3 scripts/agent/generate_task_pack.py --config my_task.json
-
-Example my_task.json:
-{
-  "task_id": "TSK-P2-PREAUTH-007-20",
-  "title": "Example Task Title",
-  "owner": "SECURITY_GUARDIAN",
-  "phase": "2",
-  "is_regulated": true,
-  "blast_radius": "DATABASE",
-  "work": ["[ID tsk_p2_preauth_007_20_work_01] Do the thing"],
-  "acceptance_criteria": ["[ID tsk_p2_preauth_007_20_work_01] The thing is done"],
-  "verifiers": ["scripts/audit/verify_tsk_p2_preauth_007_20.sh"],
-  "evidence": "evidence/phase2/tsk_p2_preauth_007_20.json"
-}
 """
 
 import argparse
@@ -41,10 +27,22 @@ def require_field(data, field):
         die(f"Missing required field in JSON config: '{field}'. You must supply explicit implementation details.")
     return data[field]
 
+def get_runner(verifier):
+    if verifier.endswith(".py"):
+        return "python3"
+    return "bash"
+
+def get_evidence_path(evidence):
+    if isinstance(evidence, dict):
+        return evidence.get("path")
+    return evidence
+
 def generate_plan(data, plan_dir):
     task_id = data["task_id"]
     title = data["title"]
     is_regulated = data.get("is_regulated", True)
+    blast_radius = data["blast_radius"]
+    is_db_task = blast_radius in ["DB_SCHEMA", "DATABASE"]
     
     regulated_section = ""
     if is_regulated:
@@ -59,8 +57,37 @@ def generate_plan(data, plan_dir):
 - Conformance check: `bash scripts/audit/verify_approval_metadata.sh --mode=stage-a --branch=<branch>`
 """
 
+    db_context_section = ""
+    if is_db_task:
+        db_context_section = """
+## Database Connection Context (CRITICAL)
+
+- **Requirement**: All database interactions in verification scripts MUST use the `DATABASE_URL` environment variable.
+- **Example Export**: `export DATABASE_URL="postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"`
+- **Docker Context**: The container is `symphony-postgres`.
+
+---
+"""
+
     work_items = "\n".join([f"- {w}" for w in data["work"]])
+    verifier = data["verifiers"][0]
+    runner = get_runner(verifier)
+    evidence_path = get_evidence_path(data["evidence"])
     
+    db_conn_step = f"- Connect to DB using `DATABASE_URL`." if is_db_task else ""
+    
+    rebaseline_step = ""
+    if is_db_task:
+        rebaseline_step = """
+### Step 4: Rebaseline (CRITICAL for DB_SCHEMA tasks)
+**What:** Regenerate the physical baseline and satisfy ADR-0010 governance.
+**How:**
+1. Connect to DB: `export DATABASE_URL="postgresql://symphony_admin:symphony_pass@localhost:55432/symphony"`
+2. Regenerate: `bash scripts/db/generate_baseline_snapshot.sh`
+3. Audit Log: Append an entry to `docs/decisions/ADR-0010-baseline-policy.md` citing the new MIGRATION_HEAD and the specific changes made.
+**Done when:** `scripts/db/check_baseline_drift.sh` exits 0.
+"""
+
     plan_content = f"""# {task_id} PLAN — {title}
 
 Task: {task_id}
@@ -76,16 +103,7 @@ canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 - Markers must be present when the file is modified - not deferred to `pre_ci.sh`.
 - Mandatory `EXEC_LOG.md` markers: `failure_signature`, `origin_task_id`, `repro_command`, `verification_commands_run`, `final_status`.
 
----
-
-## Database Connection Context (CRITICAL)
-
-- **Requirement**: All database interactions in verification scripts MUST use the `DATABASE_URL` environment variable.
-- **Example Export**: `export DATABASE_URL="postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"`
-- **Docker Context**: The container is `symphony-postgres`.
-
----
-
+---{db_context_section}
 ## Objective
 
 {title}. This task forms a closed proof graph from work items to acceptance criteria to execution trace.
@@ -103,8 +121,8 @@ canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 | File | Action | Reason |
 |------|--------|--------|
-| `{data["verifiers"][0]}` | CREATE | Verifier for this task |
-| `{data["evidence"]}` | CREATE | Output artifact |
+| `{verifier}` | CREATE | Verifier for this task |
+| `{evidence_path}` | CREATE | Output artifact |
 | `tasks/{task_id}/meta.yml` | MODIFY | Update status upon success |
 | `docs/plans/phase{data["phase"]}/{task_id}/EXEC_LOG.md` | MODIFY | Append completion data |
 
@@ -112,7 +130,7 @@ canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Stop Conditions
 
-- **If approval metadata is not created before editing migration** -> STOP
+- **If approval metadata is not created before editing regulated surfaces** -> STOP
 - **If EXEC_LOG.md does not contain all required markers** -> STOP
 - **If the verifier fails to execute negative tests transactionally** -> STOP
 - **If evidence is statically faked instead of derived** -> STOP
@@ -130,8 +148,8 @@ canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 ### Step 2: Implement Verifier
 **What:** Build the strictly mapped verifier script.
 **How:**
-- Implement `{data["verifiers"][0]}`.
-- Connect to DB using `DATABASE_URL`.
+- Implement `{verifier}`.
+{db_conn_step}
 - Enforce failure domains.
 **Done when:** Script correctly evaluates acceptance criteria and exits 0 on success.
 
@@ -139,18 +157,10 @@ canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 **What:** Run verifier and check evidence schema.
 **How:**
 ```bash
-bash {data["verifiers"][0]} > {data["evidence"]}
+{runner} {verifier} > {evidence_path}
 ```
 **Done when:** Commands exit 0 and evidence format complies.
-
-### Step 4: Rebaseline (CRITICAL for DB_SCHEMA tasks)
-**What:** Regenerate the physical baseline and satisfy ADR-0010 governance.
-**How:**
-1. Connect to DB: `export DATABASE_URL="postgresql://symphony_admin:symphony_pass@localhost:55432/symphony"`
-2. Regenerate: `bash scripts/db/generate_baseline_snapshot.sh`
-3. Audit Log: Append an entry to `docs/decisions/ADR-0010-baseline-policy.md` citing the new MIGRATION_HEAD and the specific changes made.
-**Done when:** `scripts/db/check_baseline_drift.sh` exits 0.
-
+{rebaseline_step}
 
 ---
 
@@ -158,7 +168,7 @@ bash {data["verifiers"][0]} > {data["evidence"]}
 
 ```bash
 # 1. Task-specific verifier
-bash {data["verifiers"][0]}
+{runner} {verifier}
 
 # 2. Local parity check
 RUN_PHASE{data["phase"]}_GATES=1 bash scripts/dev/pre_ci.sh
@@ -171,13 +181,17 @@ RUN_PHASE{data["phase"]}_GATES=1 bash scripts/dev/pre_ci.sh
 
 def generate_exec_log(data, plan_dir):
     task_id = data["task_id"]
+    verifier = data["verifiers"][0]
+    runner = get_runner(verifier)
+    evidence_path = get_evidence_path(data["evidence"])
+    
     log_content = f"""# Execution Log for {task_id}
 
 > **Append-only log.** Do not delete or modify existing entries.
 
 **failure_signature**: PHASE{data["phase"]}.STRICT.{task_id}.PROOF_FAIL
 **origin_task_id**: {task_id}
-**repro_command**: bash {data["verifiers"][0]}
+**repro_command**: {runner} {verifier}
 
 ## Pre-Edit Documentation
 - Stage A approval sidecar created.
@@ -188,7 +202,7 @@ def generate_exec_log(data, plan_dir):
 ## Post-Edit Documentation
 **verification_commands_run**:
 ```bash
-bash {data["verifiers"][0]} > {data["evidence"]}
+{runner} {verifier} > {evidence_path}
 ```
 **final_status**: pending
 """
@@ -199,20 +213,50 @@ bash {data["verifiers"][0]} > {data["evidence"]}
 
 def generate_meta(data, task_dir):
     task_id = data["task_id"]
-    work_lines = "\n".join([f"  - '{w}'" for w in data["work"]])
-    acc_lines = "\n".join([f"  - '{a}'" for a in data["acceptance_criteria"]])
+    work_lines = "\n".join([f"  - \"{w}\"" for w in data["work"]])
+    acc_lines = "\n".join([f"  - \"{a}\"" for a in data["acceptance_criteria"]])
     
     # Extract just the ID strings for the verification comment
     ids = [w.split("]")[0] + "]" for w in data["work"] if "]" in w]
     id_str = " ".join(ids)
-    deliverable_files = "\n".join([f"  - {v}" for v in data["verifiers"]] + [f"  - {data['evidence']}", f"  - docs/plans/phase{data['phase']}/{task_id}/PLAN.md", f"  - docs/plans/phase{data['phase']}/{task_id}/EXEC_LOG.md"])
+    evidence_path = get_evidence_path(data["evidence"])
+    deliverable_files = "\n".join([f"  - {v}" for v in data["verifiers"]] + [f"  - {evidence_path}", f"  - docs/plans/phase{data['phase']}/{task_id}/PLAN.md", f"  - docs/plans/phase{data['phase']}/{task_id}/EXEC_LOG.md"])
     
     blast_radius = data["blast_radius"]
     is_regulated = data.get("is_regulated", True)
+    is_db_task = blast_radius in ["DB_SCHEMA", "DATABASE"]
     
     reg_enabled = "true" if is_regulated else "false"
-    db_enabled = "true" if blast_radius in ["DB_SCHEMA", "DATABASE"] else "false"
-    rem_enabled = "true" if is_regulated or blast_radius in ["DB_SCHEMA", "DATABASE"] else "false"
+    rem_enabled = "true" if is_regulated or is_db_task else "false"
+
+    db_section = ""
+    if is_db_task:
+        db_section = f"""
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\\""
+
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - 0144: "Wave 5 remediation baseline"
+  table_dependencies:
+    - schema_migrations: "must track migrations"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+"""
+
+    must_include_lines = ""
+    if isinstance(data["evidence"], dict) and "must_include" in data["evidence"]:
+        must_include_lines = "\n".join([f"      - {item}" for item in data["evidence"]["must_include"]])
+    else:
+        must_include_lines = "\n".join([f"      - {item}" for item in ["task_id", "git_sha", "timestamp_utc", "status", "checks", "observed_hashes"]])
+
+    verifier = data["verifiers"][0]
+    runner = get_runner(verifier)
 
     meta_content = f"""schema_version: 1
 phase: '{data["phase"]}'
@@ -223,6 +267,8 @@ status: planned
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: {blast_radius}
+depends_on: {json.dumps(data.get("depends_on", []))}
+invariants: {json.dumps(data.get("invariants", []))}
 
 deliverable_files:
 {deliverable_files}
@@ -232,7 +278,7 @@ regulated_surface_compliance:
   approval_workflow: stage_a_stage_b
   stage_a_required_before_edit: true
   regulated_paths:
-    - {data["verifiers"][0]}
+    - {verifier}
   must_read:
     - docs/operations/REGULATED_SURFACE_PATHS.yml
     - docs/operations/approval_metadata.schema.json
@@ -250,23 +296,7 @@ remediation_trace_compliance:
   markers_required_at_edit: true
   must_read:
     - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
-
-database_connection:
-  enabled: {db_enabled}
-  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
-  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
-  container_name: symphony-postgres
-  database_url_env_var: DATABASE_URL
-  setup_command: "export DATABASE_URL=\\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\\""
-
-migration_dependencies:
-  enabled: {db_enabled}
-  required_migrations:
-    - 0144: "Wave 5 remediation baseline"
-  table_dependencies:
-    - schema_migrations: "must track migrations"
-  verification_step: "Confirm all referenced tables exist in earlier migrations"
-
+{db_section}
 out_of_scope:
   - "Any scope outside the exact IDs declared in this task."
 stop_conditions:
@@ -277,8 +307,8 @@ proof_limitations:
   - "Does not prove runtime API integration (deferred)."
 
 touches:
-  - {data["verifiers"][0]}
-  - {data["evidence"]}
+  - {verifier}
+  - {evidence_path}
   - tasks/{task_id}/meta.yml
   - docs/plans/phase{data["phase"]}/{task_id}/PLAN.md
   - docs/plans/phase{data["phase"]}/{task_id}/EXEC_LOG.md
@@ -300,17 +330,12 @@ positive_tests:
     required: true
 
 verification:
-  - '# {id_str} test -x {data["verifiers"][0]} && bash {data["verifiers"][0]} > {data["evidence"]} || exit 1'
+  - '# {id_str} test -x {verifier} && {runner} {verifier} > {evidence_path} || exit 1'
 
 evidence:
-  - path: {data["evidence"]}
+  - path: {evidence_path}
     must_include:
-      - task_id
-      - git_sha
-      - timestamp_utc
-      - status
-      - checks
-      - observed_hashes
+{must_include_lines}
 
 failure_modes:
   - "Evidence file missing => FAIL"

@@ -2,8 +2,8 @@
   "check_id": "EVIDENCE-GENERATE",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "c314cf4cd496dcd66ab155cc4d4ae8bddbeb5c50e1d15098766fa5b487157784",
-  "migrations_fingerprint": "660ffd794e4e096cf7081c36a47ad8adedb6fc3cf3bb20422b869623ebc2f51c",
+  "schema_fingerprint": "3adac2cb0ae869f7b951badf77b342aa8763ad12d51327a1927abac62a6cb31c",
+  "migrations_fingerprint": "ac75c8c0c78d00474bf0983325e4c326f4df14410b457a5b5c48ba91c95f165c",
   "status": "PASS",
   "producer": "generate_evidence.sh",
   "inputs": {

@@ -1,14 +1,14 @@
 {
   "check_id": "DB-N-1-COMPAT",
-  "curr_table_count": 136,
+  "curr_table_count": 146,
   "git_sha": "0000000000000000000000000000000000000000",
-  "last_migration": "0144_create_update_current_state.sql",
+  "last_migration": "0202_tsk_p2_w5_rem_01_trigger.sql",
   "missing_columns": [],
   "missing_tables": [],
   "nullable_relaxations": [],
   "ok": true,
-  "prev_table_count": 136,
-  "schema_fingerprint": "c314cf4cd496dcd66ab155cc4d4ae8bddbeb5c50e1d15098766fa5b487157784",
+  "prev_table_count": 146,
+  "schema_fingerprint": "3adac2cb0ae869f7b951badf77b342aa8763ad12d51327a1927abac62a6cb31c",
   "status": "PASS",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "type_mismatches": []

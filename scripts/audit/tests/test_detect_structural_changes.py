@@ -67,6 +67,7 @@ class TestDetectStructuralChanges(unittest.TestCase):
         self.assertEqual(data["matched_files"], [])
         self.assertEqual(data["match_counts"], {})
 
+    @unittest.skip("Script auto_create_exception_from_detect.py was removed")
     def test_auto_exception_generator_uses_primary_reason(self):
         detect = {
             "structural_change": True,

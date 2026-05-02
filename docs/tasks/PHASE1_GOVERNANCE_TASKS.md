@@ -716,3 +716,55 @@ Covers reversal of rogue-agent damage from a failed Wave 5 attempt. Tasks provid
 - **Verification:** test -x and grep for curl, ui_e2e_verification, WEIGHBRIDGE_RECORD; negative grep for python/node/npm
 - **Evidence:** `evidence/phase1/gf_w1_ui_010.json`
 - **Failure Modes:** Script exits 0 when a check fails => CRITICAL_FAIL; Script uses non-curl HTTP tools => FAIL; Evidence JSON not written => FAIL; Evidence file missing => FAIL
+
+### TSK-P1-SEC-010 — Identity Reference and PII Trust Boundary Implementation
+- **Owner:** SECURITY_GUARDIAN
+- **Depends on:** `TSK-P0-KYC-004`
+- **Touches:** `docs/decisions/ADR-0015-identity-reference-trust-boundary.md`, `docs/decisions/ADR-0013-zdpa-pii-decoupling-strategy.md`, `scripts/security/verify_identity_trust_boundary.sh`, `evidence/phase1/identity_trust_boundary_verification.json`
+- **Invariants:** `INV-115`
+- **Work:** Formalize ADR-0015 establishing OpenBao as Identity Derivation Authority, deprecate identity_hash terminology, and add fail-closed verifier for trust boundary enforcement.
+- **Acceptance Criteria:** ADR-0015 exists and prohibits app/db-layer derivation; ADR-0013 updated; verifier asserts OpenBao role; evidence emitted.
+- **Verification:** `bash scripts/security/verify_identity_trust_boundary.sh`; `python3 scripts/audit/validate_evidence.py --task TSK-P1-SEC-010 --evidence evidence/phase1/identity_trust_boundary_verification.json`
+- **Evidence:** `evidence/phase1/identity_trust_boundary_verification.json`
+- **Failure Modes:** App/DB layer derivation detected; identity_hash terminology remains; verifier fails to detect bypass; evidence file missing
+
+### TSK-P1-SEC-014 — Define Canonical Identity Serialization and Derivation Specification (NORMATIVE)
+- **Owner:** SECURITY_GUARDIAN
+- **Depends on:** `TSK-P1-SEC-010`
+- **Touches:** `docs/security/IDENTITY_CANONICALIZATION_SPEC_V1.md`
+- **Invariants:** `INV-115`
+- **Work:** Define Canonical JSON grammar and binary framing; implement typed Python verifier for absolute byte-level rigor; generate normative golden vectors.
+- **Acceptance Criteria:** Protocol specification defines absolute binary framing and normative golden vectors; verifier proves closure via Python-based vector validation and external anchors.
+- **Verification:** `python3 scripts/security/verify_canonicalization_spec.py`; `python3 scripts/audit/validate_evidence.py --task TSK-P1-SEC-014 --evidence evidence/phase1/identity_canonicalization_spec.json`; `RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh`
+- **Evidence:** `evidence/phase1/identity_canonicalization_spec.json`
+
+### TSK-P1-SEC-011 — Configure OpenBao as Keyed Identity Derivation Authority
+- **Owner:** SECURITY_GUARDIAN
+- **Depends on:** `TSK-P1-SEC-014`
+- **Touches:** `scripts/security/openbao_bootstrap.sh`, `infra/openbao/policies/identity-derivation.hcl`
+- **Invariants:** `INV-115`
+- **Work:** Provision 'identity-hmac-key' and 'pii-attestation-key' using renamed policy aliases; implement external execution anchoring.
+- **Acceptance Criteria:** Infrastructure provisioned; policies enforce least privilege; verifier confirms seal-wrap parity and external execution anchoring via transcript hashes.
+- **Verification:** `bash scripts/security/verify_openbao_derivation_authority.sh`; `python3 scripts/audit/validate_evidence.py --task TSK-P1-SEC-011 --evidence evidence/phase1/openbao_derivation_authority.json`; `RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh`
+- **Evidence:** `evidence/phase1/openbao_derivation_authority.json`
+
+### TSK-P1-SEC-013 — Refactor PII Vault Client for Hardened Derivation Contract
+- **Owner:** SECURITY_GUARDIAN
+- **Depends on:** `TSK-P1-SEC-011`, `TSK-P1-SEC-014`
+- **Touches:** `src/identity/pii_vault_client.ts`, `src/identity/canonicalization.ts`
+- **Invariants:** `INV-115`
+- **Work:** Refactor client for 12-field tuple and binary framing; implement verifier-side signature reconstruction in Python; enforce downgrade resistance.
+- **Acceptance Criteria:** Client passes golden vectors; verifier proves reconstruction integrity and legacy trust-equivalence ban; evidence includes external execution anchors.
+- **Verification:** `python3 scripts/security/verify_identity_trust_boundary.py`; `python3 scripts/audit/validate_evidence.py --task TSK-P1-SEC-013 --evidence evidence/phase1/identity_derivation_refactor.json`; `RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh`
+- **Evidence:** `evidence/phase1/identity_derivation_refactor.json`
+
+### TSK-P1-SEC-012 — Configure PII Disclosure Broker with Dual-Principal Gates
+- **Owner:** SECURITY_GUARDIAN
+- **Depends on:** `TSK-P1-SEC-013`, `TSK-P1-SEC-014`
+- **Touches:** `src/identity/disclosure_broker.ts`, `infra/openbao/policies/disclosure-broker.hcl`
+- **Invariants:** `INV-115`
+- **Work:** Implement formal Independence Matrix for dual-principal approval (Human, Device, IdP); implement graph-based anti-chaining; bound lineage for disclosure tokens.
+- **Acceptance Criteria:** Broker enforces formal independence matrix; verifier confirms rejection of shared human/device/auth roots; audit logs capture full independence metadata.
+- **Verification:** `bash scripts/security/verify_disclosure_broker.sh`; `python3 scripts/audit/validate_evidence.py --task TSK-P1-SEC-012 --evidence evidence/phase1/pii_disclosure_broker.json`; `RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh`
+- **Evidence:** `evidence/phase1/pii_disclosure_broker.json`
+

@@ -1,7 +1,7 @@
 {
   "task_id": "TSK-P2-PREAUTH-003-REM-05",
-  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
-  "timestamp_utc": "2026-04-24T06:48:45Z",
+  "git_sha": "1bc0ea5acffd6fb8c1ed27d935c108e5217328de",
+  "timestamp_utc": "2026-05-02T11:39:52Z",
   "status": "PASS",
   "checks": [
   {"name":"not_null_enforced","result":"pass","observed":5,"expected":5},
@@ -24,7 +24,7 @@
     "migration_0131_sha256": "5faa757a8e5d39befda569217e2bde6189c75084311379f8dadd403b9208361a",
     "migration_0132_sha256": "1bfb06f8f1460967a8724fb5b99aaab77fd75f1fc67a9af9b5d5e0330df03134",
     "migration_0133_sha256": "cf59659f9f6ef3d094406b5aa71fd6bd2266e10344f64412a23954884513730c",
-    "migration_head_sha256": "f1365184d7d14ade273d3ddc7fd19d1cc8cc56e2e8331c9749192df3d958ad01",
+    "migration_head_sha256": "74dd5b5f35b7e475a04d62b31b488f89676b74c1a5a8c393b073e0fe12b6158a",
     "verifier_sha256": "9410ccba4014e2eb0725996c9726c2e360102890832a71c6880871c49ab65446"
   },
   "command_outputs": {
@@ -37,8 +37,8 @@
     "behavioural_probe_stderr_tail": "ERROR:  GF058: GF058: execution_records.interpretation_version_id temporal mismatch; expected pack resolved at execution_timestamp\nCONTEXT:  PL/pgSQL function enforce_execution_interpretation_temporal_binding() line 9 at RAISE\nLOCATION:  exec_stmt_raise, pl_exec.c:3909"
   },
   "execution_trace": {
-    "start_utc": "2026-04-24T06:48:45.416Z",
-    "end_utc": "2026-04-24T06:48:46.181Z"
+    "start_utc": "2026-05-02T11:39:52.433Z",
+    "end_utc": "2026-05-02T11:39:53.326Z"
   },
   "not_null_enforced": true,
   "fk_verified": true,

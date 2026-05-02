@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "approval_id": "APV-TSK-P1-SEC-010",
+  "approval_type": "STAGE_A_INTENT",
+  "task_reference": "TSK-P1-SEC-010",
+  "regulated_surfaces_touched": [
+    "scripts/security/verify_identity_trust_boundary.sh",
+    "evidence/phase1/identity_trust_boundary_verification.json"
+  ],
+  "justification": "Establish OpenBao as Identity Derivation Authority and formalize ADR-0015 Identity Reference trust boundary.",
+  "approved_by": "ARCHITECT",
+  "timestamp_utc": "2026-05-01T13:46:00Z",
+  "ai": {
+    "ai_prompt_hash": "93856576a8026e82241c49435bbb41bf968ce2da9867f8ea0eba2c81c6785f83",
+    "model_id": "SWE-1.6"
+  },
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "mwiza",
+    "approved_at_utc": "2026-05-02T05:00:00Z"
+  },
+  "verification": {
+    "pre_ci_passed": true
+  },
+  "scope": {
+    "paths_changed": [
+      "docs/security/security_definer_dynamic_sql_allowlist.txt",
+      "schema/baseline.sql",
+      "schema/baseline.meta.json",
+      "docs/decisions/ADR-0010-baseline-policy.md"
+    ]
+  }
+}

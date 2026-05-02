@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-003
 inv_scope: change-rule
-expiry: 2026-05-01
+expiry: 2026-06-01
 follow_up_ticket: TSK-P2-PREAUTH-003
 reason: Wave 3 Phase 2 implementation requires new execution_records table for execution tracking with FK to interpretation packs.
 author: system

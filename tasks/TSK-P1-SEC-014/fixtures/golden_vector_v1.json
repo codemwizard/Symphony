@@ -1,0 +1,33 @@
+{
+  "metadata": {
+    "authority": "TSK-P1-SEC-014",
+    "contract": "v1.12",
+    "normative_over_bytes": true
+  },
+  "inputs": {
+    "raw_pii": {
+      "email": "test@symphony.com",
+      "name": "Test User"
+    },
+    "domain": "symphony-kyc",
+    "hmac_key_hex": "53594d50484f4e595f484d41435f44554d4d595f4b45595f3031323334353637"
+  },
+  "outputs": {
+    "hmac_input_hex": "00027631000c73796d70686f6e792d6b7963000000307b22656d61696c223a22746573744073796d70686f6e792e636f6d222c226e616d65223a22546573742055736572227d",
+    "identity_ref": "zszL3oS_n8Cw9wMEYCac7HfHUSSyqMihy3cWt87ngLY",
+    "fields_1_11": [
+      "zszL3oS_n8Cw9wMEYCac7HfHUSSyqMihy3cWt87ngLY",
+      "hmac-sha256-v1",
+      "pii-derivation-policy",
+      "key-012345",
+      "1",
+      "pii-attestation-policy",
+      "signer-67890",
+      "2",
+      "v1",
+      "symphony-kyc",
+      "1.12.0"
+    ],
+    "signature_input_hex": "002b7a737a4c336f535f6e38437739774d45594361633748664855535379714d6968793363577438376e674c59000e686d61632d7368613235362d763100157069692d64657269766174696f6e2d706f6c696379000a6b65792d30313233343500013100167069692d6174746573746174696f6e2d706f6c696379000c7369676e65722d363738393000013200027631000c73796d70686f6e792d6b79630006312e31322e30"
+  }
+}

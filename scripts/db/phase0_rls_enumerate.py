@@ -27,7 +27,7 @@ except ImportError:
 
 
 YAML_PATH = Path(__file__).resolve().parents[2] / "schema" / "rls_tables.yml"
-SNAPSHOT_PATH = Path(__file__).resolve().parents[2] / "schema" / "migrations" / "0095_pre_snapshot.sql"
+SNAPSHOT_PATH = Path(__file__).resolve().parents[2] / "schema" / "rollbacks" / "0095_pre_snapshot.sql"
 
 
 def load_yaml_registry():

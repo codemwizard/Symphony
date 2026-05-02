@@ -97,20 +97,8 @@ if [[ "${exception_present}" -eq 1 ]]; then
   exit 0
 fi
 
-echo "❌ Rule 1 would fail in CI. Auto-creating an exception file…"
-
-new_ex="$(python3 scripts/audit/auto_create_exception_from_detect.py \
-  --detect "$TEMP_DIR/detect.json" \
-  --inv-scope change-rule)"
-
-git add "$new_ex"
-
+echo "❌ Rule 1 would fail in CI. Structural change detected without invariants linkage."
 echo ""
-echo "✅ Created and staged: $new_ex"
-echo ""
-echo "Edit the YAML front matter and replace placeholders, then re-run commit:"
-echo "  - exception_id: EXC-### (not EXC-000)"
-echo "  - expiry: YYYY-MM-DD in the future"
-echo "  - follow_up_ticket: your tracker ID (not PLACEHOLDER-000)"
-echo "  - created_at: YYYY-MM-DD"
+echo "ACTION REQUIRED: You must manually document the invariants linkage or create a proper exception."
+echo "Auto-generation of EXC-* bypass files has been disabled to enforce strict governance."
 exit 1

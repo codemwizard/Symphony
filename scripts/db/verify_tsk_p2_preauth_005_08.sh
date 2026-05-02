@@ -43,8 +43,8 @@ BEGIN
     INSERT INTO billable_clients (billable_client_id, client_key, legal_name, client_type, status) VALUES (v_bc, 'CK', 'LN', 'ENTERPRISE', 'ACTIVE');
     INSERT INTO tenants (tenant_id, tenant_key, tenant_name, tenant_type, status, billable_client_id) VALUES (v_tenant, 'TK', 'TN', 'NGO', 'ACTIVE', v_bc);
     INSERT INTO projects (project_id, tenant_id, name, status, taxonomy_aligned) VALUES (v_proj, v_tenant, 'TP', 'ACTIVE', false);
-    INSERT INTO execution_records (execution_id, project_id, tenant_id, interpretation_version_id, input_hash, output_hash, runtime_version, status) 
-    VALUES (v_exec, v_proj, v_tenant, v_interp, 'ih', 'oh', 'rv', 'pending');
+    INSERT INTO execution_records (execution_id, project_id, tenant_id, interpretation_version_id, input_hash, output_hash, runtime_version, status, entity_type, entity_id) 
+    VALUES (v_exec, v_proj, v_tenant, v_interp, 'ih', 'oh', 'rv', 'pending', 'TEST_ENTITY', v_entity);
     INSERT INTO policy_decisions (project_id, policy_decision_id, execution_id, decision_type, authority_scope, declared_by, entity_type, entity_id, decision_hash, signature, signed_at)
     VALUES (v_proj, v_pol, v_exec, 'ANY', 'TEST', gen_random_uuid(), 'TEST_ENTITY', gen_random_uuid(), repeat('0', 64), repeat('0', 128), NOW());
     INSERT INTO state_rules (state_rule_id, entity_type, from_state, to_state, required_decision_type, allowed) VALUES (gen_random_uuid(), 'TEST_ENTITY', 'A', 'B', 'ANY', true);

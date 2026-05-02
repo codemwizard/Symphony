@@ -53,6 +53,8 @@ Purpose: inventory repository scripts that mutate Git state or rely on Git state
 | `scripts/audit/verify_enf_005.sh` | yes | partial | PASS | ENF-005 verifier; checks DRD lockout sudo gate and casefile scaffolder via git reset pattern detection; read-only audit surface. |
 | `scripts/audit/verify_tsk_p1_plt_008.sh` | no | n/a | PASS | Reads git rev-parse HEAD for evidence; no Git mutation. |
 | `scripts/audit/verify_tsk_p1_plt_009b.sh` | no | n/a | PASS | Reads git rev-parse HEAD for evidence; no Git mutation. |
+| `scripts/audit/verify_tsk_p2_w8_qa_002.sh` | no | yes | PASS | Reads git diff --name-only to inventory changed files for QA evidence; no Git mutation. |
+| `scripts/db/verify_tsk_p2_w8_db_006.sh` | no | yes | PASS | Reads git diff --name-only to inventory changed files for DB evidence; no Git mutation. |
 
 ## Findings
 - The original containment failure class is now covered at both fixture and runner level.

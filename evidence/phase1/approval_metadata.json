@@ -5,12 +5,10 @@
   "change_scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
-      "scripts/security/hot_tables.txt",
-      "scripts/security/ddl_allowlist.json",
-      "scripts/security/lint_ddl_lock_risk.sh",
-      ".github/CODEOWNERS",
-      "docs/plans/phase1/REM-2026-04-27_pre_ci-phase0_ordered_checks/DRD.md",
-      "docs/plans/phase1/REM-2026-04-27_pre_ci-phase0_ordered_checks/EXEC_LOG.md"
+      "docs/security/security_definer_dynamic_sql_allowlist.txt",
+      "schema/baseline.sql",
+      "schema/baseline.meta.json",
+      "docs/decisions/ADR-0010-baseline-policy.md"
     ]
   },
   "ai": {
@@ -20,10 +18,10 @@
     "session_id": "wave7-ddl-allowlist-implementation"
   },
   "human_approval": {
-    "approver_id": "human_reviewer",
-    "approval_artifact_ref": "approvals/2026-04-26/BRANCH-feat-pre-phase2-wave-5-state-machine-trigger-layer.md",
-    "change_reason": "Wave 7-STRICT Enforcement Track - DDL allowlist implementation for hot-table aware linting per docs/PLANS-addendum_1.md",
-    "approved_at_utc": "2026-04-26T00:00:00Z"
+    "approver_id": "mwiza",
+    "approval_artifact_ref": "approvals/2026-05-01/BRANCH-feat-fix-pre-phase2-bugs.md",
+    "change_reason": "Fix pre-phase 2 bugs",
+    "approved_at_utc": "2026-05-02T05:00:00Z"
   },
   "notes": "DDL allowlist implementation for hot-table aware linting. Added hot_tables.txt, ddl_allowlist.json with 57 fingerprinted entries, updated lint_ddl_lock_risk.sh with allowlist support, and updated CODEOWNERS for security review. All DDL on hot tables is fingerprinted without legacy migration exemptions."
 }

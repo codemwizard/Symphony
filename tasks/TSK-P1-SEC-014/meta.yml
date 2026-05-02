@@ -1,0 +1,113 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-SEC-014
+title: "Define Canonical Identity Serialization and Derivation Specification"
+owner_role: SECURITY_GUARDIAN
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: LOGIC
+depends_on: ["TSK-P1-SEC-010"]
+invariants: ["INV-115"]
+
+deliverable_files:
+  - scripts/security/verify_canonicalization_spec.py
+  - evidence/phase1/identity_canonicalization_spec.json
+  - docs/plans/phase1/TSK-P1-SEC-014/PLAN.md
+  - docs/plans/phase1/TSK-P1-SEC-014/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/security/verify_canonicalization_spec.py
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON correctly demonstrates enforcement via state evaluation."
+proof_limitations:
+  - "Does not prove runtime API integration (deferred)."
+
+touches:
+  - scripts/security/verify_canonicalization_spec.py
+  - evidence/phase1/identity_canonicalization_spec.json
+  - tasks/TSK-P1-SEC-014/meta.yml
+  - docs/plans/phase1/TSK-P1-SEC-014/PLAN.md
+  - docs/plans/phase1/TSK-P1-SEC-014/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p1_sec_014_work_01] Define Canonical JSON normalization rules (scalars, ASCII digits, unescaping-aware duplicate detection) for field byte derivation."
+  - "[ID tsk_p1_sec_014_work_02] Codify Fail-Closed Verification behavior for unknown fields, versions, and algorithms; define Clock Authority tiers: Tier 1 (1500ms), Tier 2 (5000ms), Hard Reject (>5000ms)."
+  - "[ID tsk_p1_sec_014_work_03] Codify Transcript Reproducibility (Reproducible Determinism): verifiers MUST independently regenerate transcripts from inputs and state."
+  - "[ID tsk_p1_sec_014_work_04] Generate Golden Protocol Vectors for 12-field tuple; provide executable byte-dump fixtures; explicitly state that golden vectors are normative over BYTES, not semantics."
+  - "[ID tsk_p1_sec_014_work_05] Implement Runtime Invocation Trust requirements: mandate hardware-rooted environment attestation (vTPM/Nitro) and signed execution receipts."
+
+acceptance_criteria:
+  - "[ID tsk_p1_sec_014_work_01] Protocol specification is the normative authority; implementations MUST be proven against its fixtures; binary framing is absolute and normative over BYTES."
+  - "[ID tsk_p1_sec_014_work_02] Fail-Closed behavior and stratified Clock Authority are codified; verifier proves rejection of rollback attempts and drift > 5000ms."
+  - "[ID tsk_p1_sec_014_work_03] Transcript Reproducibility is proven: verifier demonstrates independent regeneration of policy transcripts from golden inputs."
+  - "[ID tsk_p1_sec_014_work_04] Evidence is anchored to Runtime Invocation Trust: includes runtime_invocation_attestation (vTPM/Nitro) and caller identity proof."
+  - "[ID tsk_p1_sec_014_work_05] Evidence includes at least one anchor external to the primary execution trust domain; proves anchor_independence_matrix integrity."
+
+negative_tests:
+  - id: TSK-P1-SEC-014-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: Protocol specification is the normative authority; implementations MUST be proven against its fixtures; binary framing is absolute and normative over BYTES."
+    required: true
+
+positive_tests:
+  - id: TSK-P1-SEC-014-P1
+    description: "Verify that execution exits 0 on success path for: Protocol specification is the normative authority; implementations MUST be proven against its fixtures; binary framing is absolute and normative over BYTES."
+    required: true
+
+verification:
+  - '# [ID tsk_p1_sec_014_work_01] [ID tsk_p1_sec_014_work_02] [ID tsk_p1_sec_014_work_03] [ID tsk_p1_sec_014_work_04] [ID tsk_p1_sec_014_work_05] test -x scripts/security/verify_canonicalization_spec.py && python3 scripts/security/verify_canonicalization_spec.py > evidence/phase1/identity_canonicalization_spec.json || exit 1'
+
+evidence:
+  - path: evidence/phase1/identity_canonicalization_spec.json
+    must_include:
+      - runtime_invocation_attestation
+      - anchor_independence_matrix
+      - derived_state_fingerprint
+      - policy_eval_transcript_sha256
+      - negative_test_failure_proof
+      - binary_fixture_digest_set
+      - tuple_contract_version
+      - canonicalization_rule_digest
+      - verifier_nonce
+      - environment_attestation
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+implementation_plan: docs/plans/phase1/TSK-P1-SEC-014/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-SEC-014/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py'
+client: cursor
+assigned_agent: security_guardian
+model: claude-sonnet-4-20250514
