@@ -7,6 +7,8 @@ status: planned
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: DB_SCHEMA
+depends_on: []
+invariants: []
 
 deliverable_files:
   - scripts/db/verify_rls_arch_rem_001.sh

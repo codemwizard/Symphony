@@ -7,6 +7,8 @@ status: planned
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: GOVERNANCE
+depends_on: []
+invariants: []
 
 deliverable_files:
   - scripts/audit/verify_tsk_p2_preauth_004_rem_01.sh
