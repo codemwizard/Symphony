@@ -2,8 +2,8 @@
 
 - [x] Create Implementation Plan and Task documents.
 - [x] Delete incidental churn from worktree (completed previously).
-- [/] Stage all remaining 241 canonical and verified files.
-- [ ] Commit the changes using the contents of this `Task.md` as the commit message.
+- [x] Stage all remaining 241 canonical and verified files.
+- [x] Commit the changes using the contents of this `Task.md` as the commit message.
 
 ## Components Edited/Created
 - Worktree cleanup
