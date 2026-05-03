@@ -1,0 +1,119 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-RLS-ARCH-REM-001
+title: "Resolve Broken Migration Sequence (0095 Duplicates)"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DB_SCHEMA
+depends_on: []
+invariants: []
+
+deliverable_files:
+  - scripts/audit/verify_rls_arch_rem_001.sh
+  - evidence/phase1/tsk_rls_arch_rem_001.json
+  - docs/plans/phase1/TSK-RLS-ARCH-REM-001/PLAN.md
+  - docs/plans/phase1/TSK-RLS-ARCH-REM-001/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/verify_rls_arch_rem_001.sh
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - 0144: "Wave 5 remediation baseline"
+  table_dependencies:
+    - schema_migrations: "must track migrations"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON correctly demonstrates enforcement via state evaluation."
+proof_limitations:
+  - "Does not prove runtime API integration (deferred)."
+
+touches:
+  - scripts/audit/verify_rls_arch_rem_001.sh
+  - evidence/phase1/tsk_rls_arch_rem_001.json
+  - tasks/TSK-RLS-ARCH-REM-001/meta.yml
+  - docs/plans/phase1/TSK-RLS-ARCH-REM-001/PLAN.md
+  - docs/plans/phase1/TSK-RLS-ARCH-REM-001/EXEC_LOG.md
+
+work:
+  - '[ID tsk_rls_arch_rem_001_01] Populate the 0095 empty migrations using the authoritative SQL blocks defined in docs/plans/phase1/TSK-RLS-ARCH-001/PLAN.md.'
+  - '[ID tsk_rls_arch_rem_001_02] Relocate 0095_pre_snapshot.sql and 0095_rollback.sql out of schema/migrations/ to schema/rollbacks/ to resolve the monotonic prefix collision.'
+
+acceptance_criteria:
+  - '[ID tsk_rls_arch_rem_001_01] The 0095_rls_dual_policy_architecture.sql migration successfully applies the RLS architecture.'
+  - '[ID tsk_rls_arch_rem_001_02] schema/migrations/ contains exactly one 0095_ prefix file, restoring strict monotonic integrity.'
+
+negative_tests:
+  - id: TSK-RLS-ARCH-REM-001-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: The 0095_rls_dual_policy_architecture.sql migration successfully applies the RLS architecture."
+    required: true
+
+positive_tests:
+  - id: TSK-RLS-ARCH-REM-001-P1
+    description: "Verify that execution exits 0 on success path for: The 0095_rls_dual_policy_architecture.sql migration successfully applies the RLS architecture."
+    required: true
+
+verification:
+  - '# [ID tsk_rls_arch_rem_001_01] [ID tsk_rls_arch_rem_001_02] test -x scripts/audit/verify_rls_arch_rem_001.sh && bash scripts/audit/verify_rls_arch_rem_001.sh > evidence/phase1/tsk_rls_arch_rem_001.json || exit 1'
+
+evidence:
+  - path: evidence/phase1/tsk_rls_arch_rem_001.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+implementation_plan: docs/plans/phase1/TSK-RLS-ARCH-REM-001/PLAN.md
+implementation_log: docs/plans/phase1/TSK-RLS-ARCH-REM-001/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py'
+client: cursor
+assigned_agent: db_foundation
+model: claude-sonnet-4-20250514

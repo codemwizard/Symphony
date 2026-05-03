@@ -1,0 +1,39 @@
+{
+  "remediation_id": "TSK-P2-W5-REM-01",
+  "timestamp": "2026-05-03T16:52:00Z",
+  "issue": "Verifier INSERT statements missing required project_id column",
+  "root_cause": "Migration 0161 made policy_decisions.project_id NOT NULL, but verification script INSERT statements omitted project_id from column lists",
+  "fix_applied": {
+    "files_modified": [
+      "scripts/audit/verify_tsk_p2_w5_rem_01.sh"
+    ],
+    "changes": [
+      {
+        "line_range": "74-84",
+        "description": "Added project_id column to INSERT statement column list for first negative test"
+      },
+      {
+        "line_range": "92-102", 
+        "description": "Added project_id column to INSERT statement column list for second negative test"
+      },
+      {
+        "line_range": "110-120",
+        "description": "Added project_id column to INSERT statement column list for positive test"
+      }
+    ]
+  },
+  "verification": {
+    "database_connection": "postgresql://symphony_admin:symphony_pass@localhost:55432/symphony",
+    "gf062_trigger_status": "ACTIVE",
+    "test_results": {
+      "structural_checks": "PASS",
+      "coherence_trigger": "PASS", 
+      "behavioral_tests": "FIXED - project_id column issue resolved"
+    }
+  },
+  "evidence": {
+    "manual_test": "GF062 trigger correctly blocks entity mismatches",
+    "column_fix": "All INSERT statements now include project_id in column lists",
+    "append_only_constraint": "GF056 constraint properly prevents execution_records DELETE"
+  }
+}

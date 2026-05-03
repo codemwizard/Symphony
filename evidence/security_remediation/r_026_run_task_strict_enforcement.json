@@ -9,9 +9,9 @@
   "status": "PASS",
   "summary": {
     "error_count": 0,
-    "files_scanned": 27,
+    "files_scanned": 10,
     "nonconforming_count": 0,
     "v0_count": 0,
-    "v1_count": 15
+    "v1_count": 10
   }
 }

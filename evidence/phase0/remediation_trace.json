@@ -2,12 +2,12 @@
   "check_id": "REMEDIATION-TRACE",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "c314cf4cd496dcd66ab155cc4d4ae8bddbeb5c50e1d15098766fa5b487157784",
+  "schema_fingerprint": "3adac2cb0ae869f7b951badf77b342aa8763ad12d51327a1927abac62a6cb31c",
   "status": "PASS",
   "diff_mode": "range",
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD",
-  "merge_base": "ec9c0359153674f33a8166753b91021052c1e0ad",
+  "merge_base": "1bc0ea5acffd6fb8c1ed27d935c108e5217328de",
   "triggered_change_present": true,
   "triggered_prefixes": [
     "docs",
@@ -15,9 +15,9 @@
     "scripts"
   ],
   "satisfying_docs": [
-    "docs/plans/phase1/REM-2026-04-21_pre_ci-phase0_ordered_checks/PLAN.md",
-    "docs/plans/phase1/REM-2026-04-21_pre_ci-phase0_ordered_checks/EXEC_LOG.md"
+    "docs/plans/phase1/REM-2026-05-02_gf-rls-verifier-dual-policy-drift/PLAN.md",
+    "docs/plans/phase1/REM-2026-05-02_gf-rls-verifier-dual-policy-drift/EXEC_LOG.md"
   ],
-  "satisfying_doc_parent": "docs/plans/phase1/REM-2026-04-21_pre_ci-phase0_ordered_checks",
+  "satisfying_doc_parent": "docs/plans/phase1/REM-2026-05-02_gf-rls-verifier-dual-policy-drift",
   "errors": []
 }

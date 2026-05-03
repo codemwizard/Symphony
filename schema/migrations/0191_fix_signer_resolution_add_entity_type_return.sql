@@ -13,6 +13,8 @@
 -- Fix: Redefine resolve_authoritative_signer() to include entity_type in
 -- RETURNS TABLE and in the SELECT clause.
 
+DROP FUNCTION IF EXISTS public.resolve_authoritative_signer(text, text, uuid, text);
+
 CREATE OR REPLACE FUNCTION public.resolve_authoritative_signer(
     p_key_id text,
     p_key_version text,

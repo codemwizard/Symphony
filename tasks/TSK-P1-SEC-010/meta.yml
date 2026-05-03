@@ -1,0 +1,55 @@
+schema_version: 1
+phase: "1"
+task_id: TSK-P1-SEC-010
+title: "Identity Reference and PII Trust Boundary"
+owner_role: SECURITY_GUARDIAN
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: MODERATE
+depends_on: ["TSK-P0-KYC-004"]
+invariants: ["INV-115"]
+
+deliverable_files:
+  - scripts/security/verify_identity_trust_boundary.py
+  - evidence/phase1/identity_trust_boundary_verification.json
+  - docs/plans/phase1/TSK-P1-SEC-010/PLAN.md
+  - docs/plans/phase1/TSK-P1-SEC-010/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/security/verify_identity_trust_boundary.py
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+implementation_plan: docs/plans/phase1/TSK-P1-SEC-010/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-SEC-010/EXEC_LOG.md
+assigned_agent: security_guardian
+model: claude-sonnet-4-20250514
+touches: []
+work: []
+acceptance_criteria: []
+verification: []
+evidence: []
+failure_modes: []
+must_read: []
+notes: ''
+client: cursor

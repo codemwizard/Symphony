@@ -363,3 +363,15 @@ Wave 8 requires one dispatcher trigger at the `asset_batches` boundary.
 - Unavailable crypto is itself a hard verification failure
 - Verifier unavailability, key lookup unavailability, signer-surface unavailability, unresolved functions/extensions, and dependency load failure MUST all cause verification to fail closed
 - No graceful degradation or fallback behavior is permitted for unavailable crypto
+
+## 20. Cross-Entity-Replay Protection (GF062)
+
+The system MUST prevent cross-entity replay of authority tokens. A policy decision bound to Entity A MUST NOT be accepted as authority for an execution record bound to Entity B.
+
+**Coherence Enforcement:**
+- Each `execution_record` MUST establish an immutable binding to `entity_type` and `entity_id`.
+- The `policy_decisions` table MUST enforce a matching binding at insertion time.
+- The `enforce_policy_decisions_entity_coherence` trigger (GF062) validates that `policy_decisions.entity_type/entity_id` matches the parent `execution_records` binding.
+
+Failure to maintain coherence results in a `GF062` exception and rejection of the authority token.
+

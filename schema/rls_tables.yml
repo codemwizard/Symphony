@@ -220,8 +220,8 @@ tables:
     type: DIRECT
     tenant_column: tenant_id
     source_migration: "0080"
-    exists: false
-    notes: "GF migration not yet applied"
+    exists: true
+    notes: "GF migration applied in 0080"
 
   - name: monitoring_records
     type: DIRECT

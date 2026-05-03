@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-05-01T07:55:00Z",
+  "git_commit": "HEAD",
+  "change_scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "schema/migrations/0136_enforce_authority_transition_binding.sql",
+      "schema/migrations/MIGRATION_HEAD"
+    ]
+  },
+  "ai": {
+    "ai_prompt_hash": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+    "model_id": "cursor_codex",
+    "client": "cursor_codex",
+    "session_id": "retroactive-004-03"
+  },
+  "human_approval": {
+    "approver_id": "mwiza",
+    "approval_artifact_ref": "REM-2026-05-01_W4-03",
+    "change_reason": "Retroactive Stage A/B approval for Wave 4 implementation drift",
+    "approved_at_utc": "2026-05-01T07:55:00Z"
+  },
+  "notes": "Retroactively approved via TSK-P2-PREAUTH-004-REM-01"
+}

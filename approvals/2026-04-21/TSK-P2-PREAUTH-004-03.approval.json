@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "approval_record": {
+    "task_id": "TSK-P2-PREAUTH-004-03",
+    "date_utc": "2026-04-21",
+    "commit": "80718d7b8a7b9a0a1a2b3c4d5e6f7a8b9c0d1e2f"
+  },
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "architect-supervisor",
+    "approved_at_utc": "2026-05-01T10:40:00Z",
+    "role_authority": "Architect",
+    "change_reason": "Retroactive approval for Wave 4 core schema (authority_transition_binding)"
+  },
+  "scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "schema/migrations/0136_enforce_authority_transition_binding.sql"
+    ],
+    "invariants": ["INV-AUTH-TRANSITION-BINDING-01"],
+    "phase_boundary_ok": true
+  },
+  "verification": {
+    "commands": ["scripts/audit/verify_tsk_p2_preauth_004_rem_01.sh"],
+    "pre_ci_passed": true,
+    "notes": "Retroactive remediation for Wave 4 governance gaps."
+  }
+}

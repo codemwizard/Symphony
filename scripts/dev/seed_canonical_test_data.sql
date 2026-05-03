@@ -75,7 +75,9 @@ INSERT INTO execution_records (
     interpretation_version_id, 
     input_hash, 
     output_hash, 
-    runtime_version
+    runtime_version,
+    entity_type,
+    entity_id
 ) VALUES (
     '00000000-0000-0000-0000-000000000005', 
     '00000000-0000-0000-0000-000000000002', 
@@ -84,7 +86,9 @@ INSERT INTO execution_records (
     '00000000-0000-0000-0000-000000000004', 
     '1111111111111111111111111111111111111111111111111111111111111111', 
     '1111111111111111111111111111111111111111111111111111111111111111', 
-    'v1.0.0-pilot'
+    'v1.0.0-pilot',
+    'ASSET_BATCH',
+    '00000000-0000-0000-0000-00000000000b'
 ) ON CONFLICT (execution_id) DO NOTHING;
 
 -- 7. Seed Policy Decision

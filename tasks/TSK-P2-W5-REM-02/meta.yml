@@ -1,0 +1,117 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W5-REM-02
+title: "Reconcile DATA_AUTHORITY_SYSTEM_DESIGN.md Drift"
+owner_role: ARCHITECT
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+depends_on: []
+invariants: []
+
+deliverable_files:
+  - scripts/audit/verify_tsk_p2_w5_rem_02.sh
+  - evidence/phase2/tsk_p2_w5_rem_02.json
+  - docs/plans/phase2/TSK-P2-W5-REM-02/PLAN.md
+  - docs/plans/phase2/TSK-P2-W5-REM-02/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/verify_tsk_p2_w5_rem_02.sh
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: false
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+migration_dependencies:
+  enabled: false
+  required_migrations:
+    - 0144: "Wave 5 remediation baseline"
+  table_dependencies:
+    - schema_migrations: "must track migrations"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON correctly demonstrates enforcement via state evaluation."
+proof_limitations:
+  - "Does not prove runtime API integration (deferred)."
+
+touches:
+  - scripts/audit/verify_tsk_p2_w5_rem_02.sh
+  - evidence/phase2/tsk_p2_w5_rem_02.json
+  - tasks/TSK-P2-W5-REM-02/meta.yml
+  - docs/plans/phase2/TSK-P2-W5-REM-02/PLAN.md
+  - docs/plans/phase2/TSK-P2-W5-REM-02/EXEC_LOG.md
+
+work:
+  - '[ID tsk_p2_w5_rem_02_01] Update DATA_AUTHORITY_SYSTEM_DESIGN.md to match cryptographic enforcement reality while waiting for Wave 5 structural binding.'
+
+acceptance_criteria:
+  - '[ID tsk_p2_w5_rem_02_01] Documentation accurately reflects database structural capabilities versus cryptographic capabilities.'
+
+negative_tests:
+  - id: TSK-P2-W5-REM-02-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: Documentation accurately reflects database structural capabilities versus cryptographic capabilities."
+    required: true
+
+positive_tests:
+  - id: TSK-P2-W5-REM-02-P1
+    description: "Verify that execution exits 0 on success path for: Documentation accurately reflects database structural capabilities versus cryptographic capabilities."
+    required: true
+
+verification:
+  - '# [ID tsk_p2_w5_rem_02_01] test -x scripts/audit/verify_tsk_p2_w5_rem_02.sh && bash scripts/audit/verify_tsk_p2_w5_rem_02.sh > evidence/phase2/tsk_p2_w5_rem_02.json || exit 1'
+
+evidence:
+  - path: evidence/phase2/tsk_p2_w5_rem_02.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+implementation_plan: docs/plans/phase2/TSK-P2-W5-REM-02/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W5-REM-02/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py'
+client: cursor
+assigned_agent: architect
+model: claude-sonnet-4-20250514

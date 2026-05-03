@@ -10,10 +10,10 @@ GIT_SHA=$(git rev-parse HEAD)
 TIMESTAMP_UTC=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Check if ENUM type exists
-ENUM_EXISTS=$(psql -tAc "SELECT 1 FROM pg_type WHERE typname = 'data_authority_level'" 2>/dev/null || echo "0")
+ENUM_EXISTS=$(psql "$DATABASE_URL" -tAc "SELECT 1 FROM pg_type WHERE typname = 'data_authority_level'" 2>/dev/null || echo "0")
 
 # Check if all 7 values are present
-VALUES_COUNT=$(psql -tAc "SELECT COUNT(*) FROM pg_enum WHERE enumtypid = 'data_authority_level'::regtype" 2>/dev/null || echo "0")
+VALUES_COUNT=$(psql "$DATABASE_URL" -tAc "SELECT COUNT(*) FROM pg_enum WHERE enumtypid = 'data_authority_level'::regtype" 2>/dev/null || echo "0")
 
 # Check MIGRATION_HEAD
 MIGRATION_HEAD=$(cat schema/migrations/MIGRATION_HEAD)

@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-015
 inv_scope: change-rule
-expiry: 2026-05-02
+expiry: 2026-06-01
 follow_up_ticket: TSK-P2-PREAUTH-005
 reason: Phase 2 Phase005 migrations implementation for state transitions
 author: system

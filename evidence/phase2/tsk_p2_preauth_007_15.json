@@ -1,7 +1,7 @@
 {
   "task_id": "TSK-P2-PREAUTH-007-15",
-  "git_sha": "d805b3814d01834ad3783eb13f6427508d731d7f",
-  "timestamp_utc": "2026-04-26T12:43:39Z",
+  "git_sha": "ca6ef313511338854a40e2aae9e13871e54bedf9",
+  "timestamp_utc": "2026-05-03T14:15:51Z",
   "status": "PASS",
   "checks": [
     {
@@ -18,7 +18,7 @@
   "observed_hashes": [
     {
       "path": "scripts/audit/verify_tsk_p2_preauth_007_15.sh",
-      "sha256": "0e1916acff9b7f5acc6a52fc628473c885a4eb7dc227392203854cdbf4633ffd"
+      "sha256": "94d747b4814ca23975b88394af35c667678014d7c2c80d6029aa9075d8d9c2e2"
     }
   ]
 }

@@ -2,6 +2,7 @@
 exception_id: EXC-001
 inv_scope: change-rule
 expiry: 2026-05-03
+closed_at: 2026-05-03
 follow_up_ticket: TSK-P2-PREAUTH-006
 reason: PRE-PHASE2 data authority implementation requires new ENUM type and trigger functions with SECURITY DEFINER. Invariants linkage will be added in follow-up task TSK-P2-PREAUTH-007.
 author: system

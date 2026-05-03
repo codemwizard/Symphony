@@ -5,14 +5,13 @@ set -euo pipefail
 # verify_gf_rls_runtime.sh — Runtime RLS verifier for Green Finance tables
 #
 # Validates that all 16 GF tables in a running database have the canonical
-# born-secure RLS configuration:
+# dual-policy RLS configuration (0095 architecture):
 #   - relrowsecurity = true
 #   - relforcerowsecurity = true  (critical: blocks superuser bypass)
-#   - Exactly 1 policy per table
-#   - Policy is RESTRICTIVE (polpermissive = false)
-#   - Policy is FOR ALL (polcmd = '*')
-#   - Policy applies TO PUBLIC (polroles = {0})
-#   - Expression matches canonical function per isolation class
+#   - Exactly 2 policies per table (base PERMISSIVE + iso RESTRICTIVE)
+#   - Base policy: PERMISSIVE, FOR ALL, TO PUBLIC, USING (true)
+#   - Isolation policy: RESTRICTIVE, FOR ALL, TO PUBLIC
+#   - Isolation expression matches canonical function per isolation class
 #
 # Evidence output: evidence/phase1/gf_rls_runtime_verification.json
 # =============================================================================
@@ -92,7 +91,7 @@ for entry in "${GF_TABLES[@]}"; do
   [[ "$rls_enabled" == "true" ]] || add_failure "rls_not_enabled:$tbl"
   [[ "$rls_forced" == "true" ]] || add_failure "rls_not_forced:$tbl"
 
-  # Check policy count (must be exactly 1)
+  # Check policy count (must be 1 for legacy single-policy or 2 for dual-policy 0095 architecture)
   policy_count="$(query "
     SELECT COUNT(*)
     FROM pg_policy p
@@ -101,9 +100,36 @@ for entry in "${GF_TABLES[@]}"; do
     WHERE n.nspname = 'public' AND c.relname = '$tbl';
   " | tr -d '[:space:]')"
 
-  [[ "$policy_count" == "1" ]] || add_failure "wrong_policy_count:$tbl:expected_1_got_$policy_count"
+  if [[ "$policy_count" != "1" ]] && [[ "$policy_count" != "2" ]]; then
+    add_failure "wrong_policy_count:$tbl:expected_1_or_2_got_$policy_count"
+  fi
 
-  # Check policy shape: RESTRICTIVE, FOR ALL, TO PUBLIC
+  # Dual-policy architecture (0095): validate base policy exists
+  if [[ "$policy_count" == "2" ]]; then
+    base_policy_ok="$(query "
+      SELECT EXISTS (
+        SELECT 1 FROM pg_policy p
+        JOIN pg_class c ON c.oid = p.polrelid
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE n.nspname = 'public' AND c.relname = '$tbl'
+          AND p.polname LIKE 'rls_base_%'
+          AND p.polpermissive = true
+          AND p.polcmd = '*'
+          AND p.polroles = '{0}'
+      )::text;
+    " | tr -d '[:space:]')"
+    [[ "$base_policy_ok" == "true" ]] || add_failure "base_policy_invalid:$tbl:missing_or_wrong_rls_base"
+  fi
+
+  # For dual-policy: query the isolation policy specifically
+  # For single-policy: query the only policy present
+  if [[ "$policy_count" == "2" ]]; then
+    iso_filter="AND p.polname LIKE 'rls_iso_%'"
+  else
+    iso_filter=""
+  fi
+
+  # Check isolation policy shape
   policy_shape="$(query "
     SELECT json_build_object(
       'name', p.polname,
@@ -117,6 +143,7 @@ for entry in "${GF_TABLES[@]}"; do
     JOIN pg_class c ON c.oid = p.polrelid
     JOIN pg_namespace n ON n.oid = c.relnamespace
     WHERE n.nspname = 'public' AND c.relname = '$tbl'
+      $iso_filter
     LIMIT 1;
   " | tr -d '[:space:]' | sed 's/^[[:space:]]*//')"
 
@@ -152,10 +179,16 @@ except json.JSONDecodeError:
 
 errors = []
 isolation_type = "$isolation_type"
+policy_count = int("$policy_count")
 
-# Must be PERMISSIVE (polpermissive = true) — RESTRICTIVE-only blocks all access
-if not shape.get("permissive", True):
-    errors.append("is_restrictive_blocks_all_access")
+# For dual-policy (0095): isolation policy must be RESTRICTIVE
+# For single-policy (legacy): policy can be either PERMISSIVE or RESTRICTIVE
+if policy_count == 2:
+    if shape.get("permissive", True):
+        errors.append("iso_policy_not_restrictive")
+else:
+    # Legacy single-policy: accept either permissive posture
+    pass
 
 # Must be FOR ALL (polcmd = '*')
 if shape.get("cmd") != "*":

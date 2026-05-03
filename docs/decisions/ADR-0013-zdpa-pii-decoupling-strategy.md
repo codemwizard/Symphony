@@ -1,7 +1,8 @@
-# ADR-0013: ZDPA PII Decoupling and Evidence Survivability (Deferred Enforcement)
+# ADR-0013: ZDPA PII Decoupling and Evidence Survivability (Legacy)
 
 ## Status
-Phase-0 ADR stub (roadmap-backed). No Phase-0 schema enforcement.
+SUPERSEDED by [ADR-0015](file:///home/mwiza/workspaces/Symphony-Demo/Symphony/docs/decisions/ADR-0015-identity-reference-trust-boundary.md). 
+Phase-0 ADR stub.
 
 ## Invariants
 - Roadmap invariant: `INV-115` (alias: `INV-ZDPA-01`)

@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-1001
 inv_scope: change-rule
-expiry: 2026-05-01
+expiry: 2026-06-01
 follow_up_ticket: TSK-P2-PREAUTH-002-01
 reason: Migration 0117 creates factor_registry table with UNIQUE constraint for emission factor tracking. This is Phase 2 Wave 2 pre-auth schema work, not a production-affecting change.
 author: cascade

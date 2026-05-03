@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "approval_id": "APV-TSK-P2-W5-REM-01",
+  "approval_type": "STAGE_A_INTENT",
+  "task_reference": "TSK-P2-W5-REM-01",
+  "regulated_surfaces_touched": [
+    "schema/migrations/0174_tsk_p2_w5_rem_01_expand.sql",
+    "schema/migrations/0175_tsk_p2_w5_rem_01_backfill.sql",
+    "schema/migrations/0176_tsk_p2_w5_rem_01_constrain.sql",
+    "schema/migrations/0177_tsk_p2_w5_rem_01_trigger.sql",
+    "scripts/audit/verify_tsk_p2_w5_rem_01.sh"
+  ],
+  "justification": "DRD Remediation required to implement cross-entity replay protection for execution_records.",
+  "approved_by": "ARCHITECT",
+  "timestamp_utc": "2026-05-01T08:48:00Z"
+}
