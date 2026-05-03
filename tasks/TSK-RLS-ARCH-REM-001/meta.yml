@@ -11,7 +11,7 @@ depends_on: []
 invariants: []
 
 deliverable_files:
-  - scripts/db/verify_rls_arch_rem_001.sh
+  - scripts/audit/verify_rls_arch_rem_001.sh
   - evidence/phase1/tsk_rls_arch_rem_001.json
   - docs/plans/phase1/TSK-RLS-ARCH-REM-001/PLAN.md
   - docs/plans/phase1/TSK-RLS-ARCH-REM-001/EXEC_LOG.md
@@ -21,7 +21,7 @@ regulated_surface_compliance:
   approval_workflow: stage_a_stage_b
   stage_a_required_before_edit: true
   regulated_paths:
-    - scripts/db/verify_rls_arch_rem_001.sh
+    - scripts/audit/verify_rls_arch_rem_001.sh
   must_read:
     - docs/operations/REGULATED_SURFACE_PATHS.yml
     - docs/operations/approval_metadata.schema.json
@@ -66,7 +66,7 @@ proof_limitations:
   - "Does not prove runtime API integration (deferred)."
 
 touches:
-  - scripts/db/verify_rls_arch_rem_001.sh
+  - scripts/audit/verify_rls_arch_rem_001.sh
   - evidence/phase1/tsk_rls_arch_rem_001.json
   - tasks/TSK-RLS-ARCH-REM-001/meta.yml
   - docs/plans/phase1/TSK-RLS-ARCH-REM-001/PLAN.md
@@ -91,7 +91,7 @@ positive_tests:
     required: true
 
 verification:
-  - '# [ID tsk_rls_arch_rem_001_01] [ID tsk_rls_arch_rem_001_02] test -x scripts/db/verify_rls_arch_rem_001.sh && bash scripts/db/verify_rls_arch_rem_001.sh > evidence/phase1/tsk_rls_arch_rem_001.json || exit 1'
+  - '# [ID tsk_rls_arch_rem_001_01] [ID tsk_rls_arch_rem_001_02] test -x scripts/audit/verify_rls_arch_rem_001.sh && bash scripts/audit/verify_rls_arch_rem_001.sh > evidence/phase1/tsk_rls_arch_rem_001.json || exit 1'
 
 evidence:
   - path: evidence/phase1/tsk_rls_arch_rem_001.json

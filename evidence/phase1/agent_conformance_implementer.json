@@ -64,6 +64,7 @@
   "regulated_surface_changes_detected": true,
   "regulated_surface_changed_paths": [
     "docs/operations/REM-2026-05-02_identity_trust_boundary_implementation.md",
+    "docs/operations/failure_index.md",
     "evidence/phase0/TSK-P0-KYC-001.json",
     "evidence/phase0/TSK-P0-KYC-002.json",
     "evidence/phase0/TSK-P0-KYC-003.json",

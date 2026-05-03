@@ -1,0 +1,59 @@
+{
+  "approval_id": "STAGE-A-2026-05-03-feat-fix-pre-phase2-bugs",
+  "approval_date": "2026-05-03T15:32:00Z",
+  "approval_status": "APPROVED",
+  "approval_stage": "stage_a",
+  "regulatory_surface": ["DB_SCHEMA", "SCRIPTS", "TASKS"],
+  "blast_radius": "MEDIUM",
+  "branch_name": "feat/fix-pre-phase2-bugs",
+  "changes_approved": [
+    {
+      "file_path": "schema/rollbacks/",
+      "change_type": "CREATE_DIRECTORY",
+      "description": "Create rollbacks directory for 0095 files"
+    },
+    {
+      "file_path": "schema/rollbacks/0095_pre_snapshot.sql",
+      "change_type": "CREATE_FILE",
+      "description": "Recreate pre snapshot file from PLAN.md specification"
+    },
+    {
+      "file_path": "schema/rollbacks/0095_rollback.sql",
+      "change_type": "CREATE_FILE", 
+      "description": "Recreate rollback file from PLAN.md specification"
+    },
+    {
+      "file_path": "scripts/db/verify_tsk_p2_preauth_005_08.sh",
+      "change_type": "MODIFY",
+      "description": "Fix GF062 coherence invariant on line 49"
+    },
+    {
+      "file_path": "tasks/TSK-RLS-ARCH-REM-001/meta.yml",
+      "change_type": "MODIFY",
+      "description": "Update verifier path from scripts/db/ to scripts/audit/"
+    }
+  ],
+  "compliance_requirements": {
+    "stage_a_created_before_edit": true,
+    "regulated_surface_compliance": true,
+    "remediation_trace_required": true,
+    "baseline_regeneration_required": true
+  },
+  "risk_assessment": {
+    "risk_class": "GOVERNANCE",
+    "verification_status": "PENDING_IMPLEMENTATION",
+    "mitigation_steps": [
+      "Minimal targeted changes",
+      "Verification scripts post-implementation",
+      "Evidence generation for all changes"
+    ]
+  },
+  "canonical_references": [
+    "docs/operations/REGULATED_SURFACE_PATHS.yml",
+    "docs/operations/approval_metadata.schema.json",
+    "docs/operations/REMEDIATION_TRACE_WORKFLOW.md",
+    "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  ],
+  "approver": "cascade_agent",
+  "approval_rationale": "Bug fixes required for PR review compliance with minimal targeted changes following Symphony governance requirements"
+}
