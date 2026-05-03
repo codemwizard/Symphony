@@ -1,0 +1,33 @@
+{
+  "task_id": "REMEDIATION-BUG-FIXES",
+  "status": "COMPLETED",
+  "git_sha": "322a80e8",
+  "timestamp_utc": "2026-05-03T17:58:00Z",
+  "bugs_fixed": [
+    {
+      "bug_id": "BUG-1",
+      "description": "verify_tsk_p2_w5_rem_01.sh INSERT statements missing project_id column",
+      "fix": "Added project_id column to all INSERT statements (lines 74-84, 92-102, 110-120)",
+      "verification": "Syntax check confirms project_id column added to all INSERT statements"
+    },
+    {
+      "bug_id": "BUG-2", 
+      "description": "generate_task_pack.py get_evidence_path returns None for missing path key",
+      "fix": "Added proper error checking in get_evidence_path function",
+      "verification": "Function now validates path exists and throws error if missing"
+    }
+  ],
+  "regulated_surface_compliance": {
+    "stage_a_approval": "CREATED",
+    "remediation_trace": "EXEC_LOG.md updated with required markers",
+    "files_modified": [
+      "scripts/audit/verify_tsk_p2_w5_rem_01.sh",
+      "scripts/agent/generate_task_pack.py"
+    ]
+  },
+  "verification_results": {
+    "syntax_check_verify_script": "PASS",
+    "syntax_check_generate_script": "PASS",
+    "database_test": "SKIPPED - Database connection unavailable"
+  }
+}

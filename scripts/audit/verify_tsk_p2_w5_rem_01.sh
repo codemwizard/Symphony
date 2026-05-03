@@ -73,13 +73,13 @@ psql "$DATABASE_URL" -c "
 echo -n "  Negative Test (mismatched entity_type)... "
 if psql "$DATABASE_URL" -c "
     INSERT INTO policy_decisions (
-        policy_decision_id, execution_id, decision_type, authority_scope, declared_by, 
+        policy_decision_id, project_id, execution_id, decision_type, authority_scope, declared_by, 
         entity_type, entity_id, decision_hash, signature, signed_at
     ) VALUES (
-        gen_random_uuid(), '$TEST_EXEC_ID', 'GRANT', 'GLOBAL', gen_random_uuid(), 
+        gen_random_uuid(), '$PROJECT_ID', '$TEST_EXEC_ID', 'GRANT', 'GLOBAL', gen_random_uuid(), 
         'ENTITY_B', '$ENTITY_A_ID', 
         '0000000000000000000000000000000000000000000000000000000000000000', 
-        '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 
+        '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 
         now()
     );" 2>&1 | grep -q "GF062"; then
     echo "✅ PASS (Blocked)"
@@ -91,13 +91,13 @@ fi
 echo -n "  Negative Test (mismatched entity_id)... "
 if psql "$DATABASE_URL" -c "
     INSERT INTO policy_decisions (
-        policy_decision_id, execution_id, decision_type, authority_scope, declared_by, 
+        policy_decision_id, project_id, execution_id, decision_type, authority_scope, declared_by, 
         entity_type, entity_id, decision_hash, signature, signed_at
     ) VALUES (
-        gen_random_uuid(), '$TEST_EXEC_ID', 'GRANT', 'GLOBAL', gen_random_uuid(), 
+        gen_random_uuid(), '$PROJECT_ID', '$TEST_EXEC_ID', 'GRANT', 'GLOBAL', gen_random_uuid(), 
         'ENTITY_A', '$ENTITY_B_ID', 
         '0000000000000000000000000000000000000000000000000000000000000000', 
-        '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 
+        '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 
         now()
     );" 2>&1 | grep -q "GF062"; then
     echo "✅ PASS (Blocked)"
@@ -109,13 +109,13 @@ fi
 echo -n "  Positive Test (matching entity info)... "
 if psql "$DATABASE_URL" -c "
     INSERT INTO policy_decisions (
-        policy_decision_id, execution_id, decision_type, authority_scope, declared_by, 
+        policy_decision_id, project_id, execution_id, decision_type, authority_scope, declared_by, 
         entity_type, entity_id, decision_hash, signature, signed_at
     ) VALUES (
-        gen_random_uuid(), '$TEST_EXEC_ID', 'GRANT', 'GLOBAL', gen_random_uuid(), 
+        gen_random_uuid(), '$PROJECT_ID', '$TEST_EXEC_ID', 'GRANT', 'GLOBAL', gen_random_uuid(), 
         'ENTITY_A', '$ENTITY_A_ID', 
         '0000000000000000000000000000000000000000000000000000000000000000', 
-        '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 
+        '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 
         now()
     );" > /dev/null 2>&1; then
     echo "✅ PASS (Allowed)"

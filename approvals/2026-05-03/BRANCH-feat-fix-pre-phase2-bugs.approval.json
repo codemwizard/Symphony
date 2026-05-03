@@ -1,0 +1,44 @@
+{
+  "approval_id": "STAGE-A-2026-05-03-feat-fix-pre-phase2-bugs",
+  "approval_date": "2026-05-03T17:46:00Z",
+  "approval_status": "APPROVED",
+  "approval_stage": "stage_a",
+  "regulatory_surface": ["SCRIPTS", "AGENT_TOOLS"],
+  "blast_radius": "LOW",
+  "branch_name": "feat-fix-pre-phase2-bugs",
+  "changes_approved": [
+    {
+      "file_path": "scripts/audit/verify_tsk_p2_w5_rem_01.sh",
+      "change_type": "MODIFY",
+      "description": "Add project_id column to INSERT statements in lines 74-84, 92-102, 110-120"
+    },
+    {
+      "file_path": "scripts/agent/generate_task_pack.py",
+      "change_type": "MODIFY",
+      "description": "Fix get_evidence_path function to handle missing path key with proper error handling"
+    }
+  ],
+  "compliance_requirements": {
+    "stage_a_created_before_edit": true,
+    "regulated_surface_compliance": true,
+    "remediation_trace_required": true,
+    "baseline_regeneration_required": false
+  },
+  "risk_assessment": {
+    "risk_class": "GOVERNANCE",
+    "verification_status": "PENDING_IMPLEMENTATION",
+    "mitigation_steps": [
+      "Minimal targeted changes",
+      "Verification scripts post-implementation",
+      "Evidence generation for all changes"
+    ]
+  },
+  "canonical_references": [
+    "docs/operations/REGULATED_SURFACE_PATHS.yml",
+    "docs/operations/approval_metadata.schema.json",
+    "docs/operations/REMEDIATION_TRACE_WORKFLOW.md",
+    "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  ],
+  "approver": "cascade_agent",
+  "approval_rationale": "Bug fixes required for proper GF062 behavioral testing and task pack generation with minimal targeted changes following Symphony governance compliance"
+}

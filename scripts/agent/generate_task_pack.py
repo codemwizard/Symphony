@@ -34,7 +34,10 @@ def get_runner(verifier):
 
 def get_evidence_path(evidence):
     if isinstance(evidence, dict):
-        return evidence.get("path")
+        path = evidence.get("path")
+        if not path:
+            die("Evidence dict must contain a 'path' key.")
+        return path
     return evidence
 
 def generate_plan(data, plan_dir):
