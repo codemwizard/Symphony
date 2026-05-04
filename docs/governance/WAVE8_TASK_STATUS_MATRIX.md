@@ -37,6 +37,46 @@ Tasks are classified based on evidence-backed completion status, not inherited s
 | TSK-P2-REG-004-00 | Scaffold | No implementation evidence | Planning only |
 | TSK-P2-REG-004-01 | Scaffold | No implementation evidence | Planning only |
 
+### Current TSK-P2-W8-* Tasks (Evidence-Based Classification)
+
+**Fully Implemented Tasks (5/23)**
+
+| Task ID | Classification | Evidence Basis | Notes |
+|---------|---------------|----------------|-------|
+| TSK-P2-W8-SEC-002 | True-Complete | PostgreSQL extension built, installed, and verified | Real Ed25519 implementation with libsodium |
+| TSK-P2-W8-DB-006 | True-Complete | Migration 0177, trigger enforcement, verification passed | Database cryptographic enforcement functional |
+| TSK-P2-W8-DB-007b | True-Complete | Migration 0178, timestamp enforcement, verification passed | Scope and timestamp enforcement functional |
+| TSK-P2-W8-DB-007c | True-Complete | Migration 0178, replay prevention, verification passed | Replay law enforcement functional |
+| TSK-P2-W8-DB-009 | True-Complete | Migration 0180, context binding, verification passed | Context binding enforcement functional |
+
+**Partially Implemented Tasks (13/23)**
+
+| Task ID | Classification | Evidence Basis | Notes |
+|---------|---------------|----------------|-------|
+| TSK-P2-W8-ARCH-001 | Partial | Contract exists, missing verification | Documentation only, no verification script |
+| TSK-P2-W8-ARCH-002 | Partial | Contract exists, missing verification | Documentation only, no verification script |
+| TSK-P2-W8-ARCH-003 | Partial | Contract exists, missing verification | Documentation only, no verification script |
+| TSK-P2-W8-ARCH-004 | Partial | Specification exists, missing verification | Documentation only, no verification script |
+| TSK-P2-W8-ARCH-005 | Partial | Design exists, missing verification | Documentation only, no verification script |
+| TSK-P2-W8-ARCH-006 | Partial | Mapping exists, missing verification | Documentation only, no verification script |
+| TSK-P2-W8-DB-001 | Partial | Migration 0172 exists, missing verification | Migration exists but no verification testing |
+| TSK-P2-W8-DB-002 | Partial | Migration 0173 exists, missing verification | Migration exists but no verification testing |
+| TSK-P2-W8-DB-003 | Partial | Migration 0174 exists, missing verification | Migration exists but no verification testing |
+| TSK-P2-W8-DB-004 | Partial | Migration 0175 exists, missing verification | Migration exists but no verification testing |
+| TSK-P2-W8-DB-005 | Partial | Migration 0176 exists, missing verification | Migration exists but no verification testing |
+| TSK-P2-W8-DB-007a | Partial | Migration 0178 exists, missing verification | Migration exists but no verification testing |
+| TSK-P2-W8-DB-008 | Partial | Migration 0179 exists, missing verification | Migration exists but no verification testing |
+| TSK-P2-W8-GOV-001 | Partial | ADR documentation exists, missing verification | Governance artifacts exist but no verification |
+
+**Not Implemented Tasks (5/23)**
+
+| Task ID | Classification | Evidence Basis | Notes |
+|---------|---------------|----------------|-------|
+| TSK-P2-W8-QA-001 | Not Implemented | Missing test vectors, evidence exists | Core deliverable missing |
+| TSK-P2-W8-QA-002 | Not Implemented | Missing verification script, evidence exists | Core deliverable missing |
+| TSK-P2-W8-SEC-000 | Not Implemented | Missing .NET probes, evidence exists | Core deliverable missing |
+| TSK-P2-W8-SEC-001 | Not Implemented | Missing verification script, evidence exists | Core deliverable missing |
+
 ### Legacy TSK-P2-W8-CRYPTO-* Tasks
 
 | Task ID | Classification | Evidence Basis | Notes |

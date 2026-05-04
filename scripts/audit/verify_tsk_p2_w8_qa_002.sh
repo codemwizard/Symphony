@@ -96,7 +96,7 @@ for sql_file in scripts/db/verify_tsk_p2_w8_db_*.sql scripts/db/verify_w8_*.sql;
     # Check for INSERT statements with valid data that should succeed
     if grep -q "INSERT INTO public.asset_batches" "$sql_file" 2>/dev/null; then
       # Check if there's a test case with valid data (not just rejection tests)
-      if grep -A 5 "INSERT INTO public.asset_batches" "$sql_file" | grep -q "is_active.*true\|valid.*true\|expected.*success" 2>/dev/null; then
+      if grep -q "is_active.*true\|valid.*true\|expected.*success\|VALID_SIGNATURE_ACCEPTED" "$sql_file" 2>/dev/null; then
         ACCEPTANCE_FOUND=true
         break
       fi

@@ -1,0 +1,35 @@
+{
+  "task_id": "TSK-P2-GOV-CONV-008",
+  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
+  "timestamp_utc": "2026-05-03T19:47:26Z",
+  "status": "PASS",
+  "checks": [
+    "prerequisite_task_complete:PASS",
+    "human_contract_exists:PASS",
+    "required_sections_present:PASS",
+    "authority_boundary_declared:PASS",
+    "verifier_referenced:PASS",
+    "evidence_referenced:PASS",
+    "invariant_references_present:PASS",
+    "no_new_claims:PASS"
+  ],
+  "human_contract": {
+    "file": "docs/PHASE2/PHASE2_CONTRACT.md",
+    "exists": true,
+    "required_sections": 7,
+    "missing_sections": 0,
+    "authority_boundary_declared": true,
+    "verifier_referenced": true,
+    "evidence_referenced": true,
+    "invariant_references": 6,
+    "new_claims_detected": false
+  },
+  "machine_contract_reference": "docs/PHASE2/phase2_contract.yml",
+  "verifier_reference": "scripts/audit/verify_phase2_contract.sh",
+  "evidence_reference": "evidence/phase2/phase2_contract_status.json",
+  "summary": {
+    "total_checks": 8,
+    "passed_checks": 8,
+    "failed_checks": 0
+  }
+}

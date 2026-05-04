@@ -1,89 +1,76 @@
 {
   "task_id": "TSK-P2-W8-SEC-000",
-  "git_sha": "6dbab49ffc6ace36ff8b270e91c6377df671617c",
-  "timestamp_utc": "2026-04-29T07:00:28.839Z",
+  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
+  "timestamp_utc": "2026-05-04T10:05:15.795Z",
   "status": "PASS",
   "checks": [
     {
-      "check": "[ID w8_sec_000_work_01] Docker available",
-      "status": "PASS",
-      "detail": "Docker found: Docker version 29.3.1, build c2be9cc"
+      "check": "probe_project_exists",
+      "status": "PASS"
     },
     {
-      "check": "[ID w8_sec_000_work_01] Probe program directory exists",
-      "status": "PASS",
-      "detail": "Probe directory found at services/executor-worker/dotnet/probe"
+      "check": "probe_program_exists",
+      "status": "PASS"
     },
     {
-      "check": "[ID w8_sec_000_work_01] SDK digest configured",
-      "status": "PASS",
-      "detail": "Expected SDK digest: sha256:microsoft/dotnet/sdk:10.0.100-preview.2.24130.4"
+      "check": "probe_builds",
+      "status": "PASS"
     },
     {
-      "check": "[ID w8_sec_000_work_01] Runtime digest configured",
-      "status": "PASS",
-      "detail": "Expected runtime digest: sha256:microsoft/dotnet/aspnet:10.0.0-preview.2.24130.4"
-    },
-    {
-      "check": "[ID w8_sec_000_work_02] .NET 10 family declared",
-      "status": "PASS",
-      "detail": "Declared .NET version: 10.0.100-preview.2.24130.4"
-    },
-    {
-      "check": "[ID w8_sec_000_work_02] Linux/OpenSSL path declared",
-      "status": "PASS",
-      "detail": "Declared OpenSSL path: /lib/x86_64-linux-gnu/libcrypto.so.3"
-    },
-    {
-      "check": "[ID w8_sec_000_work_03] First-party Ed25519 surface declared",
-      "status": "PASS",
-      "detail": "Declared Ed25519 surface: System.Security.Cryptography.Ed25519"
-    },
-    {
-      "check": "[ID w8_sec_000_work_04] Wave 8 contract bytes test vector exists",
-      "status": "PASS",
-      "detail": "Test vector found at services/executor-worker/dotnet/test_vector.json"
-    },
-    {
-      "check": "[ID w8_sec_000_work_03] Reflection-only surface proof banned",
-      "status": "PASS",
-      "detail": "Reflection-only surface proof is explicitly inadmissible"
-    },
-    {
-      "check": "[ID w8_sec_000_work_04] Toy-crypto proof banned",
-      "status": "PASS",
-      "detail": "Toy-crypto proof is explicitly inadmissible"
+      "check": "probe_execution",
+      "status": "PASS"
     }
   ],
-  "observed_paths": [],
-  "observed_hashes": {},
+  "observed_paths": [
+    "scripts/security/probes/w8_ed25519_environment_fidelity/Wave8Ed25519Probe.csproj",
+    "scripts/security/probes/w8_ed25519_environment_fidelity/Program.cs"
+  ],
+  "observed_hashes": {
+    "Wave8Ed25519Probe.csproj": "f148a87d638f980036dd74f14e0d9f0a26f6ed9014497358801f0f0678f6870b",
+    "Program.cs": "3d57d6e9b3c0e3f815156174c6a672b9d6e62381e5ba8ed707607d6b29d9f755"
+  },
   "command_outputs": [
-    "✓ Docker available: Docker version 29.3.1, build c2be9cc",
-    "✓ Probe directory exists",
-    "✓ SDK digest configured: sha256:microsoft/dotnet/sdk:10.0.100-preview.2.24130.4",
-    "✓ Runtime digest configured: sha256:microsoft/dotnet/aspnet:10.0.0-preview.2.24130.4",
-    "✓ .NET 10 family declared: 10.0.100-preview.2.24130.4",
-    "✓ Linux/OpenSSL path declared: /lib/x86_64-linux-gnu/libcrypto.so.3",
-    "✓ First-party Ed25519 surface declared: System.Security.Cryptography.Ed25519",
-    "✓ Wave 8 contract bytes test vector exists",
-    "✓ Reflection-only surface proof banned",
-    "✓ Toy-crypto proof banned",
-    "✓ All checks passed"
+    "Probe build: SUCCESS",
+    "Probe execution: SUCCESS"
   ],
   "execution_trace": [
     "verify_tsk_p2_w8_sec_000.sh executed",
-    "Checking Docker availability",
-    "Checking for probe program",
-    "Checking SDK digest configuration",
-    "Checking runtime digest configuration",
-    "Checking .NET 10 family requirement",
-    "Checking Linux/OpenSSL path requirement",
-    "Checking first-party Ed25519 surface declaration",
-    "Checking Wave 8 contract bytes test vector",
-    "Checking explicit bans compliance",
-    "Verification complete",
-    "Total checks: 10",
-    "Passed: 10",
+    "Total checks: 4",
+    "Passed: 4",
     "Failed: 0"
-  ]
+  ],
+  "probe_data": {
+    "task_id": "TSK-P2-W8-SEC-000",
+    "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
+    "timestamp_utc": "2026-05-04T10:05:32.565Z",
+    "status": "PASS",
+    "environment_tuple": {
+      "dotnet_version": "10.0.7",
+      "runtime_identifier": "ubuntu.24.04-x64",
+      "os_architecture": "X64",
+      "os_description": "Ubuntu 24.04.3 LTS",
+      "framework_description": ".NET 10.0.7"
+    },
+    "execution_trace": [
+      "Starting .NET 10 Ed25519 environment fidelity probe",
+      "Validating .NET 10 runtime family",
+      "Testing Ed25519 surface invocation",
+      "Testing sign/verify behavior on Wave 8 contract bytes",
+      "All fidelity checks completed successfully"
+    ],
+    "sdk_fingerprint": "dotnet:10.0.7-framework:.NET 10.0.7",
+    "runtime_fingerprint": "runtime:ubuntu.24.04-x64-arch:X64-os:Ubuntu 24.04.3 LTS",
+    "runtime_family": ".NET 10",
+    "openssl_path": "/usr/bin/openssl",
+    "ed25519_surface_invoked": true,
+    "ed25519_signature_verification": true,
+    "semantic_fidelity": {
+      "passes": true,
+      "sign_verify_works": true,
+      "altered_byte_rejected": true,
+      "wrong_key_rejected": true,
+      "error": null
+    },
+    "error_detail": null
+  }
 }

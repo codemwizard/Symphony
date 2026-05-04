@@ -1,0 +1,108 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-GOV-CONV-019
+title: "Create Phase-4 non-claimable stub docs only"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+depends_on: []
+invariants: ["INV-GOV-CONV-019"]
+
+deliverable_files:
+  - scripts/audit/verify_gov_conv_019.sh
+  - evidence/phase2/gov_conv_019_phase4_stub.json
+  - docs/plans/phase2/TSK-P2-GOV-CONV-019/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-019/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/verify_gov_conv_019.sh
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON correctly demonstrates enforcement via state evaluation."
+proof_limitations:
+  - "Does not prove runtime API integration (deferred)."
+
+touches:
+  - scripts/audit/verify_gov_conv_019.sh
+  - evidence/phase2/gov_conv_019_phase4_stub.json
+  - tasks/TSK-P2-GOV-CONV-019/meta.yml
+  - docs/plans/phase2/TSK-P2-GOV-CONV-019/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-019/EXEC_LOG.md
+
+work:
+  - "[ID gov_conv_019_w01] Create docs/PHASE4/README.md marking Phase-4 as not open"
+  - "[ID gov_conv_019_w02] Create docs/PHASE4/phase4_contract.yml with zero implementation rows"
+  - "[ID gov_conv_019_w03] Add explicit non-claimable status and future-phase placeholder"
+  - "[ID gov_conv_019_w04] Ensure stub prevents premature Phase-4 work initiation"
+
+acceptance_criteria:
+  - "[ID gov_conv_019_w01] README.md clearly states Phase-4 is not open for implementation"
+  - "[ID gov_conv_019_w02] phase4_contract.yml exists with zero rows and non-claimable status"
+  - "[ID gov_conv_019_w03] Both files include explicit anti-drift language"
+  - "[ID gov_conv_019_w04] Verifier confirms stubs exist and claim-prevention language is present"
+
+negative_tests:
+  - id: TSK-P2-GOV-CONV-019-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: README.md clearly states Phase-4 is not open for implementation"
+    required: true
+
+positive_tests:
+  - id: TSK-P2-GOV-CONV-019-P1
+    description: "Verify that execution exits 0 on success path for: README.md clearly states Phase-4 is not open for implementation"
+    required: true
+
+verification:
+  - '# [ID gov_conv_019_w01] [ID gov_conv_019_w02] [ID gov_conv_019_w03] [ID gov_conv_019_w04] test -x scripts/audit/verify_gov_conv_019.sh && bash scripts/audit/verify_gov_conv_019.sh > evidence/phase2/gov_conv_019_phase4_stub.json || exit 1'
+
+evidence:
+  - path: evidence/phase2/gov_conv_019_phase4_stub.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - phase4_stub_created
+      - non_claimable_status
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+implementation_plan: docs/plans/phase2/TSK-P2-GOV-CONV-019/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-GOV-CONV-019/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py'
+client: cursor
+assigned_agent: architect
+model: claude-sonnet-4-20250514

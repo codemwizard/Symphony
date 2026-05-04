@@ -1,27 +1,29 @@
 {
+  "check_id": "APPROVAL-METADATA",
   "schema_version": "1.0",
-  "generated_at_utc": "2026-04-27T20:57:00Z",
-  "git_commit": "54d084ef79ded07266ab5e3c258461ae6e7b0ba6",
+  "timestamp_utc": "2026-05-04T12:36:00Z",
+  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
   "change_scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
+      "docs/decisions/ADR-0010-baseline-policy.md",
       "docs/security/security_definer_dynamic_sql_allowlist.txt",
-      "schema/baseline.sql",
       "schema/baseline.meta.json",
-      "docs/decisions/ADR-0010-baseline-policy.md"
+      "schema/baseline.sql"
     ]
   },
   "ai": {
-    "ai_prompt_hash": "93856576a8026e82241c49435bbb41bf968ce2da9867f8ea0eba2c81c6785f83",
-    "model_id": "SWE-1.6",
-    "client": "cursor_codex",
-    "session_id": "wave7-ddl-allowlist-implementation"
+    "ai_prompt_hash": "c3f594d8fadba4761f865ae91177fb0c23cf7977302b97438dc0d7d5fd11a553",
+    "model_id": "claude-sonnet-4-20250514",
+    "client": "symphony_agent",
+    "session_id": "gov-conv-015-020-implementation"
   },
   "human_approval": {
-    "approver_id": "mwiza",
-    "approval_artifact_ref": "approvals/2026-05-01/BRANCH-feat-fix-pre-phase2-bugs.md",
-    "change_reason": "Fix pre-phase 2 bugs",
-    "approved_at_utc": "2026-05-02T05:00:00Z"
+    "approver_id": "security_guardian",
+    "approval_artifact_ref": "approvals/2026-05-03/BRANCH-implement-gov-conv-015-020.md",
+    "change_reason": "Implement Phase 2 Governance Convergence tasks 015-020 following Symphony anti-drift principles",
+    "approved_at_utc": "2026-05-03T20:52:00Z"
   },
-  "notes": "DDL allowlist implementation for hot-table aware linting. Added hot_tables.txt, ddl_allowlist.json with 57 fingerprinted entries, updated lint_ddl_lock_risk.sh with allowlist support, and updated CODEOWNERS for security review. All DDL on hot tables is fingerprinted without legacy migration exemptions."
+  "status": "PASS",
+  "notes": "Implementation of Phase 2 Governance Convergence tasks 015-020 including CI wiring, violation reporting, and Phase 3/4 stub documentation with anti-drift enforcement."
 }

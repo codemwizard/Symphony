@@ -1,0 +1,40 @@
+{
+  "task_id": "TSK-P2-GOV-CONV-012",
+  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
+  "timestamp_utc": "2026-05-03T20:22:44Z",
+  "status": "PASS",
+  "checks": [
+    "prerequisite_tasks_complete:PASS",
+    "prerequisite_evidence_exists:PASS",
+    "ratification_markdown_exists:PASS",
+    "approval_sidecar_exists:PASS",
+    "sidecar_schema_valid:PASS",
+    "sidecar_required_fields:PASS",
+    "cross_references_correct:PASS",
+    "no_overbroad_claims:PASS",
+    "bounded_scope_declared:PASS",
+    "regulated_surface_scope:PASS"
+  ],
+  "ratification_status": "PASS",
+  "artifacts": {
+    "markdown": "approvals/2026-05-03/PHASE2-RATIFICATION.md",
+    "sidecar": "approvals/2026-05-03/PHASE2-RATIFICATION.approval.json",
+    "sidecar_valid": true,
+    "cross_references_correct": true
+  },
+  "prerequisites": {
+    "tasks_completed": 4,
+    "evidence_files": 4,
+    "missing_evidence": 0
+  },
+  "scope_validation": {
+    "bounded_scope_declared": true,
+    "overbroad_claims": 0,
+    "regulated_surfaces": 8
+  },
+  "summary": {
+    "total_checks": 10,
+    "passed_checks": 10,
+    "failed_checks": 0
+  }
+}

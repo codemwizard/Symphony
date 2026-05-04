@@ -55,7 +55,7 @@ add_trace "verify_tsk_p2_w8_db_006.sh executed"
 
 # Check 1: Migration exists
 add_trace "Checking migration file"
-MIGRATION_FILE="schema/migrations/0177_wave8_cryptographic_enforcement_wiring.sql"
+MIGRATION_FILE="schema/migrations/0177_wave8_crypto_boundary_enforcement.sql"
 if [ -f "$MIGRATION_FILE" ]; then
   add_check "[ID w8_db_006_work_01] Migration exists" "PASS" "Migration found at $MIGRATION_FILE"
   add_output "✓ Migration exists"
@@ -96,7 +96,7 @@ fi
 
 # Check 4: Verification SQL exists
 add_trace "Checking verification SQL"
-VERIFICATION_SQL="scripts/db/verify_w8_cryptographic_enforcement_wiring.sql"
+VERIFICATION_SQL="scripts/db/verify_w8_crypto_boundary_enforcement.sql"
 if [ -f "$VERIFICATION_SQL" ]; then
   add_check "[ID w8_db_006_work_03] Verification SQL exists" "PASS" "Verification SQL found at $VERIFICATION_SQL"
   add_output "✓ Verification SQL exists"
@@ -110,7 +110,8 @@ fi
 # Check 5: Verification SQL proves PostgreSQL rejects cryptographically invalid writes
 add_trace "Checking verification SQL proves PostgreSQL rejects cryptographically invalid writes"
 if grep -q "MISSING_SIGNATURE_REJECTED" "$VERIFICATION_SQL" 2>/dev/null && \
-   grep -q "INVALID_SIGNATURE_FORMAT_REJECTED" "$VERIFICATION_SQL" 2>/dev/null; then
+   grep -q "UNKNOWN_SIGNER_REJECTED" "$VERIFICATION_SQL" 2>/dev/null && \
+   grep -q "INVALID_SIGNATURE_REJECTED" "$VERIFICATION_SQL" 2>/dev/null; then
   add_check "[ID w8_db_006_work_03] Verification SQL proves PostgreSQL rejects cryptographically invalid writes" "PASS" "Verification SQL includes physical write tests for cryptographic rejection"
   add_output "✓ Verification SQL proves PostgreSQL rejects cryptographically invalid writes"
 else

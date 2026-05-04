@@ -1,0 +1,224 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-GOV-CONV-010
+title: "Author Phase-2 agentic SDLC policy document"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  Phase-2 needs a scoped policy guard that tells agents how Phase-2 work differs
+  from Phase-1 without redefining apex governance. This task creates only
+  docs/operations/AGENTIC_SDLC_PHASE2_POLICY.md as a domain-canonical policy for
+  Phase-2 agent operation. It prevents drift by requiring the policy to defer to
+  AI_AGENT_OPERATION_MANUAL.md, PHASE_LIFECYCLE.md, and the Phase-2 machine contract
+  rather than introducing competing process rules.
+
+anti_patterns:
+  - >-
+    Rewriting or redefining apex agent process rules that belong in
+    AI_AGENT_OPERATION_MANUAL.md.
+  - >-
+    Adding delivery claims or phase-opening claims to the policy document.
+  - >-
+    Creating verifier scripts or CI wiring in the same task as policy authoring.
+
+out_of_scope:
+  - Modifying docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - Modifying docs/operations/PHASE_LIFECYCLE.md
+  - Modifying docs/PHASE2/phase2_contract.yml
+  - Creating or modifying verifier scripts
+  - Creating ratification approval artifacts
+  - Wiring CI or pre_ci
+
+stop_conditions:
+  - >-
+    STOP if TSK-P2-GOV-CONV-005 is incomplete or docs/PHASE2/phase2_contract.yml is
+    not invariant-centric.
+  - >-
+    STOP if the policy would claim Phase-2 is open or complete.
+  - >-
+    STOP if the policy conflicts with AI_AGENT_OPERATION_MANUAL.md or PHASE_LIFECYCLE.md.
+  - >-
+    STOP if approval metadata is absent before editing docs/operations/** or evidence/**.
+
+proof_guarantees:
+  - >-
+    docs/operations/AGENTIC_SDLC_PHASE2_POLICY.md exists and references the apex
+    operation manual, lifecycle policy, and Phase-2 machine contract.
+  - >-
+    The policy states that Phase-2 delivery claims must be backed by machine contract
+    rows, verifier output, and evidence.
+  - >-
+    The task-specific evidence records required policy sections and authority
+    references.
+
+proof_limitations:
+  - >-
+    This task does not prove semantic non-conflict across all governance documents;
+    that is verified by TSK-P2-GOV-CONV-011.
+  - >-
+    This task does not wire the policy into CI.
+  - >-
+    This task does not ratify or open Phase-2.
+
+depends_on:
+  - TSK-P2-GOV-CONV-005
+blocks:
+  - TSK-P2-GOV-CONV-011
+  - TSK-P2-GOV-CONV-012
+
+touches:
+  - docs/operations/AGENTIC_SDLC_PHASE2_POLICY.md
+  - scripts/audit/verify_gov_conv_010.sh
+  - evidence/phase2/gov_conv_010_phase2_policy_authoring.json
+  - tasks/TSK-P2-GOV-CONV-010/meta.yml
+  - docs/plans/phase2/TSK-P2-GOV-CONV-010/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-010/EXEC_LOG.md
+
+deliverable_files:
+  - docs/operations/AGENTIC_SDLC_PHASE2_POLICY.md
+  - scripts/audit/verify_gov_conv_010.sh
+  - evidence/phase2/gov_conv_010_phase2_policy_authoring.json
+  - docs/plans/phase2/TSK-P2-GOV-CONV-010/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-010/EXEC_LOG.md
+
+invariants:
+  - INV-GOV-CONV-010
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - docs/operations/AGENTIC_SDLC_PHASE2_POLICY.md
+    - scripts/audit/verify_gov_conv_010.sh
+    - evidence/phase2/gov_conv_010_phase2_policy_authoring.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+work:
+  - >-
+    [ID gov_conv_010_w01] Create docs/operations/AGENTIC_SDLC_PHASE2_POLICY.md with
+    Phase-2 scope, authority hierarchy, task execution rules, evidence requirements,
+    and anti-drift rules.
+  - >-
+    [ID gov_conv_010_w02] State that AI_AGENT_OPERATION_MANUAL.md is apex authority
+    and PHASE_LIFECYCLE.md owns phase taxonomy and claim semantics.
+  - >-
+    [ID gov_conv_010_w03] State that Phase-2 delivery claims require machine contract
+    rows, deterministic verifier output, and evidence under evidence/phase2/**.
+  - >-
+    [ID gov_conv_010_w04] Create scripts/audit/verify_gov_conv_010.sh to check required
+    sections and authority references without asserting full semantic non-conflict.
+  - >-
+    [ID gov_conv_010_w05] Emit evidence/phase2/gov_conv_010_phase2_policy_authoring.json
+    with required_sections_present, authority_references_present, and no_phase_open_claims.
+
+acceptance_criteria:
+  - >-
+    [ID gov_conv_010_w01] The policy document contains Phase-2 scope, authority
+    hierarchy, execution rules, evidence requirements, and anti-drift sections.
+  - >-
+    [ID gov_conv_010_w02] The policy references AI_AGENT_OPERATION_MANUAL.md and
+    PHASE_LIFECYCLE.md as higher authorities.
+  - >-
+    [ID gov_conv_010_w03] The policy requires machine contract rows, verifier output,
+    and evidence for Phase-2 delivery claims.
+  - >-
+    [ID gov_conv_010_w04] The verifier exits non-zero when required sections or
+    authority references are missing.
+  - >-
+    [ID gov_conv_010_w05] Evidence records no_phase_open_claims: true.
+
+negative_tests:
+  - id: TSK-P2-GOV-CONV-010-N1
+    description: >-
+      Run the verifier against a fixture policy that omits AI_AGENT_OPERATION_MANUAL.md
+      as apex authority. It must exit non-zero.
+    required: true
+  - id: TSK-P2-GOV-CONV-010-N2
+    description: >-
+      Run the verifier against a fixture policy that claims Phase-2 is open or complete.
+      It must exit non-zero.
+    required: true
+  - id: TSK-P2-GOV-CONV-010-N3
+    description: >-
+      Run the verifier against a fixture policy that omits evidence/phase2/** evidence
+      requirements. It must exit non-zero.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-GOV-CONV-010-P1
+    description: >-
+      Run the verifier against the live Phase-2 policy document. It must emit PASS
+      evidence with authority references present and no_phase_open_claims: true.
+    required: true
+
+verification:
+  - >-
+    # [ID gov_conv_010_w01] [ID gov_conv_010_w02] [ID gov_conv_010_w03] [ID gov_conv_010_w04] [ID gov_conv_010_w05]
+    test -x scripts/audit/verify_gov_conv_010.sh && bash scripts/audit/verify_gov_conv_010.sh > evidence/phase2/gov_conv_010_phase2_policy_authoring.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-GOV-CONV-010 --evidence evidence/phase2/gov_conv_010_phase2_policy_authoring.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/gov_conv_010_phase2_policy_authoring.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - required_sections_present
+      - authority_references_present
+      - phase2_claim_requirements_present
+      - no_phase_open_claims
+
+failure_modes:
+  - >-
+    Policy redefines apex process rules instead of deferring to AI_AGENT_OPERATION_MANUAL.md
+    => CRITICAL_FAIL
+  - >-
+    Policy claims Phase-2 is open or complete without ratification => CRITICAL_FAIL
+  - >-
+    Policy omits machine contract, verifier, or evidence requirements for delivery
+    claims => FAIL
+  - >-
+    Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/operations/PHASE_LIFECYCLE.md
+  - docs/operations/AGENTIC_SDLC_PHASE1_POLICY.md
+  - docs/PHASE2/phase2_contract.yml
+
+implementation_plan: docs/plans/phase2/TSK-P2-GOV-CONV-010/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-GOV-CONV-010/EXEC_LOG.md
+notes: >-
+  This task authors the policy document only. Semantic conflict verification is
+  separated into TSK-P2-GOV-CONV-011 so authoring and enforcement remain distinct.
+client: codex_cli
+assigned_agent: architect
+model: UNASSIGNED

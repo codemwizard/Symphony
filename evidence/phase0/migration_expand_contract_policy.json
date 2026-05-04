@@ -2,7 +2,7 @@
   "check_id": "DB-EXPAND-CONTRACT-POLICY",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "3adac2cb0ae869f7b951badf77b342aa8763ad12d51327a1927abac62a6cb31c",
+  "schema_fingerprint": "be0aa3637a1a606fa8adc98a4b8dbe92927bff8e5efcd1580317fc8917ae8b61",
   "status": "PASS",
   "scanned_files": [
     "0001_init.sql",
@@ -165,6 +165,7 @@
     "0174_wave8_canonical_payload.sql",
     "0175_wave8_attestation_hash_enforcement.sql",
     "0176_wave8_signer_resolution_surface.sql",
+    "0177_wave8_crypto_boundary_enforcement.sql",
     "0177_wave8_cryptographic_enforcement_wiring.sql",
     "0178_wave8_scope_and_timestamp_enforcement.sql",
     "0179_wave8_key_lifecycle_enforcement.sql",
@@ -190,7 +191,8 @@
     "0199_tsk_p2_w5_rem_01_expand.sql",
     "0200_tsk_p2_w5_rem_01_backfill.sql",
     "0201_tsk_p2_w5_rem_01_constrain.sql",
-    "0202_tsk_p2_w5_rem_01_trigger.sql"
+    "0202_tsk_p2_w5_rem_01_trigger.sql",
+    "0203_converge_policy_decisions_schema.sql"
   ],
   "violation_count": 0,
   "violations": [],

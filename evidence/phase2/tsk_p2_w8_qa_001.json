@@ -1,7 +1,7 @@
 {
   "task_id": "TSK-P2-W8-QA-001",
-  "git_sha": "6dbab49ffc6ace36ff8b270e91c6377df671617c",
-  "timestamp_utc": "2026-04-29T08:11:55.938Z",
+  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
+  "timestamp_utc": "2026-05-04T11:12:55.388Z",
   "status": "PASS",
   "checks": [
     {
@@ -12,7 +12,7 @@
     {
       "check": "[ID w8_qa_001_work_01] Test vectors define canonical bytes, expected hash, and expected verification outcomes",
       "status": "PASS",
-      "detail": "Test vectors contain canonical_bytes, expected_hash, and expected_verification fields"
+      "detail": "Test vectors contain valid payload_json and expected_hash that match computed SHA-256"
     },
     {
       "check": "[ID w8_qa_001_work_01] Test vectors are not implementation-generated",
@@ -39,7 +39,7 @@
   "observed_hashes": {},
   "command_outputs": [
     "✓ Attestation test vectors exist",
-    "✓ Test vectors define required fields",
+    "✓ Test vectors define required fields and hashes are computationally valid",
     "✓ Test vectors are not implementation-generated",
     "✓ Verifier compares three-surface outputs",
     "✓ Evidence proves three-surface equality",
@@ -48,8 +48,8 @@
   ],
   "execution_trace": [
     "verify_tsk_p2_w8_qa_001.sh executed",
-    "Checking attestation test vectors exist",
-    "Checking test vectors define required fields",
+    "Checking attestation test vectors exist and are valid",
+    "Checking test vectors define required fields and are computationally valid",
     "Checking test vectors are not implementation-generated",
     "Checking verifier compares three-surface outputs",
     "Checking evidence proves three-surface equality",

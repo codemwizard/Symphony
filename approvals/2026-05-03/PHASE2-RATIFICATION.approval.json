@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "approval_id": "PHASE2-RATIFICATION-2026-05-03",
+  "approval_date": "2026-05-03",
+  "approver": {
+    "role": "ARCHITECT",
+    "name": "Phase-2 Governance Architect"
+  },
+  "approval_type": "RATIFICATION",
+  "status": "APPROVED",
+  "scope": {
+    "phase": "2",
+    "phase_name": "Internal Ledger Truth",
+    "description": "Phase-2 governance convergence artifacts",
+    "bounded": true,
+    "excludes": ["runtime_implementation", "phase3_readiness", "phase4_readiness", "system_deployment"]
+  },
+  "regulated_surfaces": [
+    "docs/PHASE2/**",
+    "docs/operations/AGENTIC_SDLC_PHASE2_POLICY.md",
+    "scripts/audit/verify_phase2_contract.sh",
+    "scripts/audit/verify_gov_conv_006.sh",
+    "scripts/audit/verify_gov_conv_007.sh",
+    "scripts/audit/verify_gov_conv_009.sh",
+    "scripts/audit/verify_gov_conv_011.sh",
+    "evidence/phase2/**"
+  ],
+  "prerequisites": [
+    {
+      "task_id": "TSK-P2-GOV-CONV-006",
+      "description": "Create canonical Phase-2 contract verifier",
+      "evidence": "evidence/phase2/gov_conv_006_contract_verifier.json",
+      "status": "completed"
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-007",
+      "description": "Wire Phase-2 contract verifier into local and CI gates",
+      "evidence": "evidence/phase2/gov_conv_007_phase2_contract_wiring.json",
+      "status": "completed"
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-009",
+      "description": "Verify Phase-2 human and machine contract alignment",
+      "evidence": "evidence/phase2/gov_conv_009_human_machine_contract_alignment.json",
+      "status": "completed"
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-011",
+      "description": "Verify Phase-2 policy authority alignment",
+      "evidence": "evidence/phase2/gov_conv_011_phase2_policy_alignment.json",
+      "status": "completed"
+    }
+  ],
+  "ratified_artifacts": [
+    {
+      "type": "machine_contract",
+      "file": "docs/PHASE2/phase2_contract.yml",
+      "description": "Invariant-centric Phase-2 machine contract"
+    },
+    {
+      "type": "human_contract",
+      "file": "docs/PHASE2/PHASE2_CONTRACT.md",
+      "description": "Human-readable Phase-2 contract document"
+    },
+    {
+      "type": "policy_document",
+      "file": "docs/operations/AGENTIC_SDLC_PHASE2_POLICY.md",
+      "description": "Phase-2 agentic SDLC policy"
+    },
+    {
+      "type": "verifier",
+      "file": "scripts/audit/verify_phase2_contract.sh",
+      "description": "Canonical Phase-2 contract verifier"
+    }
+  ],
+  "verification_status": {
+    "contract_verifier": "PASS",
+    "ci_wiring": "PASS",
+    "contract_alignment": "PASS",
+    "policy_alignment": "PASS"
+  },
+  "evidence_summary": {
+    "total_evidence_files": 4,
+    "all_pass_status": true,
+    "no_violations": true,
+    "complete_references": true
+  },
+  "cross_references": {
+    "markdown_artifact": "approvals/2026-05-03/PHASE2-RATIFICATION.md",
+    "sidecar_file": "approvals/2026-05-03/PHASE2-RATIFICATION.approval.json"
+  },
+  "change_reference": {
+    "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
+    "branch": "implement-gov-conv-001-014",
+    "description": "Phase-2 governance convergence implementation"
+  },
+  "limitations": {
+    "does_not_claim_runtime_completion": true,
+    "does_not_open_phase3": true,
+    "does_not_claim_system_readiness": true,
+    "bounded_to_governance_artifacts": true
+  },
+  "next_steps": [
+    "Reference this ratification for future Phase-2 work",
+    "Use ratified verifiers for all Phase-2 changes",
+    "Generate evidence in established structure",
+    "Follow ratified policy and contract requirements"
+  ],
+  "metadata": {
+    "created_at": "2026-05-03T20:15:00Z",
+    "updated_at": "2026-05-03T20:15:00Z",
+    "version": "1.0",
+    "schema_compliance": true
+  }
+}

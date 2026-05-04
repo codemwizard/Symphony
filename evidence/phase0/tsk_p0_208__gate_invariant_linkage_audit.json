@@ -3,7 +3,7 @@
   "task_id": "TSK-P0-208",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "3adac2cb0ae869f7b951badf77b342aa8763ad12d51327a1927abac62a6cb31c",
+  "schema_fingerprint": "be0aa3637a1a606fa8adc98a4b8dbe92927bff8e5efcd1580317fc8917ae8b61",
   "status": "PASS",
   "pass": true,
   "details": {

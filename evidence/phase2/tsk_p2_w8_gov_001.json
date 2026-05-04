@@ -1,7 +1,7 @@
 {
   "task_id": "TSK-P2-W8-GOV-001",
-  "git_sha": "6dbab49ffc6ace36ff8b270e91c6377df671617c",
-  "timestamp_utc": "2026-04-29T06:42:59.578721+00:00",
+  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
+  "timestamp_utc": "2026-05-04T04:38:32.565674+00:00",
   "status": "PASS",
   "checks": [
     {
@@ -17,7 +17,7 @@
     {
       "check": "Task status matrix exists",
       "status": "PASS",
-      "detail": "Hash: d9019b26b00f592db96d588ab3ea0592c099c10eb9699017accb79a54aa0e5c5"
+      "detail": "Hash: c1dfdb6b542ebeadb898fabebb2e9da1ebf17eeba1c16b54928e135976adbb8b"
     },
     {
       "check": "Task status matrix content validation",
@@ -102,7 +102,7 @@
   ],
   "observed_hashes": {
     "docs/governance/WAVE8_GOVERNANCE_REMEDIATION_ADR.md": "6352a9c961700a0e3d021ce994613c355289ccf198d33718c6febc47206059ad",
-    "docs/governance/WAVE8_TASK_STATUS_MATRIX.md": "d9019b26b00f592db96d588ab3ea0592c099c10eb9699017accb79a54aa0e5c5",
+    "docs/governance/WAVE8_TASK_STATUS_MATRIX.md": "c1dfdb6b542ebeadb898fabebb2e9da1ebf17eeba1c16b54928e135976adbb8b",
     "docs/governance/WAVE8_FALSE_COMPLETION_REVOCATION_LEDGER.md": "f1b9b169d05163e81c2b8a0a1f4b298ed87834c05fd9a9b6c986a3dab251ec3c",
     "docs/governance/WAVE8_MIGRATION_HEAD_TRUTH_TABLE.md": "46913c901bf9e67f764e4f17417decca4588acfd215c5932084f1e898ab5c6bd",
     "docs/governance/WAVE8_CLOSURE_RUBRIC.md": "b6cad91ceee85785a207c6a6bcbaf3aa34c94041b478d3eff93b541f000fbd47",

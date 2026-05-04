@@ -1,0 +1,234 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-GOV-CONV-013
+title: "Verify Phase-2 ratification artifact integrity"
+owner_role: SECURITY_GUARDIAN
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+
+intent: >-
+  Phase-2 ratification artifacts need an independent verifier separate from the
+  task that created them. This task creates only the reusable ratification verifier
+  and its evidence. It prevents approval drift by checking that the ratification
+  markdown, approval sidecar, prerequisite evidence references, and bounded
+  ratification scope remain valid after creation.
+
+anti_patterns:
+  - >-
+    Treating ratification artifact creation as sufficient without an independent
+    reusable verifier.
+  - >-
+    Accepting a markdown approval artifact without validating its sidecar schema.
+  - >-
+    Allowing ratification text to claim broader Phase-2 implementation completion
+    than prerequisite evidence supports.
+
+out_of_scope:
+  - Editing approvals/YYYY-MM-DD/PHASE2-RATIFICATION.md
+  - Editing approvals/YYYY-MM-DD/PHASE2-RATIFICATION.approval.json
+  - Editing contract or policy documents
+  - Editing CI or pre_ci wiring
+  - Creating Phase-3 or Phase-4 artifacts
+
+stop_conditions:
+  - >-
+    STOP if TSK-P2-GOV-CONV-012 is incomplete or Phase-2 ratification artifacts do
+    not exist.
+  - >-
+    STOP if the verifier cannot locate the ratification markdown and sidecar path
+    deterministically.
+  - >-
+    STOP if approval schema validation cannot be performed.
+  - >-
+    STOP if approval metadata is absent before editing scripts/audit/** or evidence/**.
+
+proof_guarantees:
+  - >-
+    The verifier confirms the Phase-2 ratification markdown and approval sidecar
+    exist and cross-reference each other.
+  - >-
+    The verifier validates sidecar structure against the repository approval schema.
+  - >-
+    The verifier rejects missing prerequisite evidence references and overbroad
+    ratification claims.
+
+proof_limitations:
+  - >-
+    This task does not modify or repair invalid ratification artifacts.
+  - >-
+    This task does not prove human approver intent beyond recorded sidecar metadata.
+  - >-
+    This task does not wire the verifier into CI or pre_ci.
+
+depends_on:
+  - TSK-P2-GOV-CONV-012
+blocks: []
+
+touches:
+  - scripts/audit/verify_phase2_ratification.sh
+  - evidence/phase2/phase2_ratification_status.json
+  - tasks/TSK-P2-GOV-CONV-013/meta.yml
+  - docs/plans/phase2/TSK-P2-GOV-CONV-013/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-013/EXEC_LOG.md
+
+deliverable_files:
+  - scripts/audit/verify_phase2_ratification.sh
+  - evidence/phase2/phase2_ratification_status.json
+  - docs/plans/phase2/TSK-P2-GOV-CONV-013/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-013/EXEC_LOG.md
+
+invariants:
+  - INV-GOV-CONV-013
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/verify_phase2_ratification.sh
+    - evidence/phase2/phase2_ratification_status.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+    - docs/operations/approval_sidecar.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+work:
+  - >-
+    [ID gov_conv_013_w01] Create scripts/audit/verify_phase2_ratification.sh to
+    locate the active Phase-2 ratification markdown and approval sidecar artifacts.
+  - >-
+    [ID gov_conv_013_w02] Validate markdown-to-sidecar cross-reference and sidecar-to
+    markdown artifact_ref consistency.
+  - >-
+    [ID gov_conv_013_w03] Validate approval sidecar structure against the repository
+    approval sidecar schema.
+  - >-
+    [ID gov_conv_013_w04] Verify prerequisite evidence references for Phase-2 contract
+    status, contract wiring, human/machine contract alignment, and policy alignment.
+  - >-
+    [ID gov_conv_013_w05] Reject ratification text that claims all Phase-2 implementation
+    is complete or that Phase-3/Phase-4 is opened.
+  - >-
+    [ID gov_conv_013_w06] Emit evidence/phase2/phase2_ratification_status.json with
+    artifact_paths, sidecar_valid, cross_reference_valid, missing_evidence,
+    overbroad_claims, and ratification_status.
+
+acceptance_criteria:
+  - >-
+    [ID gov_conv_013_w01] The verifier deterministically locates exactly one active
+    Phase-2 ratification artifact set or fails with an explicit ambiguity error.
+  - >-
+    [ID gov_conv_013_w02] The verifier exits non-zero when markdown and sidecar
+    cross-references are missing or inconsistent.
+  - >-
+    [ID gov_conv_013_w03] The verifier exits non-zero when the approval sidecar is
+    schema-invalid.
+  - >-
+    [ID gov_conv_013_w04] The verifier exits non-zero when prerequisite evidence
+    references are missing.
+  - >-
+    [ID gov_conv_013_w05] The verifier exits non-zero when overbroad Phase-2 or
+    future-phase claims are present.
+  - >-
+    [ID gov_conv_013_w06] Evidence records ratification_status: PASS only when all
+    violation arrays are empty.
+
+negative_tests:
+  - id: TSK-P2-GOV-CONV-013-N1
+    description: >-
+      Run the verifier against fixture ratification artifacts with inconsistent
+      markdown and sidecar cross-references. It must exit non-zero.
+    required: true
+  - id: TSK-P2-GOV-CONV-013-N2
+    description: >-
+      Run the verifier against a fixture approval sidecar missing required schema
+      fields. It must exit non-zero with sidecar_valid: false.
+    required: true
+  - id: TSK-P2-GOV-CONV-013-N3
+    description: >-
+      Run the verifier against a fixture ratification markdown that claims all
+      Phase-2 implementation is complete. It must exit non-zero and report
+      overbroad_claims.
+    required: true
+  - id: TSK-P2-GOV-CONV-013-N4
+    description: >-
+      Run the verifier against a fixture ratification markdown missing prerequisite
+      evidence references. It must exit non-zero and report missing_evidence.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-GOV-CONV-013-P1
+    description: >-
+      Run the verifier against the live ratification artifacts. It must emit PASS
+      evidence with sidecar_valid: true, cross_reference_valid: true,
+      missing_evidence: [], and overbroad_claims: [].
+    required: true
+
+verification:
+  - >-
+    # [ID gov_conv_013_w01] [ID gov_conv_013_w02] [ID gov_conv_013_w03] [ID gov_conv_013_w04] [ID gov_conv_013_w05] [ID gov_conv_013_w06]
+    test -x scripts/audit/verify_phase2_ratification.sh && bash scripts/audit/verify_phase2_ratification.sh > evidence/phase2/phase2_ratification_status.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-GOV-CONV-013 --evidence evidence/phase2/phase2_ratification_status.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/phase2_ratification_status.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - artifact_paths
+      - sidecar_valid
+      - cross_reference_valid
+      - missing_evidence
+      - overbroad_claims
+      - ratification_status
+
+failure_modes:
+  - >-
+    Ratification markdown and sidecar cross-reference mismatch exits 0 => CRITICAL_FAIL
+  - >-
+    Schema-invalid approval sidecar exits 0 => CRITICAL_FAIL
+  - >-
+    Missing prerequisite evidence exits 0 => CRITICAL_FAIL
+  - >-
+    Overbroad Phase-2 or future-phase claim exits 0 => CRITICAL_FAIL
+  - >-
+    Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/operations/PHASE_LIFECYCLE.md
+  - docs/operations/approval_metadata.schema.json
+  - docs/operations/approval_sidecar.schema.json
+
+implementation_plan: docs/plans/phase2/TSK-P2-GOV-CONV-013/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-GOV-CONV-013/EXEC_LOG.md
+notes: >-
+  This task creates the reusable ratification verifier only. If it finds invalid
+  ratification artifacts, a separate Architect fix task must repair those artifacts.
+client: codex_cli
+assigned_agent: security_guardian
+model: UNASSIGNED

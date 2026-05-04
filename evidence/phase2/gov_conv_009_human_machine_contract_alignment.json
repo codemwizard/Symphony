@@ -1,0 +1,51 @@
+{
+  "task_id": "TSK-P2-GOV-CONV-009",
+  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
+  "timestamp_utc": "2026-05-03T19:51:12Z",
+  "status": "PASS",
+  "checks": [
+    "prerequisite_tasks_complete:PASS",
+    "contract_files_exist:PASS",
+    "machine_invariants_extracted:PASS",
+    "human_invariants_extracted:PASS",
+    "no_unsupported_invariants:PASS",
+    "authority_boundary_present:PASS",
+    "verifier_reference_present:PASS",
+    "evidence_reference_present:PASS"
+  ],
+  "alignment_status": "PASS",
+  "machine_contract": {
+    "file": "docs/PHASE2/phase2_contract.yml",
+    "invariant_count": 6,
+    "invariants": [
+      "INV-156",
+      "INV-157",
+      "INV-158",
+      "INV-175",
+      "INV-176",
+      "INV-177"
+    ]
+  },
+  "human_contract": {
+    "file": "docs/PHASE2/PHASE2_CONTRACT.md",
+    "invariant_count": 6,
+    "invariants": [
+      "INV-156",
+      "INV-157",
+      "INV-158",
+      "INV-175",
+      "INV-176",
+      "INV-177"
+    ],
+    "authority_boundary_present": true,
+    "verifier_reference_present": true,
+    "evidence_reference_present": true
+  },
+  "unsupported_invariants": [],
+  "unsupported_count": 0,
+  "summary": {
+    "total_checks": 8,
+    "passed_checks": 8,
+    "failed_checks": 0
+  }
+}

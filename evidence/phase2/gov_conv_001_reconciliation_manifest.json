@@ -1,0 +1,1785 @@
+{
+  "task_id": "TSK-P2-GOV-CONV-001",
+  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
+  "timestamp_utc": "2026-05-03T19:26:10Z",
+  "status": "PASS",
+  "checks": [
+    "task_metadata_scan:PASS",
+    "row_count_minimum:PASS",
+    "metadata_parsing:PASS",
+    "summary_counts:PASS",
+    "fail_closed_behavior:PASS"
+  ],
+  "rows": [
+    {
+      "task_id": "TSK-P2-GOV-CONV-009",
+      "title": "Verify Phase-2 human and machine contract alignment",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-006C-01",
+      "title": "Add DataAuthorityLevel enum to C# codebase",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-012",
+      "title": "Create Phase-2 constitutional ratification approval artifacts",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-19-R1",
+      "title": "Add superuser check to executor identity validation",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-005-CLEANUP",
+      "title": "Wave 5 Baseline Reconciliation - Delete monolith 0120 and update task plans",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W8-DB-005",
+      "title": "Authoritative signer-resolution surface",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W6-REM-17a",
+      "title": "Schema Expand \u2014 Nullable Prerequisite Columns",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB Foundation",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W8-GOV-001",
+      "title": "Wave 8 governance truth repair",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-REG-001-02",
+      "title": "Add append-only trigger and privileges to statutory_levy_registry",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-005-05",
+      "title": "Implement enforce_transition_signature() trigger",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W8-ARCH-003",
+      "title": "Signing and replay contract hardening",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-005-00",
+      "title": "Create PLAN.md and verify alignment for state_transitions",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-SEC-002-00",
+      "title": "Create PLAN.md and verify alignment for INV-131",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W6-REM-17c-alpha",
+      "title": "Enforce NOT NULL on state_transitions.interpretation_version_id after backfill",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB Foundation",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-006B-03",
+      "title": "Implement enforce_state_transition_authority() trigger",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-REG-003-01",
+      "title": "Install PostGIS extension",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-004-01",
+      "title": "Create policy_decisions table (migration 0134) as the Wave 4 cryptographic truth anchor row type: append-only, entity-bound, hash- and signature-committed",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-004",
+      "title": "Register W5 W6 and W8 Phase-2 invariant IDs from reconciliation manifest",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-005-06",
+      "title": "Implement enforce_execution_binding() trigger",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-13",
+      "title": "Attestation Anti-Replay Contract",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W6-REM-14",
+      "title": "Enforce NOT NULL on state_current.last_transition_id so that corrupted application state is blocked at the database boundary",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB Foundation",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-18",
+      "title": "CI Sequence and Execution Trace",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-001-02",
+      "title": "Implement resolve_interpretation_pack() function with exact signature",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-015",
+      "title": "Wire claim-admissibility verifier into local/CI gates",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-004-00",
+      "title": "Author Wave 4 authority-binding contract (policy_decisions + state_rules + invariant) and prove semantic alignment before any schema work",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W6-REM-17b-alpha",
+      "title": "Backfill interpretation_version_id on state_transitions from execution_records lineage",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB Foundation",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-SEC-004-01",
+      "title": "Verify default-deny and promote INV-133",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-SEC-003-01",
+      "title": "Verify fail-closed behavior and promote INV-132",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-006C-00",
+      "title": "Create PLAN.md and verify alignment for C# read model marking",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-006A-03",
+      "title": "Add data_authority columns to asset_batches",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W8-ARCH-002",
+      "title": "Transition hash contract",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-006B-01",
+      "title": "Implement enforce_monitoring_authority() trigger",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W5-FIX-06",
+      "title": "Add ON DELETE RESTRICT to state_current FK referencing state_transitions to prevent silent cascade deletion",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-003-REM-01",
+      "title": "Add nullable determinism columns (input_hash, output_hash, runtime_version, tenant_id) to execution_records via forward migration 0131 so that REM-02 can tighten them to NOT NULL",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-005-04",
+      "title": "Implement enforce_transition_authority() trigger",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W8-DB-009",
+      "title": "Context binding and anti-transplant protection",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-013",
+      "title": "Verify Phase-2 ratification artifact integrity",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W8-QA-002",
+      "title": "Behavioral evidence pack",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "QA_VERIFIER",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W8-DB-006",
+      "title": "Authoritative trigger integration of cryptographic primitive",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W6-REM-16c",
+      "title": "SQLSTATE Baseline Drift Remediation",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB Foundation",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W6-REM-19",
+      "title": "Trigger Topology Freeze",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "Architect",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-01",
+      "title": "Runtime INV ID assignment",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-06",
+      "title": "Invariant Registry Schema and Append-Only Topology",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-020",
+      "title": "Verify Phase-4 stub non-claimability only",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-006A-02",
+      "title": "Add data_authority columns to monitoring_records",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W8-DB-001",
+      "title": "Authoritative Wave 8 dispatcher trigger topology",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-004-03-DAG",
+      "title": "Add missing TSK-P2-PREAUTH-004-03 node to phase2_pre_atomic_dag.yml to complete authority binding checkpoint chain",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-006C-02",
+      "title": "Add DataAuthority and AuditGrade to MonitoringRecord read model",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-19-R4",
+      "title": "Add evidence digest validation against file on disk",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-005-REM-06",
+      "title": "Change enforce_transition_state_rules trigger to RAISE EXCEPTION",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-004-01-REM",
+      "title": "Create verifier script for policy_decisions table and update 004-01 task metadata to align with 0134 migration contract",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-001-00",
+      "title": "Create PLAN.md and verify alignment for interpretation_packs",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-002-00",
+      "title": "Create PLAN.md and verify alignment for factor_registry",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-005-03",
+      "title": "Implement enforce_transition_state_rules() trigger",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W8-ARCH-006",
+      "title": "SQLSTATE registration",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-14",
+      "title": "DB Kill Switch Gate",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-12",
+      "title": "Attestation Seam Schema",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-006B-00",
+      "title": "Create PLAN.md and verify alignment for data authority triggers",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-00",
+      "title": "Create PLAN.md and verify alignment for invariant registration",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-010",
+      "title": "Author Phase-2 agentic SDLC policy document",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W5-FIX-10",
+      "title": "Fix verifier script trigger name reference from tr_update_current_state to actual trigger name",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "QA_VERIFIER",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-006C-03",
+      "title": "Add DataAuthority and AuditGrade to AssetBatch and StateTransition read models",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-REG-002-02",
+      "title": "Add append-only trigger and privileges to exchange_rate_audit_log",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-005-REM-07",
+      "title": "Change enforce_transition_authority trigger to RAISE EXCEPTION",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-10",
+      "title": "Interpretation Overlap Rejection",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-SEC-003-00",
+      "title": "Create PLAN.md and verify alignment for INV-132",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-004-REM-01",
+      "title": "Retroactive Approval for Wave 4 Regulated Surfaces",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-005-REM-11",
+      "title": "Rename trigger to trg_06_update_current for explicit ordering",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-005-REM-12",
+      "title": "Fix append-only error string to match verifier requirement",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W8-DB-002",
+      "title": "Placeholder and legacy posture removal",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W8-SEC-000",
+      "title": "Frozen .NET 10 Ed25519 Environment Fidelity Gate",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-005-REM-10",
+      "title": "Add enforce_transition_signature trigger to verify transition_hash",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-17",
+      "title": "INV-165 and INV-167 Correction Verifiers",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-15",
+      "title": "INV-175 and INV-176 DB Verifiers",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W8-ARCH-005",
+      "title": "System design patch for authoritative trigger model",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-008",
+      "title": "Author Phase-2 human contract document",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-002-02",
+      "title": "Create unit_conversions table",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-005-REM-03",
+      "title": "Add UNIQUE(entity_type, entity_id, execution_id) constraint to state_transitions",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-002",
+      "title": "Register PREAUTH Phase-2 invariant IDs from reconciliation manifest",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-11",
+      "title": "Phase 1 Boundary Marker Schema",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-006B-04",
+      "title": "Implement upgrade_authority_on_execution_binding() trigger",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-19-R3",
+      "title": "Fail meaningless fallbacks when DATABASE_URL unset",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-003-00",
+      "title": "Create PLAN.md and verify alignment for execution_records",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W5-FIX-05",
+      "title": "Rename triggers on state_transitions to bi_XX_ prefix for deterministic execution order",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W8-ARCH-004",
+      "title": "Data authority derivation contract",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-08",
+      "title": "Trust Architecture: PK Registry and Identity Binding",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-REG-003-06",
+      "title": "Implement enforce_k13_taxonomy_alignment() trigger",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-005",
+      "title": "Rewrite Phase-2 machine contract to invariant-centric rows",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-004-02",
+      "title": "Create state_rules table (migration 0135) with rule_priority INT NOT NULL DEFAULT 0 and a deterministic tiebreaker so that rule selection is a total order under replay",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-03",
+      "title": "Register INV-176 (state_machine_enforced)",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W8-ARCH-001",
+      "title": "Canonical attestation payload contract",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-014",
+      "title": "Create semantic phase claim admissibility verifier",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W8-QA-001",
+      "title": "Three-surface determinism vectors",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "QA_VERIFIER",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-19",
+      "title": "CI Provenance and Identity Binding",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-05",
+      "title": "Promote INV-165/167 and wire pre_ci.sh",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-07",
+      "title": "Registry Supersession and Execution Constraints",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-001",
+      "title": "Produce Phase-2 reconciliation manifest from task metadata",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W5-FIX-03",
+      "title": "Add FK constraints on state_transitions.execution_id and policy_decision_id to enforce referential integrity at DB level",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-006",
+      "title": "Create canonical Phase-2 contract verifier",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-005-08",
+      "title": "Implement update_current_state() trigger",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W5-REM-02",
+      "title": "Reconcile DATA_AUTHORITY_SYSTEM_DESIGN.md Drift",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-005-07",
+      "title": "Implement deny_state_transitions_mutation() trigger",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-003-REM-02",
+      "title": "Tighten execution_records determinism columns: backfill + SET NOT NULL (5 columns) + UNIQUE (tenant_id, input_hash, interpretation_version_id, runtime_version) + FK NOT NULL via forward migration 0132",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-005-02",
+      "title": "Create state_current table",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W8-DB-003",
+      "title": "SQL-authoritative canonical payload construction",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-REG-003-04",
+      "title": "Add taxonomy_aligned column to projects",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-003-REM-04B",
+      "title": "Register INV-EXEC-TRUTH-001 in docs/architecture/THREAT_MODEL.md and docs/architecture/COMPLIANCE_MAP.md under ARCHITECT path authority",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-16",
+      "title": "INV-177 DB Verifier",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-CCG-001-00",
+      "title": "Create PLAN.md and verify alignment for core contract gate",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W8-DB-008",
+      "title": "Key lifecycle enforcement",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-SEC-004-00",
+      "title": "Create PLAN.md and verify alignment for INV-133",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W6-REM-17b-beta",
+      "title": "Backfill policy_decisions.project_id",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB Foundation",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-017",
+      "title": "Create Phase-3 non-claimable stub docs only",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W5-FIX-02",
+      "title": "Add entity_type column to state_rules so that enforce_transition_state_rules() resolves correctly per entity domain",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W6-REM-16a",
+      "title": "Contract Document Placement",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "Architect",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-003-REM-05B",
+      "title": "Wire scripts/db/verify_execution_truth_anchor.sh into scripts/dev/pre_ci.sh and scripts/audit/run_invariants_fast_checks.sh with fail-closed exit semantics",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-004-03",
+      "title": "Register and enforce INV-AUTH-TRANSITION-BINDING-01: bind every authority-bearing execution_records transition to exactly one policy_decisions row whose entity and execution match",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-CCG-001-01",
+      "title": "Run gate and promote INV-159/160/161/166",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-04",
+      "title": "Register INV-177 (phase1_boundary_marked)",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-REG-002-00",
+      "title": "Create PLAN.md and verify alignment for exchange_rate_audit_log",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-005-REM-08",
+      "title": "Change enforce_execution_binding trigger to RAISE EXCEPTION",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-002-01",
+      "title": "Create factor_registry table",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-REG-003-00",
+      "title": "Create PLAN.md and verify alignment for PostGIS spatial tables",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W5-FIX-08",
+      "title": "Add explicit SQLSTATE codes to all Wave 5 trigger RAISE EXCEPTION statements",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-001-01",
+      "title": "Create interpretation_packs table with temporal uniqueness",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-003-02",
+      "title": "Add interpretation_version_id FK to execution_records",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W8-DB-004",
+      "title": "Deterministic attestation hash recomputation",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W8-DB-007c",
+      "title": "Replay law enforcement",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-006A-01",
+      "title": "Create data_authority_level ENUM type",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-006A-00",
+      "title": "Create PLAN.md and verify alignment for data_authority ENUM",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-011",
+      "title": "Verify Phase-2 policy authority alignment",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W6-REM-16b",
+      "title": "SQLSTATE Registry Merge",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "Architect",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-003-REM-04",
+      "title": "Register invariant INV-EXEC-TRUTH-001 in INVARIANTS_MANIFEST.yml and supporting governance documents after REM-05 evidence proves enforcement at the DB layer",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W8-SEC-002",
+      "title": "PostgreSQL native Ed25519 verification primitive",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-019",
+      "title": "Create Phase-4 non-claimable stub docs only",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-SEC-001-00",
+      "title": "Create PLAN.md and verify alignment for INV-130",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-006B-02",
+      "title": "Implement enforce_asset_batch_authority() trigger",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-003-REM-05",
+      "title": "Author single integrity verifier scripts/db/verify_execution_truth_anchor.sh and degradation-smoke harness with self-certifying evidence",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-SEC-002-01",
+      "title": "Run live service test and promote INV-131",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-003",
+      "title": "Register REG and SEC Phase-2 invariant IDs from reconciliation manifest",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-09",
+      "title": "Trust Architecture: Delegated Grant Schema",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-000",
+      "title": "Author and merge ADR for Spatial Capability Model",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "ARCHITECT",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W5-FIX-13",
+      "title": "Create standalone integration verifier script for complete Wave 5 state machine behavioral proof",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "QA_VERIFIER",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-REG-001-00",
+      "title": "Create PLAN.md and verify alignment for statutory_levy_registry",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-19-R2",
+      "title": "Replace weak placeholders with meaningful empty indicators",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W6-REM-01",
+      "title": "Fix column name mismatch in enforce_transition_authority() so that state_transitions INSERTs resolve correctly",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W8-DB-007a",
+      "title": "Scope authorization enforcement",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W6-REM-17c-beta",
+      "title": "Enforce policy_decisions.project_id NOT NULL",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB Foundation",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-007",
+      "title": "Wire Phase-2 contract verifier into local and CI gates",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-REG-002-01",
+      "title": "Create exchange_rate_audit_log table",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-003-01",
+      "title": "Create execution_records table",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-REG-003-03",
+      "title": "Create project_boundaries table",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-REG-004-00",
+      "title": "Create PLAN.md and verify alignment for INV-169 promotion",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W5-FIX-01",
+      "title": "Fix column name mismatch in enforce_transition_authority() so that state_transitions INSERTs resolve correctly",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-REG-003-05",
+      "title": "Implement enforce_dns_harm() trigger",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W8-SEC-001",
+      "title": "Ed25519 verification primitive",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W5-FIX-12",
+      "title": "Convert Wave 5 verifier scripts from structural-only to behavioral live INSERT tests",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "QA_VERIFIER",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W5-FIX-11",
+      "title": "Correct migration references in Wave 5 task metadata to match actual migration numbers",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "QA_VERIFIER",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W6-REM-15",
+      "title": "Reassign K13 SQLSTATE from GF060 to GF061 to protect the P76xx series and prevent collision with legacy code",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB Foundation",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-REG-001-01",
+      "title": "Create statutory_levy_registry table",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-REG-003-02",
+      "title": "Create protected_areas table",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-016",
+      "title": "Report admissibility violations, read-only",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W8-DB-007b",
+      "title": "Persisted timestamp enforcement",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-005-01",
+      "title": "Create state_transitions table",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-006A-04",
+      "title": "Add data_authority columns to state_transitions",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W5-FIX-09",
+      "title": "Set signature_payload to 'PLACEHOLDER_PENDING_SIGNING_CONTRACT' in generate_transition_hash() to make pre-signing posture explicit",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-REG-003-07",
+      "title": "Register INV-178 and update MIGRATION_HEAD",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-19-R5",
+      "title": "Replace tab delimiter with non-whitespace delimiter",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W5-FIX-07",
+      "title": "Add NOT NULL constraint to state_current.current_state to prevent empty state records",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W5-REM-01",
+      "title": "Implement Cross-Entity-Replay Protection via Expand/Contract",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-007-02",
+      "title": "Register INV-175 (data_authority_enforced)",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W5-FIX-04",
+      "title": "Harden all Wave 5 trigger functions with SECURITY DEFINER and SET search_path = pg_catalog, public",
+      "status": "planned",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-SEC-001-01",
+      "title": "Fix verifier scope and promote INV-130",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-REG-004-01",
+      "title": "Verify function exists and promote INV-169",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-PREAUTH-003-REM-03",
+      "title": "Install execution_records append-only trigger and INSERT-time temporal-binding trigger via forward migration 0133",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-GOV-CONV-018",
+      "title": "Verify Phase-3 stub non-claimability only",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    }
+  ],
+  "summary_counts": {
+    "total_tasks": 176,
+    "planned": 86,
+    "completed": 90,
+    "in_progress": 0
+  },
+  "total_tasks": 176,
+  "evidence_complete": 77,
+  "verifier_complete": 176,
+  "inv_id_absent": 99
+}

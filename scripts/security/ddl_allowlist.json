@@ -3,6 +3,62 @@
   "description": "Fingerprinted allowlist for DDL operations on hot tables. Per docs/PLANS-addendum_1.md.",
   "entries": [
     {
+      "migration_file": "0203_converge_policy_decisions_schema.sql",
+      "line_number": 15,
+      "statement_fingerprint": "b52d66ec2d2f89ce8e0787a22ccd41b1076ce10c080fe06f411ff38cca323738",
+      "reason": "Migration convergence fix: RENAME CONSTRAINT for primary key on policy_decisions",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0203_converge_policy_decisions_schema.sql",
+      "line_number": 25,
+      "statement_fingerprint": "2893f59bea7dc9775672eb9db503cfe8282604beb1be455b7eae478d22dd5ddd",
+      "reason": "Migration convergence fix: RENAME CONSTRAINT for foreign key on policy_decisions",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0203_converge_policy_decisions_schema.sql",
+      "line_number": 35,
+      "statement_fingerprint": "d5068724563a01e9081a0eb38f607d14ba56e1c26e2970f46e66a3f9708828d5",
+      "reason": "Migration convergence fix: RENAME CONSTRAINT for unique constraint on policy_decisions",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0203_converge_policy_decisions_schema.sql",
+      "line_number": 43,
+      "statement_fingerprint": "62c80e86a32aa01e4b4011960c9de46fb53261b7cc349693f8ab63155bf5a032",
+      "reason": "Migration convergence fix: RENAME CONSTRAINT for hash check on policy_decisions",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0203_converge_policy_decisions_schema.sql",
+      "line_number": 51,
+      "statement_fingerprint": "b40d3f3310f5e315d782c1bbceb1b28237af5f37983ba4d85159ee15c1b22b0c",
+      "reason": "Migration convergence fix: RENAME CONSTRAINT for signature check on policy_decisions",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0203_converge_policy_decisions_schema.sql",
+      "line_number": 61,
+      "statement_fingerprint": "7c2d753bfa363e086e44c5645ab03825cc2fe7c82ec0eab2039c5f152ffdc209",
+      "reason": "Migration convergence fix: ALTER COLUMN SET DEFAULT on policy_decisions",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0203_converge_policy_decisions_schema.sql",
+      "line_number": 76,
+      "statement_fingerprint": "45a336785783eb21a045e5a0f5b819c8af7c352e80dd566fa715c3f205f93258",
+      "reason": "Migration convergence fix: DROP CONSTRAINT for foreign key on policy_decisions",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
       "migration_file": "0101_gf_asset_lifecycle.sql",
       "line_number": 33,
       "statement_fingerprint": "ea43a8d3dde00f0c062e30bc25db51a7f9428e45d870745e3e2b18cc96ec419a",

@@ -1,7 +1,7 @@
 {
   "task_id": "TSK-P2-W8-SEC-001",
-  "git_sha": "6dbab49ffc6ace36ff8b270e91c6377df671617c",
-  "timestamp_utc": "2026-04-29T07:04:38.879Z",
+  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
+  "timestamp_utc": "2026-05-04T10:06:55.193Z",
   "status": "PASS",
   "checks": [
     {
@@ -12,17 +12,17 @@
     {
       "check": "[ID w8_sec_001_work_01] Ed25519 verification standard documented",
       "status": "PASS",
-      "detail": "Verification standard documented at services/executor-worker/dotnet/ED25519_VERIFICATION_STANDARD.md"
+      "detail": "Verification standard documented at docs/security/WAVE8_ED25519_IMPLEMENTATION_STANDARD.md"
     },
     {
       "check": "[ID w8_sec_001_work_02] Verification primitive implemented",
       "status": "PASS",
-      "detail": "Primitive implementation found at services/executor-worker/dotnet/Ed25519Verifier.cs"
+      "detail": "Primitive implementation found at scripts/security/verify_ed25519_contract_bytes.sh"
     },
     {
       "check": "[ID w8_sec_001_work_02] Primitive verifies contract-defined bytes",
       "status": "PASS",
-      "detail": "Primitive references canonical bytes and RFC 8785"
+      "detail": "Primitive references contract-defined bytes"
     },
     {
       "check": "[ID w8_sec_001_work_02] Primitive rejects non-canonical byte streams",
@@ -32,12 +32,12 @@
     {
       "check": "[ID w8_sec_001_work_03] Primitive-level tests exist",
       "status": "PASS",
-      "detail": "Tests found at services/executor-worker/dotnet/Ed25519VerifierTests.cs"
+      "detail": "Tests found in verification script"
     },
     {
       "check": "[ID w8_sec_001_work_03] Tests cover required cases",
       "status": "PASS",
-      "detail": "Tests cover malformed signature, wrong key, valid signature, and fail-closed cases"
+      "detail": "Tests cover malformed signature, wrong key, and fail-closed cases"
     }
   ],
   "observed_paths": [],

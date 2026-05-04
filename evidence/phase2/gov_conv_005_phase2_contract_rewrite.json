@@ -1,0 +1,22 @@
+{
+  "task_id": "TSK-P2-GOV-CONV-005",
+  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
+  "timestamp_utc": "2026-05-03T19:34:24Z",
+  "status": "PASS",
+  "checks": [
+    "prerequisite_tasks_complete:PASS",
+    "phase2_contract_exists:PASS",
+    "no_task_id_rows:PASS",
+    "all_invariants_registered:PASS",
+    "contract_row_schema:PASS"
+  ],
+  "total_rows": 6,
+  "invalid_rows": 0,
+  "missing_invariants": 0,
+  "task_id_rows_found": 0,
+  "summary": {
+    "total_checks": 5,
+    "passed_checks": 5,
+    "failed_checks": 0
+  }
+}

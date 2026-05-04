@@ -1,0 +1,23 @@
+{
+  "task_id": "TSK-P2-GOV-CONV-003",
+  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
+  "timestamp_utc": "2026-05-03T19:30:24Z",
+  "status": "PASS",
+  "checks": [
+    "reconciliation_manifest_exists:PASS",
+    "reg_sec_rows_identified:PASS",
+    "reg_sec_invariants_registered:PASS",
+    "no_duplicate_ids:PASS",
+    "reg_sec_only_scope:PASS"
+  ],
+  "registered_ids": ["INV-005", "INV-006", "INV-007", "INV-008", "INV-009", "INV-010", "INV-061", "INV-073", "INV-134", "INV-109", "INV-122", "INV-124", "INV-130", "INV-131", "INV-132", "INV-133", "INV-136", "INV-169", "INV-178"],
+  "source_manifest_rows": [{"task_id": "TSK-P2-SEC-002-00", "title": "Create PLAN.md and verify alignment for INV-131", "status": "completed", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-SEC-004-01", "title": "Verify default-deny and promote INV-133", "status": "completed", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-SEC-003-01", "title": "Verify fail-closed behavior and promote INV-132", "status": "completed", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-SEC-003-00", "title": "Create PLAN.md and verify alignment for INV-132", "status": "completed", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-W8-SEC-000", "title": "Frozen .NET 10 Ed25519 Environment Fidelity Gate", "status": "planned", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-SEC-004-00", "title": "Create PLAN.md and verify alignment for INV-133", "status": "completed", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-W8-SEC-002", "title": "PostgreSQL native Ed25519 verification primitive", "status": "completed", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-SEC-001-00", "title": "Create PLAN.md and verify alignment for INV-130", "status": "completed", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-SEC-002-01", "title": "Run live service test and promote INV-131", "status": "completed", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-W8-SEC-001", "title": "Ed25519 verification primitive", "status": "planned", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-SEC-001-01", "title": "Fix verifier scope and promote INV-130", "status": "completed", "owner_role": "SECURITY_GUARDIAN"}],
+  "duplicate_id_count": 0,
+  "out_of_scope_entries": 0,
+  "reg_sec_invariant_count": 19,
+  "summary": {
+    "total_checks": 5,
+    "passed_checks": 5,
+    "failed_checks": 0
+  }
+}

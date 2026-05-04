@@ -19,6 +19,31 @@
 
 **Work Item [ID w8_gov_001_work_02]**: Created corrected Wave 8 task status matrix (WAVE8_TASK_STATUS_MATRIX.md) and false-completion revocation ledger (WAVE8_FALSE_COMPLETION_REVOCATION_LEDGER.md) classifying existing TSK-P2-REG-* artifacts as scaffold (no implementation evidence).
 
+### 2026-05-04 - Wave 8 Governance Truth Completion
+
+**Work Item [ID w8_gov_001_work_03]**: Migration-head truth table (WAVE8_MIGRATION_HEAD_TRUTH_TABLE.md) and authoritative Wave 8 closure rubric (WAVE8_CLOSURE_RUBRIC.md) created, explicitly naming `asset_batches` as the sole authoritative Wave 8 boundary.
+
+**Work Item [ID w8_gov_001_work_04]**: Proof-integrity threat register (WAVE8_PROOF_INTEGRITY_THREAT_REGISTER.md), evidence admissibility policy (WAVE8_EVIDENCE_ADMISSIBILITY_POLICY.md), and false-completion pattern catalog (WAVE8_FALSE_COMPLETION_PATTERN_CATALOG.md) created, explicitly banning detached function proof, grep proof, reflection-only surface proof, toy-crypto proof, garbage-payload matrix fraud, fake crypto behind real trigger wiring, superuser-only success, and mirrored-vector fraud.
+
+**Work Item [ID w8_gov_001_work_05]**: Phase 2 task index (docs/tasks/PHASE2_TASKS.md) updated with Wave 8 closure track and evidence-based status matrix. Governance artifacts explicitly state that unsplit `W8-DB-007` is non-executable for closure.
+
+**failure_signature**: P2.W8.TSK_P2_W8_GOV_001.PROOF_FAIL
+**origin_task_id**: TSK-P2-W8-GOV-001
+**repro_command**: python3 scripts/agent/verify_tsk_p2_w8_gov_001.py
+**verification_commands_run**: python3 scripts/agent/verify_tsk_p2_w8_gov_001.py; python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase2/TSK-P2-W8-GOV-001/PLAN.md --meta tasks/TSK-P2-W8-GOV-001/meta.yml
+**final_status**: COMPLETED
+
+## Final Summary
+
+TSK-P2-W8-GOV-001 completed successfully. All 5 work items implemented:
+- Governance truth anchor established with ADR
+- Evidence-based task status matrix created with comprehensive audit findings
+- Migration-head truth table and closure rubric anchored to `asset_batches` boundary
+- Proof integrity threat register and evidence admissibility policy implemented
+- Phase 2 task index updated with closure track and evidence-based classifications
+
+All governance deliverables verified and evidence generated. Wave 8 governance truth repair complete.
+
 **Work Item [ID w8_gov_001_work_03]**: Created migration-head truth table (WAVE8_MIGRATION_HEAD_TRUTH_TABLE.md) and authoritative Wave 8 closure rubric (WAVE8_CLOSURE_RUBRIC.md) explicitly naming `asset_batches` as the sole authoritative Wave 8 boundary.
 
 **Work Item [ID w8_gov_001_work_04]**: Created proof-integrity threat register (WAVE8_PROOF_INTEGRITY_THREAT_REGISTER.md), evidence admissibility policy (WAVE8_EVIDENCE_ADMISSIBILITY_POLICY.md), and false-completion pattern catalog (WAVE8_FALSE_COMPLETION_PATTERN_CATALOG.md) explicitly banning detached function proof, grep proof, reflection-only surface proof, toy-crypto proof, garbage-payload matrix fraud, fake crypto behind real trigger wiring, superuser-only success, and mirrored-vector fraud.

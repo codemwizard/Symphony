@@ -9,8 +9,10 @@ ALTER TABLE public.wave8_signer_resolution
 ADD COLUMN IF NOT EXISTS superseded_by uuid,
 ADD COLUMN IF NOT EXISTS superseded_at timestamp with time zone;
 
--- Note: CHECK constraint with subquery is not supported in PostgreSQL
--- This validation is enforced by the cryptographic enforcement function instead
+-- Add foreign key constraint for superseded_by to ensure valid reference
+ALTER TABLE public.wave8_signer_resolution
+ADD CONSTRAINT wave8_signer_superseded_by_valid 
+FOREIGN KEY (superseded_by) REFERENCES public.wave8_signer_resolution(signer_id) ON DELETE SET NULL;
 
 -- Update the cryptographic enforcement function to add key lifecycle enforcement
 -- This converts key lifecycle from registry metadata into actual boundary behavior

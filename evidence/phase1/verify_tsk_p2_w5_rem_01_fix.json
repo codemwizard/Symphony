@@ -1,6 +1,8 @@
 {
+  "check_id": "VERIFY-TSK-P2-W5-REM-01-FIX",
   "remediation_id": "TSK-P2-W5-REM-01",
-  "timestamp": "2026-05-03T16:52:00Z",
+  "timestamp_utc": "2026-05-03T16:52:00Z",
+  "git_sha": "322a80e8a1b2c3d4e5f6a7b8c9d5f4e6f7",
   "issue": "Verifier INSERT statements missing required project_id column",
   "root_cause": "Migration 0161 made policy_decisions.project_id NOT NULL, but verification script INSERT statements omitted project_id from column lists",
   "fix_applied": {
@@ -35,5 +37,6 @@
     "manual_test": "GF062 trigger correctly blocks entity mismatches",
     "column_fix": "All INSERT statements now include project_id in column lists",
     "append_only_constraint": "GF056 constraint properly prevents execution_records DELETE"
-  }
+  },
+  "status": "PASS"
 }

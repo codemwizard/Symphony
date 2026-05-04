@@ -1,0 +1,225 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-GOV-CONV-011
+title: "Verify Phase-2 policy authority alignment"
+owner_role: SECURITY_GUARDIAN
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+
+intent: >-
+  After the Phase-2 agentic SDLC policy document exists, it must be checked for
+  authority drift against the apex operation manual, lifecycle policy, and Phase-2
+  contract. This task creates only the policy alignment verifier and its evidence.
+  It prevents governance hallucination by rejecting policy text that claims Phase-2
+  completion, redefines higher-authority process rules, or omits required claim
+  evidence requirements.
+
+anti_patterns:
+  - >-
+    Treating the presence of AGENTIC_SDLC_PHASE2_POLICY.md as proof that it aligns
+    with higher-authority governance.
+  - >-
+    Using shallow existence checks that cannot detect prohibited phase-open or
+    phase-complete claims.
+  - >-
+    Editing the policy document in the same task as creating the verifier.
+
+out_of_scope:
+  - Editing docs/operations/AGENTIC_SDLC_PHASE2_POLICY.md
+  - Editing docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - Editing docs/operations/PHASE_LIFECYCLE.md
+  - Editing docs/PHASE2/phase2_contract.yml
+  - Wiring the verifier into CI or pre_ci
+  - Creating ratification approval artifacts
+
+stop_conditions:
+  - >-
+    STOP if TSK-P2-GOV-CONV-010 is incomplete or
+    docs/operations/AGENTIC_SDLC_PHASE2_POLICY.md does not exist.
+  - >-
+    STOP if the verifier cannot detect prohibited phase-open or phase-complete
+    language in policy fixtures.
+  - >-
+    STOP if the verifier cannot inspect required authority references.
+  - >-
+    STOP if approval metadata is absent before editing scripts/audit/** or evidence/**.
+
+proof_guarantees:
+  - >-
+    The verifier rejects Phase-2 policy text that claims Phase-2 is open, complete,
+    ratified, or delivery-claimable without the required ratification artifact.
+  - >-
+    The verifier rejects policy text that omits references to AI_AGENT_OPERATION_MANUAL.md,
+    PHASE_LIFECYCLE.md, or docs/PHASE2/phase2_contract.yml.
+  - >-
+    Evidence records prohibited_claims, missing_authorities, and policy_alignment_status.
+
+proof_limitations:
+  - >-
+    This task does not prove full semantic equivalence between all governance
+    documents.
+  - >-
+    This task does not modify the policy if drift is found; a separate fix task must
+    repair the policy.
+  - >-
+    This task does not wire the verifier into local or CI gates.
+
+depends_on:
+  - TSK-P2-GOV-CONV-010
+blocks:
+  - TSK-P2-GOV-CONV-012
+
+touches:
+  - scripts/audit/verify_gov_conv_011.sh
+  - evidence/phase2/gov_conv_011_phase2_policy_alignment.json
+  - tasks/TSK-P2-GOV-CONV-011/meta.yml
+  - docs/plans/phase2/TSK-P2-GOV-CONV-011/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-011/EXEC_LOG.md
+
+deliverable_files:
+  - scripts/audit/verify_gov_conv_011.sh
+  - evidence/phase2/gov_conv_011_phase2_policy_alignment.json
+  - docs/plans/phase2/TSK-P2-GOV-CONV-011/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-011/EXEC_LOG.md
+
+invariants:
+  - INV-GOV-CONV-011
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/verify_gov_conv_011.sh
+    - evidence/phase2/gov_conv_011_phase2_policy_alignment.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+work:
+  - >-
+    [ID gov_conv_011_w01] Create scripts/audit/verify_gov_conv_011.sh to inspect
+    docs/operations/AGENTIC_SDLC_PHASE2_POLICY.md for required authority references
+    and claim-evidence requirements.
+  - >-
+    [ID gov_conv_011_w02] Reject prohibited policy claims that Phase-2 is open,
+    complete, ratified, or delivery-claimable without a ratification artifact.
+  - >-
+    [ID gov_conv_011_w03] Reject policy text that omits AI_AGENT_OPERATION_MANUAL.md,
+    PHASE_LIFECYCLE.md, docs/PHASE2/phase2_contract.yml, verifier output, or
+    evidence/phase2/** claim requirements.
+  - >-
+    [ID gov_conv_011_w04] Add negative fixture coverage for prohibited phase-open
+    language, missing apex authority, missing lifecycle authority, and missing
+    evidence requirement.
+  - >-
+    [ID gov_conv_011_w05] Emit evidence/phase2/gov_conv_011_phase2_policy_alignment.json
+    with prohibited_claims, missing_authorities, missing_claim_requirements, and
+    policy_alignment_status.
+
+acceptance_criteria:
+  - >-
+    [ID gov_conv_011_w01] The verifier inspects the live Phase-2 policy document
+    and records observed authority references.
+  - >-
+    [ID gov_conv_011_w02] The verifier exits non-zero when fixture policy text claims
+    Phase-2 is open, complete, ratified, or delivery-claimable.
+  - >-
+    [ID gov_conv_011_w03] The verifier exits non-zero when required authority or
+    claim-evidence references are missing.
+  - >-
+    [ID gov_conv_011_w04] Each negative fixture fails for the expected reason.
+  - >-
+    [ID gov_conv_011_w05] Evidence records policy_alignment_status: PASS on the live
+    repository only when prohibited_claims, missing_authorities, and
+    missing_claim_requirements are empty.
+
+negative_tests:
+  - id: TSK-P2-GOV-CONV-011-N1
+    description: >-
+      Run the verifier against a fixture policy that states Phase-2 is complete or
+      delivery-claimable. It must exit non-zero and report prohibited_claims.
+    required: true
+  - id: TSK-P2-GOV-CONV-011-N2
+    description: >-
+      Run the verifier against a fixture policy that omits AI_AGENT_OPERATION_MANUAL.md
+      or PHASE_LIFECYCLE.md. It must exit non-zero and report missing_authorities.
+    required: true
+  - id: TSK-P2-GOV-CONV-011-N3
+    description: >-
+      Run the verifier against a fixture policy that omits verifier output or
+      evidence/phase2/** as delivery-claim requirements. It must exit non-zero.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-GOV-CONV-011-P1
+    description: >-
+      Run the verifier against the live Phase-2 policy document. It must emit PASS
+      evidence with empty prohibited_claims, missing_authorities, and
+      missing_claim_requirements.
+    required: true
+
+verification:
+  - >-
+    # [ID gov_conv_011_w01] [ID gov_conv_011_w02] [ID gov_conv_011_w03] [ID gov_conv_011_w04] [ID gov_conv_011_w05]
+    test -x scripts/audit/verify_gov_conv_011.sh && bash scripts/audit/verify_gov_conv_011.sh > evidence/phase2/gov_conv_011_phase2_policy_alignment.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-GOV-CONV-011 --evidence evidence/phase2/gov_conv_011_phase2_policy_alignment.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/gov_conv_011_phase2_policy_alignment.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - prohibited_claims
+      - missing_authorities
+      - missing_claim_requirements
+      - policy_alignment_status
+
+failure_modes:
+  - >-
+    Policy phase-open or phase-complete claim exits 0 => CRITICAL_FAIL
+  - >-
+    Policy missing apex or lifecycle authority exits 0 => CRITICAL_FAIL
+  - >-
+    Policy missing verifier/evidence claim requirements exits 0 => FAIL
+  - >-
+    Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/operations/PHASE_LIFECYCLE.md
+  - docs/operations/AGENTIC_SDLC_PHASE2_POLICY.md
+  - docs/PHASE2/phase2_contract.yml
+
+implementation_plan: docs/plans/phase2/TSK-P2-GOV-CONV-011/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-GOV-CONV-011/EXEC_LOG.md
+notes: >-
+  This verifier does not repair policy drift. If drift is found, create a separate
+  single-file Architect fix task scoped to AGENTIC_SDLC_PHASE2_POLICY.md.
+client: codex_cli
+assigned_agent: security_guardian
+model: UNASSIGNED

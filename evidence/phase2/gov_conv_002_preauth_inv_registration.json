@@ -1,0 +1,23 @@
+{
+  "task_id": "TSK-P2-GOV-CONV-002",
+  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
+  "timestamp_utc": "2026-05-03T19:28:38Z",
+  "status": "PASS",
+  "checks": [
+    "reconciliation_manifest_exists:PASS",
+    "preauth_rows_identified:PASS",
+    "preauth_invariants_registered:PASS",
+    "no_duplicate_ids:PASS",
+    "preauth_only_scope:PASS"
+  ],
+  "registered_ids": ["INV-175", "INV-176", "INV-177"],
+  "source_manifest_rows": [{"task_id": "TSK-P2-PREAUTH-007-19-R1", "title": "Add superuser check to executor identity validation", "status": "planned", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-PREAUTH-007-19-R4", "title": "Add evidence digest validation against file on disk", "status": "planned", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-PREAUTH-004-01-REM", "title": "Create verifier script for policy_decisions table and update 004-01 task metadata to align with 0134 migration contract", "status": "planned", "owner_role": "DB_FOUNDATION"}, {"task_id": "TSK-P2-PREAUTH-007-14", "title": "DB Kill Switch Gate", "status": "completed", "owner_role": "DB_FOUNDATION"}, {"task_id": "TSK-P2-PREAUTH-007-17", "title": "INV-165 and INV-167 Correction Verifiers", "status": "planned", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-PREAUTH-007-15", "title": "INV-175 and INV-176 DB Verifiers", "status": "planned", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-PREAUTH-007-11", "title": "Phase 1 Boundary Marker Schema", "status": "completed", "owner_role": "DB_FOUNDATION"}, {"task_id": "TSK-P2-PREAUTH-007-19-R3", "title": "Fail meaningless fallbacks when DATABASE_URL unset", "status": "planned", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-PREAUTH-007-03", "title": "Register INV-176 (state_machine_enforced)", "status": "completed", "owner_role": "INVARIANTS_CURATOR"}, {"task_id": "TSK-P2-PREAUTH-007-05", "title": "Promote INV-165/167 and wire pre_ci.sh", "status": "completed", "owner_role": "INVARIANTS_CURATOR"}, {"task_id": "TSK-P2-PREAUTH-007-16", "title": "INV-177 DB Verifier", "status": "planned", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-PREAUTH-004-03", "title": "Register and enforce INV-AUTH-TRANSITION-BINDING-01: bind every authority-bearing execution_records transition to exactly one policy_decisions row whose entity and execution match", "status": "planned", "owner_role": "INVARIANTS_CURATOR"}, {"task_id": "TSK-P2-PREAUTH-007-04", "title": "Register INV-177 (phase1_boundary_marked)", "status": "completed", "owner_role": "INVARIANTS_CURATOR"}, {"task_id": "TSK-P2-PREAUTH-003-REM-04", "title": "Register invariant INV-EXEC-TRUTH-001 in INVARIANTS_MANIFEST.yml and supporting governance documents after REM-05 evidence proves enforcement at the DB layer", "status": "completed", "owner_role": "INVARIANTS_CURATOR"}, {"task_id": "TSK-P2-PREAUTH-007-19-R2", "title": "Replace weak placeholders with meaningful empty indicators", "status": "planned", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-PREAUTH-007-19-R5", "title": "Replace tab delimiter with non-whitespace delimiter", "status": "planned", "owner_role": "SECURITY_GUARDIAN"}, {"task_id": "TSK-P2-PREAUTH-007-02", "title": "Register INV-175 (data_authority_enforced)", "status": "completed", "owner_role": "INVARIANTS_CURATOR"}],
+  "duplicate_id_count": 0,
+  "out_of_scope_entries": 0,
+  "preauth_invariant_count": 3,
+  "summary": {
+    "total_checks": 5,
+    "passed_checks": 5,
+    "failed_checks": 0
+  }
+}
