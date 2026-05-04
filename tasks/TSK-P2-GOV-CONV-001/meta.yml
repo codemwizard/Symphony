@@ -1,0 +1,222 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-GOV-CONV-001
+title: "Produce Phase-2 reconciliation manifest from task metadata"
+owner_role: INVARIANTS_CURATOR
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  Phase-2 executed work and Phase-2 contract claims are not currently reconciled
+  through a single mechanically inspectable artifact. This task creates a read-only
+  reconciliation manifest from task metadata so later contract and invariant work is
+  grounded in repository state rather than roadmap inference. It prevents governance
+  drift by treating task meta.yml files as the source of truth and by recording
+  missing evidence or verifier paths explicitly instead of silently omitting them.
+
+anti_patterns:
+  - >-
+    Scanning evidence/phase2/** as the source of truth instead of task meta.yml files;
+    evidence files can be missing or stale while task metadata records the intended
+    contract.
+  - >-
+    Assigning, renaming, or registering invariant IDs during discovery; this task
+    only reports what exists and what is missing.
+  - >-
+    Emitting a PASS manifest from a partial scan; low row counts must fail closed.
+
+out_of_scope:
+  - Assigning or registering invariant IDs
+  - Modifying docs/invariants/INVARIANTS_MANIFEST.yml
+  - Modifying docs/PHASE2/phase2_contract.yml
+  - Modifying any existing task meta.yml
+  - Creating Phase-2 contract, policy, or ratification documents
+
+stop_conditions:
+  - >-
+    STOP if tasks/ cannot be scanned or no TSK-P2-* task metadata files are found.
+  - >-
+    STOP if the manifest row count is below 80 unless a human explicitly approves
+    a lower threshold with rationale.
+  - >-
+    STOP if any manifest row omits task_id, evidence_paths, verifier_paths, or
+    invariants.
+  - >-
+    STOP if the verifier cannot emit evidence derived from live repository inspection.
+
+proof_guarantees:
+  - >-
+    The evidence manifest enumerates every readable tasks/TSK-P2-*/meta.yml file
+    discovered by the verifier.
+  - >-
+    Each row records declared evidence paths, declared verifier paths, declared
+    invariant IDs, and file-existence status for those paths.
+  - >-
+    The verifier exits non-zero for partial scans below the row-count threshold.
+
+proof_limitations:
+  - >-
+    This task does not prove that evidence files are semantically valid; it only
+    records whether declared files exist.
+  - >-
+    This task does not prove verifier correctness; it only records whether declared
+    verifier paths exist.
+  - >-
+    This task does not decide which invariant IDs should be created; that is handled
+    by follow-on registration tasks.
+
+depends_on:
+  - TSK-P2-PREAUTH-007-19
+blocks:
+  - TSK-P2-GOV-CONV-002
+  - TSK-P2-GOV-CONV-003
+  - TSK-P2-GOV-CONV-004
+
+touches:
+  - scripts/audit/verify_gov_conv_001.sh
+  - evidence/phase2/gov_conv_001_reconciliation_manifest.json
+  - tasks/TSK-P2-GOV-CONV-001/meta.yml
+  - docs/plans/phase2/TSK-P2-GOV-CONV-001/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-001/EXEC_LOG.md
+
+deliverable_files:
+  - scripts/audit/verify_gov_conv_001.sh
+  - evidence/phase2/gov_conv_001_reconciliation_manifest.json
+  - docs/plans/phase2/TSK-P2-GOV-CONV-001/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-001/EXEC_LOG.md
+
+invariants:
+  - INV-GOV-CONV-001
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/verify_gov_conv_001.sh
+    - evidence/phase2/gov_conv_001_reconciliation_manifest.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+work:
+  - >-
+    [ID gov_conv_001_w01] Create scripts/audit/verify_gov_conv_001.sh to scan
+    tasks/TSK-P2-*/meta.yml as the only source of truth for executed Phase-2 task
+    metadata.
+  - >-
+    [ID gov_conv_001_w02] For each discovered task, emit a manifest row containing
+    task_id, declared evidence paths, evidence_exists booleans, declared verifier
+    paths, verifier_exists booleans, declared invariants, owner_role, status, and
+    phase.
+  - >-
+    [ID gov_conv_001_w03] Add summary_counts to the manifest, including total_tasks,
+    evidence_complete, evidence_partial, evidence_absent, verifier_complete,
+    verifier_partial, verifier_absent, inv_id_present, and inv_id_absent.
+  - >-
+    [ID gov_conv_001_w04] Add verifier failure behavior for row_count below 80,
+    malformed rows, unreadable metadata files, and static/non-derived evidence.
+
+acceptance_criteria:
+  - >-
+    [ID gov_conv_001_w01] The verifier reads task metadata from tasks/TSK-P2-*/meta.yml
+    and does not treat evidence/phase2/** directory contents as the task source of truth.
+  - >-
+    [ID gov_conv_001_w02] The emitted evidence contains one row per readable TSK-P2
+    task metadata file and includes path-existence booleans for evidence and verifier
+    references.
+  - >-
+    [ID gov_conv_001_w03] summary_counts exists and every count is a non-negative integer
+    derived from the emitted rows.
+  - >-
+    [ID gov_conv_001_w04] The verifier exits non-zero on a fixture scan with fewer
+    than 80 task rows.
+
+negative_tests:
+  - id: TSK-P2-GOV-CONV-001-N1
+    description: >-
+      Run the verifier against a fixture containing only five TSK-P2 task metadata
+      files. It must exit non-zero because the row count is below the minimum threshold.
+    required: true
+  - id: TSK-P2-GOV-CONV-001-N2
+    description: >-
+      Run the verifier against a fixture where a task declares an evidence path that
+      does not exist. The manifest row must preserve the path and mark evidence_exists
+      false instead of omitting it.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-GOV-CONV-001-P1
+    description: >-
+      Run the verifier against the live repository. It must emit a schema-valid
+      evidence manifest with at least 80 rows and populated summary_counts.
+    required: true
+
+verification:
+  - >-
+    # [ID gov_conv_001_w01] [ID gov_conv_001_w02] [ID gov_conv_001_w03] [ID gov_conv_001_w04]
+    test -x scripts/audit/verify_gov_conv_001.sh && bash scripts/audit/verify_gov_conv_001.sh > evidence/phase2/gov_conv_001_reconciliation_manifest.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-GOV-CONV-001 --evidence evidence/phase2/gov_conv_001_reconciliation_manifest.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/gov_conv_001_reconciliation_manifest.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - rows
+      - summary_counts
+      - total_tasks
+      - evidence_complete
+      - verifier_complete
+      - inv_id_absent
+
+failure_modes:
+  - >-
+    Verifier scans evidence/phase2/** instead of tasks/TSK-P2-*/meta.yml as source
+    of truth => CRITICAL_FAIL
+  - >-
+    Row-count threshold is not enforced and a partial scan exits 0 => CRITICAL_FAIL
+  - >-
+    Missing evidence or verifier paths are omitted instead of recorded as false
+    booleans => FAIL
+  - >-
+    Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/invariants/INVARIANTS_MANIFEST.yml
+
+implementation_plan: docs/plans/phase2/TSK-P2-GOV-CONV-001/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-GOV-CONV-001/EXEC_LOG.md
+notes: >-
+  This is a read-only reconciliation task except for its own verifier, evidence,
+  meta, PLAN, and EXEC_LOG files. It intentionally does not assign invariant IDs or
+  edit contract documents.
+client: codex_cli
+assigned_agent: invariants_curator
+model: UNASSIGNED

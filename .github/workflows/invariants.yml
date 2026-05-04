@@ -190,12 +190,27 @@ jobs:
           PRE_CI_CONTEXT=1 scripts/audit/verify_invproc_06_ci_wiring_closeout.sh
           PRE_CI_CONTEXT=1 scripts/audit/verify_human_governance_review_signoff.sh
 
+      - name: Verify claim-admissibility
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/verify_phase_claim_admissibility.sh
+          PRE_CI_CONTEXT=1 scripts/audit/verify_phase_claim_admissibility.sh
+
       - name: Phase-0 ordered checks
         if: github.event_name != 'schedule'
         run: |
           chmod +x scripts/audit/*.sh
           chmod +x scripts/security/*.sh
           scripts/audit/run_phase0_ordered_checks.sh
+
+      - name: Phase-2 contract verification
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/verify_phase2_contract.sh
+          RUN_PHASE2_GATES=1 bash scripts/audit/verify_phase2_contract.sh > evidence/phase2/phase2_contract_status.json || {
+            echo "ERROR: Phase-2 contract verification failed"
+            exit 1
+          }
 
       - name: Upload detector artifacts
         if: github.event_name != 'schedule' && always()

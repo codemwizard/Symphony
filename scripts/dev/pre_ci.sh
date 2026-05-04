@@ -851,6 +851,14 @@ else
   exit 1
 fi
 
+if [[ -x scripts/audit/verify_phase_claim_admissibility.sh ]]; then
+  emit_preci_step_with_provenance "run_claim_admissibility" "scripts/audit/verify_phase_claim_admissibility.sh" ""
+  scripts/audit/verify_phase_claim_admissibility.sh
+else
+  echo "ERROR: scripts/audit/verify_phase_claim_admissibility.sh not found"
+  exit 1
+fi
+
 echo "==> Wave 8 SEC-002 binary build and runtime verification"
 if [[ -x scripts/audit/verify_tsk_p2_w8_sec_002.sh ]]; then
   emit_preci_step_with_provenance "run_sec_002" "scripts/audit/verify_tsk_p2_w8_sec_002.sh" ""
@@ -1346,6 +1354,23 @@ if ! assert_preci_sequence "$PRECI_TRACE_LOG"; then
 fi
 echo "PRECI trace log: $PRECI_TRACE_LOG"
 # --- end PRECI_SEQUENCE_ASSERTION ---
+
+# --- RUN_PHASE2_GATES ---
+# Phase-2 contract verification when RUN_PHASE2_GATES=1
+if [[ "${RUN_PHASE2_GATES:-0}" == "1" ]]; then
+  echo "==> Phase-2 contract verification (RUN_PHASE2_GATES=1)"
+  if [[ -x "scripts/audit/verify_phase2_contract.sh" ]]; then
+    bash scripts/audit/verify_phase2_contract.sh > evidence/phase2/phase2_contract_status.json || {
+      echo "ERROR: Phase-2 contract verification failed" >&2
+      exit 1
+    }
+    echo "  Phase-2 contract verification: PASSED"
+  else
+    echo "ERROR: scripts/audit/verify_phase2_contract.sh not found or not executable" >&2
+    exit 1
+  fi
+fi
+# --- end RUN_PHASE2_GATES ---
 
 echo "? Pre-CI local checks PASSED."
 

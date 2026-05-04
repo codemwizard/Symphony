@@ -272,6 +272,36 @@ load_extension() {
     
     local load_output
     if [ -n "${DB_CONTAINER:-}" ]; then
+        # Copy extension files from host to container
+        local pkglibdir=$($PG_CONFIG --pkglibdir)
+        local sharedir=$($PG_CONFIG --sharedir)
+        
+        docker exec "$DB_CONTAINER" mkdir -p "$pkglibdir"
+        docker exec "$DB_CONTAINER" mkdir -p "$sharedir/extension"
+        docker cp "$pkglibdir/wave8_crypto.so" "$DB_CONTAINER:$pkglibdir/"
+        for f in "$sharedir"/extension/wave8_crypto*; do
+            if [ -f "$f" ]; then
+                docker cp "$f" "$DB_CONTAINER:$sharedir/extension/"
+            fi
+        done
+        
+        # Resolve libsodium path on host and copy to container
+        local libsodium_path=$(ldd "$pkglibdir/wave8_crypto.so" | grep libsodium | awk '{print $3}')
+        if [ -n "$libsodium_path" ] && [ -f "$libsodium_path" ]; then
+            local lib_dir=$(dirname "$libsodium_path")
+            docker exec "$DB_CONTAINER" mkdir -p "$lib_dir"
+            
+            # If it's a symlink on the host, copy both symlink and real file
+            if [ -L "$libsodium_path" ]; then
+                local real_path=$(readlink -f "$libsodium_path")
+                docker cp "$real_path" "$DB_CONTAINER:$real_path"
+                docker exec "$DB_CONTAINER" ln -sf "$real_path" "$libsodium_path"
+            else
+                docker cp "$libsodium_path" "$DB_CONTAINER:$libsodium_path"
+            fi
+            docker exec "$DB_CONTAINER" ldconfig
+        fi
+
         load_output=$(docker exec "$DB_CONTAINER" psql -U symphony -d symphony -c "CREATE EXTENSION IF NOT EXISTS wave8_crypto;" 2>&1) || {
             local escaped_output
             escaped_output=$(echo "$load_output" | sed 's/"/\\"/g' | tr '\n' ' ')

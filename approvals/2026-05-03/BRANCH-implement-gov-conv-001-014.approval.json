@@ -1,0 +1,26 @@
+{
+  "approval_id": "BRANCH-implement-gov-conv-001-014",
+  "approval_type": "stage_a",
+  "date": "2026-05-03",
+  "branch": "implement-gov-conv-015-020",
+  "approver": "Invariants Curator Agent",
+  "status": "APPROVED",
+  "scope": {
+    "task_range": "TSK-P2-GOV-CONV-001 through TSK-P2-GOV-CONV-014",
+    "regulated_surfaces": [
+      "scripts/audit/**",
+      "docs/operations/**", 
+      "evidence/**"
+    ]
+  },
+  "risk_assessment": {
+    "risk_class": "GOVERNANCE",
+    "blast_radius": "DOCS_ONLY and CI_GATES",
+    "anti_drift_measures": "All tasks are generator-created with single objectives"
+  },
+  "governance_compliance": {
+    "symphony_requirements": true,
+    "anti_drift_principles": true,
+    "wave5_lessons_learned": true
+  }
+}

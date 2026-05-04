@@ -1,0 +1,239 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-GOV-CONV-014
+title: "Create semantic phase claim admissibility verifier"
+owner_role: SECURITY_GUARDIAN
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+
+intent: >-
+  The repository needs a semantic admissibility verifier that blocks phase-key and
+  phase-claim drift across task metadata and governance documents. This task creates
+  only scripts/audit/verify_phase_claim_admissibility.sh and its evidence output.
+  It prevents anti-hallucination failures by rejecting future-phase delivery claims,
+  phase-completion overclaims, and capability-laundering language that numeric phase
+  checks alone cannot catch.
+
+anti_patterns:
+  - >-
+    Checking only that phase values are in the numeric set 0..4 while allowing
+    semantic claims such as "Phase complete" or "Phase-3 ready".
+  - >-
+    Treating future-phase scaffolding as evidence that a future phase is open.
+  - >-
+    Wiring the verifier into CI in the same task as creating and proving it.
+
+out_of_scope:
+  - Modifying existing task meta.yml files
+  - Modifying docs/PHASE2/**, docs/PHASE3/**, or docs/PHASE4/**
+  - Wiring scripts/dev/pre_ci.sh or .github/workflows/**
+  - Creating future-phase scaffolding
+  - Fixing violations found by the verifier
+
+stop_conditions:
+  - >-
+    STOP if PHASE_LIFECYCLE.md cannot be read or valid lifecycle phase keys cannot
+    be determined.
+  - >-
+    STOP if negative fixtures containing phase-complete or future-phase delivery
+    claims do not fail.
+  - >-
+    STOP if the verifier cannot emit the exact violating file path, field, and
+    matched pattern.
+  - >-
+    STOP if approval metadata is absent before editing scripts/audit/** or evidence/**.
+
+proof_guarantees:
+  - >-
+    The verifier rejects invalid lifecycle phase keys in task metadata.
+  - >-
+    The verifier rejects semantic phase overclaims including phase-complete,
+    phase-open, future-phase-ready, and delivery-claimable language outside approved
+    artifacts.
+  - >-
+    Evidence records scanned files, violations, matched patterns, and allowed
+    exception contexts.
+
+proof_limitations:
+  - >-
+    The verifier cannot catch every possible paraphrase of a prohibited claim; it
+    enforces the configured pattern classes.
+  - >-
+    This task does not fix existing violations.
+  - >-
+    This task does not wire the verifier into local or CI gates.
+
+depends_on: []
+blocks:
+  - TSK-P2-GOV-CONV-015
+  - TSK-P2-GOV-CONV-016
+
+touches:
+  - scripts/audit/verify_phase_claim_admissibility.sh
+  - evidence/phase2/phase_claim_admissibility.json
+  - tasks/TSK-P2-GOV-CONV-014/meta.yml
+  - docs/plans/phase2/TSK-P2-GOV-CONV-014/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-014/EXEC_LOG.md
+
+deliverable_files:
+  - scripts/audit/verify_phase_claim_admissibility.sh
+  - evidence/phase2/phase_claim_admissibility.json
+  - docs/plans/phase2/TSK-P2-GOV-CONV-014/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-014/EXEC_LOG.md
+
+invariants:
+  - INV-GOV-CONV-014
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/verify_phase_claim_admissibility.sh
+    - evidence/phase2/phase_claim_admissibility.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+work:
+  - >-
+    [ID gov_conv_014_w01] Create scripts/audit/verify_phase_claim_admissibility.sh
+    to scan task metadata and selected governance docs for lifecycle phase key and
+    semantic claim admissibility.
+  - >-
+    [ID gov_conv_014_w02] Enforce lifecycle phase key validity against PHASE_LIFECYCLE.md:
+    only '0', '1', '2', '3', and '4' are valid task phase keys.
+  - >-
+    [ID gov_conv_014_w03] Enforce semantic blocked pattern classes for phase-open,
+    phase-complete, phase-ready, delivery-claimable, future-phase implementation,
+    and capability-laundering language.
+  - >-
+    [ID gov_conv_014_w04] Add explicit allowed-context handling for approved
+    ratification artifacts and non-claimable scaffold text so valid governance
+    language is not rejected.
+  - >-
+    [ID gov_conv_014_w05] Add negative fixtures for invalid phase key, phase-complete
+    overclaim, future-phase delivery claim, and future-phase scaffold falsely treated
+    as open.
+  - >-
+    [ID gov_conv_014_w06] Emit evidence/phase2/phase_claim_admissibility.json with
+    files_scanned, violations, allowed_contexts, blocked_patterns, and
+    admissibility_status.
+
+acceptance_criteria:
+  - >-
+    [ID gov_conv_014_w01] The verifier scans task metadata and configured governance
+    document paths and reports file path, field or line, and matched pattern for
+    each violation.
+  - >-
+    [ID gov_conv_014_w02] The verifier exits non-zero for a fixture task meta.yml
+    with phase: '2.1' or a named phase value.
+  - >-
+    [ID gov_conv_014_w03] The verifier exits non-zero for fixtures containing
+    prohibited phase-complete or future-phase delivery claims.
+  - >-
+    [ID gov_conv_014_w04] The verifier allows explicitly non-claimable scaffold
+    language and approved ratification contexts without allowing broad overclaims.
+  - >-
+    [ID gov_conv_014_w05] Each negative fixture fails for the expected reason.
+  - >-
+    [ID gov_conv_014_w06] Evidence records admissibility_status: PASS only when
+    violations is empty.
+
+negative_tests:
+  - id: TSK-P2-GOV-CONV-014-N1
+    description: >-
+      Run the verifier against a fixture task with phase: '2.1'. It must exit non-zero
+      as an invalid lifecycle phase key.
+    required: true
+  - id: TSK-P2-GOV-CONV-014-N2
+    description: >-
+      Run the verifier against a fixture task or doc claiming "Phase-2 complete" or
+      "Phase complete". It must exit non-zero and report the matched pattern.
+    required: true
+  - id: TSK-P2-GOV-CONV-014-N3
+    description: >-
+      Run the verifier against a fixture claiming Phase-3 is ready, open, or
+      delivery-claimable without approved opening artifacts. It must exit non-zero.
+    required: true
+  - id: TSK-P2-GOV-CONV-014-N4
+    description: >-
+      Run the verifier against a fixture using future-phase scaffold text as evidence
+      of implementation readiness. It must exit non-zero unless the text is explicitly
+      marked non-claimable.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-GOV-CONV-014-P1
+    description: >-
+      Run the verifier against valid fixture task metadata with phase: '2' and
+      explicitly non-claimable future-phase scaffold language. It must exit 0.
+    required: true
+
+verification:
+  - >-
+    # [ID gov_conv_014_w01] [ID gov_conv_014_w02] [ID gov_conv_014_w03] [ID gov_conv_014_w04] [ID gov_conv_014_w05] [ID gov_conv_014_w06]
+    test -x scripts/audit/verify_phase_claim_admissibility.sh && bash scripts/audit/verify_phase_claim_admissibility.sh > evidence/phase2/phase_claim_admissibility.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-GOV-CONV-014 --evidence evidence/phase2/phase_claim_admissibility.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/phase_claim_admissibility.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - files_scanned
+      - violations
+      - allowed_contexts
+      - blocked_patterns
+      - admissibility_status
+
+failure_modes:
+  - >-
+    Verifier checks numeric phase keys but misses semantic phase-complete claims
+    => CRITICAL_FAIL
+  - >-
+    Verifier accepts future-phase delivery claims without approved opening artifacts
+    => CRITICAL_FAIL
+  - >-
+    Verifier cannot report exact violating path and pattern => FAIL
+  - >-
+    Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/operations/PHASE_LIFECYCLE.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-GOV-CONV-014/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-GOV-CONV-014/EXEC_LOG.md
+notes: >-
+  This task creates and proves the semantic admissibility verifier only. Wiring is
+  handled by TSK-P2-GOV-CONV-015, and existing violation remediation is handled by
+  read-only report plus child fix tasks.
+client: codex_cli
+assigned_agent: security_guardian
+model: UNASSIGNED

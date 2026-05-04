@@ -1,0 +1,216 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-GOV-CONV-003
+title: "Register REG and SEC Phase-2 invariant IDs from reconciliation manifest"
+owner_role: INVARIANTS_CURATOR
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  The reconciliation manifest may identify REG and SEC Phase-2 task clusters that
+  require invariant registration before the Phase-2 machine contract can be rewritten.
+  This task registers only REG and SEC invariant IDs so governance/security work is
+  reviewed independently from PREAUTH and Wave remediation clusters. It prevents
+  hallucinated invariant claims by requiring each registered ID to trace to an actual
+  reconciliation manifest row.
+
+anti_patterns:
+  - >-
+    Registering REG or SEC invariant IDs from roadmap prose rather than the
+    reconciliation manifest.
+  - >-
+    Mixing REG/SEC invariant registration with PREAUTH, W5, W6, or W8 clusters.
+  - >-
+    Creating broad claims such as "security complete" instead of mechanically
+    verifiable invariant descriptions.
+
+out_of_scope:
+  - Registering PREAUTH invariant IDs
+  - Registering W5, W6, or W8 invariant IDs
+  - Rewriting docs/PHASE2/phase2_contract.yml
+  - Creating or wiring Phase-2 contract verifier scripts
+  - Editing task metadata outside this task pack
+
+stop_conditions:
+  - >-
+    STOP if evidence/phase2/gov_conv_001_reconciliation_manifest.json is missing
+    or invalid.
+  - >-
+    STOP if any proposed invariant ID duplicates an existing ID in
+    docs/invariants/INVARIANTS_MANIFEST.yml.
+  - >-
+    STOP if a proposed invariant cannot be traced to a REG or SEC row in the
+    reconciliation manifest.
+  - >-
+    STOP if approval metadata is absent before editing docs/invariants/**,
+    scripts/audit/**, or evidence/**.
+
+proof_guarantees:
+  - >-
+    Every invariant registered by this task is REG- or SEC-scoped and traceable to
+    the reconciliation manifest.
+  - >-
+    The verifier rejects duplicate IDs and out-of-scope PREAUTH/Wave entries.
+  - >-
+    The evidence records registered IDs, source manifest rows, and scope violations.
+
+proof_limitations:
+  - >-
+    This task does not prove PREAUTH, W5, W6, or W8 invariant coverage.
+  - >-
+    This task does not rewrite any Phase-2 contract rows.
+  - >-
+    This task does not prove full semantic correctness beyond ID uniqueness,
+    cluster scope, required fields, and manifest traceability.
+
+depends_on:
+  - TSK-P2-GOV-CONV-001
+blocks:
+  - TSK-P2-GOV-CONV-005
+
+touches:
+  - docs/invariants/INVARIANTS_MANIFEST.yml
+  - scripts/audit/verify_gov_conv_003.sh
+  - evidence/phase2/gov_conv_003_reg_sec_inv_registration.json
+  - tasks/TSK-P2-GOV-CONV-003/meta.yml
+  - docs/plans/phase2/TSK-P2-GOV-CONV-003/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-003/EXEC_LOG.md
+
+deliverable_files:
+  - docs/invariants/INVARIANTS_MANIFEST.yml
+  - scripts/audit/verify_gov_conv_003.sh
+  - evidence/phase2/gov_conv_003_reg_sec_inv_registration.json
+  - docs/plans/phase2/TSK-P2-GOV-CONV-003/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-003/EXEC_LOG.md
+
+invariants:
+  - INV-GOV-CONV-003
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - docs/invariants/INVARIANTS_MANIFEST.yml
+    - scripts/audit/verify_gov_conv_003.sh
+    - evidence/phase2/gov_conv_003_reg_sec_inv_registration.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+work:
+  - >-
+    [ID gov_conv_003_w01] Review the reconciliation manifest and identify only REG
+    and SEC cluster rows that lack registered invariant IDs.
+  - >-
+    [ID gov_conv_003_w02] Register only REG- and SEC-scoped invariant entries in
+    docs/invariants/INVARIANTS_MANIFEST.yml with precise descriptions, status,
+    verifier reference, and evidence reference.
+  - >-
+    [ID gov_conv_003_w03] Create scripts/audit/verify_gov_conv_003.sh to validate
+    REG/SEC-only scope, invariant ID uniqueness, manifest traceability, and required
+    fields for each new entry.
+  - >-
+    [ID gov_conv_003_w04] Emit evidence/phase2/gov_conv_003_reg_sec_inv_registration.json
+    containing registered_ids, source_manifest_rows, duplicate_id_count, and
+    out_of_scope_entries.
+
+acceptance_criteria:
+  - >-
+    [ID gov_conv_003_w01] EXEC_LOG.md records the REG/SEC manifest rows reviewed and
+    excludes PREAUTH and Wave rows from this task.
+  - >-
+    [ID gov_conv_003_w02] INVARIANTS_MANIFEST.yml contains only new REG/SEC-scoped
+    invariant entries from this task.
+  - >-
+    [ID gov_conv_003_w03] The verifier exits non-zero if a duplicate ID or non-REG/SEC
+    cluster entry is introduced.
+  - >-
+    [ID gov_conv_003_w04] Evidence records registered_ids and source_manifest_rows
+    for every new REG/SEC invariant.
+
+negative_tests:
+  - id: TSK-P2-GOV-CONV-003-N1
+    description: >-
+      Run the verifier against a fixture where a PREAUTH or W8 row is registered by
+      this task. It must exit non-zero as out-of-scope.
+    required: true
+  - id: TSK-P2-GOV-CONV-003-N2
+    description: >-
+      Run the verifier against a fixture where a proposed REG/SEC invariant ID
+      duplicates an existing manifest ID. It must exit non-zero.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-GOV-CONV-003-P1
+    description: >-
+      Run the verifier against the live manifest and invariant registry after REG/SEC
+      registration. It must emit PASS evidence with duplicate_id_count: 0 and
+      out_of_scope_entries: [].
+    required: true
+
+verification:
+  - >-
+    # [ID gov_conv_003_w01] [ID gov_conv_003_w02] [ID gov_conv_003_w03] [ID gov_conv_003_w04]
+    test -x scripts/audit/verify_gov_conv_003.sh && bash scripts/audit/verify_gov_conv_003.sh > evidence/phase2/gov_conv_003_reg_sec_inv_registration.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-GOV-CONV-003 --evidence evidence/phase2/gov_conv_003_reg_sec_inv_registration.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/gov_conv_003_reg_sec_inv_registration.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - registered_ids
+      - source_manifest_rows
+      - duplicate_id_count
+      - out_of_scope_entries
+
+failure_modes:
+  - >-
+    Invariant ID is registered without a matching REG/SEC source row in the
+    reconciliation manifest => CRITICAL_FAIL
+  - >-
+    Task registers PREAUTH, W5, W6, or W8 invariant IDs => BLOCKED
+  - >-
+    Duplicate invariant ID is accepted by the verifier => CRITICAL_FAIL
+  - >-
+    Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/invariants/INVARIANTS_MANIFEST.yml
+  - evidence/phase2/gov_conv_001_reconciliation_manifest.json
+
+implementation_plan: docs/plans/phase2/TSK-P2-GOV-CONV-003/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-GOV-CONV-003/EXEC_LOG.md
+notes: >-
+  This task keeps REG/SEC invariant registration separate from PREAUTH and Wave
+  clusters to preserve single-domain review and avoid broad registry churn.
+client: codex_cli
+assigned_agent: invariants_curator
+model: UNASSIGNED

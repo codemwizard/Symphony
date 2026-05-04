@@ -1,0 +1,44 @@
+{
+  "task_id": "TSK-P2-GOV-CONV-011",
+  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
+  "timestamp_utc": "2026-05-03T21:07:33Z",
+  "status": "PASS",
+  "checks": [
+    "prerequisite_task_complete:PASS",
+    "policy_document_exists:PASS",
+    "apex_authority_referenced:PASS",
+    "lifecycle_authority_referenced:PASS",
+    "machine_contract_referenced:PASS",
+    "claim_evidence_requirements:PASS",
+    "no_prohibited_claims:PASS",
+    "verifier_referenced:PASS",
+    "evidence_path_referenced:PASS",
+    "no_role_redefinition:PASS",
+    "policy_scoped:PASS"
+  ],
+  "policy_alignment_status": "PASS",
+  "authority_references": {
+    "apex_manual": "AI_AGENT_OPERATION_MANUAL.md",
+    "lifecycle_policy": "PHASE_LIFECYCLE.md",
+    "machine_contract": "phase2_contract.yml",
+    "verifier": "verify_phase2_contract.sh",
+    "evidence_path": "phase2_contract_status.json"
+  },
+  "prohibited_claims": {
+    "count": 0,
+    "readiness_claims": 0,
+    "open_claims": 0,
+    "completion_claims": 0
+  },
+  "claim_evidence_requirements": false,
+  "policy_scoping": {
+    "scoped_language_present": true,
+    "no_role_redefinition": true,
+    "phase_specific": true
+  },
+  "summary": {
+    "total_checks": 11,
+    "passed_checks": 11,
+    "failed_checks": 0
+  }
+}

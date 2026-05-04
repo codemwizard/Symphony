@@ -1,0 +1,243 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-GOV-CONV-012
+title: "Create Phase-2 constitutional ratification approval artifacts"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  Phase-2 governance artifacts must be ratified explicitly after the machine contract,
+  verifier wiring, human contract, and policy alignment checks exist. This task creates
+  only the Phase-2 ratification approval markdown and JSON sidecar artifacts. It
+  prevents retroactive phase-status drift by recording exactly which prerequisite
+  artifacts and verifier evidence were present at ratification time.
+
+anti_patterns:
+  - >-
+    Claiming Phase-2 is open, complete, or ratified before prerequisite verification
+    evidence exists.
+  - >-
+    Creating ratification text without a schema-valid approval sidecar.
+  - >-
+    Modifying contracts, policies, or verifier scripts in the same task as ratification
+    artifact creation.
+
+out_of_scope:
+  - Modifying docs/PHASE2/phase2_contract.yml
+  - Modifying docs/PHASE2/PHASE2_CONTRACT.md
+  - Modifying docs/operations/AGENTIC_SDLC_PHASE2_POLICY.md
+  - Modifying scripts/audit/** verifier behavior
+  - Modifying CI or pre_ci wiring
+  - Opening Phase-3 or Phase-4
+
+stop_conditions:
+  - >-
+    STOP if TSK-P2-GOV-CONV-006, TSK-P2-GOV-CONV-007, TSK-P2-GOV-CONV-009, or
+    TSK-P2-GOV-CONV-011 is incomplete.
+  - >-
+    STOP if required evidence files from prerequisite tasks are missing or invalid.
+  - >-
+    STOP if the approval sidecar cannot validate against the repository approval
+    schema.
+  - >-
+    STOP if the ratification artifact would claim Phase-2 implementation completion
+    beyond the verified contract rows.
+
+proof_guarantees:
+  - >-
+    A Phase-2 ratification markdown artifact and JSON sidecar exist under an
+    approvals/YYYY-MM-DD/ directory.
+  - >-
+    The ratification artifacts reference prerequisite verifier evidence and the
+    approval sidecar path.
+  - >-
+    The task-specific evidence records referenced artifacts, sidecar validation
+    status, and ratification_scope.
+
+proof_limitations:
+  - >-
+    This task does not prove the human approver's intent beyond the recorded approval
+    metadata.
+  - >-
+    This task does not modify or verify contract/policy content; prerequisites own
+    those checks.
+  - >-
+    This task does not create Stage B PR approval artifacts.
+
+depends_on:
+  - TSK-P2-GOV-CONV-006
+  - TSK-P2-GOV-CONV-007
+  - TSK-P2-GOV-CONV-009
+  - TSK-P2-GOV-CONV-011
+blocks:
+  - TSK-P2-GOV-CONV-013
+
+touches:
+  - approvals/YYYY-MM-DD/PHASE2-RATIFICATION.md
+  - approvals/YYYY-MM-DD/PHASE2-RATIFICATION.approval.json
+  - scripts/audit/verify_gov_conv_012.sh
+  - evidence/phase2/gov_conv_012_phase2_ratification_artifacts.json
+  - tasks/TSK-P2-GOV-CONV-012/meta.yml
+  - docs/plans/phase2/TSK-P2-GOV-CONV-012/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-012/EXEC_LOG.md
+
+deliverable_files:
+  - approvals/YYYY-MM-DD/PHASE2-RATIFICATION.md
+  - approvals/YYYY-MM-DD/PHASE2-RATIFICATION.approval.json
+  - scripts/audit/verify_gov_conv_012.sh
+  - evidence/phase2/gov_conv_012_phase2_ratification_artifacts.json
+  - docs/plans/phase2/TSK-P2-GOV-CONV-012/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-012/EXEC_LOG.md
+
+invariants:
+  - INV-GOV-CONV-012
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - approvals/YYYY-MM-DD/PHASE2-RATIFICATION.md
+    - approvals/YYYY-MM-DD/PHASE2-RATIFICATION.approval.json
+    - scripts/audit/verify_gov_conv_012.sh
+    - evidence/phase2/gov_conv_012_phase2_ratification_artifacts.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+    - docs/operations/approval_sidecar.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+work:
+  - >-
+    [ID gov_conv_012_w01] Create approvals/YYYY-MM-DD/PHASE2-RATIFICATION.md with
+    ratification scope, prerequisite task IDs, prerequisite evidence paths, verifier
+    evidence references, and explicit statement that ratification covers governance
+    artifact normalization only.
+  - >-
+    [ID gov_conv_012_w02] Create approvals/YYYY-MM-DD/PHASE2-RATIFICATION.approval.json
+    conforming to the repository approval sidecar schema with approver_id,
+    approval_timestamp, change_ref, artifact_ref, and regulated_surface scope.
+  - >-
+    [ID gov_conv_012_w03] Ensure the markdown artifact contains the required
+    machine-readable cross-reference section and exact sidecar path.
+  - >-
+    [ID gov_conv_012_w04] Create scripts/audit/verify_gov_conv_012.sh to validate
+    artifact existence, sidecar schema conformance, prerequisite evidence references,
+    and no overbroad Phase-2 completion claims.
+  - >-
+    [ID gov_conv_012_w05] Emit evidence/phase2/gov_conv_012_phase2_ratification_artifacts.json
+    with artifact_paths, sidecar_valid, prerequisites_referenced, missing_evidence,
+    and ratification_scope.
+
+acceptance_criteria:
+  - >-
+    [ID gov_conv_012_w01] The ratification markdown references prerequisite tasks
+    and evidence from TSK-P2-GOV-CONV-006, 007, 009, and 011.
+  - >-
+    [ID gov_conv_012_w02] The approval sidecar validates against the repository
+    approval sidecar schema.
+  - >-
+    [ID gov_conv_012_w03] The markdown contains a machine-readable cross-reference
+    section with the exact approval sidecar JSON path.
+  - >-
+    [ID gov_conv_012_w04] The verifier exits non-zero if prerequisite evidence is
+    missing, sidecar validation fails, or overbroad Phase-2 completion claims appear.
+  - >-
+    [ID gov_conv_012_w05] Evidence records sidecar_valid: true, missing_evidence: [],
+    and a bounded ratification_scope.
+
+negative_tests:
+  - id: TSK-P2-GOV-CONV-012-N1
+    description: >-
+      Run the verifier against a fixture ratification markdown missing the approval
+      sidecar cross-reference. It must exit non-zero.
+    required: true
+  - id: TSK-P2-GOV-CONV-012-N2
+    description: >-
+      Run the verifier against a fixture approval sidecar missing required schema
+      fields. It must exit non-zero.
+    required: true
+  - id: TSK-P2-GOV-CONV-012-N3
+    description: >-
+      Run the verifier against a fixture ratification artifact that claims all Phase-2
+      implementation is complete. It must exit non-zero as an overbroad claim.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-GOV-CONV-012-P1
+    description: >-
+      Run the verifier against the live ratification artifacts. It must emit PASS
+      evidence with sidecar_valid: true and missing_evidence: [].
+    required: true
+
+verification:
+  - >-
+    # [ID gov_conv_012_w01] [ID gov_conv_012_w02] [ID gov_conv_012_w03] [ID gov_conv_012_w04] [ID gov_conv_012_w05]
+    test -x scripts/audit/verify_gov_conv_012.sh && bash scripts/audit/verify_gov_conv_012.sh > evidence/phase2/gov_conv_012_phase2_ratification_artifacts.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-GOV-CONV-012 --evidence evidence/phase2/gov_conv_012_phase2_ratification_artifacts.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/gov_conv_012_phase2_ratification_artifacts.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - artifact_paths
+      - sidecar_valid
+      - prerequisites_referenced
+      - missing_evidence
+      - ratification_scope
+
+failure_modes:
+  - >-
+    Ratification artifact is created without schema-valid approval sidecar => CRITICAL_FAIL
+  - >-
+    Ratification artifact omits prerequisite evidence references => CRITICAL_FAIL
+  - >-
+    Ratification artifact claims Phase-2 implementation completion beyond verified
+    contract scope => CRITICAL_FAIL
+  - >-
+    Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/operations/PHASE_LIFECYCLE.md
+  - docs/operations/approval_metadata.schema.json
+  - docs/operations/approval_sidecar.schema.json
+  - evidence/phase2/phase2_contract_status.json
+  - evidence/phase2/gov_conv_007_phase2_contract_wiring.json
+  - evidence/phase2/gov_conv_009_human_machine_contract_alignment.json
+  - evidence/phase2/gov_conv_011_phase2_policy_alignment.json
+
+implementation_plan: docs/plans/phase2/TSK-P2-GOV-CONV-012/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-GOV-CONV-012/EXEC_LOG.md
+notes: >-
+  Replace YYYY-MM-DD with the actual approval date during implementation. This task
+  creates ratification artifacts only; validation is handled here at artifact level
+  and again by TSK-P2-GOV-CONV-013 as an independent ratification verifier.
+client: codex_cli
+assigned_agent: architect
+model: UNASSIGNED

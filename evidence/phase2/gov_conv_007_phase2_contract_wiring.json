@@ -1,0 +1,35 @@
+{
+  "task_id": "TSK-P2-GOV-CONV-007",
+  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
+  "timestamp_utc": "2026-05-03T19:40:39Z",
+  "status": "PASS",
+  "checks": [
+    "prerequisite_task_complete:PASS",
+    "canonical_verifier_exists:PASS",
+    "local_pre_ci_wiring:PASS",
+    "ci_wiring:PASS",
+    "fail_closed_behavior:PASS",
+    "local_wiring_test:PASS",
+    "evidence_path_consistency:PASS"
+  ],
+  "local_wiring": {
+    "script": "scripts/dev/pre_ci.sh",
+    "has_run_phase2_gates": true,
+    "has_verifier_call": true,
+    "fail_closed": true,
+    "test_passed": true
+  },
+  "ci_wiring": {
+    "workflow": ".github/workflows/invariants.yml",
+    "has_run_phase2_gates": true,
+    "has_verifier_call": true,
+    "fail_closed": true
+  },
+  "evidence_path": "evidence/phase2/phase2_contract_status.json || {",
+  "canonical_verifier": "scripts/audit/verify_phase2_contract.sh",
+  "summary": {
+    "total_checks": 7,
+    "passed_checks": 7,
+    "failed_checks": 0
+  }
+}

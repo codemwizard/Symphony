@@ -1,0 +1,24 @@
+{
+  "task_id": "TSK-P2-GOV-CONV-006",
+  "git_sha": "$(git rev-parse HEAD 2>/dev/null || echo unknown)",
+  "timestamp_utc": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
+  "contract_file": "docs/PHASE2/phase2_contract.yml",
+  "status": "PASS",
+  "violations": {
+    "malformed_rows": [],
+    "invalid_statuses": [],
+    "missing_invariants": [],
+    "missing_verifiers": [],
+    "missing_evidence": [],
+    "task_id_rows": []
+  },
+  "total_rows": 6,
+  "summary": {
+    "malformed_rows": 0,
+    "invalid_statuses": 0,
+    "missing_invariants": 0,
+    "missing_verifiers": 0,
+    "missing_evidence": 0,
+    "task_id_rows": 0
+  }
+}

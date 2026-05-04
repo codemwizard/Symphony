@@ -108,35 +108,41 @@ Forward-only remediation of gaps left by TSK-P2-PREAUTH-003-01/-02. Migrations 0
 ## Wave 8 Closure Track (Authoritative Implementation)
 
 **Governance Truth:** docs/governance/WAVE8_GOVERNANCE_REMEDIATION_ADR.md
-**Task Sequence:** docs/plans/phase2/WAVE8_TRUE_TASK_SEQUENCE.md
-**Total Tasks:** 22 (GOV-001, ARCH-001 through ARCH-006, SEC-000 through SEC-001, DB-001 through DB-009, QA-001 through QA-002)
+**Evidence-Based Status:** docs/governance/WAVE8_TASK_STATUS_MATRIX.md
+**Total Tasks:** 23 (GOV-001, ARCH-001 through ARCH-006, SEC-000 through SEC-002, DB-001 through DB-009, QA-001 through QA-002)
+
+**Implementation Status (Evidence-Based):**
+- ✅ **Fully Implemented:** 5/23 tasks (SEC-002, DB-006, DB-007b, DB-007c, DB-009)
+- ⚠️ **Partially Implemented:** 13/23 tasks (all ARCH tasks, most DB tasks, GOV-001)
+- ❌ **Not Implemented:** 5/23 tasks (QA-001, QA-002, SEC-000, SEC-001)
 
 **Note:** TSK-P2-W8-DB-007 is superseded by TSK-P2-W8-DB-007a, TSK-P2-W8-DB-007b, and TSK-P2-W8-DB-007c per Wave 8 governance truth. The unsplit DB-007 is non-executable for closure.
 
-| Task ID | Owner Role | Status | Plan | Log |
+| Task ID | Owner Role | Evidence-Based Status | Plan | Log |
 |---|---|---|---|---|
-| TSK-P2-W8-GOV-001 | ARCHITECT | in_progress | docs/plans/phase2/TSK-P2-W8-GOV-001/PLAN.md | docs/plans/phase2/TSK-P2-W8-GOV-001/EXEC_LOG.md |
-| TSK-P2-W8-ARCH-001 | ARCHITECT | planned | docs/plans/phase2/TSK-P2-W8-ARCH-001/PLAN.md | docs/plans/phase2/TSK-P2-W8-ARCH-001/EXEC_LOG.md |
-| TSK-P2-W8-ARCH-002 | ARCHITECT | planned | docs/plans/phase2/TSK-P2-W8-ARCH-002/PLAN.md | docs/plans/phase2/TSK-P2-W8-ARCH-002/EXEC_LOG.md |
-| TSK-P2-W8-ARCH-003 | ARCHITECT | planned | docs/plans/phase2/TSK-P2-W8-ARCH-003/PLAN.md | docs/plans/phase2/TSK-P2-W8-ARCH-003/EXEC_LOG.md |
-| TSK-P2-W8-ARCH-004 | ARCHITECT | planned | docs/plans/phase2/TSK-P2-W8-ARCH-004/PLAN.md | docs/plans/phase2/TSK-P2-W8-ARCH-004/EXEC_LOG.md |
-| TSK-P2-W8-ARCH-005 | ARCHITECT | planned | docs/plans/phase2/TSK-P2-W8-ARCH-005/PLAN.md | docs/plans/phase2/TSK-P2-W8-ARCH-005/EXEC_LOG.md |
-| TSK-P2-W8-ARCH-006 | ARCHITECT | planned | docs/plans/phase2/TSK-P2-W8-ARCH-006/PLAN.md | docs/plans/phase2/TSK-P2-W8-ARCH-006/EXEC_LOG.md |
-| TSK-P2-W8-SEC-000 | SECURITY_GUARDIAN | planned | docs/plans/phase2/TSK-P2-W8-SEC-000/PLAN.md | docs/plans/phase2/TSK-P2-W8-SEC-000/EXEC_LOG.md |
-| TSK-P2-W8-SEC-001 | SECURITY_GUARDIAN | planned | docs/plans/phase2/TSK-P2-W8-SEC-001/PLAN.md | docs/plans/phase2/TSK-P2-W8-SEC-001/EXEC_LOG.md |
-| TSK-P2-W8-DB-001 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-W8-DB-001/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-001/EXEC_LOG.md |
-| TSK-P2-W8-DB-002 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-W8-DB-002/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-002/EXEC_LOG.md |
-| TSK-P2-W8-DB-003 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-W8-DB-003/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-003/EXEC_LOG.md |
-| TSK-P2-W8-DB-004 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-W8-DB-004/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-004/EXEC_LOG.md |
-| TSK-P2-W8-DB-005 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-W8-DB-005/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-005/EXEC_LOG.md |
-| TSK-P2-W8-DB-006 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-W8-DB-006/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-006/EXEC_LOG.md |
-| TSK-P2-W8-DB-007a | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-W8-DB-007a/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-007a/EXEC_LOG.md |
-| TSK-P2-W8-DB-007b | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-W8-DB-007b/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-007b/EXEC_LOG.md |
-| TSK-P2-W8-DB-007c | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-W8-DB-007c/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-007c/EXEC_LOG.md |
-| TSK-P2-W8-DB-008 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-W8-DB-008/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-008/EXEC_LOG.md |
-| TSK-P2-W8-DB-009 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-W8-DB-009/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-009/EXEC_LOG.md |
-| TSK-P2-W8-QA-001 | QA_VERIFIER | planned | docs/plans/phase2/TSK-P2-W8-QA-001/PLAN.md | docs/plans/phase2/TSK-P2-W8-QA-001/EXEC_LOG.md |
-| TSK-P2-W8-QA-002 | QA_VERIFIER | planned | docs/plans/phase2/TSK-P2-W8-QA-002/PLAN.md | docs/plans/phase2/TSK-P2-W8-QA-002/EXEC_LOG.md |
+| TSK-P2-W8-GOV-001 | ARCHITECT | partial | docs/plans/phase2/TSK-P2-W8-GOV-001/PLAN.md | docs/plans/phase2/TSK-P2-W8-GOV-001/EXEC_LOG.md |
+| TSK-P2-W8-ARCH-001 | ARCHITECT | partial | docs/plans/phase2/TSK-P2-W8-ARCH-001/PLAN.md | docs/plans/phase2/TSK-P2-W8-ARCH-001/EXEC_LOG.md |
+| TSK-P2-W8-ARCH-002 | ARCHITECT | partial | docs/plans/phase2/TSK-P2-W8-ARCH-002/PLAN.md | docs/plans/phase2/TSK-P2-W8-ARCH-002/EXEC_LOG.md |
+| TSK-P2-W8-ARCH-003 | ARCHITECT | partial | docs/plans/phase2/TSK-P2-W8-ARCH-003/PLAN.md | docs/plans/phase2/TSK-P2-W8-ARCH-003/EXEC_LOG.md |
+| TSK-P2-W8-ARCH-004 | ARCHITECT | partial | docs/plans/phase2/TSK-P2-W8-ARCH-004/PLAN.md | docs/plans/phase2/TSK-P2-W8-ARCH-004/EXEC_LOG.md |
+| TSK-P2-W8-ARCH-005 | ARCHITECT | partial | docs/plans/phase2/TSK-P2-W8-ARCH-005/PLAN.md | docs/plans/phase2/TSK-P2-W8-ARCH-005/EXEC_LOG.md |
+| TSK-P2-W8-ARCH-006 | ARCHITECT | partial | docs/plans/phase2/TSK-P2-W8-ARCH-006/PLAN.md | docs/plans/phase2/TSK-P2-W8-ARCH-006/EXEC_LOG.md |
+| TSK-P2-W8-SEC-000 | SECURITY_GUARDIAN | not_implemented | docs/plans/phase2/TSK-P2-W8-SEC-000/PLAN.md | docs/plans/phase2/TSK-P2-W8-SEC-000/EXEC_LOG.md |
+| TSK-P2-W8-SEC-001 | SECURITY_GUARDIAN | not_implemented | docs/plans/phase2/TSK-P2-W8-SEC-001/PLAN.md | docs/plans/phase2/TSK-P2-W8-SEC-001/EXEC_LOG.md |
+| TSK-P2-W8-SEC-002 | SECURITY_GUARDIAN | true_complete | docs/plans/phase2/TSK-P2-W8-SEC-002/PLAN.md | docs/plans/phase2/TSK-P2-W8-SEC-002/EXEC_LOG.md |
+| TSK-P2-W8-DB-001 | DB_FOUNDATION | partial | docs/plans/phase2/TSK-P2-W8-DB-001/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-001/EXEC_LOG.md |
+| TSK-P2-W8-DB-002 | DB_FOUNDATION | partial | docs/plans/phase2/TSK-P2-W8-DB-002/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-002/EXEC_LOG.md |
+| TSK-P2-W8-DB-003 | DB_FOUNDATION | partial | docs/plans/phase2/TSK-P2-W8-DB-003/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-003/EXEC_LOG.md |
+| TSK-P2-W8-DB-004 | DB_FOUNDATION | partial | docs/plans/phase2/TSK-P2-W8-DB-004/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-004/EXEC_LOG.md |
+| TSK-P2-W8-DB-005 | DB_FOUNDATION | partial | docs/plans/phase2/TSK-P2-W8-DB-005/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-005/EXEC_LOG.md |
+| TSK-P2-W8-DB-006 | DB_FOUNDATION | true_complete | docs/plans/phase2/TSK-P2-W8-DB-006/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-006/EXEC_LOG.md |
+| TSK-P2-W8-DB-007a | DB_FOUNDATION | partial | docs/plans/phase2/TSK-P2-W8-DB-007a/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-007a/EXEC_LOG.md |
+| TSK-P2-W8-DB-007b | DB_FOUNDATION | true_complete | docs/plans/phase2/TSK-P2-W8-DB-007b/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-007b/EXEC_LOG.md |
+| TSK-P2-W8-DB-007c | DB_FOUNDATION | true_complete | docs/plans/phase2/TSK-P2-W8-DB-007c/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-007c/EXEC_LOG.md |
+| TSK-P2-W8-DB-008 | DB_FOUNDATION | partial | docs/plans/phase2/TSK-P2-W8-DB-008/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-008/EXEC_LOG.md |
+| TSK-P2-W8-DB-009 | DB_FOUNDATION | true_complete | docs/plans/phase2/TSK-P2-W8-DB-009/PLAN.md | docs/plans/phase2/TSK-P2-W8-DB-009/EXEC_LOG.md |
+| TSK-P2-W8-QA-001 | QA_VERIFIER | not_implemented | docs/plans/phase2/TSK-P2-W8-QA-001/PLAN.md | docs/plans/phase2/TSK-P2-W8-QA-001/EXEC_LOG.md |
+| TSK-P2-W8-QA-002 | QA_VERIFIER | not_implemented | docs/plans/phase2/TSK-P2-W8-QA-002/PLAN.md | docs/plans/phase2/TSK-P2-W8-QA-002/EXEC_LOG.md |
 
 ## Wave Verification Rule
 

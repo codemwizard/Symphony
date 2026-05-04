@@ -1,0 +1,218 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-GOV-CONV-008
+title: "Author Phase-2 human contract document"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  Phase-2 needs a human-readable contract document that mirrors the machine contract
+  without becoming an independent source of truth. This task creates only
+  docs/PHASE2/PHASE2_CONTRACT.md after the machine contract rewrite exists. It
+  prevents governance drift by requiring the document to cite the machine contract,
+  lifecycle policy, and verifier as authorities rather than introducing new delivery
+  claims.
+
+anti_patterns:
+  - >-
+    Authoring human contract claims that do not exist in docs/PHASE2/phase2_contract.yml.
+  - >-
+    Treating the human contract as the authoritative contract over the machine
+    contract.
+  - >-
+    Creating verifier scripts or CI wiring in the same task as document authoring.
+
+out_of_scope:
+  - Modifying docs/PHASE2/phase2_contract.yml
+  - Creating or modifying verifier scripts
+  - Modifying scripts/dev/pre_ci.sh or .github/workflows/**
+  - Writing docs/operations/AGENTIC_SDLC_PHASE2_POLICY.md
+  - Creating ratification approval artifacts
+
+stop_conditions:
+  - >-
+    STOP if TSK-P2-GOV-CONV-005 is incomplete or docs/PHASE2/phase2_contract.yml is
+    not invariant-centric.
+  - >-
+    STOP if the human document would introduce a delivery claim not present in the
+    machine contract.
+  - >-
+    STOP if the document omits the machine contract and verifier as authoritative
+    references.
+  - >-
+    STOP if approval metadata is absent before editing docs/PHASE2/** or evidence/**.
+
+proof_guarantees:
+  - >-
+    docs/PHASE2/PHASE2_CONTRACT.md exists and references the Phase-2 machine contract,
+    lifecycle definition, and Phase-2 verifier.
+  - >-
+    The document states that machine contract rows are authoritative for delivery
+    claims.
+  - >-
+    The task-specific evidence records document sections and authority references.
+
+proof_limitations:
+  - >-
+    This task does not prove full human/machine semantic parity; that is verified
+    by TSK-P2-GOV-CONV-009.
+  - >-
+    This task does not create policy guard documentation.
+  - >-
+    This task does not open or ratify Phase-2.
+
+depends_on:
+  - TSK-P2-GOV-CONV-005
+blocks:
+  - TSK-P2-GOV-CONV-009
+  - TSK-P2-GOV-CONV-012
+
+touches:
+  - docs/PHASE2/PHASE2_CONTRACT.md
+  - scripts/audit/verify_gov_conv_008.sh
+  - evidence/phase2/gov_conv_008_phase2_human_contract.json
+  - tasks/TSK-P2-GOV-CONV-008/meta.yml
+  - docs/plans/phase2/TSK-P2-GOV-CONV-008/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-008/EXEC_LOG.md
+
+deliverable_files:
+  - docs/PHASE2/PHASE2_CONTRACT.md
+  - scripts/audit/verify_gov_conv_008.sh
+  - evidence/phase2/gov_conv_008_phase2_human_contract.json
+  - docs/plans/phase2/TSK-P2-GOV-CONV-008/PLAN.md
+  - docs/plans/phase2/TSK-P2-GOV-CONV-008/EXEC_LOG.md
+
+invariants:
+  - INV-GOV-CONV-008
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - docs/PHASE2/PHASE2_CONTRACT.md
+    - scripts/audit/verify_gov_conv_008.sh
+    - evidence/phase2/gov_conv_008_phase2_human_contract.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+work:
+  - >-
+    [ID gov_conv_008_w01] Create docs/PHASE2/PHASE2_CONTRACT.md with Phase-2 name,
+    lifecycle key, capability boundary, non-goals, required artifact set, and authority
+    references.
+  - >-
+    [ID gov_conv_008_w02] State that docs/PHASE2/phase2_contract.yml is authoritative
+    for delivery-claimable rows and that docs/PHASE2/PHASE2_CONTRACT.md is explanatory.
+  - >-
+    [ID gov_conv_008_w03] Reference scripts/audit/verify_phase2_contract.sh and
+    evidence/phase2/phase2_contract_status.json as the machine verification path.
+  - >-
+    [ID gov_conv_008_w04] Create scripts/audit/verify_gov_conv_008.sh to check required
+    sections and authority references without asserting full parity.
+  - >-
+    [ID gov_conv_008_w05] Emit evidence/phase2/gov_conv_008_phase2_human_contract.json
+    with required_sections_present and authority_references_present.
+
+acceptance_criteria:
+  - >-
+    [ID gov_conv_008_w01] PHASE2_CONTRACT.md contains Phase-2 identity, capability
+    boundary, non-goals, and required artifact sections.
+  - >-
+    [ID gov_conv_008_w02] PHASE2_CONTRACT.md explicitly states that the machine
+    contract is authoritative for delivery-claimable rows.
+  - >-
+    [ID gov_conv_008_w03] PHASE2_CONTRACT.md references verify_phase2_contract.sh
+    and phase2_contract_status.json.
+  - >-
+    [ID gov_conv_008_w04] The verifier exits non-zero if required sections or
+    authority references are missing.
+  - >-
+    [ID gov_conv_008_w05] Evidence records required_sections_present and
+    authority_references_present.
+
+negative_tests:
+  - id: TSK-P2-GOV-CONV-008-N1
+    description: >-
+      Run the verifier against a fixture PHASE2_CONTRACT.md that omits the statement
+      that phase2_contract.yml is authoritative. It must exit non-zero.
+    required: true
+  - id: TSK-P2-GOV-CONV-008-N2
+    description: >-
+      Run the verifier against a fixture PHASE2_CONTRACT.md that omits the verifier
+      reference. It must exit non-zero.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-GOV-CONV-008-P1
+    description: >-
+      Run the verifier against the live PHASE2_CONTRACT.md. It must emit PASS
+      evidence with all required sections and references present.
+    required: true
+
+verification:
+  - >-
+    # [ID gov_conv_008_w01] [ID gov_conv_008_w02] [ID gov_conv_008_w03] [ID gov_conv_008_w04] [ID gov_conv_008_w05]
+    test -x scripts/audit/verify_gov_conv_008.sh && bash scripts/audit/verify_gov_conv_008.sh > evidence/phase2/gov_conv_008_phase2_human_contract.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-GOV-CONV-008 --evidence evidence/phase2/gov_conv_008_phase2_human_contract.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/gov_conv_008_phase2_human_contract.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - required_sections_present
+      - authority_references_present
+      - machine_contract_authoritative
+      - verifier_reference_present
+
+failure_modes:
+  - >-
+    Human contract introduces delivery claims absent from machine contract => CRITICAL_FAIL
+  - >-
+    Human contract omits machine contract authority statement => CRITICAL_FAIL
+  - >-
+    Human contract omits verifier/evidence authority references => FAIL
+  - >-
+    Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/operations/PHASE_LIFECYCLE.md
+  - docs/PHASE1/PHASE1_CONTRACT.md
+  - docs/PHASE2/phase2_contract.yml
+
+implementation_plan: docs/plans/phase2/TSK-P2-GOV-CONV-008/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-GOV-CONV-008/EXEC_LOG.md
+notes: >-
+  This task authors the human-readable contract only. Full human/machine parity
+  verification is separated into TSK-P2-GOV-CONV-009.
+client: codex_cli
+assigned_agent: architect
+model: UNASSIGNED

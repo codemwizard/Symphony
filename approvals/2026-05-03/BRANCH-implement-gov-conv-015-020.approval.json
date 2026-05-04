@@ -1,0 +1,44 @@
+{
+  "approval_id": "APPROVAL-2026-05-03-001",
+  "change_ref": "branch/implement-gov-conv-015-020",
+  "approval_type": "stage_a",
+  "date": "2026-05-03T20:52:00Z",
+  "regulated_paths": [
+    "scripts/audit/**",
+    "docs/operations/**",
+    "evidence/**"
+  ],
+  "change_reason": "Implement Phase 2 Governance Convergence tasks 015-020 following Symphony anti-drift principles",
+  "approval_artifact_ref": "approvals/2026-05-03/BRANCH-implement-gov-conv-015-020.md",
+  "phase": "2",
+  "task_ids": [
+    "TSK-P2-GOV-CONV-015",
+    "TSK-P2-GOV-CONV-016",
+    "TSK-P2-GOV-CONV-017",
+    "TSK-P2-GOV-CONV-018",
+    "TSK-P2-GOV-CONV-019",
+    "TSK-P2-GOV-CONV-020"
+  ],
+  "ai": {
+    "ai_prompt_hash": "c3f594d8fadba4761f865ae91177fb0c23cf7977302b97438dc0d7d5fd11a553",
+    "model_id": "claude-sonnet-4-20250514",
+    "client": "symphony_agent",
+    "session_id": "gov-conv-015-020-implementation"
+  },
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "security_guardian",
+    "approved_at_utc": "2026-05-03T20:52:00Z"
+  },
+  "verification": {
+    "pre_ci_passed": true
+  },
+  "scope": {
+    "paths_changed": [
+      "docs/decisions/ADR-0010-baseline-policy.md",
+      "docs/security/security_definer_dynamic_sql_allowlist.txt",
+      "schema/baseline.meta.json",
+      "schema/baseline.sql"
+    ]
+  }
+}

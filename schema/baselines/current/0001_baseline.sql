@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict KkyT0zV8FDoWty3Dcf8bp7iDyI65rQqhf89aBFTmdRXDnqsu60Ijyn6y19YQP6E
+\restrict NNhKDQO9SYDZGiKDcqCGhmrPL2GbwrjUNL14JkgqhKdIIPAP24PstPVOzRXfTiU
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
@@ -1081,6 +1081,41 @@ BEGIN
 
   v_truncated := left(p_allocated_reference, v_strategy.max_length);
   RETURN v_truncated;
+END;
+$$;
+
+
+--
+-- Name: check_invariant_gate(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.check_invariant_gate() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    failing_count INTEGER;
+    registry_exists BOOLEAN;
+BEGIN
+    -- Check if invariant registry exists
+    SELECT EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_name = 'invariant_registry'
+    ) INTO registry_exists;
+    
+    IF registry_exists THEN
+        -- Check for failing invariants
+        SELECT COUNT(*) INTO failing_count
+        FROM invariant_registry 
+        WHERE status = 'FAIL' AND enabled = true;
+        
+        IF failing_count > 0 THEN
+            RAISE EXCEPTION 'GF063: % invariants are failing, operation blocked', failing_count
+            USING ERRCODE = 'GF063';
+        END IF;
+    END IF;
+    
+    RETURN NEW;
 END;
 $$;
 
@@ -2387,8 +2422,10 @@ CREATE FUNCTION public.enforce_policy_decisions_append_only() RETURNS trigger
     SET search_path TO 'pg_catalog', 'public'
     AS $$
 BEGIN
-    RAISE EXCEPTION 'GF061: policy_decisions is append-only, UPDATE/DELETE not allowed'
-        USING ERRCODE = 'GF061';
+    IF TG_OP = 'DELETE' THEN
+        RAISE EXCEPTION 'GF060: policy_decisions table is append-only' 
+        USING ERRCODE = 'GF060';
+    END IF;
     RETURN NULL;
 END;
 $$;
@@ -8158,7 +8195,7 @@ CREATE TABLE public.policy_bundles (
 --
 
 CREATE TABLE public.policy_decisions (
-    policy_decision_id uuid NOT NULL,
+    policy_decision_id uuid DEFAULT gen_random_uuid() NOT NULL,
     execution_id uuid NOT NULL,
     decision_type text NOT NULL,
     authority_scope text NOT NULL,
@@ -8170,8 +8207,8 @@ CREATE TABLE public.policy_decisions (
     signed_at timestamp with time zone NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     project_id uuid NOT NULL,
-    CONSTRAINT policy_decisions_decision_hash_check CHECK ((decision_hash ~ '^[0-9a-f]{64}$'::text)),
-    CONSTRAINT policy_decisions_signature_check CHECK ((signature ~ '^[0-9a-f]{128}$'::text))
+    CONSTRAINT policy_decisions_hash_hex_64 CHECK ((decision_hash ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT policy_decisions_sig_hex_128 CHECK ((signature ~ '^[0-9a-f]{128}$'::text))
 );
 
 
@@ -10055,19 +10092,19 @@ ALTER TABLE ONLY public.policy_bundles
 
 
 --
--- Name: policy_decisions policy_decisions_execution_id_decision_type_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: policy_decisions policy_decisions_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.policy_decisions
-    ADD CONSTRAINT policy_decisions_execution_id_decision_type_key UNIQUE (execution_id, decision_type);
+    ADD CONSTRAINT policy_decisions_pk PRIMARY KEY (policy_decision_id);
 
 
 --
--- Name: policy_decisions policy_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: policy_decisions policy_decisions_unique_exec_type; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.policy_decisions
-    ADD CONSTRAINT policy_decisions_pkey PRIMARY KEY (policy_decision_id);
+    ADD CONSTRAINT policy_decisions_unique_exec_type UNIQUE (execution_id, decision_type);
 
 
 --
@@ -11874,13 +11911,6 @@ CREATE TRIGGER enforce_k13_taxonomy_alignment_trigger BEFORE INSERT OR UPDATE ON
 
 
 --
--- Name: policy_decisions enforce_policy_decisions_append_only; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER enforce_policy_decisions_append_only BEFORE DELETE OR UPDATE ON public.policy_decisions FOR EACH ROW EXECUTE FUNCTION public.enforce_policy_decisions_append_only();
-
-
---
 -- Name: policy_decisions enforce_policy_decisions_entity_coherence; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -11920,6 +11950,13 @@ CREATE TRIGGER gf_verifier_read_tokens_append_only BEFORE DELETE OR UPDATE ON pu
 --
 
 CREATE TRIGGER invariant_registry_append_only_trigger BEFORE DELETE OR UPDATE ON public.invariant_registry FOR EACH ROW EXECUTE FUNCTION public.invariant_registry_append_only();
+
+
+--
+-- Name: policy_decisions policy_decisions_append_only_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER policy_decisions_append_only_trigger BEFORE DELETE ON public.policy_decisions FOR EACH ROW EXECUTE FUNCTION public.enforce_policy_decisions_append_only();
 
 
 --
@@ -12963,11 +13000,11 @@ ALTER TABLE ONLY public.pii_vault_records
 
 
 --
--- Name: policy_decisions policy_decisions_execution_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: policy_decisions policy_decisions_fk_execution; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.policy_decisions
-    ADD CONSTRAINT policy_decisions_execution_id_fkey FOREIGN KEY (execution_id) REFERENCES public.execution_records(execution_id);
+    ADD CONSTRAINT policy_decisions_fk_execution FOREIGN KEY (execution_id) REFERENCES public.execution_records(execution_id) ON DELETE RESTRICT;
 
 
 --
@@ -13320,6 +13357,14 @@ ALTER TABLE ONLY public.verifier_registry
 
 ALTER TABLE ONLY public.wave8_attestation_nonces
     ADD CONSTRAINT wave8_attestation_nonces_batch_id_fkey FOREIGN KEY (batch_id) REFERENCES public.asset_batches(asset_batch_id);
+
+
+--
+-- Name: wave8_signer_resolution wave8_signer_superseded_by_valid; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.wave8_signer_resolution
+    ADD CONSTRAINT wave8_signer_superseded_by_valid FOREIGN KEY (superseded_by) REFERENCES public.wave8_signer_resolution(signer_id) ON DELETE SET NULL;
 
 
 --
@@ -14212,5 +14257,5 @@ ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict KkyT0zV8FDoWty3Dcf8bp7iDyI65rQqhf89aBFTmdRXDnqsu60Ijyn6y19YQP6E
+\unrestrict NNhKDQO9SYDZGiKDcqCGhmrPL2GbwrjUNL14JkgqhKdIIPAP24PstPVOzRXfTiU
 
