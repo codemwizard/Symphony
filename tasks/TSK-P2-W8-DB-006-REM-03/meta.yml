@@ -1,0 +1,159 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W8-DB-006-REM-03
+title: "Verify no other similar regressions exist"
+owner_role: DB_FOUNDATION_AGENT
+status: completed
+priority: HIGH
+risk_class: SCHEMA_INTEGRITY
+blast_radius: SCHEMA_MIGRATIONS
+
+intent: >-
+  Scan all schema migrations for similar append-only regressions and
+  verify no other schema integrity issues exist.
+
+primary_enforcement_domain: >-
+  Schema migration audit and regression verification
+
+anti_patterns:
+  - "Assuming no other regressions without comprehensive scan"
+  - "Missing verification of similar constraint changes"
+
+out_of_scope:
+  - "Changes to working migrations"
+  - "Non-regression related schema analysis"
+
+stop_conditions:
+  - "If other critical regressions found, stop and create separate DRDs"
+  - "If baseline drift detected during scan, stop and address first"
+
+proof_guarantees:
+  - "No other similar append-only regressions exist"
+  - "All schema migrations follow append-only contract"
+  - "Baseline verification passes"
+
+proof_limitations:
+  - "This scan only verifies similar regressions"
+
+depends_on:
+  - TSK-P2-W8-DB-006-REM-01
+  - TSK-P2-W8-DB-006-REM-02
+
+blocks: []
+
+touches:
+  - schema/migrations/
+  - scripts/db/
+  - evidence/phase2/
+
+invariants:
+  - INV-SCHEMA-001
+  - INV-APPEND-ONLY-001
+
+deliverable_files:
+  - Regression scan results
+  - evidence/phase2/schema_regression_scan.json
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_only
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - evidence/phase2/schema_regression_scan.json
+    - schema/migrations/
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+
+migration_dependencies:
+  enabled: false
+
+work:
+  - >-
+    [ID w8_db_006_rem_03_work_01] Scan all schema migrations for
+    similar append-only regressions or constraint relaxations.
+
+  - >-
+    [ID w8_db_006_rem_03_work_02] Verify no other migrations
+    change append-only semantics or similar immutability constraints.
+
+acceptance_criteria:
+  - >-
+    [ID w8_db_006_rem_03_work_01] Schema scan completes
+    without finding similar regressions.
+
+  - >-
+    [ID w8_db_006_rem_03_work_02] Regression scan evidence
+    shows no similar issues exist.
+
+negative_tests:
+  - id: TSK-P2-W8-DB-006-REM-03-N1
+    description: >-
+      Verifier fails if similar regressions are found during scan.
+
+positive_tests:
+  - id: TSK-P2-W8-DB-006-REM-03-P1
+    description: >-
+      Verifier passes when schema scan completes without finding
+      similar regressions.
+
+verification:
+  - >-
+    [ID w8_db_006_rem_03_work_01] [ID w8_db_006_rem_03_work_02] bash
+    scripts/audit/verify_schema_regression_scan.sh
+
+evidence:
+  - path: evidence/phase2/schema_regression_scan.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - "Similar regressions found => FAIL"
+  - "Baseline drift detected => CRITICAL_FAIL"
+  - "Missing scan evidence => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PLANS-addendum_1.md
+  - tasks/TSK-P1-240/meta.yml
+
+implementation_plan: docs/plans/phase2/REM-2026-05-05_policy_decisions_append_only_regression/PLAN.md
+implementation_log: docs/plans/phase2/REM-2026-05-05_policy_decisions_append_only_regression/EXEC_LOG.md
+
+notes: >-
+  Derived from DRD REM-2026-05-05_policy_decisions_append_only_regression
+  to verify no other similar schema regressions exist after fixing
+  the primary append-only issue.
+
+client: codex
+assigned_agent: db_foundation
+model: gpt-5.5

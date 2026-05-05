@@ -79,7 +79,7 @@
     "mode": "range",
     "base_ref": "refs/remotes/origin/main",
     "head_ref": "HEAD",
-    "merge_base": "21534c1335d0676131e9becbcb6003acd60599a1"
+    "merge_base": "498e8f9b3a5712204f8ad164f832378db6d31b22"
   },
   "approval_required": false,
   "approval_metadata_present": true,

@@ -9,7 +9,7 @@
   "worktrees": [
     {
       "worktree": "/home/mwiza/workspaces/Symphony-Demo/Symphony",
-      "branch": "refs/heads/implement-gov-conv-015-020",
+      "branch": "refs/heads/wave8-phase2-completion",
       "detached": false,
       "prunable": false
     }

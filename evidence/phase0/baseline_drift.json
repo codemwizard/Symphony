@@ -5,8 +5,8 @@
   "schema_fingerprint": "be0aa3637a1a606fa8adc98a4b8dbe92927bff8e5efcd1580317fc8917ae8b61",
   "status": "PASS",
   "baseline_path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/baselines/current/0001_baseline.sql",
-  "baseline_hash": "0ce8bd74bcc10bf9b5178ec61eeb71a13fc2a9e94abf51d223b15d9e10dfe8cf",
-  "current_hash": "0ce8bd74bcc10bf9b5178ec61eeb71a13fc2a9e94abf51d223b15d9e10dfe8cf",
+  "baseline_hash": "b9cd8bdd8e1491efb18842bfa596f959851318a4173d3e9d87cef447619b9a6b",
+  "current_hash": "b9cd8bdd8e1491efb18842bfa596f959851318a4173d3e9d87cef447619b9a6b",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.3 (Debian 18.3-1.pgdg13+1)",
   "pg_server_version": "18.3 (Debian 18.3-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres"

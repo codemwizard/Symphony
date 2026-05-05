@@ -2,8 +2,8 @@
 
 ## Summary
 
-This policy defines how to clean a dirty working tree before a branch-batch
-commit without deleting canonical proof artifacts.
+This policy defines how to prepare a dirty working tree for a branch-batch
+commit without permanently deleting or losing canonical proof artifacts and local exploratory files.
 
 In Symphony, cleanup is:
 - batch-aware
@@ -11,8 +11,8 @@ In Symphony, cleanup is:
 - fail-closed
 
 The goal is not to make the tree look clean.
-The goal is to preserve the proof set for the active branch batch and remove
-only incidental local churn.
+The goal is to preserve the proof set for the active branch batch and safely exclude
+incidental local churn from the commit, leaving it untracked or unstaged rather than permanently deleting it.
 
 ## Core Rule
 
@@ -22,15 +22,15 @@ For the active branch batch:
 - keep all canonical proof artifacts
 - keep all approval-linked artifacts
 - keep all intentionally refreshed canonical artifacts
-- delete only incidental, unreferenced, reproducible local-only outputs that
-  are not declared branch deliverables
+- exclude incidental, unreferenced, reproducible local-only outputs from the commit (leave them untracked or unstaged).
+- **never use `rm`, `git clean -df`, or permanent deletion commands during active development.**
 
 If a file is tracked, referenced, approval-linked, or plausibly canonical, it
-is not deleted until ownership is confirmed.
+is never excluded from the commit or deleted until ownership is explicitly confirmed.
 
 ## Primary Concept: Keep-Set
 
-Before deleting anything, compute the keep-set.
+Before excluding anything from a commit, compute the keep-set.
 
 The keep-set is the complete set of files that must remain in the branch
 because they prove the active batch.
@@ -68,9 +68,9 @@ Keep a file if any of the following is true:
 - it is a canonical artifact intentionally refreshed by the active batch
 - it is required for a verifier or governance gate to pass truthfully
 
-### Generated Churn: delete
+### Generated Churn: exclude (Do Not Delete)
 
-Delete a file only if all of the following are true:
+Exclude a file from the active commit (leave it untracked) only if all of the following are true:
 - it is untracked
 - it is not in the keep-set
 - it is not referenced by task packs, plans, registry, or approvals
@@ -79,7 +79,7 @@ Delete a file only if all of the following are true:
 
 ### Ambiguous Evidence: inspect first
 
-Inspect before deleting if any of the following are true:
+Inspect before excluding a file from the commit if any of the following are true:
 - the file is tracked
 - the file is under `evidence/**`
 - the file is referenced from task packs, plans, registry, or approvals
@@ -97,11 +97,11 @@ must be:
 - justified by the active batch
 - recorded in the batch log or remediation notes
 
-Tracked files are not silently deleted for cleanliness.
+Tracked files are not silently excluded or permanently deleted for cleanliness.
 
-## Deletion Predicate
+## Exclusion Predicate
 
-A file may be deleted only if this predicate is fully true:
+A file may be excluded from the commit (left untracked) only if this predicate is fully true:
 
 - `untracked == true`
 - `in_keep_set == false`
@@ -118,7 +118,7 @@ Where `canonical_candidate == true` if any of these are true:
 - the filename matches declared evidence naming for an active-batch task
 - the file appears to replace an existing tracked evidence artifact
 
-If any term is false or unknown, do not delete.
+If any term is false or unknown, do not exclude it without manual inspection. Never permanently delete it.
 
 ## Required Cleanup Process
 
@@ -127,11 +127,11 @@ Before cleanup:
 2. if the batch is wave-based, identify the active wave
 3. compute the keep-set
 4. inspect tracked modified evidence
-5. delete only files that satisfy the deletion predicate
+5. leave untracked or unstage files that satisfy the exclusion predicate (DO NOT use `rm`)
 6. re-run `git status --short`
-7. confirm the remaining evidence matches the batch deliverable
+7. confirm the staged evidence matches the batch deliverable
 
-Do not start with deletion.
+Do not start with exclusion or deletion.
 Start with keep-set construction.
 
 If ownership of an evidence file cannot be determined from the keep-set and
@@ -169,6 +169,17 @@ has already been computed.
 - `scripts/ci/clean_evidence.sh` must not be run blindly on a mixed working
   tree.
 - cleanup must happen on an approved feature branch, never on `main`.
+- `rm` and `git clean` are strictly prohibited during the active commit preparation lifecycle.
+
+## The Safe Lifecycle for Permanent Deletion
+
+A clean work tree is ONLY to be cleared or permanently cleaned up *after* the following conditions are met:
+1. The branch-batch commit has been successfully created locally.
+2. The commit has been pushed to the remote repository (`origin`).
+3. The branch has been successfully merged into the canonical `main` branch.
+4. The local repository has performed a `git fetch` and `git merge` (or `git pull`) on the local `main` branch to synchronize with the remote.
+
+Only after this confirmed synchronization with the merged `main` state is it safe to permanently delete lingering untracked local "noise" files.
 
 ## Final Standard
 
@@ -184,6 +195,7 @@ It should not contain:
 - temporary generated artifacts with no canonical role
 
 In short:
-- proof stays
-- noise goes
+- proof stays in the commit
+- noise is excluded from the commit (but kept on disk)
 - tracked or ambiguous artifacts are inspected, not guessed
+- permanent deletion happens only after a confirmed remote merge

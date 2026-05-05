@@ -27,23 +27,23 @@ namespace Wave8Ed25519Probe
                 evidence.execution_trace.Add("Starting .NET 10 Ed25519 environment fidelity probe");
                 evidence.sdk_fingerprint = GetSdkFingerprint();
                 evidence.runtime_fingerprint = GetRuntimeFingerprint();
-                
+
                 // Work Item 02: Prove executing runtime reports declared .NET 10 family and Linux/OpenSSL path
                 evidence.execution_trace.Add("Validating .NET 10 runtime family");
                 evidence.runtime_family = GetRuntimeFamily();
                 evidence.openssl_path = GetOpenSslPath();
-                
+
                 // Work Item 03: Prove declared first-party Ed25519 surface is actually invoked
                 evidence.execution_trace.Add("Testing Ed25519 surface invocation");
                 var surfaceTest = TestEd25519Surface();
                 evidence.ed25519_surface_invoked = surfaceTest.invoked;
                 evidence.ed25519_signature_verification = surfaceTest.verification_works;
-                
+
                 // Work Item 04: Prove sign/verify behavior on Wave 8-shaped contract bytes
                 evidence.execution_trace.Add("Testing sign/verify behavior on Wave 8 contract bytes");
                 var semanticTest = TestWave8ContractSemantics();
                 evidence.semantic_fidelity = semanticTest;
-                
+
                 evidence.status = "PASS";
                 evidence.execution_trace.Add("All fidelity checks completed successfully");
             }
@@ -55,12 +55,12 @@ namespace Wave8Ed25519Probe
             }
 
             // Output evidence as JSON
-            var json = JsonSerializer.Serialize(evidence, new JsonSerializerOptions 
-            { 
-                WriteIndented = true 
+            var json = JsonSerializer.Serialize(evidence, new JsonSerializerOptions
+            {
+                WriteIndented = true
             });
             Console.WriteLine(json);
-            
+
             return evidence.status == "PASS" ? 0 : 1;
         }
 
@@ -194,26 +194,26 @@ namespace Wave8Ed25519Probe
                     scope = "asset_batch",
                     payload_hash = "test_hash_123456789"
                 };
-                
+
                 var contractBytes = JsonSerializer.SerializeToUtf8Bytes(contract);
-                
+
                 // Test Ed25519 signing of contract bytes
                 using var key = Key.Create(algorithm,
                     new KeyCreationParameters { ExportPolicy = KeyExportPolicies.AllowPlaintextExport });
                 var signature = algorithm.Sign(key, contractBytes);
-                
+
                 // Test Ed25519 verification of contract bytes
                 var verification = algorithm.Verify(key.PublicKey, contractBytes, signature);
-                
+
                 // Test altered-byte rejection
                 var alteredBytes = contractBytes.ToArray();
                 alteredBytes[0] ^= 0xFF; // Flip first byte
                 var alteredVerification = algorithm.Verify(key.PublicKey, alteredBytes, signature);
-                
+
                 // Test wrong-key rejection
                 using var wrongKey = Key.Create(algorithm);
                 var wrongKeyVerification = algorithm.Verify(wrongKey.PublicKey, contractBytes, signature);
-                
+
                 return new SemanticTestResult
                 {
                     passes = verification && !alteredVerification && !wrongKeyVerification,

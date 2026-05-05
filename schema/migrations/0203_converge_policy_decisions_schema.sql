@@ -92,7 +92,7 @@ DROP FUNCTION IF EXISTS enforce_policy_decisions_append_only();
 CREATE OR REPLACE FUNCTION enforce_policy_decisions_append_only()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF TG_OP = 'DELETE' THEN
+    IF TG_OP IN ('UPDATE', 'DELETE') THEN
         RAISE EXCEPTION 'GF060: policy_decisions table is append-only' 
         USING ERRCODE = 'GF060';
     END IF;

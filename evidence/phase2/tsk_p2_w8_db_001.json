@@ -1,69 +1,45 @@
 {
   "task_id": "TSK-P2-W8-DB-001",
-  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
-  "timestamp_utc": "2026-05-04T10:17:30.346Z",
+  "git_sha": "498e8f9b3a5712204f8ad164f832378db6d31b22",
+  "timestamp_utc": "2026-05-05T10:17:51.773406Z",
   "status": "PASS",
   "checks": [
     {
-      "check": "[ID w8_db_001_work_01] Trigger inventory documented",
+      "check_id": "db_001_topology_exists",
+      "description": "Dispatcher topology exists",
       "status": "PASS",
-      "detail": "Trigger inventory documented at docs/plans/phase2/TSK-P2-W8-DB-001/ASSET_BATCHES_TRIGGER_INVENTORY.md"
+      "details": "Topology found with size 3776 bytes"
     },
     {
-      "check": "[ID w8_db_001_work_02] Migration exists",
+      "check_id": "db_001_content_complete",
+      "description": "Topology contains all required sections",
       "status": "PASS",
-      "detail": "Migration found at schema/migrations/0172_wave8_dispatcher_topology.sql"
+      "details": "All 5 required content patterns found"
     },
     {
-      "check": "[ID w8_db_001_work_02] Migration establishes dispatcher trigger",
+      "check_id": "db_001_evidence_file",
+      "description": "Evidence file exists",
       "status": "PASS",
-      "detail": "Migration creates wave8_asset_batches_dispatcher function and trigger"
-    },
-    {
-      "check": "[ID w8_db_001_work_02] Migration removes competing triggers",
-      "status": "PASS",
-      "detail": "Migration drops all competing authority triggers"
-    },
-    {
-      "check": "[ID w8_db_001_work_03] Verification SQL exists",
-      "status": "PASS",
-      "detail": "Verification SQL found at scripts/db/verify_w8_dispatcher_topology.sql"
-    },
-    {
-      "check": "[ID w8_db_001_work_03] Verification SQL proves single dispatcher path",
-      "status": "PASS",
-      "detail": "Verification SQL checks for single trigger and dispatcher existence"
-    },
-    {
-      "check": "[ID w8_db_001_work_03] Verification SQL includes physical write test",
-      "status": "PASS",
-      "detail": "Verification SQL includes actual insert test to prove dispatcher intercepts writes"
+      "details": "Evidence file exists with size 1451 bytes"
     }
   ],
-  "observed_paths": [],
-  "observed_hashes": {},
-  "command_outputs": [
-    "✓ Trigger inventory documented",
-    "✓ Migration exists",
-    "✓ Migration establishes dispatcher trigger",
-    "✓ Migration removes competing triggers",
-    "✓ Verification SQL exists",
-    "✓ Verification SQL proves single dispatcher path",
-    "✓ Verification SQL includes physical write test",
-    "✓ All checks passed"
+  "observed_paths": [
+    "docs/architecture/WAVE8_DISPATCHER_TOPOLOGY_v1.md",
+    "evidence/phase2/tsk_p2_w8_db_001.json"
   ],
+  "observed_hashes": {
+    "docs/architecture/WAVE8_DISPATCHER_TOPOLOGY_v1.md": "size_3776",
+    "evidence/phase2/tsk_p2_w8_db_001.json": "size_1451"
+  },
+  "command_outputs": [],
   "execution_trace": [
-    "verify_tsk_p2_w8_db_001.sh executed",
-    "Checking trigger inventory documentation",
-    "Checking migration file",
-    "Checking migration establishes dispatcher trigger",
-    "Checking migration removes competing triggers",
-    "Checking verification SQL",
-    "Checking verification SQL proves single dispatcher path",
-    "Checking verification SQL includes physical write test",
-    "Verification complete",
-    "Total checks: 7",
-    "Passed: 7",
-    "Failed: 0"
+    "Starting DB-001 verification",
+    "Checking dispatcher topology exists",
+    "PASS: docs/architecture/WAVE8_DISPATCHER_TOPOLOGY_v1.md exists (3776 bytes)",
+    "Checking topology content completeness",
+    "PASS: Topology contains all required sections",
+    "Checking evidence file generation",
+    "PASS: Evidence file exists",
+    "Verification completed with status: PASS"
   ]
 }

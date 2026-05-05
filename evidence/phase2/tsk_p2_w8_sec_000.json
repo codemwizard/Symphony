@@ -1,7 +1,7 @@
 {
   "task_id": "TSK-P2-W8-SEC-000",
-  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
-  "timestamp_utc": "2026-05-04T10:05:15.795Z",
+  "git_sha": "498e8f9b3a5712204f8ad164f832378db6d31b22",
+  "timestamp_utc": "2026-05-05T14:41:55.973Z",
   "status": "PASS",
   "checks": [
     {
@@ -29,20 +29,15 @@
     "Wave8Ed25519Probe.csproj": "f148a87d638f980036dd74f14e0d9f0a26f6ed9014497358801f0f0678f6870b",
     "Program.cs": "3d57d6e9b3c0e3f815156174c6a672b9d6e62381e5ba8ed707607d6b29d9f755"
   },
-  "command_outputs": [
-    "Probe build: SUCCESS",
-    "Probe execution: SUCCESS"
-  ],
   "execution_trace": [
     "verify_tsk_p2_w8_sec_000.sh executed",
-    "Total checks: 4",
     "Passed: 4",
     "Failed: 0"
   ],
   "probe_data": {
     "task_id": "TSK-P2-W8-SEC-000",
-    "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
-    "timestamp_utc": "2026-05-04T10:05:32.565Z",
+    "git_sha": "498e8f9b3a5712204f8ad164f832378db6d31b22",
+    "timestamp_utc": "2026-05-05T14:42:00.606Z",
     "status": "PASS",
     "environment_tuple": {
       "dotnet_version": "10.0.7",

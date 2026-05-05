@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-W8-QA-001
 title: "Three-surface determinism vectors"
 owner_role: QA_VERIFIER
-status: planned
+status: completed
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: CI_GATES

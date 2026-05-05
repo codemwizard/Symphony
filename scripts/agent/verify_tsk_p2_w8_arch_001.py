@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 """
-Verifier for TSK-P2-W8-ARCH-001: Canonical attestation payload contract
-
-This script verifies that the canonical attestation payload contract has been
-created and contains the required content as specified in the task plan.
+Verification script for TSK-P2-W8-ARCH-001: Canonical attestation payload contract
+Verifies that WAVE8_ARCHITECTURE_OVERVIEW.md exists and references are complete
 """
 
 import json
