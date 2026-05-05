@@ -4,13 +4,13 @@
 - Template Type: Full
 - Incident Class: Schema Integrity Violation
 - Severity: L2
-- Status: Open
+- Status: Resolved
 - Owner: DB_FOUNDATION_AGENT
 - Date Opened: 2026-05-05
-- Date Resolved: TBD
+- Date Resolved: 2026-05-05
 - Task: TSK-P2-W8-DB-006-REM-01
-- Branch: fix/policy-decisions-append-only-regression
-- Commit Range: TBD
+- Branch: wave8-phase2-completion
+- Commit Range: HEAD
 
 ## Summary
 Migration change redefined append-only guard for policy_decisions table to only block DELETE operations, inadvertently re-enabling UPDATE mutations and breaking immutability guarantees for policy decision records.
@@ -50,8 +50,11 @@ N/A - Proactive identification before deployment prevents recovery loop
 Proactive code review identified the regression before deployment
 
 ## Corrective Actions Taken
-- Files changed: TBD (migration file containing regression to be corrected)
-- Commands run: TBD (migration verification and baseline drift checks to be run)
+- Files changed: `schema/migrations/0203_converge_policy_decisions_schema.sql`
+- Commands run: 
+  - Edited trigger to `BEFORE UPDATE OR DELETE ON policy_decisions`
+  - Applied migrations via `scripts/db/migrate.sh`
+  - Regenerated baseline via `scripts/db/generate_baseline_snapshot.sh`
 
 ## Prevention Actions
 | Action | Owner | Enforcement | Metric | Status | Target Date |
@@ -69,8 +72,8 @@ Proactive code review identified the regression before deployment
 - Whether to add automated tests for append-only enforcement
 
 ## Verification Outcomes
-- Command: TBD (migration verification script with baseline drift check)
-- Result: TBD
+- Command: `check_baseline_drift.sh` and `verify_policy_decisions_schema.sh`
+- Result: PASS
 
 ## Open Risks / Follow-ups
 - Risk of policy decision records being modified if deployed

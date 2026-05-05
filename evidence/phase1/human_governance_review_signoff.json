@@ -3,7 +3,7 @@
   "run_id": "standalone-1970-01-01T00:00:00Z",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "be0aa3637a1a606fa8adc98a4b8dbe92927bff8e5efcd1580317fc8917ae8b61",
+  "schema_fingerprint": "23a1df8500a23f571db5b1dfd0f60935217c0116a482deea8551a0b82328fb80",
   "status": "PASS",
   "reviewer_id": "security_guardian",
   "signed_at_utc": "2026-05-03T20:52:00Z",

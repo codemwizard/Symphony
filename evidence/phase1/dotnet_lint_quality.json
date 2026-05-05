@@ -1,0 +1,14 @@
+{
+  "check_id": "SEC-G18",
+  "timestamp_utc": "1970-01-01T00:00:00Z",
+  "git_sha": "0000000000000000000000000000000000000000",
+  "schema_fingerprint": "23a1df8500a23f571db5b1dfd0f60935217c0116a482deea8551a0b82328fb80",
+  "status": "PASS",
+  "note": "",
+  "targets": ["scripts/security/probes/w8_ed25519_environment_fidelity/Wave8Ed25519Probe.csproj", "services/executor-worker/dotnet/src/ExecutorWorker/ExecutorWorker.csproj", "services/ledger-api/dotnet/src/LedgerApi.DemoHost/LedgerApi.DemoHost.csproj", "services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj", "services/ledger-api/dotnet/tests/LedgerApi.Tests/LedgerApi.Tests.csproj"],
+  "targets_count": 5,
+  "processed_targets_count": 5,
+  "timeout_seconds": 60,
+  "format_env_blocked": false,
+  "command_summary": {"build_invocations": 5, "build_succeeded_markers": 5, "error_lines": 5, "format_invocations": 5, "restore_invocations": 5, "targets_seen": 5, "time_elapsed_lines": 5, "warning_lines": 5}
+}

@@ -1,10 +1,10 @@
 {
-  "baseline_date": "2026-05-04",
-  "baseline_path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/baselines/2026-05-04/0001_baseline.sql",
+  "baseline_date": "2026-05-05",
+  "baseline_path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/baselines/2026-05-05/0001_baseline.sql",
   "baseline_cutoff": "0203_converge_policy_decisions_schema.sql",
-  "normalized_schema_sha256": "0ce8bd74bcc10bf9b5178ec61eeb71a13fc2a9e94abf51d223b15d9e10dfe8cf",
+  "normalized_schema_sha256": "025fe2948bf5bd4fe4767c97f1a4391f523c8e5fb2283c9e824def3f9736cf97",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.3 (Debian 18.3-1.pgdg13+1)",
   "pg_server_version": "18.3 (Debian 18.3-1.pgdg13+1)",
-  "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-05-04T19:44:19.610880+00:00"
+  "dump_source": "container:symphony-postgres-fix",
+  "generated_at_utc": "2026-05-05T20:46:58.383355+00:00"
 }
