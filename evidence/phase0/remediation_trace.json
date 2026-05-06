@@ -11,6 +11,7 @@
   "triggered_change_present": true,
   "triggered_prefixes": [
     ".github",
+    "docs",
     "schema",
     "scripts"
   ],

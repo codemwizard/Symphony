@@ -9,6 +9,7 @@
   "head_ref": "HEAD",
   "triggered_files": [
     ".github/workflows/invariants.yml",
+    "scripts/dev/pre_ci.sh",
     "scripts/security/probes/w8_ed25519_environment_fidelity/Program.cs",
     "scripts/security/verify_tsk_p2_w8_sec_000.sh",
     "scripts/security/verify_tsk_p2_w8_sec_000_fixed.sh"
@@ -64,6 +65,8 @@
     "docs/plans/phase1/REM-2026-05-05_pre_ci-phase1_db_verifiers/PLAN.md",
     "docs/plans/phase1/REM-2026-05-05_pre_ci-verify_task_plans_present/EXEC_LOG.md",
     "docs/plans/phase1/REM-2026-05-05_pre_ci-verify_task_plans_present/PLAN.md",
+    "docs/plans/phase1/REM-2026-05-06_pre_ci-phase0_ordered_checks/EXEC_LOG.md",
+    "docs/plans/phase1/REM-2026-05-06_pre_ci-phase0_ordered_checks/PLAN.md",
     "docs/plans/phase1/TASK-GOV-C1/EXEC_LOG.md",
     "docs/plans/phase1/TASK-GOV-C2C3/EXEC_LOG.md",
     "docs/plans/phase1/TASK-GOV-C4O4/EXEC_LOG.md",

@@ -110,6 +110,16 @@ export DB_CONTAINER="symphony-postgres"
 
 **Why it worked before:** Either `DB_CONTAINER` was previously exported, or the container retained extension files from a previous session where they were manually installed.
 
+## Issue 7: Permission Denied during Native .NET Build after Docker Verifier (PRECI.DB.ENVIRONMENT)
+
+**Symptom:** `pre_ci.sh` fails during API startup with `System.UnauthorizedAccessException: Access to the path '.../bin/Debug/net10.0/LedgerApi.runtimeconfig.json' is denied`.
+
+**Root Cause:** The patch applied for Issue 2 (running the projection freshness verifier inside a Docker container) mounted the workspace volume into the container. Because Docker runs as `root` by default, the MSBuild process inside the container created the `bin/` and `obj/` directories with `root` ownership. When `pre_ci.sh` later attempted to start the API natively (as the host user), it lacked permissions to overwrite these root-owned files.
+
+**Fix:** 
+1. **Immediate host fix:** Manually clear the locked folders using `sudo rm -rf services/ledger-api/dotnet/src/LedgerApi/bin services/ledger-api/dotnet/src/LedgerApi/obj`
+2. **Script fix:** Update the `docker run` command in `verify_projection_freshness_and_scope.sh` to execute a `bash -c` string that runs `dotnet test` and immediately runs `rm -rf` on the generated `bin/` and `obj/` directories before the container exits.
+
 ---
 
 ## General Lessons
@@ -117,5 +127,6 @@ export DB_CONTAINER="symphony-postgres"
 1. **Governance gates verify committed history, not working tree.** Always commit before running `pre_ci.sh`.
 2. **WSL is unreliable for .NET tooling.** Use Docker containers for all `dotnet` commands.
 3. **Environment variables must be exported** when child scripts need them. Local shell variables are invisible to subprocesses.
-4. **Clear zombie processes** before running builds to prevent IPC hangs.
-5. **Follow the DRD protocol** instead of bypassing lockouts — the audit trail matters.
+4. **Docker volume mounts create permission boundaries.** If a container builds artifacts into a mapped host volume, it must clean them up or map the user ID to prevent locking out host processes.
+5. **Clear zombie processes** before running builds to prevent IPC hangs.
+6. **Follow the DRD protocol** instead of bypassing lockouts — the audit trail matters.
