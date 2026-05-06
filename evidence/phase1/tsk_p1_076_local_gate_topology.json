@@ -3,7 +3,7 @@
   "task_id": "TSK-P1-076",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "23a1df8500a23f571db5b1dfd0f60935217c0116a482deea8551a0b82328fb80",
+  "schema_fingerprint": "a45b29a3fc1625e742a8edb6cfc18f93704f0177a6a100557d50b7b381cc9549",
   "resolved_hooks_dir": ".git/hooks",
   "status": "PASS",
   "failures": []
