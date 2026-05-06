@@ -230,7 +230,7 @@ RUN_DEMO_GATES="${RUN_DEMO_GATES:-0}"
 
 ENV_FILE="infra/docker/.env"
 COMPOSE_FILE="infra/docker/docker-compose.yml"
-DB_CONTAINER="symphony-postgres"
+export DB_CONTAINER="symphony-postgres"
 DB_HOST_PORT="${HOST_POSTGRES_PORT:-5432}"
 FRESH_DB="${FRESH_DB:-1}"   # enforce CI parity by default (ephemeral DB per run)
 KEEP_TEMP_DB="${KEEP_TEMP_DB:-0}" # set to 1 to keep temp DB for debugging

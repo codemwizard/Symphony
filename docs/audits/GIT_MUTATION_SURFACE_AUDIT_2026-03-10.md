@@ -55,6 +55,17 @@ Purpose: inventory repository scripts that mutate Git state or rely on Git state
 | `scripts/audit/verify_tsk_p1_plt_009b.sh` | no | n/a | PASS | Reads git rev-parse HEAD for evidence; no Git mutation. |
 | `scripts/audit/verify_tsk_p2_w8_qa_002.sh` | no | yes | PASS | Reads git diff --name-only to inventory changed files for QA evidence; no Git mutation. |
 | `scripts/db/verify_tsk_p2_w8_db_006.sh` | no | yes | PASS | Reads git diff --name-only to inventory changed files for DB evidence; no Git mutation. |
+| `scripts/agent/verify_tsk_p2_w8_db_001.py` | no | yes | PASS | Reads git rev-parse HEAD for evidence; no Git mutation. |
+| `scripts/agent/verify_tsk_p2_w8_db_002.py` | no | yes | PASS | Reads git rev-parse HEAD for evidence; no Git mutation. |
+| `scripts/agent/verify_tsk_p2_w8_db_003.py` | no | yes | PASS | Reads git rev-parse HEAD for evidence; no Git mutation. |
+| `scripts/agent/verify_tsk_p2_w8_db_004.py` | no | yes | PASS | Reads git rev-parse HEAD for evidence; no Git mutation. |
+| `scripts/agent/verify_tsk_p2_w8_db_005.py` | no | yes | PASS | Reads git rev-parse HEAD for evidence; no Git mutation. |
+| `scripts/agent/verify_tsk_p2_w8_db_007a.py` | no | yes | PASS | Reads git rev-parse HEAD for evidence; no Git mutation. |
+| `scripts/agent/verify_tsk_p2_w8_db_007b.py` | no | yes | PASS | Reads git rev-parse HEAD for evidence; no Git mutation. |
+| `scripts/agent/verify_tsk_p2_w8_db_007c.py` | no | yes | PASS | Reads git rev-parse HEAD for evidence; no Git mutation. |
+| `scripts/agent/verify_tsk_p2_w8_db_008.py` | no | yes | PASS | Reads git rev-parse HEAD for evidence; no Git mutation. |
+| `scripts/agent/verify_tsk_p2_w8_sec_001.py` | no | yes | PASS | Reads git rev-parse HEAD for evidence; no Git mutation. |
+| `scripts/security/probes/w8_ed25519_environment_fidelity/bin/Debug/net10.0/NSec.Cryptography.dll` | no | n/a | PASS | Binary .NET assembly containing GitHub URL references but no actual Git commands; false positive from regex pattern matching "github" strings. |
 | `scripts/security/probes/w8_ed25519_environment_fidelity/bin/Release/net10.0/NSec.Cryptography.dll` | no | n/a | PASS | Binary .NET assembly containing GitHub URL references but no actual Git commands; false positive from regex pattern matching "github" strings. |
 
 ## Findings

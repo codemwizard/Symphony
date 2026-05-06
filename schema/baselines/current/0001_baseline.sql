@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict NNhKDQO9SYDZGiKDcqCGhmrPL2GbwrjUNL14JkgqhKdIIPAP24PstPVOzRXfTiU
+\restrict O8ltdj1kpdti4ESud1raszzL13ZdcuURzBJU0fc6mtSFNM06H7C0NtodWKfRe1X
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
--- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
+-- Dumped by pg_dump version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -2422,7 +2422,7 @@ CREATE FUNCTION public.enforce_policy_decisions_append_only() RETURNS trigger
     SET search_path TO 'pg_catalog', 'public'
     AS $$
 BEGIN
-    IF TG_OP = 'DELETE' THEN
+    IF TG_OP IN ('UPDATE', 'DELETE') THEN
         RAISE EXCEPTION 'GF060: policy_decisions table is append-only' 
         USING ERRCODE = 'GF060';
     END IF;
@@ -11956,7 +11956,7 @@ CREATE TRIGGER invariant_registry_append_only_trigger BEFORE DELETE OR UPDATE ON
 -- Name: policy_decisions policy_decisions_append_only_trigger; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER policy_decisions_append_only_trigger BEFORE DELETE ON public.policy_decisions FOR EACH ROW EXECUTE FUNCTION public.enforce_policy_decisions_append_only();
+CREATE TRIGGER policy_decisions_append_only_trigger BEFORE DELETE OR UPDATE ON public.policy_decisions FOR EACH ROW EXECUTE FUNCTION public.enforce_policy_decisions_append_only();
 
 
 --
@@ -14257,5 +14257,5 @@ ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict NNhKDQO9SYDZGiKDcqCGhmrPL2GbwrjUNL14JkgqhKdIIPAP24PstPVOzRXfTiU
+\unrestrict O8ltdj1kpdti4ESud1raszzL13ZdcuURzBJU0fc6mtSFNM06H7C0NtodWKfRe1X
 

@@ -1,0 +1,162 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W8-DB-006-REM-05
+title: "Add Ed25519 test vectors to validation suite"
+owner_role: SECURITY_GUARDIAN_AGENT
+status: completed
+priority: HIGH
+risk_class: CRYPTOGRAPHIC_ENFORCEMENT
+blast_radius: SCRIPTS_SECURITY
+
+intent: >-
+  Add Ed25519 test vectors from contract to verification suite to
+  ensure signature validation works with real cryptographic signatures.
+
+primary_enforcement_domain: >-
+  Ed25519 signature validation testing and verification
+
+anti_patterns:
+  - "Adding test vectors without contract reference"
+  - "Testing with invalid or incomplete signature vectors"
+
+out_of_scope:
+  - "Changes to production validation logic"
+  - "Non-cryptographic testing changes"
+
+stop_conditions:
+  - "If test vectors require contract changes, stop and verify"
+  - "If baseline drift detected during testing, stop and address first"
+
+proof_guarantees:
+  - "Ed25519 test vectors added to verification suite"
+  - "Validation works with real Ed25519 signatures"
+  - "Cryptographic contract compliance maintained"
+
+proof_limitations:
+  - "This task only adds test vectors to existing validation"
+
+depends_on:
+  - TSK-P2-W8-DB-006-REM-04
+
+blocks: []
+
+touches:
+  - scripts/security/
+  - scripts/audit/
+  - docs/contracts/
+  - evidence/phase2/
+
+invariants:
+  - INV-CRYPTO-001
+  - INV-SCHEMA-001
+
+deliverable_files:
+  - Updated verification script with test vectors
+  - evidence/phase2/ed25519_test_vectors.json
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_only
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - evidence/phase2/ed25519_test_vectors.json
+    - scripts/security/
+    - docs/contracts/ED25519_SIGNING_CONTRACT.md
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+
+migration_dependencies:
+  enabled: false
+
+work:
+  - >-
+    [ID w8_db_006_rem_05_work_01] Extract Ed25519 test vectors
+    from docs/contracts/ED25519_SIGNING_CONTRACT.md and add to
+    verification script.
+
+  - >-
+    [ID w8_db_006_rem_05_work_02] Run updated verification
+    script with Ed25519 test vectors and generate evidence.
+
+acceptance_criteria:
+  - >-
+    [ID w8_db_006_rem_05_work_01] Ed25519 test vectors
+    extracted from contract and added to verification script.
+
+  - >-
+    [ID w8_db_006_rem_05_work_02] Verification script passes
+    all Ed25519 test vectors and generates valid evidence.
+
+negative_tests:
+  - id: TSK-P2-W8-DB-006-REM-05-N1
+    description: >-
+      Verifier fails if test vectors not added or verification fails.
+
+positive_tests:
+  - id: TSK-P2-W8-DB-006-REM-05-P1
+    description: >-
+      Verifier passes when Ed25519 test vectors are added
+      and verification script passes all tests.
+
+verification:
+  - >-
+    [ID w8_db_006_rem_05_work_01] [ID w8_db_006_rem_05_work_02] bash
+    scripts/agent/verify_tsk_p2_w8_sec_002.py
+
+evidence:
+  - path: evidence/phase2/ed25519_test_vectors.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - "Test vectors missing => FAIL"
+  - "Ed25519 verification fails => FAIL"
+  - "Baseline drift detected => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PLANS-addendum_1.md
+  - tasks/TSK-P1-240/meta.yml
+  - docs/contracts/ED25519_SIGNING_CONTRACT.md
+
+implementation_plan: docs/plans/phase2/REM-2026-05-05_ed25519_signature_format_regression/PLAN.md
+implementation_log: docs/plans/phase2/REM-2026-05-05_ed25519_signature_format_regression/EXEC_LOG.md
+
+notes: >-
+  Derived from DRD REM-2026-05-05_ed25519_signature_format_regression
+  to add Ed25519 test vectors to verification suite and ensure
+  signature validation works with real cryptographic signatures.
+
+client: codex
+assigned_agent: security_guardian
+model: gpt-5.5

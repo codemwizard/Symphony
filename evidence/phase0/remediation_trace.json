@@ -2,13 +2,23 @@
   "check_id": "REMEDIATION-TRACE",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "be0aa3637a1a606fa8adc98a4b8dbe92927bff8e5efcd1580317fc8917ae8b61",
+  "schema_fingerprint": "a45b29a3fc1625e742a8edb6cfc18f93704f0177a6a100557d50b7b381cc9549",
   "status": "PASS",
-  "reason": "no_production_affecting_changes",
   "diff_mode": "range",
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD",
-  "merge_base": "21534c1335d0676131e9becbcb6003acd60599a1",
-  "triggered_change_present": false,
-  "satisfying_docs": []
+  "merge_base": "498e8f9b3a5712204f8ad164f832378db6d31b22",
+  "triggered_change_present": true,
+  "triggered_prefixes": [
+    ".github",
+    "docs",
+    "schema",
+    "scripts"
+  ],
+  "satisfying_docs": [
+    "docs/plans/phase1/REM-2026-05-05_pre_ci-phase0_ordered_checks/PLAN.md",
+    "docs/plans/phase1/REM-2026-05-05_pre_ci-phase0_ordered_checks/EXEC_LOG.md"
+  ],
+  "satisfying_doc_parent": "docs/plans/phase1/REM-2026-05-05_pre_ci-phase0_ordered_checks",
+  "errors": []
 }

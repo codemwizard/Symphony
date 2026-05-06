@@ -207,7 +207,7 @@ jobs:
         if: github.event_name != 'schedule'
         run: |
           chmod +x scripts/audit/verify_phase2_contract.sh
-          RUN_PHASE2_GATES=1 bash scripts/audit/verify_phase2_contract.sh > evidence/phase2/phase2_contract_status.json || {
+          RUN_PHASE2_GATES=1 bash scripts/audit/verify_phase2_contract.sh || {
             echo "ERROR: Phase-2 contract verification failed"
             exit 1
           }

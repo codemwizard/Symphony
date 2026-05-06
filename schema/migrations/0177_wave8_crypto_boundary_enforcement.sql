@@ -71,8 +71,8 @@ BEGIN
     message_bytes := NEW.canonical_payload_bytes;
     
     -- Validate signature format (hex string, 64 bytes for Ed25519)
-    IF NEW.signature !~ '^[0-9a-f]{64}$' THEN
-        RAISE EXCEPTION 'Invalid signature format: must be 64-character hex string'
+    IF NEW.signature !~ '^[0-9a-f]{128}$' THEN
+        RAISE EXCEPTION 'Invalid signature format: must be 128-character hex string'
         USING ERRCODE = 'P7808'; -- Wave 8: timestamp or replay validation failure
     END IF;
     

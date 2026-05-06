@@ -1,0 +1,163 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-W8-DB-006-REM-04
+title: "Fix Ed25519 signature format validation"
+owner_role: SECURITY_GUARDIAN_AGENT
+status: completed
+priority: HIGH
+risk_class: CRYPTOGRAPHIC_ENFORCEMENT
+blast_radius: SCHEMA_MIGRATIONS
+
+intent: >-
+  Fix signature validation regex to accept 128 hex characters
+  (64 bytes) for Ed25519 signatures instead of 64 hex characters,
+  preventing rejection of valid cryptographic signatures.
+
+primary_enforcement_domain: >-
+  Ed25519 signature validation and cryptographic enforcement
+
+anti_patterns:
+  - "Changing validation without cryptographic contract reference"
+  - "Hard-coding validation lengths without specification backing"
+
+out_of_scope:
+  - "Changes to other cryptographic validations"
+  - "Non-signature related schema changes"
+
+stop_conditions:
+  - "If fix requires changes to Ed25519 contract, stop and verify"
+  - "If baseline drift detected during fix, stop and address first"
+
+proof_guarantees:
+  - "Validation accepts 128 hex characters for Ed25519 signatures"
+  - "Valid signatures are no longer rejected"
+  - "Ed25519 contract compliance maintained"
+
+proof_limitations:
+  - "This fix only addresses signature format validation"
+
+depends_on:
+  - TSK-P2-W8-DB-006
+
+blocks: []
+
+touches:
+  - schema/migrations/
+  - scripts/security/
+  - docs/contracts/
+  - evidence/phase2/
+
+invariants:
+  - INV-CRYPTO-001
+  - INV-SCHEMA-001
+
+deliverable_files:
+  - Fixed migration file
+  - evidence/phase2/ed25519_signature_format_fix.json
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_only
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - evidence/phase2/ed25519_signature_format_fix.json
+    - schema/migrations/
+    - docs/contracts/ED25519_SIGNING_CONTRACT.md
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+
+migration_dependencies:
+  enabled: false
+
+work:
+  - >-
+    [ID w8_db_006_rem_04_work_01] Update signature validation
+    regex to accept 128 hex characters for Ed25519 signatures.
+
+  - >-
+    [ID w8_db_006_rem_04_work_02] Verify fix against Ed25519
+    contract and test with valid signatures.
+
+acceptance_criteria:
+  - >-
+    [ID w8_db_006_rem_04_work_01] Validation regex accepts
+    128 hex characters for Ed25519 signatures.
+
+  - >-
+    [ID w8_db_006_rem_04_work_02] Ed25519 contract
+    compliance verified and test vectors pass.
+
+negative_tests:
+  - id: TSK-P2-W8-DB-006-REM-04-N1
+    description: >-
+      Verifier fails if validation still rejects 128 hex
+      characters or accepts 64 hex characters.
+
+positive_tests:
+  - id: TSK-P2-W8-DB-006-REM-04-P1
+    description: >-
+      Verifier passes when validation accepts 128 hex characters
+      and Ed25519 test vectors pass.
+
+verification:
+  - >-
+    [ID w8_db_006_rem_04_work_01] [ID w8_db_006_rem_04_work_02] test
+    -e schema/migrations/*signature*.sql && DATABASE_URL="postgresql://symphony_admin:symphony_pass@localhost:55432/symphony" scripts/agent/verify_tsk_p2_w8_sec_002.py
+
+evidence:
+  - path: evidence/phase2/ed25519_signature_format_fix.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - "Validation still rejects valid signatures => FAIL"
+  - "Ed25519 contract compliance failure => CRITICAL_FAIL"
+  - "Baseline drift introduced => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PLANS-addendum_1.md
+  - docs/contracts/ED25519_SIGNING_CONTRACT.md
+  - tasks/TSK-P1-240/meta.yml
+
+implementation_plan: docs/plans/phase2/REM-2026-05-05_ed25519_signature_format_regression/PLAN.md
+implementation_log: docs/plans/phase2/REM-2026-05-05_ed25519_signature_format_regression/EXEC_LOG.md
+
+notes: >-
+  Derived from DRD REM-2026-05-05_ed25519_signature_format_regression
+  to fix critical cryptographic enforcement regression that would reject
+  valid Ed25519 signatures.
+
+client: codex
+assigned_agent: security_guardian
+model: gpt-5.5

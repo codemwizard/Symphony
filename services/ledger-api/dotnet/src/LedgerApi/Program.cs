@@ -16,7 +16,7 @@ using Symphony.LedgerApi.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
-    options.KnownIPNetworks.Clear();
+    options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
     options.ForwardLimit = 1;
 
@@ -802,6 +802,8 @@ app.MapPost("/pilot-demo/api/session/switch", async (PilotSessionSwitchRequest r
     {
         return Results.NotFound();
     }
+
+    await Task.CompletedTask;
 
     var tenantId = request.tenant_id;
     if (string.IsNullOrWhiteSpace(tenantId))
@@ -2071,11 +2073,13 @@ async Task SeedChungaWorkers(IProgrammeStore ps, ILogger l, Guid actualTenantId,
 {
     // TEMPORARILY DISABLED: Auto-seeding for testing true no-tenant behavior
     l.LogInformation("SeedChungaWorkers DISABLED for testing.");
+    await Task.CompletedTask;
     return;
 }
 
 async Task SeedDemoInstructions(ILogger l)
 {
+    await Task.CompletedTask;
     try
     {
         // const string DemoTenantId = "11111111-1111-1111-1111-111111111111";  // Unused while seeding is disabled

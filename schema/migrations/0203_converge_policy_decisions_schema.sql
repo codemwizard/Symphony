@@ -92,7 +92,7 @@ DROP FUNCTION IF EXISTS enforce_policy_decisions_append_only();
 CREATE OR REPLACE FUNCTION enforce_policy_decisions_append_only()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF TG_OP = 'DELETE' THEN
+    IF TG_OP IN ('UPDATE', 'DELETE') THEN
         RAISE EXCEPTION 'GF060: policy_decisions table is append-only' 
         USING ERRCODE = 'GF060';
     END IF;
@@ -102,7 +102,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public;
 
 -- Create the trigger with correct name
 CREATE TRIGGER policy_decisions_append_only_trigger
-BEFORE DELETE ON policy_decisions
+BEFORE UPDATE OR DELETE ON policy_decisions
 FOR EACH ROW EXECUTE FUNCTION enforce_policy_decisions_append_only();
 
 -- Revoke permissions on the function
