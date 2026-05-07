@@ -1,11 +1,11 @@
 {
   "check_id": "PERF-002",
   "task_id": "PERF-002",
-  "timestamp_utc": "1970-01-01T00:00:00Z",
-  "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
-  "status": "PASS",
-  "pass": true,
+  "timestamp_utc": "2026-05-07T08:21:51Z",
+  "git_sha": "3341456807604ca41b32dd38d0ac01d4a97d0e5a",
+  "schema_fingerprint": "a45b29a3fc1625e742a8edb6cfc18f93704f0177a6a100557d50b7b381cc9549",
+  "status": "FAIL",
+  "pass": false,
   "details": {
     "workload_profile": {
       "runner": "dotnet-selftest-profile",
@@ -17,7 +17,7 @@
       ],
       "environment": "local",
       "storage_mode": "file",
-      "baseline_file": "/home/mwiza/workspace/Symphony/docs/operations/perf_smoke_baseline.json"
+      "baseline_file": "/home/mwiza/workspaces/Symphony-Demo/Symphony/docs/operations/perf_smoke_baseline.json"
     },
     "warmup": {
       "enabled": true,
@@ -32,14 +32,14 @@
       ],
       "discarded_results": true
     },
-    "baseline_file": "/home/mwiza/workspace/Symphony/docs/operations/perf_smoke_baseline.json",
+    "baseline_file": "/home/mwiza/workspaces/Symphony-Demo/Symphony/docs/operations/perf_smoke_baseline.json",
     "baseline_locked": true,
     "soft_regression_threshold_pct": 0.1,
     "hard_regression_threshold_pct": 0.15,
     "baseline_p95_ms": 5500.0,
-    "current_p95_ms": 1659.0,
-    "drift_pct": -0.6983636363636364,
-    "regression_classification": "PASS",
+    "current_p95_ms": 9381.0,
+    "drift_pct": 0.7056363636363636,
+    "regression_classification": "HARD_REGRESSION",
     "regression_enforced": true,
     "thresholds_source": "docs/operations/perf_smoke_baseline.json"
   }

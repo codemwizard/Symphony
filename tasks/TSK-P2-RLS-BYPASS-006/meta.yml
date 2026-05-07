@@ -1,0 +1,269 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-RLS-BYPASS-006
+title: "Regenerate baseline with provenance after RLS bypass policy migration"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: GOVERNANCE
+blast_radius: DB_SCHEMA
+
+intent: >-
+  Removing app.bypass_rls from terminal RLS policies changes the schema contract and
+  must be reflected in the canonical baseline under the baseline governance rules.
+  This task regenerates schema/baseline.sql and normalized baseline artifacts only
+  after the forward-only migration and terminal policy verifier have passed. It
+  prevents baseline drift by requiring pg_dump provenance, migration-head alignment,
+  and an explicit explanation artifact rather than silent baseline churn.
+
+anti_patterns:
+  - >-
+    Updating schema/baseline.sql without a same-PR migration change and explanation
+    artifact.
+  - >-
+    Regenerating baseline from host tooling with unknown pg_dump/server version drift.
+  - >-
+    Treating a baseline text update as proof that terminal RLS policy behavior is
+    correct.
+  - >-
+    Combining baseline regeneration with runtime tenant-isolation proof or migration
+    creation.
+
+out_of_scope:
+  - Creating or modifying schema migrations
+  - Editing application/runtime source files
+  - Editing RLS runtime proof scripts
+  - Modifying CI workflow wiring
+  - Changing baseline governance policy
+  - Claiming Phase-2 closeout completion
+
+stop_conditions:
+  - >-
+    STOP if TSK-P2-RLS-BYPASS-004 or TSK-P2-RLS-BYPASS-005 is incomplete.
+  - >-
+    STOP if schema/migrations/MIGRATION_HEAD does not match the RLS bypass migration
+    head expected by this task.
+  - >-
+    STOP if no baseline refresh explanation artifact or plan-log rationale is present.
+  - >-
+    STOP if baseline generation cannot record pg_dump_version, pg_server_version,
+    dump_source, and normalized_schema_sha256.
+  - >-
+    STOP if approval metadata is absent before editing schema/baseline.sql,
+    schema/baselines/**, scripts/db/**, or evidence/phase2/**.
+
+proof_guarantees:
+  - >-
+    Baseline artifacts are regenerated after the RLS bypass policy migration and
+    terminal policy verifier.
+  - >-
+    Evidence records baseline provenance, migration head, dump source, and normalized
+    schema hash.
+  - >-
+    The verifier rejects baseline drift if app.bypass_rls remains in current baseline
+    policy definitions.
+
+proof_limitations:
+  - >-
+    This task does not prove runtime tenant isolation behavior.
+  - >-
+    This task does not create or modify the RLS policy migration.
+  - >-
+    This task does not prove all historical baseline snapshots are clean; it updates
+    only current canonical baseline artifacts.
+  - >-
+    This task does not close Phase-2.
+
+depends_on:
+  - TSK-P2-RLS-BYPASS-004
+  - TSK-P2-RLS-BYPASS-005
+blocks:
+  - TSK-P2-RLS-BYPASS-008
+
+touches:
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.normalized.sql
+  - scripts/db/verify_rls_bypass_baseline_refresh.sh
+  - evidence/phase2/rls_bypass_baseline_refresh.json
+  - tasks/TSK-P2-RLS-BYPASS-006/meta.yml
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-006/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-006/EXEC_LOG.md
+
+deliverable_files:
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.normalized.sql
+  - scripts/db/verify_rls_bypass_baseline_refresh.sh
+  - evidence/phase2/rls_bypass_baseline_refresh.json
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-006/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-006/EXEC_LOG.md
+
+invariants:
+  - INV-P0-TENANT-ISOLATION-RLS-BYPASS-006
+  - INV-045
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - schema/baseline.sql
+    - schema/baselines/current/0001_baseline.sql
+    - schema/baselines/current/baseline.normalized.sql
+    - scripts/db/verify_rls_bypass_baseline_refresh.sh
+    - evidence/phase2/rls_bypass_baseline_refresh.json
+  must_read:
+    - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+work:
+  - >-
+    [ID rls_bypass_006_w01] Confirm TSK-P2-RLS-BYPASS-004 and
+    TSK-P2-RLS-BYPASS-005 evidence pass and record the migration head and terminal
+    policy proof references in EXEC_LOG.md.
+  - >-
+    [ID rls_bypass_006_w02] Regenerate schema/baseline.sql and current baseline
+    artifacts from the migrated database using the repo-approved baseline generation
+    path and DATABASE_URL.
+  - >-
+    [ID rls_bypass_006_w03] Record a baseline refresh explanation in EXEC_LOG.md
+    citing the RLS bypass migration and why baseline changed.
+  - >-
+    [ID rls_bypass_006_w04] Create scripts/db/verify_rls_bypass_baseline_refresh.sh
+    to check baseline provenance, migration-head alignment, and absence of
+    app.bypass_rls in current canonical baseline policy definitions.
+  - >-
+    [ID rls_bypass_006_w05] Emit evidence/phase2/rls_bypass_baseline_refresh.json
+    with pg_dump_version, pg_server_version, dump_source, normalized_schema_sha256,
+    migration_head, baseline_paths, observed_paths, observed_hashes, command_outputs,
+    and execution_trace.
+
+acceptance_criteria:
+  - >-
+    [ID rls_bypass_006_w01] EXEC_LOG.md references passing evidence from
+    rls_bypass_policy_migration.json and rls_no_app_bypass_policies.json.
+  - >-
+    [ID rls_bypass_006_w02] schema/baseline.sql and current baseline artifacts are
+    regenerated from the migrated terminal database, not manually edited.
+  - >-
+    [ID rls_bypass_006_w03] EXEC_LOG.md contains a baseline refresh explanation tied
+    to the RLS bypass policy migration.
+  - >-
+    [ID rls_bypass_006_w04] The verifier exits non-zero if current baseline policy
+    definitions still contain app.bypass_rls or if provenance fields are missing.
+  - >-
+    [ID rls_bypass_006_w05] Evidence includes pg_dump_version, pg_server_version,
+    dump_source, normalized_schema_sha256, and migration_head.
+
+negative_tests:
+  - id: TSK-P2-RLS-BYPASS-006-N1
+    description: >-
+      Run the verifier against a fixture current baseline containing app.bypass_rls
+      in a policy definition. It must exit non-zero.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-006-N2
+    description: >-
+      Run the verifier against fixture evidence missing pg_dump_version,
+      pg_server_version, dump_source, or normalized_schema_sha256. It must exit
+      non-zero.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-006-N3
+    description: >-
+      Run the verifier when MIGRATION_HEAD does not match the expected post-migration
+      head. It must exit non-zero.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-RLS-BYPASS-006-P1
+    description: >-
+      Run the verifier after baseline regeneration. It must emit PASS evidence with
+      no app.bypass_rls in current canonical baseline policy definitions.
+    required: true
+
+verification:
+  - >-
+    # [ID rls_bypass_006_w01] [ID rls_bypass_006_w02] [ID rls_bypass_006_w03] [ID rls_bypass_006_w04] [ID rls_bypass_006_w05]
+    test -x scripts/db/verify_rls_bypass_baseline_refresh.sh && bash scripts/db/verify_rls_bypass_baseline_refresh.sh > evidence/phase2/rls_bypass_baseline_refresh.json || exit 1
+  - >-
+    bash scripts/db/check_baseline_drift.sh || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-RLS-BYPASS-006 --evidence evidence/phase2/rls_bypass_baseline_refresh.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/rls_bypass_baseline_refresh.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - pg_dump_version
+      - pg_server_version
+      - dump_source
+      - normalized_schema_sha256
+      - migration_head
+      - baseline_paths
+      - app_bypass_rls_in_current_baseline
+
+failure_modes:
+  - >-
+    Baseline is manually edited instead of regenerated from migrated database =>
+    CRITICAL_FAIL
+  - >-
+    Current baseline still contains app.bypass_rls policy definitions =>
+    CRITICAL_FAIL
+  - >-
+    Baseline refresh evidence omits provenance fields => CRITICAL_FAIL
+  - >-
+    Baseline updated without explanation artifact or EXEC_LOG rationale => FAIL
+  - >-
+    Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PLANS-addendum_1.md
+  - evidence/phase2/rls_bypass_policy_migration.json
+  - evidence/phase2/rls_no_app_bypass_policies.json
+
+implementation_plan: docs/plans/phase2/TSK-P2-RLS-BYPASS-006/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-RLS-BYPASS-006/EXEC_LOG.md
+notes: >-
+  This task exists because PLANS-addendum_1 requires intentional baseline refresh
+  with provenance and explanation. It does not prove runtime behavior and must not
+  be used as a Phase-2 closeout claim by itself.
+client: codex_cli
+assigned_agent: db_foundation
+model: UNASSIGNED

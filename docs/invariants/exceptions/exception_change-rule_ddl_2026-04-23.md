@@ -6,6 +6,7 @@ follow_up_ticket: TSK-P2-PREAUTH-005
 reason: Wave 5 remediation replacing monolithic migration 0120 with atomic migrations 0137-0144. Stage A approval artifacts created for all remediation tasks. Invariants linkage deferred to Stage B approval.
 author: system
 created_at: 2026-04-23
+closed_at: 2026-05-07
 ---
 
 # Exception: ddl structural change without invariants linkage

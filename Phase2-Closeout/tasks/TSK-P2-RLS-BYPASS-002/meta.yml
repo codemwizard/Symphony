@@ -1,0 +1,427 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-RLS-BYPASS-002
+title: "Remove runtime Ledger API app.bypass_rls dependencies"
+owner_role: SECURITY_GUARDIAN
+status: planned
+priority: CRITICAL
+risk_class: SECURITY
+blast_radius: APP_LAYER
+
+intent: >-
+  Runtime Ledger API paths currently contain app.bypass_rls set_config calls that
+  can recreate the same tenant-isolation bypass even after database policies are
+  corrected. This task removes runtime-reachable bypass dependencies from Ledger API
+  request and store paths identified by the dependency inventory. It prevents the
+  remediation from becoming a string-only schema fix while leaving a hidden runtime
+  privilege path in application code.
+
+anti_patterns:
+  - >-
+    Removing database policy bypass predicates while leaving runtime application code
+    that still sets app.bypass_rls.
+  - >-
+    Replacing app.bypass_rls with an ambient superuser connection or hidden
+    privileged fallback in normal request-serving paths.
+  - >-
+    Modifying seed/bootstrap-only code in the same task as runtime request path
+    remediation.
+  - >-
+    Declaring runtime bypass removed without a verifier that scans compiled source
+    paths and exercises a tenant-isolation negative case.
+
+out_of_scope:
+  - Editing schema/migrations/**
+  - Editing schema/baseline.sql or schema/baselines/**
+  - Editing demo seed/bootstrap logic in services/ledger-api/dotnet/src/LedgerApi/Program.cs
+    unless the inventory classifies a specific Program.cs path as runtime-reachable
+  - Creating a forward-only RLS policy migration
+  - Regenerating baseline artifacts
+  - Modifying CI workflows
+  - Creating administrative privileged execution infrastructure
+
+stop_conditions:
+  - >-
+    STOP if TSK-P2-RLS-BYPASS-001 is incomplete or
+    evidence/phase2/rls_bypass_dependency_inventory.json is missing.
+  - >-
+    STOP if the inventory contains UNKNOWN findings.
+  - >-
+    STOP if a runtime-reachable app.bypass_rls dependency is outside this task's
+    touch list; create a separate scoped task instead of expanding silently.
+  - >-
+    STOP if any replacement design uses ambient superuser connections, hidden admin
+    connection strings, or implicit privilege escalation in request-serving runtime.
+  - >-
+    STOP if approval metadata is absent before editing services/**, scripts/audit/**,
+    or evidence/phase2/**.
+
+proof_guarantees:
+  - >-
+    Runtime-reachable Ledger API source files in this task's scope contain no
+    app.bypass_rls set_config calls after remediation.
+  - >-
+    The verifier fails if app.bypass_rls appears in runtime-scoped Ledger API paths
+    identified by the dependency inventory.
+  - >-
+    The verifier runs at least one runtime tenant-isolation negative case proving
+    cross-tenant access is rejected without app.bypass_rls.
+
+proof_limitations:
+  - >-
+    This task does not remove bypass predicates from database RLS policies.
+  - >-
+    This task does not refactor demo seed/bootstrap paths unless inventory classifies
+    them as runtime-reachable.
+  - >-
+    This task does not prove all repository paths are bypass-free; inventory and
+    later policy/runtime proof tasks own wider coverage.
+  - >-
+    This task does not regenerate schema baseline artifacts.
+
+depends_on:
+  - TSK-P2-RLS-BYPASS-001
+blocks:
+  - TSK-P2-RLS-BYPASS-004
+  - TSK-P2-RLS-BYPASS-006
+
+touches:
+  - services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs
+  - services/ledger-api/dotnet/src/LedgerApi/Security/ITenantReadinessProbe.cs
+  - scripts/audit/verify_rls_bypass_runtime_removal.sh
+  - evidence/phase2/rls_bypass_runtime_removal.json
+  - tasks/TSK-P2-RLS-BYPASS-002/meta.yml
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-002/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-002/EXEC_LOG.md
+
+deliverable_files:
+  - services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs
+  - services/ledger-api/dotnet/src/LedgerApi/Security/ITenantReadinessProbe.cs
+  - scripts/audit/verify_rls_bypass_runtime_removal.sh
+  - evidence/phase2/rls_bypass_runtime_removal.json
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-002/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-002/EXEC_LOG.md
+
+invariants:
+  - INV-P0-TENANT-ISOLATION-RLS-BYPASS-002
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs
+    - services/ledger-api/dotnet/src/LedgerApi/Security/ITenantReadinessProbe.cs
+    - scripts/audit/verify_rls_bypass_runtime_removal.sh
+    - evidence/phase2/rls_bypass_runtime_removal.json
+  must_read:
+    - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+work:
+  - >-
+    [ID rls_bypass_002_w01] Read
+    evidence/phase2/rls_bypass_dependency_inventory.json and confirm the Ledger API
+    findings in Stores.cs and ITenantReadinessProbe.cs are classified as RUNTIME or
+    runtime-reachable before editing.
+  - >-
+    [ID rls_bypass_002_w02] Remove app.bypass_rls set_config usage from
+    services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs without adding
+    superuser, admin-mode, or hidden privileged connection behavior.
+  - >-
+    [ID rls_bypass_002_w03] Remove app.bypass_rls set_config usage from
+    services/ledger-api/dotnet/src/LedgerApi/Security/ITenantReadinessProbe.cs without
+    weakening tenant readiness checks.
+  - >-
+    [ID rls_bypass_002_w04] Create scripts/audit/verify_rls_bypass_runtime_removal.sh
+    to fail if runtime-scoped Ledger API source paths still contain app.bypass_rls
+    or forbidden privileged fallback patterns.
+  - >-
+    [ID rls_bypass_002_w05] Add verifier runtime proof using DATABASE_URL that
+    attempts a cross-tenant read/write through the affected runtime path or closest
+    available runtime harness and expects rejection without app.bypass_rls.
+  - >-
+    [ID rls_bypass_002_w06] Emit evidence/phase2/rls_bypass_runtime_removal.json with
+    changed_paths, removed_references, forbidden_fallbacks, runtime_negative_test,
+    observed_paths, observed_hashes, command_outputs, and execution_trace.
+
+acceptance_criteria:
+  - >-
+    [ID rls_bypass_002_w01] EXEC_LOG.md records the inventory rows consumed and
+    confirms no UNKNOWN runtime finding is being ignored.
+  - >-
+    [ID rls_bypass_002_w02] Stores.cs no longer contains app.bypass_rls or set_config
+    calls for that setting.
+  - >-
+    [ID rls_bypass_002_w03] ITenantReadinessProbe.cs no longer contains app.bypass_rls
+    or set_config calls for that setting.
+  - >-
+    [ID rls_bypass_002_w04] The verifier exits non-zero if app.bypass_rls or forbidden
+    fallback patterns are reintroduced into runtime-scoped Ledger API source files.
+  - >-
+    [ID rls_bypass_002_w05] The verifier uses DATABASE_URL and records a rejected
+    cross-tenant runtime negative test.
+  - >-
+    [ID rls_bypass_002_w06] Evidence includes Wave-8 required fields and reports
+    forbidden_fallbacks: [].
+
+negative_tests:
+  - id: TSK-P2-RLS-BYPASS-002-N1
+    description: >-
+      Reintroduce SELECT set_config('app.bypass_rls', 'on', true) in a fixture copy
+      of Stores.cs. The verifier must exit non-zero and report the runtime bypass
+      reference.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-002-N2
+    description: >-
+      Introduce a fixture runtime code path using a superuser/admin connection string
+      fallback for request-serving operations. The verifier must exit non-zero and
+      report forbidden_fallbacks.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-002-N3
+    description: >-
+      Execute the runtime tenant-isolation negative case with DATABASE_URL. A
+      cross-tenant access attempt must be rejected; acceptance is a verifier failure.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-RLS-BYPASS-002-P1
+    description: >-
+      Run the verifier against the remediated runtime files and database. It must
+      emit PASS evidence with no runtime bypass references and no forbidden fallbacks.
+    required: true
+
+verification:
+  - >-
+    # [ID rls_bypass_002_w01] [ID rls_bypass_002_w02] [ID rls_bypass_002_w03] [ID rls_bypass_002_w04] [ID rls_bypass_002_w05] [ID rls_bypass_002_w06]
+    test -x scripts/audit/verify_rls_bypass_runtime_removal.sh && bash scripts/audit/verify_rls_bypass_runtime_removal.sh > evidence/phase2/rls_bypass_runtime_removal.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-RLS-BYPASS-002 --evidence evidence/phase2/rls_bypass_runtime_removal.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/rls_bypass_runtime_removal.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - changed_paths
+      - inventory_rows_consumed
+      - removed_references
+      - forbidden_fallbacks
+      - runtime_negative_test
+
+failure_modes:
+  - >-
+    Runtime source still sets app.bypass_rls after remediation => CRITICAL_FAIL
+  - >-
+    Replacement uses ambient superuser/admin connection behavior in request runtime
+    => CRITICAL_FAIL
+  - >-
+    Cross-tenant runtime negative test accepts access => CRITICAL_FAIL
+  - >-
+    Verifier omits DATABASE_URL for DB-backed runtime proof => FAIL
+  - >-
+    Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - evidence/phase2/rls_bypass_dependency_inventory.json
+
+implementation_plan: docs/plans/phase2/TSK-P2-RLS-BYPASS-002/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-RLS-BYPASS-002/EXEC_LOG.md
+notes: >-
+  Initial read-only inspection found app.bypass_rls usage in Ledger API Stores.cs
+  and ITenantReadinessProbe.cs. Final execution must use the inventory evidence as
+  authority and must not expand the touched runtime files without creating a separate
+  task.
+client: codex_cli
+assigned_agent: security_guardian
+model: UNASSIGNED
+docs/plans/phase2/TSK-P2-RLS-BYPASS-002/PLAN.md
+# TSK-P2-RLS-BYPASS-002 PLAN - Remove runtime Ledger API bypass dependencies
+
+Task: TSK-P2-RLS-BYPASS-002
+Owner: SECURITY_GUARDIAN
+Depends on: TSK-P2-RLS-BYPASS-001
+failure_signature: PHASE2.RLS_BYPASS.TSK-P2-RLS-BYPASS-002.RUNTIME_REMOVAL_FAIL
+canonical_reference: docs/operations/PHASE_EXECUTION_ENVELOPE.md
+
+## Objective
+
+Remove runtime-reachable `app.bypass_rls` dependency from scoped Ledger API source
+files without replacing it with hidden privileged runtime behavior.
+
+Done means scoped runtime files no longer set `app.bypass_rls`, forbidden privileged
+fallbacks are absent, and a DATABASE_URL-backed runtime negative test rejects
+cross-tenant access.
+
+## Regulated Surface Compliance
+
+This task edits regulated or production-affecting surfaces:
+
+- `services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs`
+- `services/ledger-api/dotnet/src/LedgerApi/Security/ITenantReadinessProbe.cs`
+- `scripts/audit/verify_rls_bypass_runtime_removal.sh`
+- `evidence/phase2/rls_bypass_runtime_removal.json`
+
+Create and validate Stage A approval metadata before editing these paths. Stage B
+approval is required after PR opening.
+
+## Remediation Trace Compliance
+
+`EXEC_LOG.md` is append-only and must include:
+
+- `failure_signature`
+- `origin_task_id`
+- `repro_command`
+- `verification_commands_run`
+- `final_status`
+
+## Architectural Context
+
+The RLS policy fix is insufficient if runtime application code still activates
+bypass semantics. This task removes runtime request/repository dependencies first,
+so later policy migration does not leave application-level bypass assumptions behind.
+
+## Pre-conditions
+
+- TSK-P2-RLS-BYPASS-001 is complete.
+- Inventory evidence exists and contains no UNKNOWN findings.
+- Stage A approval metadata exists before regulated edits.
+- DATABASE_URL is available for verifier runtime proof.
+
+## Files to Change
+
+| File | Action | Reason |
+|---|---|---|
+| `services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs` | Modify | Remove runtime bypass setting |
+| `services/ledger-api/dotnet/src/LedgerApi/Security/ITenantReadinessProbe.cs` | Modify | Remove readiness-probe bypass setting |
+| `scripts/audit/verify_rls_bypass_runtime_removal.sh` | Create | Verify runtime removal |
+| `evidence/phase2/rls_bypass_runtime_removal.json` | Emit | Runtime remediation evidence |
+| `tasks/TSK-P2-RLS-BYPASS-002/meta.yml` | Create | Task contract |
+| `docs/plans/phase2/TSK-P2-RLS-BYPASS-002/EXEC_LOG.md` | Create/update append-only | Remediation trace |
+
+## Out of Scope
+
+- Schema policy changes
+- Baseline regeneration
+- Demo seed/bootstrap refactoring unless classified runtime-reachable
+- Admin execution boundary creation
+- CI workflow edits
+
+## Stop Conditions
+
+- Stop if inventory evidence is missing or has UNKNOWN findings.
+- Stop if a runtime finding is outside this task's touch list.
+- Stop if the replacement design uses hidden privileged runtime access.
+- Stop if approval metadata is missing before regulated edits.
+
+## Implementation Steps
+
+### Step 1 - Confirm inventory rows [ID rls_bypass_002_w01]
+
+Read the inventory evidence and record the exact rows consumed for Stores.cs and
+ITenantReadinessProbe.cs in EXEC_LOG.
+
+Done when no UNKNOWN runtime finding is ignored.
+
+### Step 2 - Remove Stores.cs bypass [ID rls_bypass_002_w02]
+
+Remove `app.bypass_rls` set_config usage from Stores.cs. Preserve legitimate tenant
+context handling through explicit tenant IDs and normal RLS semantics.
+
+Done when Stores.cs has no app.bypass_rls reference.
+
+### Step 3 - Remove readiness probe bypass [ID rls_bypass_002_w03]
+
+Remove bypass setting from ITenantReadinessProbe.cs without weakening readiness
+validation.
+
+Done when the probe has no app.bypass_rls reference.
+
+### Step 4 - Create verifier [ID rls_bypass_002_w04]
+
+Create `verify_rls_bypass_runtime_removal.sh` to scan scoped runtime files and
+reject app.bypass_rls plus forbidden privileged fallback patterns.
+
+Done when negative fixtures fail.
+
+### Step 5 - Add runtime negative proof [ID rls_bypass_002_w05]
+
+Use DATABASE_URL to prove a cross-tenant runtime access attempt is rejected without
+app.bypass_rls.
+
+Done when rejection is recorded in evidence.
+
+### Step 6 - Emit evidence [ID rls_bypass_002_w06]
+
+Emit `rls_bypass_runtime_removal.json` with Wave-8 evidence fields.
+
+Done when evidence validates and forbidden_fallbacks is empty.
+
+## Verification
+
+```bash
+test -x scripts/audit/verify_rls_bypass_runtime_removal.sh && bash scripts/audit/verify_rls_bypass_runtime_removal.sh > evidence/phase2/rls_bypass_runtime_removal.json || exit 1
+python3 scripts/audit/validate_evidence.py --task TSK-P2-RLS-BYPASS-002 --evidence evidence/phase2/rls_bypass_runtime_removal.json || exit 1
+RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+Evidence Contract
+evidence/phase2/rls_bypass_runtime_removal.json must include:
+task_id, git_sha, timestamp_utc, status, checks, observed_paths,
+observed_hashes, command_outputs, execution_trace, changed_paths,
+inventory_rows_consumed, removed_references, forbidden_fallbacks, and
+runtime_negative_test.
+
+Rollback
+Restore only the scoped runtime files and remove this task's verifier/evidence.
+Do not modify migrations or baseline artifacts as rollback for this task.
+
+Risk
+Risk	Consequence	Mitigation
+Hidden privileged fallback added	Bypass survives under new name	Verifier checks forbidden fallback patterns
+Runtime path missed	Incomplete remediation	Inventory dependency and stop condition
+Cross-tenant proof omitted	Fake PASS	DATABASE_URL-backed negative test required
+
+## `docs/plans/phase2/TSK-P2-RLS-BYPASS-002/EXEC_LOG.md`
+
+```markdown
+# TSK-P2-RLS-BYPASS-002 EXEC_LOG
+
+Append-only. Never delete or rewrite existing entries.
+
+failure_signature: PHASE2.RLS_BYPASS.TSK-P2-RLS-BYPASS-002.RUNTIME_REMOVAL_FAIL
+origin_task_id: TSK-P2-RLS-BYPASS-002
+repro_command: bash scripts/audit/verify_rls_bypass_runtime_removal.sh > evidence/phase2/rls_bypass_runtime_removal.json
+
+| # | Timestamp UTC | Action | Result | Notes |
+|---|---|---|---|---|
+| 1 | TBD | Task pack created inline for human review | planned | No repository files written by Codex |
+| 2 | TBD | verification_commands_run | pending | test -x scripts/audit/verify_rls_bypass_runtime_removal.sh && bash scripts/audit/verify_rls_bypass_runtime_removal.sh > evidence/phase2/rls_bypass_runtime_removal.json; python3 scripts/audit/validate_evidence.py --task TSK-P2-RLS-BYPASS-002 --evidence evidence/phase2/rls_bypass_runtime_removal.json; RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh |
+| 3 | TBD | final_status | pending | Pending implementation |

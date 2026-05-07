@@ -1,0 +1,261 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-RLS-BYPASS-003
+title: "Refactor Ledger API demo seeding away from app.bypass_rls"
+owner_role: SECURITY_GUARDIAN
+status: planned
+priority: CRITICAL
+risk_class: SECURITY
+blast_radius: APP_LAYER
+
+intent: >-
+  Demo seeding and bootstrap logic can legitimately require non-request operational
+  behavior, but it must not depend on app.bypass_rls or normalize an ambient bypass
+  pattern in application startup. This task refactors Ledger API demo seeding paths
+  identified by the inventory so they do not set app.bypass_rls. It preserves a
+  strict boundary between non-runtime setup and request-serving execution.
+
+anti_patterns:
+  - >-
+    Treating demo seeding as harmless while it sets app.bypass_rls inside the Ledger
+    API application process.
+  - >-
+    Replacing app.bypass_rls with an ambient superuser connection string available
+    to request-serving runtime.
+  - >-
+    Combining demo seed refactor with RLS policy migration or runtime repository
+    remediation in the same task.
+  - >-
+    Declaring seed remediation complete without proving normal request startup cannot
+    activate privileged bypass behavior.
+
+out_of_scope:
+  - Editing services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs
+  - Editing services/ledger-api/dotnet/src/LedgerApi/Security/ITenantReadinessProbe.cs
+  - Editing schema/migrations/**
+  - Editing schema/baseline.sql or schema/baselines/**
+  - Creating a general administrative execution framework
+  - Modifying CI workflows
+  - Removing database policy predicates
+
+stop_conditions:
+  - >-
+    STOP if TSK-P2-RLS-BYPASS-001 is incomplete or inventory evidence is missing.
+  - >-
+    STOP if Program.cs is classified RUNTIME rather than SEED or ADMIN; runtime
+    remediation must be split into a separate task.
+  - >-
+    STOP if the replacement depends on ambient superuser credentials or hidden
+    admin-mode runtime configuration.
+  - >-
+    STOP if demo seed behavior cannot be isolated from request-serving runtime.
+  - >-
+    STOP if approval metadata is absent before editing services/**, scripts/audit/**,
+    or evidence/phase2/**.
+
+proof_guarantees:
+  - >-
+    Ledger API Program.cs no longer contains active app.bypass_rls set_config calls
+    after seed remediation.
+  - >-
+    The verifier rejects app.bypass_rls in active demo seed/bootstrap code and rejects
+    ambient privileged fallback configuration.
+  - >-
+    Evidence records that seed/bootstrap remediation is isolated from normal runtime
+    request paths.
+
+proof_limitations:
+  - >-
+    This task does not create the full administrative execution boundary if the
+    inventory identifies broader admin tooling needs.
+  - >-
+    This task does not remove runtime repository bypass usage; that is
+    TSK-P2-RLS-BYPASS-002.
+  - >-
+    This task does not remove RLS policy bypass predicates.
+  - >-
+    This task does not regenerate baselines.
+
+depends_on:
+  - TSK-P2-RLS-BYPASS-001
+blocks:
+  - TSK-P2-RLS-BYPASS-004
+  - TSK-P2-RLS-BYPASS-006
+
+touches:
+  - services/ledger-api/dotnet/src/LedgerApi/Program.cs
+  - scripts/audit/verify_rls_bypass_seed_refactor.sh
+  - evidence/phase2/rls_bypass_seed_refactor.json
+  - tasks/TSK-P2-RLS-BYPASS-003/meta.yml
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-003/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-003/EXEC_LOG.md
+
+deliverable_files:
+  - services/ledger-api/dotnet/src/LedgerApi/Program.cs
+  - scripts/audit/verify_rls_bypass_seed_refactor.sh
+  - evidence/phase2/rls_bypass_seed_refactor.json
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-003/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-003/EXEC_LOG.md
+
+invariants:
+  - INV-P0-TENANT-ISOLATION-RLS-BYPASS-003
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - services/ledger-api/dotnet/src/LedgerApi/Program.cs
+    - scripts/audit/verify_rls_bypass_seed_refactor.sh
+    - evidence/phase2/rls_bypass_seed_refactor.json
+  must_read:
+    - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+work:
+  - >-
+    [ID rls_bypass_003_w01] Read
+    evidence/phase2/rls_bypass_dependency_inventory.json and confirm Program.cs
+    app.bypass_rls findings are classified as SEED or ADMIN, not RUNTIME.
+  - >-
+    [ID rls_bypass_003_w02] Refactor services/ledger-api/dotnet/src/LedgerApi/Program.cs
+    demo seed/bootstrap logic so it does not set app.bypass_rls.
+  - >-
+    [ID rls_bypass_003_w03] Ensure any remaining privileged setup path is explicit,
+    non-default, auditable, and unavailable to request-serving runtime; if broader
+    infrastructure is required, stop and create a separate ADMIN-boundary task.
+  - >-
+    [ID rls_bypass_003_w04] Create scripts/audit/verify_rls_bypass_seed_refactor.sh
+    to fail on active app.bypass_rls usage in Program.cs and forbidden ambient
+    privileged fallback patterns.
+  - >-
+    [ID rls_bypass_003_w05] Add verifier proof that normal application startup or
+    request-serving configuration does not expose an app.bypass_rls or hidden
+    privileged mode.
+  - >-
+    [ID rls_bypass_003_w06] Emit evidence/phase2/rls_bypass_seed_refactor.json with
+    inventory_rows_consumed, removed_seed_references, privileged_boundary_assessment,
+    observed_paths, observed_hashes, command_outputs, and execution_trace.
+
+acceptance_criteria:
+  - >-
+    [ID rls_bypass_003_w01] EXEC_LOG.md records the Program.cs inventory rows consumed
+    and their SEED or ADMIN classification.
+  - >-
+    [ID rls_bypass_003_w02] Program.cs contains no active app.bypass_rls set_config
+    calls after remediation.
+  - >-
+    [ID rls_bypass_003_w03] No ambient superuser/admin connection fallback is added
+    to the request-serving runtime.
+  - >-
+    [ID rls_bypass_003_w04] The verifier exits non-zero if active app.bypass_rls
+    usage or forbidden privileged fallback patterns are present in Program.cs.
+  - >-
+    [ID rls_bypass_003_w05] Evidence records request_runtime_privileged_mode_exposed:
+    false.
+  - >-
+    [ID rls_bypass_003_w06] Evidence includes Wave-8 required observed_paths,
+    observed_hashes, command_outputs, and execution_trace fields.
+
+negative_tests:
+  - id: TSK-P2-RLS-BYPASS-003-N1
+    description: >-
+      Run the verifier against a fixture Program.cs with an active SELECT
+      set_config('app.bypass_rls', 'on', true) in seed/bootstrap code. It must exit
+      non-zero.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-003-N2
+    description: >-
+      Run the verifier against a fixture Program.cs that introduces a runtime-visible
+      admin/superuser connection fallback. It must exit non-zero and report forbidden
+      privileged runtime exposure.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-003-N3
+    description: >-
+      Run the verifier against a fixture where Program.cs inventory findings are
+      classified RUNTIME. It must exit non-zero and require a separate runtime task.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-RLS-BYPASS-003-P1
+    description: >-
+      Run the verifier against the remediated Program.cs. It must emit PASS evidence
+      with removed_seed_references populated and request_runtime_privileged_mode_exposed:
+      false.
+    required: true
+
+verification:
+  - >-
+    # [ID rls_bypass_003_w01] [ID rls_bypass_003_w02] [ID rls_bypass_003_w03] [ID rls_bypass_003_w04] [ID rls_bypass_003_w05] [ID rls_bypass_003_w06]
+    test -x scripts/audit/verify_rls_bypass_seed_refactor.sh && bash scripts/audit/verify_rls_bypass_seed_refactor.sh > evidence/phase2/rls_bypass_seed_refactor.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-RLS-BYPASS-003 --evidence evidence/phase2/rls_bypass_seed_refactor.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/rls_bypass_seed_refactor.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - inventory_rows_consumed
+      - removed_seed_references
+      - privileged_boundary_assessment
+      - request_runtime_privileged_mode_exposed
+      - forbidden_fallbacks
+
+failure_modes:
+  - >-
+    Program.cs still contains active app.bypass_rls set_config usage after remediation
+    => CRITICAL_FAIL
+  - >-
+    Replacement exposes superuser/admin privileged mode to request-serving runtime
+    => CRITICAL_FAIL
+  - >-
+    Runtime-classified Program.cs finding is handled as seed-only => CRITICAL_FAIL
+  - >-
+    Verifier omits observed_paths, observed_hashes, command_outputs, or execution_trace
+    => CRITICAL_FAIL
+  - >-
+    Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - evidence/phase2/rls_bypass_dependency_inventory.json
+
+implementation_plan: docs/plans/phase2/TSK-P2-RLS-BYPASS-003/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-RLS-BYPASS-003/EXEC_LOG.md
+notes: >-
+  Initial read-only inspection found app.bypass_rls usage in Ledger API Program.cs.
+  This task is scoped to demo seed/bootstrap remediation only. If inventory classifies
+  the Program.cs usage as runtime-reachable, split it into a separate runtime task
+  instead of implementing this seed-focused task.
+client: codex_cli
+assigned_agent: security_guardian
+model: UNASSIGNED

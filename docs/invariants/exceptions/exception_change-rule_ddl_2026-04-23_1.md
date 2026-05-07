@@ -6,6 +6,7 @@ follow_up_ticket: TSK-P2-PREAUTH-005
 reason: Bug fix for migration ordering issue. Migration 0121 referenced state_transitions table which doesn't exist until migration 0137. Moved data authority columns for state_transitions from 0121 to 0137 to fix pre_ci phase1_db_verifiers failure.
 author: system
 created_at: 2026-04-23
+closed_at: 2026-05-07
 ---
 
 # Exception: ddl structural change without invariants linkage

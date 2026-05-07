@@ -1,0 +1,244 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-RLS-BYPASS-005
+title: "Prove terminal RLS policies contain no app.bypass_rls predicate"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: SECURITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  After the forward-only migration is created, the terminal database state needs an
+  independent policy verifier that inspects active RLS policies rather than relying
+  on migration text. This task creates the reusable terminal-policy verifier and
+  evidence proving app.bypass_rls is absent from active policy definitions. It
+  prevents fake closure where the migration file looks correct but the applied schema
+  still contains bypass predicates.
+
+anti_patterns:
+  - >-
+    Treating migration text inspection as proof that terminal database policy state
+    is clean.
+  - >-
+    Grepping schema files while not querying pg_policies or equivalent terminal DB
+    state.
+  - >-
+    Accepting absence of app.bypass_rls without also asserting tenant-isolation
+    predicates still exist.
+  - >-
+    Combining terminal policy verification with baseline regeneration or runtime
+    application changes.
+
+out_of_scope:
+  - Creating or modifying schema migrations
+  - Editing schema/migrations/MIGRATION_HEAD
+  - Editing schema/baseline.sql or schema/baselines/**
+  - Editing application source files
+  - Modifying CI workflows or scripts/dev/pre_ci.sh
+  - Running full runtime tenant-isolation proof across application flows
+
+stop_conditions:
+  - >-
+    STOP if TSK-P2-RLS-BYPASS-004 is incomplete or migration 0204 has not been
+    applied to the verification database.
+  - >-
+    STOP if DATABASE_URL is unavailable.
+  - >-
+    STOP if pg_policies or equivalent database catalog inspection cannot be run.
+  - >-
+    STOP if any active policy still references app.bypass_rls.
+  - >-
+    STOP if approval metadata is absent before editing scripts/db/** or
+    evidence/phase2/**.
+
+proof_guarantees:
+  - >-
+    The verifier inspects terminal database policy state via DATABASE_URL.
+  - >-
+    The verifier fails if any active policy definition contains app.bypass_rls.
+  - >-
+    The verifier fails if affected tenant tables lose tenant-isolation predicates
+    entirely.
+
+proof_limitations:
+  - >-
+    This task does not prove application runtime cross-tenant behavior.
+  - >-
+    This task does not regenerate baseline artifacts.
+  - >-
+    This task does not prove every RLS policy is semantically correct beyond absence
+    of bypass and presence of tenant-isolation predicate.
+  - >-
+    This task does not update CI wiring.
+
+depends_on:
+  - TSK-P2-RLS-BYPASS-004
+blocks:
+  - TSK-P2-RLS-BYPASS-006
+  - TSK-P2-RLS-BYPASS-007
+
+touches:
+  - scripts/db/verify_rls_no_app_bypass_policies.sh
+  - evidence/phase2/rls_no_app_bypass_policies.json
+  - tasks/TSK-P2-RLS-BYPASS-005/meta.yml
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-005/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-005/EXEC_LOG.md
+
+deliverable_files:
+  - scripts/db/verify_rls_no_app_bypass_policies.sh
+  - evidence/phase2/rls_no_app_bypass_policies.json
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-005/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-005/EXEC_LOG.md
+
+invariants:
+  - INV-P0-TENANT-ISOLATION-RLS-BYPASS-005
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/db/verify_rls_no_app_bypass_policies.sh
+    - evidence/phase2/rls_no_app_bypass_policies.json
+  must_read:
+    - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+work:
+  - >-
+    [ID rls_bypass_005_w01] Create scripts/db/verify_rls_no_app_bypass_policies.sh
+    to query terminal policy definitions through DATABASE_URL.
+  - >-
+    [ID rls_bypass_005_w02] Check all active RLS policy definitions for app.bypass_rls
+    and fail if any remain.
+  - >-
+    [ID rls_bypass_005_w03] Check affected tenant-scoped tables still have a
+    tenant-isolation predicate based on app.current_tenant_id or the repo's canonical
+    tenant context function.
+  - >-
+    [ID rls_bypass_005_w04] Add negative fixture or temp-policy coverage proving a
+    policy containing app.bypass_rls fails the verifier.
+  - >-
+    [ID rls_bypass_005_w05] Emit evidence/phase2/rls_no_app_bypass_policies.json
+    with policy_rows_checked, bypass_predicates_remaining, tenant_predicates_missing,
+    observed_paths, observed_hashes, command_outputs, and execution_trace.
+
+acceptance_criteria:
+  - >-
+    [ID rls_bypass_005_w01] The verifier uses psql "$DATABASE_URL" or equivalent
+    DATABASE_URL-driven database access.
+  - >-
+    [ID rls_bypass_005_w02] The verifier exits non-zero if any active policy contains
+    app.bypass_rls.
+  - >-
+    [ID rls_bypass_005_w03] The verifier exits non-zero if affected tenant tables
+    have no tenant-isolation predicate after bypass removal.
+  - >-
+    [ID rls_bypass_005_w04] A negative fixture or temp policy containing app.bypass_rls
+    fails verification.
+  - >-
+    [ID rls_bypass_005_w05] Evidence reports bypass_predicates_remaining: [] and
+    tenant_predicates_missing: [] on the remediated terminal schema.
+
+negative_tests:
+  - id: TSK-P2-RLS-BYPASS-005-N1
+    description: >-
+      Create a fixture or temporary policy definition containing app.bypass_rls and
+      run the verifier. It must exit non-zero and report the policy.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-005-N2
+    description: >-
+      Create a fixture or temporary policy definition with app.bypass_rls removed but
+      no tenant predicate. It must exit non-zero and report tenant_predicates_missing.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-005-N3
+    description: >-
+      Run the verifier without DATABASE_URL. It must exit non-zero with an explicit
+      missing DATABASE_URL error.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-RLS-BYPASS-005-P1
+    description: >-
+      Run the verifier against the database after migration 0204 is applied. It must
+      emit PASS evidence with no bypass predicates and no missing tenant predicates.
+    required: true
+
+verification:
+  - >-
+    # [ID rls_bypass_005_w01] [ID rls_bypass_005_w02] [ID rls_bypass_005_w03] [ID rls_bypass_005_w04] [ID rls_bypass_005_w05]
+    test -x scripts/db/verify_rls_no_app_bypass_policies.sh && bash scripts/db/verify_rls_no_app_bypass_policies.sh > evidence/phase2/rls_no_app_bypass_policies.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-RLS-BYPASS-005 --evidence evidence/phase2/rls_no_app_bypass_policies.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/rls_no_app_bypass_policies.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - policy_rows_checked
+      - bypass_predicates_remaining
+      - tenant_predicates_missing
+      - database_url_used
+
+failure_modes:
+  - >-
+    Verifier inspects migration text but not terminal database policies =>
+    CRITICAL_FAIL
+  - >-
+    Active policy containing app.bypass_rls exits 0 => CRITICAL_FAIL
+  - >-
+    Tenant predicate removed along with bypass predicate exits 0 => CRITICAL_FAIL
+  - >-
+    Verifier does not use DATABASE_URL => FAIL
+  - >-
+    Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - evidence/phase2/rls_bypass_policy_migration.json
+
+implementation_plan: docs/plans/phase2/TSK-P2-RLS-BYPASS-005/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-RLS-BYPASS-005/EXEC_LOG.md
+notes: >-
+  This is a terminal database-state verifier, not a migration text verifier. It
+  must inspect active policies after the forward-only migration is applied.
+client: codex_cli
+assigned_agent: db_foundation
+model: UNASSIGNED

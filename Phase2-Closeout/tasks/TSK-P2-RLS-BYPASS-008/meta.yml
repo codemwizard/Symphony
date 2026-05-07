@@ -1,0 +1,820 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-RLS-BYPASS-008
+title: "Aggregate RLS bypass blocker resolution evidence without claiming Phase-2 closeout"
+owner_role: INVARIANTS_CURATOR
+status: planned
+priority: CRITICAL
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  The app.bypass_rls issue is a Phase-2 closeout blocker because it weakens inherited
+  tenant-isolation guarantees. After inventory, runtime remediation, seed refactor,
+  policy migration, terminal policy proof, baseline refresh, and runtime isolation
+  proof complete, the repository needs one bounded evidence index showing that this
+  specific blocker is resolved. This task aggregates proof for the RLS bypass blocker
+  only and explicitly does not claim Phase-2 closeout or Wave 8 closure.
+
+anti_patterns:
+  - >-
+    Treating RLS bypass blocker resolution as equivalent to Phase-2 closeout.
+  - >-
+    Aggregating evidence without validating that each prerequisite evidence artifact
+    exists and contains required proof fields.
+  - >-
+    Claiming Wave 8 or Phase-2 status changes from this blocker-specific evidence.
+  - >-
+    Hand-authoring proof instead of linking verifier-generated evidence.
+
+out_of_scope:
+  - Creating Phase-2 closeout approval artifacts
+  - Updating Wave 8 task status to True-Complete
+  - Editing schema migrations, baseline files, or application source
+  - Creating future-phase documents or evidence namespaces
+  - Marking any task complete
+  - Modifying docs/PHASE2/phase2_contract.yml
+
+stop_conditions:
+  - >-
+    STOP if any prerequisite task TSK-P2-RLS-BYPASS-001 through
+    TSK-P2-RLS-BYPASS-007 is incomplete or its evidence is missing.
+  - >-
+    STOP if any prerequisite evidence file lacks observed_paths, observed_hashes,
+    command_outputs, or execution_trace.
+  - >-
+    STOP if runtime isolation evidence does not prove bypass_setting_used: false,
+    positive_test_passed: true, and negative_test_passed: true.
+  - >-
+    STOP if terminal policy evidence reports any remaining app.bypass_rls predicate.
+  - >-
+    STOP if the aggregation text would claim Phase-2 closeout or Wave 8 closure.
+
+proof_guarantees:
+  - >-
+    The blocker index references all required RLS bypass remediation evidence files.
+  - >-
+    The verifier rejects missing, stale, or structurally inadmissible prerequisite
+    evidence.
+  - >-
+    The evidence states only that the app.bypass_rls blocker is resolved, not that
+    Phase-2 has closed.
+
+proof_limitations:
+  - >-
+    This task does not prove unrelated Phase-2 or Wave 8 obligations.
+  - >-
+    This task does not create closeout approval artifacts.
+  - >-
+    This task does not update any task status matrix.
+  - >-
+    This task does not prove future-owned carry-forward obligations are implemented.
+
+depends_on:
+  - TSK-P2-RLS-BYPASS-001
+  - TSK-P2-RLS-BYPASS-002
+  - TSK-P2-RLS-BYPASS-003
+  - TSK-P2-RLS-BYPASS-004
+  - TSK-P2-RLS-BYPASS-005
+  - TSK-P2-RLS-BYPASS-006
+  - TSK-P2-RLS-BYPASS-007
+blocks: []
+
+touches:
+  - docs/governance/RLS_BYPASS_CLOSEOUT_BLOCKER_RESOLUTION.md
+  - scripts/audit/verify_rls_bypass_blocker_resolution.sh
+  - evidence/phase2/rls_bypass_blocker_resolution.json
+  - tasks/TSK-P2-RLS-BYPASS-008/meta.yml
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-008/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-008/EXEC_LOG.md
+
+deliverable_files:
+  - docs/governance/RLS_BYPASS_CLOSEOUT_BLOCKER_RESOLUTION.md
+  - scripts/audit/verify_rls_bypass_blocker_resolution.sh
+  - evidence/phase2/rls_bypass_blocker_resolution.json
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-008/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-008/EXEC_LOG.md
+
+invariants:
+  - INV-P0-TENANT-ISOLATION-RLS-BYPASS-008
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - docs/governance/RLS_BYPASS_CLOSEOUT_BLOCKER_RESOLUTION.md
+    - scripts/audit/verify_rls_bypass_blocker_resolution.sh
+    - evidence/phase2/rls_bypass_blocker_resolution.json
+  must_read:
+    - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+work:
+  - >-
+    [ID rls_bypass_008_w01] Create
+    docs/governance/RLS_BYPASS_CLOSEOUT_BLOCKER_RESOLUTION.md as a bounded index
+    of the app.bypass_rls blocker, prerequisite task IDs, evidence paths, and proof
+    claims.
+  - >-
+    [ID rls_bypass_008_w02] State explicitly that this artifact resolves only the
+    app.bypass_rls closeout blocker and does not trigger Phase-2 closeout, Wave 8
+    closure, or future-phase opening.
+  - >-
+    [ID rls_bypass_008_w03] Create scripts/audit/verify_rls_bypass_blocker_resolution.sh
+    to validate every prerequisite evidence file exists, includes required fields,
+    and contains expected PASS values for inventory, runtime removal, seed refactor,
+    policy migration, terminal policy state, baseline refresh, and runtime isolation.
+  - >-
+    [ID rls_bypass_008_w04] Reject blocker-resolution text containing overbroad
+    status claims or references to unopened evidence namespaces.
+  - >-
+    [ID rls_bypass_008_w05] Emit evidence/phase2/rls_bypass_blocker_resolution.json
+    with prerequisite_evidence, missing_evidence, inadmissible_evidence,
+    blocker_resolution_status, overbroad_claims, observed_paths, observed_hashes,
+    command_outputs, and execution_trace.
+
+acceptance_criteria:
+  - >-
+    [ID rls_bypass_008_w01] The governance index lists all seven prerequisite RLS
+    bypass tasks and their evidence paths.
+  - >-
+    [ID rls_bypass_008_w02] The governance index explicitly says Phase-2 closeout
+    is not triggered by this artifact.
+  - >-
+    [ID rls_bypass_008_w03] The verifier exits non-zero if any prerequisite evidence
+    file is missing, structurally inadmissible, or lacks expected PASS fields.
+  - >-
+    [ID rls_bypass_008_w04] The verifier exits non-zero if the index claims Phase-2
+    closeout, Wave 8 closure, or future-phase opening.
+  - >-
+    [ID rls_bypass_008_w05] Evidence records blocker_resolution_status: PASS only
+    when missing_evidence, inadmissible_evidence, and overbroad_claims are empty.
+
+negative_tests:
+  - id: TSK-P2-RLS-BYPASS-008-N1
+    description: >-
+      Run the verifier against a fixture index missing one prerequisite evidence path.
+      It must exit non-zero and report missing_evidence.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-008-N2
+    description: >-
+      Run the verifier against fixture prerequisite evidence missing observed_hashes
+      or execution_trace. It must exit non-zero and report inadmissible_evidence.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-008-N3
+    description: >-
+      Run the verifier against a fixture index that claims Phase-2 closeout or Wave 8
+      closure. It must exit non-zero and report overbroad_claims.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-RLS-BYPASS-008-P1
+    description: >-
+      Run the verifier against the live blocker-resolution index and all prerequisite
+      evidence. It must emit PASS evidence with empty missing_evidence,
+      inadmissible_evidence, and overbroad_claims.
+    required: true
+
+verification:
+  - >-
+    # [ID rls_bypass_008_w01] [ID rls_bypass_008_w02] [ID rls_bypass_008_w03] [ID rls_bypass_008_w04] [ID rls_bypass_008_w05]
+    test -x scripts/audit/verify_rls_bypass_blocker_resolution.sh && bash scripts/audit/verify_rls_bypass_blocker_resolution.sh > evidence/phase2/rls_bypass_blocker_resolution.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-RLS-BYPASS-008 --evidence evidence/phase2/rls_bypass_blocker_resolution.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/rls_bypass_blocker_resolution.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - prerequisite_evidence
+      - missing_evidence
+      - inadmissible_evidence
+      - blocker_resolution_status
+      - overbroad_claims
+
+failure_modes:
+  - >-
+    Blocker-resolution artifact claims Phase-2 closeout or Wave 8 closure =>
+    CRITICAL_FAIL
+  - >-
+    Missing prerequisite evidence is accepted => CRITICAL_FAIL
+  - >-
+    Inadmissible prerequisite evidence is accepted => CRITICAL_FAIL
+  - >-
+    Runtime isolation PASS fields are absent or false => CRITICAL_FAIL
+  - >-
+    Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - evidence/phase2/rls_bypass_dependency_inventory.json
+  - evidence/phase2/rls_bypass_runtime_removal.json
+  - evidence/phase2/rls_bypass_seed_refactor.json
+  - evidence/phase2/rls_bypass_policy_migration.json
+  - evidence/phase2/rls_no_app_bypass_policies.json
+  - evidence/phase2/rls_bypass_baseline_refresh.json
+  - evidence/phase2/rls_bypass_runtime_isolation.json
+
+implementation_plan: docs/plans/phase2/TSK-P2-RLS-BYPASS-008/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-RLS-BYPASS-008/EXEC_LOG.md
+notes: >-
+  This task resolves the evidence index for the app.bypass_rls blocker only. It must
+  not be used to claim Phase-2 closeout, Wave 8 closure, or future-phase readiness.
+client: codex_cli
+assigned_agent: invariants_curator
+model: UNASSIGNED
+docs/plans/phase2/TSK-P2-RLS-BYPASS-008/PLAN.md
+# TSK-P2-RLS-BYPASS-008 PLAN - Aggregate RLS bypass blocker evidence
+
+Task: TSK-P2-RLS-BYPASS-008
+Owner: INVARIANTS_CURATOR
+Depends on: TSK-P2-RLS-BYPASS-001 through TSK-P2-RLS-BYPASS-007
+failure_signature: PHASE2.RLS_BYPASS.TSK-P2-RLS-BYPASS-008.BLOCKER_RESOLUTION_FAIL
+canonical_reference: docs/operations/PHASE_EXECUTION_ENVELOPE.md
+
+## Objective
+
+Create a bounded governance index proving the app.bypass_rls blocker has supporting
+remediation evidence.
+
+Done means all prerequisite evidence exists and validates, no overbroad status claim
+is present, and `rls_bypass_blocker_resolution.json` reports PASS.
+
+## Regulated Surface Compliance
+
+Create Stage A approval metadata before editing:
+
+- `docs/governance/RLS_BYPASS_CLOSEOUT_BLOCKER_RESOLUTION.md`
+- `scripts/audit/verify_rls_bypass_blocker_resolution.sh`
+- `evidence/phase2/rls_bypass_blocker_resolution.json`
+
+Stage B approval is required after PR opening.
+
+## Remediation Trace Compliance
+
+`EXEC_LOG.md` is append-only and must include `failure_signature`, `origin_task_id`,
+`repro_command`, `verification_commands_run`, and `final_status`.
+
+## Architectural Context
+
+The bypass blocker can be resolved without Phase-2 closeout being triggered. This
+task preserves that distinction mechanically.
+
+## Pre-conditions
+
+- TSK-P2-RLS-BYPASS-001 through 007 are complete.
+- All prerequisite evidence files exist and validate.
+- Stage A approval metadata exists before regulated edits.
+
+## Files to Change
+
+| File | Action | Reason |
+|---|---|---|
+| `docs/governance/RLS_BYPASS_CLOSEOUT_BLOCKER_RESOLUTION.md` | Create | Bounded blocker evidence index |
+| `scripts/audit/verify_rls_bypass_blocker_resolution.sh` | Create | Verify index and prerequisite evidence |
+| `evidence/phase2/rls_bypass_blocker_resolution.json` | Emit | Aggregated blocker evidence |
+| `tasks/TSK-P2-RLS-BYPASS-008/meta.yml` | Create | Task contract |
+| `docs/plans/phase2/TSK-P2-RLS-BYPASS-008/EXEC_LOG.md` | Create/update append-only | Remediation trace |
+
+## Out of Scope
+
+- Closeout approval artifacts
+- Wave 8 status changes
+- Schema/source/baseline edits
+- Future-phase artifacts
+
+## Stop Conditions
+
+- Stop if any prerequisite evidence is missing or inadmissible.
+- Stop if runtime isolation evidence lacks required PASS values.
+- Stop if terminal policy evidence reports remaining bypass predicates.
+- Stop if index text makes overbroad status claims.
+
+## Implementation Steps
+
+### Step 1 - Create blocker index [ID rls_bypass_008_w01]
+
+Create the governance index listing prerequisite tasks and evidence paths.
+
+Done when all seven prerequisite tasks are listed.
+
+### Step 2 - Bound the claim [ID rls_bypass_008_w02]
+
+State that this artifact resolves only the app.bypass_rls blocker and does not
+trigger Phase-2 closeout.
+
+Done when the boundary statement is explicit.
+
+### Step 3 - Create verifier [ID rls_bypass_008_w03]
+
+Create `verify_rls_bypass_blocker_resolution.sh` to validate prerequisite evidence.
+
+Done when missing or inadmissible evidence fixtures fail.
+
+### Step 4 - Reject overclaims [ID rls_bypass_008_w04]
+
+Reject overbroad status claims and unopened evidence namespaces.
+
+Done when overclaim fixtures fail.
+
+### Step 5 - Emit evidence [ID rls_bypass_008_w05]
+
+Emit `rls_bypass_blocker_resolution.json`.
+
+Done when blocker_resolution_status is PASS.
+
+## Verification
+
+```bash
+test -x scripts/audit/verify_rls_bypass_blocker_resolution.sh && bash scripts/audit/verify_rls_bypass_blocker_resolution.sh > evidence/phase2/rls_bypass_blocker_resolution.json || exit 1
+python3 scripts/audit/validate_evidence.py --task TSK-P2-RLS-BYPASS-008 --evidence evidence/phase2/rls_bypass_blocker_resolution.json || exit 1
+RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+Evidence Contract
+evidence/phase2/rls_bypass_blocker_resolution.json must include:
+task_id, git_sha, timestamp_utc, status, checks, observed_paths,
+observed_hashes, command_outputs, execution_trace, prerequisite_evidence,
+missing_evidence, inadmissible_evidence, blocker_resolution_status, and
+overbroad_claims.
+
+Rollback
+Remove the blocker-resolution index, verifier, and evidence. Do not modify underlying
+remediation evidence.
+
+Risk
+Risk	Consequence	Mitigation
+Blocker resolution overclaims closeout	False governance state	Verifier rejects overbroad claims
+Missing prerequisite accepted	Fake closure	Evidence presence and schema checks
+Inadmissible evidence accepted	Weak proof	Required Wave-8 fields checked
+
+## `docs/plans/phase2/TSK-P2-RLS-BYPASS-008/EXEC_LOG.md`
+
+```markdown
+# TSK-P2-RLS-BYPASS-008 EXEC_LOG
+
+Append-only. Never delete or rewrite existing entries.
+
+failure_signature: PHASE2.RLS_BYPASS.TSK-P2-RLS-BYPASS-008.BLOCKER_RESOLUTION_FAIL
+origin_task_id: TSK-P2-RLS-BYPASS-008
+repro_command: bash scripts/audit/verify_rls_bypass_blocker_resolution.sh > evidence/phase2/rls_bypass_blocker_resolution.json
+
+| # | Timestamp UTC | Action | Result | Notes |
+|---|---|---|---|---|
+| 1 | TBD | Task pack created inline for human review | planned | No repository files written by Codex |
+| 2 | TBD | verification_commands_run | pending | test -x scripts/audit/verify_rls_bypass_blocker_resolution.sh && bash scripts/audit/verify_rls_bypass_blocker_resolution.sh > evidence/phase2/rls_bypass_blocker_resolution.json; python3 scripts/audit/validate_evidence.py --task TSK-P2-RLS-BYPASS-008 --evidence evidence/phase2/rls_bypass_blocker_resolution.json; RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh |
+| 3 | TBD | final_status | pending | Pending implementation |
+OPTIONAL CARRY-FORWARD TASK
+tasks/TSK-P2-RLS-BYPASS-009/meta.yml
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-RLS-BYPASS-009
+title: "Record non-immediate carry-forward obligations from Phase-2 closeout review"
+owner_role: INVARIANTS_CURATOR
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  The Phase-2 closeout review identified three real obligations that are not the
+  immediate app.bypass_rls closeout blocker: methodology adapter extraction,
+  dwell-time forensic enforcement, and sovereign authorization schema. These must
+  be recorded as carry-forward obligations so they are not silently ignored or
+  falsely treated as current Phase-2 blockers. This task creates a bounded governance
+  record and verifier that documents those obligations without creating future-phase
+  execution artifacts or claiming they are implemented.
+
+anti_patterns:
+  - >-
+    Ignoring real deferred obligations because they do not block the app.bypass_rls
+    remediation.
+  - >-
+    Treating future-owned obligations as current Phase-2 implementation tasks without
+    contract authority.
+  - >-
+    Creating future-phase task metadata, evidence namespaces, opening artifacts, or
+    implementation documents.
+  - >-
+    Recording carry-forward debt without verifying that the current Phase-2 contract
+    does not already claim the obligation as implemented.
+
+out_of_scope:
+  - Implementing methodology adapter extraction
+  - Implementing dwell-time forensic enforcement
+  - Implementing sovereign authorization or Article 6 eligibility schema
+  - Creating future-phase task packs
+  - Creating docs/PHASE3/**, evidence/phase3/**, evidence/phase4/**, or future-phase
+    opening artifacts
+  - Modifying runtime source, schema migrations, or CI workflows
+  - Claiming Phase-2 closeout
+
+stop_conditions:
+  - >-
+    STOP if the carry-forward record would create task metadata with a lifecycle
+    phase key other than '2'.
+  - >-
+    STOP if the carry-forward record uses future-phase opening or readiness language
+    prohibited by PHASE_EXECUTION_ENVELOPE.md.
+  - >-
+    STOP if the claim-check finds current Phase-2 contract or governance artifacts
+    already claim dwell-time forensic enforcement as implemented; create a new
+    immediate blocker task instead of filing it as carry-forward.
+  - >-
+    STOP if the record omits any of the three obligations from the closeout review.
+  - >-
+    STOP if approval metadata is absent before editing docs/governance/**,
+    scripts/audit/**, or evidence/phase2/**.
+
+proof_guarantees:
+  - >-
+    The carry-forward record lists the three non-immediate obligations with owner
+    domain, evidence for why they are not app.bypass_rls blockers, and the condition
+    under which each becomes executable.
+  - >-
+    The verifier rejects future-phase artifact creation, prohibited readiness language,
+    and missing obligation entries.
+  - >-
+    The verifier performs a claim-check so dwell-time enforcement is not incorrectly
+    filed as carry-forward if current Phase-2 artifacts already claim it.
+
+proof_limitations:
+  - >-
+    This task does not implement any carry-forward obligation.
+  - >-
+    This task does not create executable future-phase tasks.
+  - >-
+    This task does not prove the future obligations are fully specified for later
+    implementation.
+  - >-
+    This task does not close Phase-2 or update Wave 8 status.
+
+depends_on: []
+blocks: []
+
+touches:
+  - docs/governance/PHASE2_CLOSEOUT_CARRY_FORWARD_OBLIGATIONS.md
+  - scripts/audit/verify_phase2_closeout_carry_forward_obligations.sh
+  - evidence/phase2/phase2_closeout_carry_forward_obligations.json
+  - tasks/TSK-P2-RLS-BYPASS-009/meta.yml
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-009/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-009/EXEC_LOG.md
+
+deliverable_files:
+  - docs/governance/PHASE2_CLOSEOUT_CARRY_FORWARD_OBLIGATIONS.md
+  - scripts/audit/verify_phase2_closeout_carry_forward_obligations.sh
+  - evidence/phase2/phase2_closeout_carry_forward_obligations.json
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-009/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-009/EXEC_LOG.md
+
+invariants:
+  - INV-P2-CARRY-FORWARD-001
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - docs/governance/PHASE2_CLOSEOUT_CARRY_FORWARD_OBLIGATIONS.md
+    - scripts/audit/verify_phase2_closeout_carry_forward_obligations.sh
+    - evidence/phase2/phase2_closeout_carry_forward_obligations.json
+  must_read:
+    - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+work:
+  - >-
+    [ID rls_bypass_009_w01] Create
+    docs/governance/PHASE2_CLOSEOUT_CARRY_FORWARD_OBLIGATIONS.md documenting exactly
+    three carry-forward obligations: methodology adapter extraction, dwell-time
+    forensic enforcement, and sovereign authorization schema.
+  - >-
+    [ID rls_bypass_009_w02] For each obligation, record owner domain, why it is real,
+    why it is not the immediate app.bypass_rls blocker, what claim would make it a
+    blocker, and what future executable boundary is required before implementation.
+  - >-
+    [ID rls_bypass_009_w03] Perform a claim-check against PHASE_EXECUTION_ENVELOPE.md,
+    docs/PHASE2/phase2_contract.yml, docs/PHASE2/PHASE2_CONTRACT.md, and
+    docs/operations/AGENTIC_SDLC_PHASE2_POLICY.md to confirm no current artifact
+    claims dwell-time forensic enforcement as implemented.
+  - >-
+    [ID rls_bypass_009_w04] Create
+    scripts/audit/verify_phase2_closeout_carry_forward_obligations.sh to reject
+    missing obligations, future-phase artifact paths, prohibited readiness language,
+    and any current implemented claim that would make the dwell-time item an immediate
+    blocker.
+  - >-
+    [ID rls_bypass_009_w05] Emit
+    evidence/phase2/phase2_closeout_carry_forward_obligations.json with obligations,
+    claim_check_results, prohibited_artifacts_found, prohibited_claims, observed_paths,
+    observed_hashes, command_outputs, and execution_trace.
+
+acceptance_criteria:
+  - >-
+    [ID rls_bypass_009_w01] The carry-forward record contains exactly the three
+    obligations named in the closeout review and no executable future-phase task pack.
+  - >-
+    [ID rls_bypass_009_w02] Each obligation has owner domain, non-immediate rationale,
+    blocker-escalation condition, and future executable boundary.
+  - >-
+    [ID rls_bypass_009_w03] Claim-check results are recorded for the dwell-time
+    forensic enforcement item.
+  - >-
+    [ID rls_bypass_009_w04] The verifier exits non-zero for missing obligations,
+    prohibited future-phase artifacts, prohibited readiness language, or a current
+    implemented claim that contradicts carry-forward treatment.
+  - >-
+    [ID rls_bypass_009_w05] Evidence records prohibited_artifacts_found: [],
+    prohibited_claims: [], and carry_forward_status: PASS only when all checks pass.
+
+negative_tests:
+  - id: TSK-P2-RLS-BYPASS-009-N1
+    description: >-
+      Run the verifier against a fixture carry-forward record missing one of the
+      three obligations. It must exit non-zero.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-009-N2
+    description: >-
+      Run the verifier against a fixture record that references future-phase task
+      metadata, future-phase evidence namespaces, or future opening artifacts. It
+      must exit non-zero.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-009-N3
+    description: >-
+      Run the verifier against a fixture current contract that claims dwell-time
+      forensic enforcement is implemented. It must exit non-zero and require a new
+      immediate blocker task instead of carry-forward treatment.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-009-N4
+    description: >-
+      Run the verifier against a fixture record using prohibited readiness or opening
+      language. It must exit non-zero and report prohibited_claims.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-RLS-BYPASS-009-P1
+    description: >-
+      Run the verifier against the live carry-forward record and current Phase-2
+      governance artifacts. It must emit PASS evidence with all three obligations
+      present and no prohibited artifacts or claims.
+    required: true
+
+verification:
+  - >-
+    # [ID rls_bypass_009_w01] [ID rls_bypass_009_w02] [ID rls_bypass_009_w03] [ID rls_bypass_009_w04] [ID rls_bypass_009_w05]
+    test -x scripts/audit/verify_phase2_closeout_carry_forward_obligations.sh && bash scripts/audit/verify_phase2_closeout_carry_forward_obligations.sh > evidence/phase2/phase2_closeout_carry_forward_obligations.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-RLS-BYPASS-009 --evidence evidence/phase2/phase2_closeout_carry_forward_obligations.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/phase2_closeout_carry_forward_obligations.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - obligations
+      - claim_check_results
+      - prohibited_artifacts_found
+      - prohibited_claims
+      - carry_forward_status
+
+failure_modes:
+  - >-
+    Carry-forward record omits one of the three identified obligations => FAIL
+  - >-
+    Carry-forward record creates executable future-phase artifacts or evidence
+    namespaces => CRITICAL_FAIL
+  - >-
+    Current Phase-2 artifact claims dwell-time forensic enforcement is implemented
+    but task files it as carry-forward => CRITICAL_FAIL
+  - >-
+    Record uses prohibited readiness/opening language => CRITICAL_FAIL
+  - >-
+    Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - C:/Workspace/GitHub/RoadMap/Prompts/Phase-2_Closeout.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-RLS-BYPASS-009/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-RLS-BYPASS-009/EXEC_LOG.md
+notes: >-
+  This task is documentation and verification only. It records non-immediate
+  obligations without creating future-phase execution artifacts. The dwell-time item
+  is conditional: if current Phase-2 artifacts already claim it as implemented, stop
+  and create a new immediate blocker task instead.
+client: codex_cli
+assigned_agent: invariants_curator
+model: UNASSIGNED
+docs/plans/phase2/TSK-P2-RLS-BYPASS-009/PLAN.md
+# TSK-P2-RLS-BYPASS-009 PLAN - Record carry-forward obligations
+
+Task: TSK-P2-RLS-BYPASS-009
+Owner: INVARIANTS_CURATOR
+failure_signature: PHASE2.RLS_BYPASS.TSK-P2-RLS-BYPASS-009.CARRY_FORWARD_RECORD_FAIL
+canonical_reference: docs/operations/PHASE_EXECUTION_ENVELOPE.md
+
+## Objective
+
+Create a bounded carry-forward record for the three non-immediate obligations from
+the Phase-2 closeout review.
+
+Done means the record lists methodology adapter extraction, dwell-time forensic
+enforcement, and sovereign authorization schema as carry-forward obligations, while
+the verifier proves no prohibited future-phase artifacts or readiness claims are
+introduced.
+
+## Regulated Surface Compliance
+
+Create Stage A approval metadata before editing:
+
+- `docs/governance/PHASE2_CLOSEOUT_CARRY_FORWARD_OBLIGATIONS.md`
+- `scripts/audit/verify_phase2_closeout_carry_forward_obligations.sh`
+- `evidence/phase2/phase2_closeout_carry_forward_obligations.json`
+
+Stage B approval is required after PR opening.
+
+## Remediation Trace Compliance
+
+`EXEC_LOG.md` is append-only and must include `failure_signature`, `origin_task_id`,
+`repro_command`, `verification_commands_run`, and `final_status`.
+
+## Architectural Context
+
+The closeout review separated one immediate app.bypass_rls blocker from three real
+but non-immediate obligations. This task prevents those obligations from being lost
+while also preventing them from becoming unauthorized current execution tasks.
+
+## Pre-conditions
+
+- `PHASE_EXECUTION_ENVELOPE.md` has been read and applied.
+- Current Phase-2 governance artifacts are readable.
+- Stage A approval metadata exists before regulated edits.
+
+## Files to Change
+
+| File | Action | Reason |
+|---|---|---|
+| `docs/governance/PHASE2_CLOSEOUT_CARRY_FORWARD_OBLIGATIONS.md` | Create | Carry-forward governance record |
+| `scripts/audit/verify_phase2_closeout_carry_forward_obligations.sh` | Create | Verify carry-forward boundaries |
+| `evidence/phase2/phase2_closeout_carry_forward_obligations.json` | Emit | Carry-forward evidence |
+| `tasks/TSK-P2-RLS-BYPASS-009/meta.yml` | Create | Task contract |
+| `docs/plans/phase2/TSK-P2-RLS-BYPASS-009/EXEC_LOG.md` | Create/update append-only | Remediation trace |
+
+## Out of Scope
+
+- Implementing any carry-forward obligation
+- Creating future-phase task packs
+- Creating future-phase evidence namespaces
+- Editing schema, runtime source, or CI workflows
+- Claiming Phase-2 closeout
+
+## Stop Conditions
+
+- Stop if the record would create task metadata outside lifecycle phase `2`.
+- Stop if prohibited readiness/opening language is required.
+- Stop if current artifacts claim dwell-time enforcement as implemented.
+- Stop if any of the three obligations is omitted.
+- Stop if approval metadata is absent before regulated edits.
+
+## Implementation Steps
+
+### Step 1 - Create record [ID rls_bypass_009_w01]
+
+Create the carry-forward governance record with exactly three obligations.
+
+Done when all three are present.
+
+### Step 2 - Define obligation boundaries [ID rls_bypass_009_w02]
+
+For each obligation, record owner domain, rationale, blocker-escalation condition,
+and future executable boundary.
+
+Done when each entry is complete.
+
+### Step 3 - Claim-check dwell-time item [ID rls_bypass_009_w03]
+
+Scan current Phase-2 governance artifacts for implemented claims around dwell-time
+forensic enforcement.
+
+Done when claim-check results are recorded.
+
+### Step 4 - Create verifier [ID rls_bypass_009_w04]
+
+Create `verify_phase2_closeout_carry_forward_obligations.sh`.
+
+Done when missing-obligation, future-artifact, prohibited-language, and claim-conflict
+fixtures fail.
+
+### Step 5 - Emit evidence [ID rls_bypass_009_w05]
+
+Emit `phase2_closeout_carry_forward_obligations.json`.
+
+Done when carry_forward_status is PASS.
+
+## Verification
+
+```bash
+test -x scripts/audit/verify_phase2_closeout_carry_forward_obligations.sh && bash scripts/audit/verify_phase2_closeout_carry_forward_obligations.sh > evidence/phase2/phase2_closeout_carry_forward_obligations.json || exit 1
+python3 scripts/audit/validate_evidence.py --task TSK-P2-RLS-BYPASS-009 --evidence evidence/phase2/phase2_closeout_carry_forward_obligations.json || exit 1
+RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+Evidence Contract
+evidence/phase2/phase2_closeout_carry_forward_obligations.json must include:
+task_id, git_sha, timestamp_utc, status, checks, observed_paths,
+observed_hashes, command_outputs, execution_trace, obligations,
+claim_check_results, prohibited_artifacts_found, prohibited_claims, and
+carry_forward_status.
+
+Rollback
+Remove the carry-forward record, verifier, and evidence. Do not create or delete any
+future implementation artifacts as rollback.
+
+Risk
+Risk	Consequence	Mitigation
+Carry-forward becomes hidden implementation plan	Unauthorized scope	Verifier rejects executable future artifacts
+Conditional dwell-time item misfiled	Closeout blocker missed	Claim-check fails closed
+Obligations ignored	Future drift	Required exact three-item record
+
+## `docs/plans/phase2/TSK-P2-RLS-BYPASS-009/EXEC_LOG.md`
+
+```markdown
+# TSK-P2-RLS-BYPASS-009 EXEC_LOG
+
+Append-only. Never delete or rewrite existing entries.
+
+failure_signature: PHASE2.RLS_BYPASS.TSK-P2-RLS-BYPASS-009.CARRY_FORWARD_RECORD_FAIL
+origin_task_id: TSK-P2-RLS-BYPASS-009
+repro_command: bash scripts/audit/verify_phase2_closeout_carry_forward_obligations.sh > evidence/phase2/phase2_closeout_carry_forward_obligations.json
+
+| # | Timestamp UTC | Action | Result | Notes |
+|---|---|---|---|---|
+| 1 | TBD | Task pack created inline for human review | planned | No repository files written by Codex |
+| 2 | TBD | Dwell-time claim-check | pending | Must scan current Phase-2 governance artifacts before filing as carry-forward |
+| 3 | TBD | verification_commands_run | pending | test -x scripts/audit/verify_phase2_closeout_carry_forward_obligations.sh && bash scripts/audit/verify_phase2_closeout_carry_forward_obligations.sh > evidence/phase2/phase2_closeout_carry_forward_obligations.json; python3 scripts/audit/validate_evidence.py --task TSK-P2-RLS-BYPASS-009 --evidence evidence/phase2/phase2_closeout_carry_forward_obligations.json; RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh |
+| 4 | TBD | final_status | pending | Pending implementation |
+That completes the inline task-pack set for Task 1:
+
+TSK-P2-RLS-BYPASS-001: dependency inventory
+TSK-P2-RLS-BYPASS-002: runtime bypass removal
+TSK-P2-RLS-BYPASS-003: seed/bootstrap refactor
+TSK-P2-RLS-BYPASS-004: forward-only policy migration
+TSK-P2-RLS-BYPASS-005: terminal policy verifier
+TSK-P2-RLS-BYPASS-006: baseline refresh
+TSK-P2-RLS-BYPASS-007: runtime isolation proof
+TSK-P2-RLS-BYPASS-008: blocker-resolution evidence index
+TSK-P2-RLS-BYPASS-009: carry-forward obligation record

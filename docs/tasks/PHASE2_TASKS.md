@@ -144,6 +144,22 @@ Forward-only remediation of gaps left by TSK-P2-PREAUTH-003-01/-02. Migrations 0
 | TSK-P2-W8-QA-001 | QA_VERIFIER | not_implemented | docs/plans/phase2/TSK-P2-W8-QA-001/PLAN.md | docs/plans/phase2/TSK-P2-W8-QA-001/EXEC_LOG.md |
 | TSK-P2-W8-QA-002 | QA_VERIFIER | not_implemented | docs/plans/phase2/TSK-P2-W8-QA-002/PLAN.md | docs/plans/phase2/TSK-P2-W8-QA-002/EXEC_LOG.md |
 
+## Phase-2 Closeout — RLS Bypass Remediation
+
+**Scope:** Inherited Phase-0 tenant-isolation constraint (app.bypass_rls)
+**Dependency:** Independent of Wave 8 task graph; addresses §9 inherited constraint
+
+| Task ID | Owner Role | Status | Plan | Log |
+|---|---|---|---|---|
+| TSK-P2-RLS-BYPASS-001 | SECURITY_GUARDIAN | planned | docs/plans/phase2/TSK-P2-RLS-BYPASS-001/PLAN.md | docs/plans/phase2/TSK-P2-RLS-BYPASS-001/EXEC_LOG.md |
+| TSK-P2-RLS-BYPASS-002 | SECURITY_GUARDIAN | planned | docs/plans/phase2/TSK-P2-RLS-BYPASS-002/PLAN.md | docs/plans/phase2/TSK-P2-RLS-BYPASS-002/EXEC_LOG.md |
+| TSK-P2-RLS-BYPASS-003 | SECURITY_GUARDIAN | planned | docs/plans/phase2/TSK-P2-RLS-BYPASS-003/PLAN.md | docs/plans/phase2/TSK-P2-RLS-BYPASS-003/EXEC_LOG.md |
+| TSK-P2-RLS-BYPASS-004 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-RLS-BYPASS-004/PLAN.md | docs/plans/phase2/TSK-P2-RLS-BYPASS-004/EXEC_LOG.md |
+| TSK-P2-RLS-BYPASS-005 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-RLS-BYPASS-005/PLAN.md | docs/plans/phase2/TSK-P2-RLS-BYPASS-005/EXEC_LOG.md |
+| TSK-P2-RLS-BYPASS-006 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-RLS-BYPASS-006/PLAN.md | docs/plans/phase2/TSK-P2-RLS-BYPASS-006/EXEC_LOG.md |
+| TSK-P2-RLS-BYPASS-007 | SECURITY_GUARDIAN | planned | docs/plans/phase2/TSK-P2-RLS-BYPASS-007/PLAN.md | docs/plans/phase2/TSK-P2-RLS-BYPASS-007/EXEC_LOG.md |
+| TSK-P2-RLS-BYPASS-008 | INVARIANTS_CURATOR | planned | docs/plans/phase2/TSK-P2-RLS-BYPASS-008/PLAN.md | docs/plans/phase2/TSK-P2-RLS-BYPASS-008/EXEC_LOG.md |
+| TSK-P2-RLS-BYPASS-009 | INVARIANTS_CURATOR | planned | docs/plans/phase2/TSK-P2-RLS-BYPASS-009/PLAN.md | docs/plans/phase2/TSK-P2-RLS-BYPASS-009/EXEC_LOG.md |
 ## Wave Verification Rule
 
 - Run each task's own verifier in DAG order.
@@ -157,4 +173,5 @@ Forward-only remediation of gaps left by TSK-P2-PREAUTH-003-01/-02. Migrations 0
 - Wave 6 tasks indexed: 14
 - Wave 7 tasks indexed: 6
 - Wave 8 tasks indexed: 16
-- Total Wave 4-8 task packs indexed: 49
+- Phase-2 Closeout tasks indexed: 9
+- Total Wave 4-8 + Closeout task packs indexed: 58

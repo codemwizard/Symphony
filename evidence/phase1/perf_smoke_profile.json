@@ -1,9 +1,9 @@
 {
   "check_id": "PHASE1-PERF-SMOKE-PROFILE",
-  "timestamp_utc": "1970-01-01T00:00:00Z",
-  "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
-  "status": "PASS",
+  "timestamp_utc": "2026-05-07T08:21:51Z",
+  "git_sha": "3341456807604ca41b32dd38d0ac01d4a97d0e5a",
+  "schema_fingerprint": "a45b29a3fc1625e742a8edb6cfc18f93704f0177a6a100557d50b7b381cc9549",
+  "status": "FAIL",
   "profile": {
     "runner": "dotnet-selftest-profile",
     "iterations": 3,
@@ -14,7 +14,7 @@
     ],
     "environment": "local",
     "storage_mode": "file",
-    "baseline_file": "/home/mwiza/workspace/Symphony/docs/operations/perf_smoke_baseline.json"
+    "baseline_file": "/home/mwiza/workspaces/Symphony-Demo/Symphony/docs/operations/perf_smoke_baseline.json"
   },
   "warmup": {
     "enabled": true,
@@ -33,38 +33,39 @@
     {
       "name": "ingress_selftest",
       "exit_code": 0,
-      "elapsed_ms": 1659
+      "elapsed_ms": 9381
     },
     {
       "name": "evidence_pack_selftest",
       "exit_code": 0,
-      "elapsed_ms": 1554
+      "elapsed_ms": 2336
     },
     {
       "name": "case_pack_selftest",
       "exit_code": 0,
-      "elapsed_ms": 1540
+      "elapsed_ms": 2778
     }
   ],
   "summary": {
-    "total_elapsed_ms": 4753,
-    "avg_elapsed_ms": 1584,
-    "p50_ms": 1554,
-    "p95_ms": 1659,
-    "p99_ms": 1659
+    "total_elapsed_ms": 14495,
+    "avg_elapsed_ms": 4831,
+    "p50_ms": 2778,
+    "p95_ms": 9381,
+    "p99_ms": 9381
   },
+  "error": "perf_hard_regression_detected:p95_ms=9381.00>allowed=6325.00",
   "promotion": {
     "baseline_locked": true,
     "soft_regression_threshold_pct": 0.1,
     "hard_regression_threshold_pct": 0.15,
     "baseline_p95_ms": 5500.0,
-    "current_p95_ms": 1659.0,
-    "drift_pct": -0.6983636363636364,
-    "regression_classification": "PASS",
+    "current_p95_ms": 9381.0,
+    "drift_pct": 0.7056363636363636,
+    "regression_classification": "HARD_REGRESSION",
     "allowed_p95_ms": 6324.999999999999,
     "mode": "enforced",
-    "regression_detected": false,
+    "regression_detected": true,
     "regression_enforced": true
   },
-  "regression_classification": "PASS"
+  "regression_classification": "HARD_REGRESSION"
 }

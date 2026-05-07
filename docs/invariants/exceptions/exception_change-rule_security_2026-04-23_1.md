@@ -6,6 +6,7 @@ follow_up_ticket: TSK-P2-PREAUTH-004-01-REM
 reason: Wave 4 remediation task aligning existing migration 0134 with task metadata; no new migrations added
 author: db_foundation
 created_at: 2026-04-23
+closed_at: 2026-05-07
 ---
 
 # Exception: security structural change without invariants linkage

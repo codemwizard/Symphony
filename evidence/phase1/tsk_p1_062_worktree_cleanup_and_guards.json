@@ -9,7 +9,7 @@
   "worktrees": [
     {
       "worktree": "/home/mwiza/workspaces/Symphony-Demo/Symphony",
-      "branch": "refs/heads/wave8-phase2-completion",
+      "branch": "refs/heads/feat/phase2-closeout-scaffolding-implementation",
       "detached": false,
       "prunable": false
     }
