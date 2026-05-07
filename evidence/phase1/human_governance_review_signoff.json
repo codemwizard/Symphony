@@ -7,7 +7,7 @@
   "status": "PASS",
   "reviewer_id": "security_guardian",
   "signed_at_utc": "2026-05-03T20:52:00Z",
-  "change_ref": "branch/wave8-phase2-completion",
+  "change_ref": "branch/feat/phase2-closeout-scaffolding-implementation",
   "review_artifact_ref": "approvals/2026-05-03/BRANCH-implement-gov-conv-015-020.md",
   "review_sidecar_ref": "approvals/2026-05-03/BRANCH-implement-gov-conv-015-020.approval.json",
   "review_scope_count": 4,

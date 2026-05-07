@@ -1,0 +1,262 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-RLS-BYPASS-007
+title: "Prove runtime tenant isolation without app.bypass_rls"
+owner_role: SECURITY_GUARDIAN
+status: planned
+priority: CRITICAL
+risk_class: SECURITY
+blast_radius: CI_GATES
+
+intent: >-
+  The app.bypass_rls remediation is not complete until runtime tenant isolation is
+  proven after runtime refactors and policy migration are applied. This task creates
+  a full runtime proof verifier that exercises tenant-isolation behavior without
+  relying on bypass semantics. It prevents fake closure where source and policy text
+  are clean but cross-tenant access still succeeds or verification uses inadmissible
+  proof patterns.
+
+anti_patterns:
+  - >-
+    Treating absence of app.bypass_rls strings as proof of tenant isolation.
+  - >-
+    Using superuser-only tests that bypass normal runtime roles.
+  - >-
+    Running detached SQL checks that do not exercise the relevant runtime or RLS
+    enforcement path.
+  - >-
+    Accepting advisory warnings instead of fail-closed cross-tenant rejection.
+
+out_of_scope:
+  - Editing runtime source files
+  - Editing schema migrations
+  - Editing baseline artifacts
+  - Creating or modifying CI workflow wiring
+  - Creating Phase-2 closeout approval artifacts
+  - Fixing any newly discovered bypass dependency
+
+stop_conditions:
+  - >-
+    STOP if TSK-P2-RLS-BYPASS-002, TSK-P2-RLS-BYPASS-003, TSK-P2-RLS-BYPASS-004,
+    or TSK-P2-RLS-BYPASS-005 is incomplete.
+  - >-
+    STOP if DATABASE_URL is unavailable.
+  - >-
+    STOP if the verifier would run only as superuser or rely on session_replication_role.
+  - >-
+    STOP if app.bypass_rls appears in runtime source, active policy definitions, or
+    verification setup.
+  - >-
+    STOP if approval metadata is absent before editing scripts/audit/** or
+    evidence/phase2/**.
+
+proof_guarantees:
+  - >-
+    The verifier executes tenant-isolation positive and negative scenarios without
+    setting app.bypass_rls.
+  - >-
+    Cross-tenant reads and writes are rejected under normal runtime-role semantics.
+  - >-
+    Evidence records command outputs, runtime role used, tenant IDs, accepted positive
+    paths, rejected negative paths, and absence of app.bypass_rls in verifier setup.
+
+proof_limitations:
+  - >-
+    This task proves the configured runtime/RLS scenarios, not every possible
+    application endpoint.
+  - >-
+    This task does not modify source, schema, or baseline files.
+  - >-
+    This task does not independently prove baseline provenance.
+  - >-
+    This task does not close Phase-2 by itself.
+
+depends_on:
+  - TSK-P2-RLS-BYPASS-002
+  - TSK-P2-RLS-BYPASS-003
+  - TSK-P2-RLS-BYPASS-004
+  - TSK-P2-RLS-BYPASS-005
+blocks:
+  - TSK-P2-RLS-BYPASS-008
+
+touches:
+  - scripts/audit/verify_rls_bypass_runtime_isolation.sh
+  - evidence/phase2/rls_bypass_runtime_isolation.json
+  - tasks/TSK-P2-RLS-BYPASS-007/meta.yml
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-007/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-007/EXEC_LOG.md
+
+deliverable_files:
+  - scripts/audit/verify_rls_bypass_runtime_isolation.sh
+  - evidence/phase2/rls_bypass_runtime_isolation.json
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-007/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-007/EXEC_LOG.md
+
+invariants:
+  - INV-P0-TENANT-ISOLATION-RLS-BYPASS-007
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/verify_rls_bypass_runtime_isolation.sh
+    - evidence/phase2/rls_bypass_runtime_isolation.json
+  must_read:
+    - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+work:
+  - >-
+    [ID rls_bypass_007_w01] Create scripts/audit/verify_rls_bypass_runtime_isolation.sh
+    to run runtime/RLS positive and negative tenant-isolation scenarios using
+    DATABASE_URL without setting app.bypass_rls.
+  - >-
+    [ID rls_bypass_007_w02] Assert verifier setup does not use superuser-only proof,
+    session_replication_role, app.bypass_rls, or advisory-only checks.
+  - >-
+    [ID rls_bypass_007_w03] Execute positive same-tenant scenarios proving allowed
+    runtime access still works after bypass removal.
+  - >-
+    [ID rls_bypass_007_w04] Execute negative cross-tenant read/write scenarios proving
+    unauthorized tenant access is rejected under normal runtime-role semantics.
+  - >-
+    [ID rls_bypass_007_w05] Cross-check active RLS policy definitions during runtime
+    proof and fail if app.bypass_rls reappears.
+  - >-
+    [ID rls_bypass_007_w06] Emit evidence/phase2/rls_bypass_runtime_isolation.json
+    with positive_test_passed, negative_test_passed, runtime_role_used,
+    bypass_setting_used, policy_cross_check, observed_paths, observed_hashes,
+    command_outputs, and execution_trace.
+
+acceptance_criteria:
+  - >-
+    [ID rls_bypass_007_w01] The verifier uses DATABASE_URL and does not set
+    app.bypass_rls anywhere in setup or test execution.
+  - >-
+    [ID rls_bypass_007_w02] The verifier exits non-zero if run as superuser-only
+    proof, if session_replication_role is used, or if checks are advisory.
+  - >-
+    [ID rls_bypass_007_w03] Same-tenant positive scenarios pass.
+  - >-
+    [ID rls_bypass_007_w04] Cross-tenant negative scenarios are rejected and recorded.
+  - >-
+    [ID rls_bypass_007_w05] Active policy cross-check reports no app.bypass_rls
+    predicate.
+  - >-
+    [ID rls_bypass_007_w06] Evidence records bypass_setting_used: false,
+    positive_test_passed: true, and negative_test_passed: true.
+
+negative_tests:
+  - id: TSK-P2-RLS-BYPASS-007-N1
+    description: >-
+      Modify a fixture verifier setup to set app.bypass_rls. The verifier must exit
+      non-zero and report bypass_setting_used: true.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-007-N2
+    description: >-
+      Run a cross-tenant access attempt that succeeds. The verifier must exit
+      non-zero and report negative_test_passed: false.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-007-N3
+    description: >-
+      Run the verifier through a superuser-only or session_replication_role path.
+      It must exit non-zero as inadmissible proof.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-007-N4
+    description: >-
+      Run the verifier against a database where an active policy contains
+      app.bypass_rls. It must exit non-zero.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-RLS-BYPASS-007-P1
+    description: >-
+      Run the verifier against the remediated runtime/database. It must emit PASS
+      evidence proving same-tenant success and cross-tenant rejection without
+      app.bypass_rls.
+    required: true
+
+verification:
+  - >-
+    # [ID rls_bypass_007_w01] [ID rls_bypass_007_w02] [ID rls_bypass_007_w03] [ID rls_bypass_007_w04] [ID rls_bypass_007_w05] [ID rls_bypass_007_w06]
+    test -x scripts/audit/verify_rls_bypass_runtime_isolation.sh && bash scripts/audit/verify_rls_bypass_runtime_isolation.sh > evidence/phase2/rls_bypass_runtime_isolation.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-RLS-BYPASS-007 --evidence evidence/phase2/rls_bypass_runtime_isolation.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/rls_bypass_runtime_isolation.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - runtime_role_used
+      - bypass_setting_used
+      - positive_test_passed
+      - negative_test_passed
+      - policy_cross_check
+
+failure_modes:
+  - >-
+    Verifier proves isolation by absence of strings only, without runtime scenarios
+    => CRITICAL_FAIL
+  - >-
+    Cross-tenant access succeeds and verifier exits 0 => CRITICAL_FAIL
+  - >-
+    Verifier sets app.bypass_rls or uses superuser/session_replication_role proof
+    => CRITICAL_FAIL
+  - >-
+    Same-tenant positive behavior breaks after remediation => FAIL
+  - >-
+    Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - evidence/phase2/rls_bypass_runtime_removal.json
+  - evidence/phase2/rls_bypass_seed_refactor.json
+  - evidence/phase2/rls_bypass_policy_migration.json
+  - evidence/phase2/rls_no_app_bypass_policies.json
+
+implementation_plan: docs/plans/phase2/TSK-P2-RLS-BYPASS-007/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-RLS-BYPASS-007/EXEC_LOG.md
+notes: >-
+  This is the behavioral proof task for the app.bypass_rls remediation. It is not a
+  string scan and must not rely on inadmissible proof patterns such as grep-only,
+  detached function proof, superuser-only success, or advisory-only enforcement.
+client: codex_cli
+assigned_agent: security_guardian
+model: UNASSIGNED

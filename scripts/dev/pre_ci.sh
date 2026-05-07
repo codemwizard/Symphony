@@ -510,6 +510,14 @@ else
   exit 1
 fi
 
+# Ensure dotnet binaries exist with host-user ownership after Docker-based tests.
+# This prevents failures in downstream scripts that rely on --no-build.
+# DRD: REM-2026-05-07_ci-binary-ownership-fix
+echo "==> Rebuilding dotnet binaries (post-Docker ownership normalization)"
+dotnet build services/ledger-api/dotnet/src/LedgerApi.DemoHost/LedgerApi.DemoHost.csproj -c Debug > /dev/null 2>&1
+dotnet build services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj -c Debug > /dev/null 2>&1
+
+
 pre_ci_set_context "DB/environment" "PRECI.DB.ENVIRONMENT" "pre_ci.phase1_db_verifiers" "Phase-1 DB and environment verifiers"
 if [[ -f "$ENV_FILE" ]]; then
   set -a

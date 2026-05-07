@@ -1,0 +1,453 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-RLS-BYPASS-004
+title: "Create forward-only migration removing app.bypass_rls from RLS policies"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: SECURITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  The terminal database schema contains RLS policies whose tenant-isolation predicate
+  can be bypassed by setting app.bypass_rls to on. This violates inherited Phase-0
+  tenant-isolation guarantees and blocks truthful Phase-2 closeout. This task creates
+  a forward-only migration that removes the bypass predicate from affected policies
+  without editing applied migrations or introducing a replacement privileged shortcut.
+
+anti_patterns:
+  - >-
+    Editing historical migration 0077, 0096, or any migration already at or below
+    the applied migration head.
+  - >-
+    Dropping and recreating policies with a different bypass predicate or superuser
+    escape hatch.
+  - >-
+    Removing app.bypass_rls from policy text before runtime and seed dependencies
+    have been inventoried and remediated.
+  - >-
+    Updating schema/baseline.sql in the same task as the forward-only migration.
+
+out_of_scope:
+  - Editing schema/migrations/0203_converge_policy_decisions_schema.sql or any earlier migration
+  - Editing schema/baseline.sql or schema/baselines/**
+  - Editing Ledger API runtime or seed source files
+  - Creating runtime proof scripts outside this migration verifier
+  - Modifying CI workflows or scripts/dev/pre_ci.sh
+  - Creating future-phase artifacts
+
+stop_conditions:
+  - >-
+    STOP if TSK-P2-RLS-BYPASS-001, TSK-P2-RLS-BYPASS-002, or
+    TSK-P2-RLS-BYPASS-003 is incomplete.
+  - >-
+    STOP if PHASE_EXECUTION_ENVELOPE.md still forbids migration creation for this
+    task and no human approval or envelope update authorizes this closeout-blocker
+    migration.
+  - >-
+    STOP if schema/migrations/MIGRATION_HEAD does not resolve to 0203 at execution
+    time; derive a new task path from the real head instead of guessing.
+  - >-
+    STOP if any affected policy cannot be identified from terminal database state
+    or from the dependency inventory.
+  - >-
+    STOP if approval metadata is absent before editing schema/migrations/**,
+    scripts/db/**, or evidence/phase2/**.
+
+proof_guarantees:
+  - >-
+    A new forward-only migration after the current migration head removes
+    app.bypass_rls predicates from affected RLS policies.
+  - >-
+    The migration does not edit any applied migration and updates MIGRATION_HEAD in
+    the same task.
+  - >-
+    The verifier rejects migration content that contains app.bypass_rls in recreated
+    policy definitions.
+
+proof_limitations:
+  - >-
+    This task proves migration structure and policy text remediation, not full runtime
+    tenant-isolation behavior.
+  - >-
+    This task does not regenerate schema baseline artifacts.
+  - >-
+    This task does not prove application runtime paths are bypass-free; prior runtime
+    remediation tasks own that.
+  - >-
+    This task does not close Phase-2 by itself.
+
+depends_on:
+  - TSK-P2-RLS-BYPASS-001
+  - TSK-P2-RLS-BYPASS-002
+  - TSK-P2-RLS-BYPASS-003
+blocks:
+  - TSK-P2-RLS-BYPASS-005
+  - TSK-P2-RLS-BYPASS-006
+  - TSK-P2-RLS-BYPASS-007
+
+touches:
+  - schema/migrations/0204_remove_app_bypass_rls_from_policies.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_rls_bypass_policy_migration.sh
+  - evidence/phase2/rls_bypass_policy_migration.json
+  - tasks/TSK-P2-RLS-BYPASS-004/meta.yml
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-004/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-004/EXEC_LOG.md
+
+deliverable_files:
+  - schema/migrations/0204_remove_app_bypass_rls_from_policies.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_rls_bypass_policy_migration.sh
+  - evidence/phase2/rls_bypass_policy_migration.json
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-004/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-004/EXEC_LOG.md
+
+invariants:
+  - INV-P0-TENANT-ISOLATION-RLS-BYPASS-004
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - schema/migrations/0204_remove_app_bypass_rls_from_policies.sql
+    - schema/migrations/MIGRATION_HEAD
+    - scripts/db/verify_rls_bypass_policy_migration.sh
+    - evidence/phase2/rls_bypass_policy_migration.json
+  must_read:
+    - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - 0203: "Current local migration head before RLS bypass remediation"
+  table_dependencies:
+    - programme_policy_binding: "RLS policy target discovered from existing schema/baselines"
+    - programme_registry: "RLS policy target discovered from existing schema/baselines"
+    - tenant_registry: "RLS policy target discovered from existing schema/baselines"
+  verification_step: "Confirm target tables and policies exist before replacing policy predicates"
+
+work:
+  - >-
+    [ID rls_bypass_004_w01] Confirm the execution envelope conflict is resolved or
+    human-authorized for this closeout-blocker migration, then confirm
+    schema/migrations/MIGRATION_HEAD is 0203 before creating migration 0204.
+  - >-
+    [ID rls_bypass_004_w02] Create
+    schema/migrations/0204_remove_app_bypass_rls_from_policies.sql as a forward-only
+    migration that drops and recreates affected RLS policies without app.bypass_rls.
+  - >-
+    [ID rls_bypass_004_w03] Preserve tenant isolation through app.current_tenant_id
+    predicates and do not add any replacement bypass, superuser, SECURITY DEFINER,
+    session_replication_role, or role-switch escape hatch.
+  - >-
+    [ID rls_bypass_004_w04] Update schema/migrations/MIGRATION_HEAD from 0203 to
+    0204 in the same task.
+  - >-
+    [ID rls_bypass_004_w05] Create scripts/db/verify_rls_bypass_policy_migration.sh
+    to lint the migration, apply or inspect the terminal schema with DATABASE_URL,
+    and fail if any active policy contains app.bypass_rls.
+  - >-
+    [ID rls_bypass_004_w06] Emit evidence/phase2/rls_bypass_policy_migration.json
+    with target_policies, migration_applied, bypass_predicates_remaining,
+    observed_paths, observed_hashes, command_outputs, and execution_trace.
+
+acceptance_criteria:
+  - >-
+    [ID rls_bypass_004_w01] EXEC_LOG.md records the envelope/migration-head authority
+    resolution and the observed migration head before edits.
+  - >-
+    [ID rls_bypass_004_w02] Migration 0204 exists and only performs forward-only
+    policy replacement for affected RLS policies.
+  - >-
+    [ID rls_bypass_004_w03] Migration 0204 contains no app.bypass_rls predicate and
+    no replacement privileged escape hatch.
+  - >-
+    [ID rls_bypass_004_w04] MIGRATION_HEAD is updated to 0204.
+  - >-
+    [ID rls_bypass_004_w05] The verifier uses DATABASE_URL, runs migration linting,
+    and exits non-zero if any active policy still references app.bypass_rls.
+  - >-
+    [ID rls_bypass_004_w06] Evidence includes migration_applied: "0204" and
+    bypass_predicates_remaining: [].
+
+negative_tests:
+  - id: TSK-P2-RLS-BYPASS-004-N1
+    description: >-
+      Run the verifier against a fixture migration that recreates a policy containing
+      app.bypass_rls. It must exit non-zero and report the offending policy.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-004-N2
+    description: >-
+      Run the verifier against a fixture migration that uses session_replication_role,
+      SECURITY DEFINER bypass logic, role switching, or a superuser escape hatch. It
+      must exit non-zero.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-004-N3
+    description: >-
+      Run the verifier when MIGRATION_HEAD is not updated to match the new migration.
+      It must exit non-zero.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-004-N4
+    description: >-
+      Run scripts/db/lint_migrations.sh against the new migration. Any forbidden
+      transaction wrapper, non-forward edit, or migration formatting issue must fail.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-RLS-BYPASS-004-P1
+    description: >-
+      Run the verifier against a database with migration 0204 applied. It must emit
+      PASS evidence showing no active RLS policy contains app.bypass_rls.
+    required: true
+
+verification:
+  - >-
+    # [ID rls_bypass_004_w01] [ID rls_bypass_004_w02] [ID rls_bypass_004_w03] [ID rls_bypass_004_w04] [ID rls_bypass_004_w05] [ID rls_bypass_004_w06]
+    test -x scripts/db/verify_rls_bypass_policy_migration.sh && bash scripts/db/verify_rls_bypass_policy_migration.sh > evidence/phase2/rls_bypass_policy_migration.json || exit 1
+  - >-
+    bash scripts/db/lint_migrations.sh || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-RLS-BYPASS-004 --evidence evidence/phase2/rls_bypass_policy_migration.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/rls_bypass_policy_migration.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - migration_applied
+      - target_policies
+      - bypass_predicates_remaining
+      - forbidden_escape_hatches
+      - migration_head_before
+      - migration_head_after
+
+failure_modes:
+  - >-
+    Applied migration is edited instead of creating a forward-only migration =>
+    CRITICAL_FAIL
+  - >-
+    New policy migration still contains app.bypass_rls or an equivalent escape hatch
+    => CRITICAL_FAIL
+  - >-
+    MIGRATION_HEAD is not updated in the same task => CRITICAL_FAIL
+  - >-
+    Verifier does not use DATABASE_URL for database inspection => FAIL
+  - >-
+    scripts/db/lint_migrations.sh is omitted => FAIL
+  - >-
+    Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PLANS-addendum_1.md
+  - evidence/phase2/rls_bypass_dependency_inventory.json
+  - evidence/phase2/rls_bypass_runtime_removal.json
+  - evidence/phase2/rls_bypass_seed_refactor.json
+
+implementation_plan: docs/plans/phase2/TSK-P2-RLS-BYPASS-004/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-RLS-BYPASS-004/EXEC_LOG.md
+notes: >-
+  Local filesystem inspection shows MIGRATION_HEAD currently contains 0203, but
+  PHASE_EXECUTION_ENVELOPE.md still states 0190 and restricts migration work. Do
+  not execute this task until the envelope conflict is resolved or a human explicitly
+  authorizes this closeout-blocker migration. If the migration head changes before
+  execution, regenerate this task with the correct next migration number.
+client: codex_cli
+assigned_agent: db_foundation
+model: UNASSIGNED
+docs/plans/phase2/TSK-P2-RLS-BYPASS-004/PLAN.md
+# TSK-P2-RLS-BYPASS-004 PLAN - Forward-only RLS policy migration
+
+Task: TSK-P2-RLS-BYPASS-004
+Owner: DB_FOUNDATION
+Depends on: TSK-P2-RLS-BYPASS-001, TSK-P2-RLS-BYPASS-002, TSK-P2-RLS-BYPASS-003
+failure_signature: PHASE2.RLS_BYPASS.TSK-P2-RLS-BYPASS-004.POLICY_MIGRATION_FAIL
+canonical_reference: docs/operations/PHASE_EXECUTION_ENVELOPE.md
+
+## Objective
+
+Create a forward-only migration removing `app.bypass_rls` from affected RLS policy
+predicates without editing applied migrations or adding a replacement escape hatch.
+
+Done means migration 0204 exists, MIGRATION_HEAD is 0204, migration lint passes, and
+the verifier proves no active RLS policy contains `app.bypass_rls`.
+
+## Regulated Surface Compliance
+
+This task edits regulated schema and DB verifier surfaces. Stage A approval metadata
+must exist before editing:
+
+- `schema/migrations/0204_remove_app_bypass_rls_from_policies.sql`
+- `schema/migrations/MIGRATION_HEAD`
+- `scripts/db/verify_rls_bypass_policy_migration.sh`
+- `evidence/phase2/rls_bypass_policy_migration.json`
+
+Stage B approval is required after PR opening.
+
+## Remediation Trace Compliance
+
+`EXEC_LOG.md` is append-only and must include `failure_signature`, `origin_task_id`,
+`repro_command`, `verification_commands_run`, and `final_status`.
+
+## Architectural Context
+
+The bypass is in terminal RLS policy state, but applied migrations are immutable.
+The fix must be a new migration after the current head. The local filesystem reports
+head `0203`; the root envelope says `0190`. Execution must stop until that authority
+conflict is resolved or human-authorized for this blocker.
+
+## Pre-conditions
+
+- TSK-P2-RLS-BYPASS-001, 002, and 003 are complete.
+- No UNKNOWN inventory findings remain.
+- The envelope/migration-head conflict is resolved or explicitly authorized.
+- DATABASE_URL is available.
+- Stage A approval metadata exists before regulated edits.
+
+## Files to Change
+
+| File | Action | Reason |
+|---|---|---|
+| `schema/migrations/0204_remove_app_bypass_rls_from_policies.sql` | Create | Forward-only policy remediation |
+| `schema/migrations/MIGRATION_HEAD` | Modify | Advance migration head to 0204 |
+| `scripts/db/verify_rls_bypass_policy_migration.sh` | Create | Verify migration and terminal policy state |
+| `evidence/phase2/rls_bypass_policy_migration.json` | Emit | Migration evidence |
+| `tasks/TSK-P2-RLS-BYPASS-004/meta.yml` | Create | Task contract |
+| `docs/plans/phase2/TSK-P2-RLS-BYPASS-004/EXEC_LOG.md` | Create/update append-only | Remediation trace |
+
+## Out of Scope
+
+- Runtime source edits
+- Seed/bootstrap edits
+- Baseline regeneration
+- CI workflow edits
+- Phase closeout claims
+
+## Stop Conditions
+
+- Stop if prerequisites are incomplete.
+- Stop if migration work remains forbidden by the root envelope without human authorization.
+- Stop if MIGRATION_HEAD is not 0203 at execution time.
+- Stop if any replacement policy includes bypass semantics.
+- Stop if approval metadata is absent before regulated edits.
+
+## Implementation Steps
+
+### Step 1 - Confirm authority and head [ID rls_bypass_004_w01]
+
+Record envelope authorization and current migration head in EXEC_LOG.
+
+Done when the task has authority to create the next migration.
+
+### Step 2 - Create migration [ID rls_bypass_004_w02]
+
+Create migration 0204 to drop and recreate affected policies without
+`app.bypass_rls`.
+
+Done when migration is forward-only and scoped to affected policies.
+
+### Step 3 - Preserve tenant predicate [ID rls_bypass_004_w03]
+
+Keep tenant isolation based on explicit tenant context and reject replacement escape
+hatches.
+
+Done when migration contains no bypass-like constructs.
+
+### Step 4 - Update MIGRATION_HEAD [ID rls_bypass_004_w04]
+
+Set MIGRATION_HEAD to 0204.
+
+Done when the head matches the new migration.
+
+### Step 5 - Create verifier [ID rls_bypass_004_w05]
+
+Create `verify_rls_bypass_policy_migration.sh` using DATABASE_URL.
+
+Done when it fails for bypass predicates, bad migration lint, and head mismatch.
+
+### Step 6 - Emit evidence [ID rls_bypass_004_w06]
+
+Emit `rls_bypass_policy_migration.json`.
+
+Done when evidence validates and reports no remaining bypass predicates.
+
+## Verification
+
+```bash
+test -x scripts/db/verify_rls_bypass_policy_migration.sh && bash scripts/db/verify_rls_bypass_policy_migration.sh > evidence/phase2/rls_bypass_policy_migration.json || exit 1
+bash scripts/db/lint_migrations.sh || exit 1
+python3 scripts/audit/validate_evidence.py --task TSK-P2-RLS-BYPASS-004 --evidence evidence/phase2/rls_bypass_policy_migration.json || exit 1
+RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+Evidence Contract
+evidence/phase2/rls_bypass_policy_migration.json must include:
+task_id, git_sha, timestamp_utc, status, checks, observed_paths,
+observed_hashes, command_outputs, execution_trace, migration_applied,
+target_policies, bypass_predicates_remaining, forbidden_escape_hatches,
+migration_head_before, and migration_head_after.
+
+Rollback
+Create a new forward migration if rollback is required. Do not edit or delete the
+0204 migration after it has been applied.
+
+Risk
+Risk	Consequence	Mitigation
+Envelope/head conflict ignored	Inadmissible migration	Stop condition requires resolution
+Applied migration edited	Forward-only violation	Touch list allows only 0204 and MIGRATION_HEAD
+Replacement escape hatch added	Security regression	Verifier blocks bypass-like constructs
+Baseline updated too early	Drift confusion	Baseline task is separate
+
+## `docs/plans/phase2/TSK-P2-RLS-BYPASS-004/EXEC_LOG.md`
+
+```markdown
+# TSK-P2-RLS-BYPASS-004 EXEC_LOG
+
+Append-only. Never delete or rewrite existing entries.
+
+failure_signature: PHASE2.RLS_BYPASS.TSK-P2-RLS-BYPASS-004.POLICY_MIGRATION_FAIL
+origin_task_id: TSK-P2-RLS-BYPASS-004
+repro_command: bash scripts/db/verify_rls_bypass_policy_migration.sh > evidence/phase2/rls_bypass_policy_migration.json
+
+| # | Timestamp UTC | Action | Result | Notes |
+|---|---|---|---|---|
+| 1 | TBD | Task pack created inline for human review | planned | No repository files written by Codex |
+| 2 | TBD | Authority check | pending | Resolve PHASE_EXECUTION_ENVELOPE migration-head conflict before execution |
+| 3 | TBD | verification_commands_run | pending | test -x scripts/db/verify_rls_bypass_policy_migration.sh && bash scripts/db/verify_rls_bypass_policy_migration.sh > evidence/phase2/rls_bypass_policy_migration.json; bash scripts/db/lint_migrations.sh; python3 scripts/audit/validate_evidence.py --task TSK-P2-RLS-BYPASS-004 --evidence evidence/phase2/rls_bypass_policy_migration.json; RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh |
+| 4 | TBD | final_status | pending | Pending implementation |

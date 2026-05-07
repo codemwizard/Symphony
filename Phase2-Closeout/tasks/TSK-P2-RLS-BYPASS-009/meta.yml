@@ -1,0 +1,12 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-RLS-BYPASS-009
+title: "Record non-immediate carry-forward obligations from Phase-2 closeout review"
+owner_role: INVARIANTS_CURATOR
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+notes: >-
+  This task is documentation and verification only. It records non-immediate
+  obligations without creating future-phase execution artifacts.

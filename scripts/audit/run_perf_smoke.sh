@@ -166,7 +166,9 @@ fi
 
 # Native AOT report (real publish attempt + result capture).
 AOT_OUT_DIR="/tmp/symphony_executor_aot_publish"
-rm -rf "$AOT_OUT_DIR"
+if [[ -d "$AOT_OUT_DIR" ]]; then
+  rm -rf "$AOT_OUT_DIR"
+fi
 mkdir -p "$AOT_OUT_DIR"
 AOT_LOG="/tmp/symphony_executor_aot_publish.log"
 AOT_CMD=(dotnet publish services/executor-worker/dotnet/src/ExecutorWorker/ExecutorWorker.csproj -c Release -p:PublishAot=true -p:StripSymbols=false -o "$AOT_OUT_DIR")

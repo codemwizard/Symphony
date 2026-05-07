@@ -1,0 +1,258 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-RLS-BYPASS-001
+title: "Inventory all app.bypass_rls dependency surfaces before remediation"
+owner_role: SECURITY_GUARDIAN
+status: planned
+priority: CRITICAL
+risk_class: SECURITY
+blast_radius: CI_GATES
+
+intent: >-
+  The terminal schema contains RLS policy predicates that depend on the
+  app.bypass_rls setting, which weakens inherited tenant-isolation guarantees and
+  blocks truthful Phase-2 closeout. Removing the policy predicate before discovering
+  all runtime, seed, admin, test, migration, and CI dependencies risks replacing an
+  explicit bypass with a hidden privileged path or breaking operational flows. This
+  task produces a complete dependency inventory before any remediation changes are
+  attempted.
+
+anti_patterns:
+  - >-
+    Removing the RLS predicate first and discovering dependent runtime or seed paths
+    only after operational failures appear.
+  - >-
+    Treating string deletion as equivalent to removing the operational dependency on
+    bypass semantics.
+  - >-
+    Replacing app.bypass_rls with an ambient superuser connection or hidden runtime
+    privilege escalation path.
+  - >-
+    Emitting an inventory PASS from grep-only output without classifying each finding
+    by execution surface and remediation requirement.
+
+out_of_scope:
+  - Modifying existing migrations, including 0096_rls_admin_governance.sql
+  - Creating a forward-only RLS policy migration
+  - Editing Program.cs or any application/runtime source file
+  - Editing seed, test, CI, bootstrap, or operational scripts
+  - Regenerating schema/baseline.sql
+  - Removing app.bypass_rls references
+
+stop_conditions:
+  - >-
+    STOP if PHASE_EXECUTION_ENVELOPE.md cannot be read and applied before inventory
+    generation.
+  - >-
+    STOP if the verifier cannot scan schema, source, scripts, tests, CI workflow,
+    and docs surfaces.
+  - >-
+    STOP if any finding cannot be classified as RUNTIME, ADMIN, SEED, TEST,
+    MIGRATION, CI_BOOTSTRAP, DOCS, or UNKNOWN.
+  - >-
+    STOP if any UNKNOWN classification remains in the final evidence.
+  - >-
+    STOP if approval metadata is absent before editing scripts/audit/** or
+    evidence/phase2/**.
+
+proof_guarantees:
+  - >-
+    The evidence enumerates every discovered repository reference to app.bypass_rls
+    and set_config calls that manipulate it.
+  - >-
+    Every finding is classified by execution surface, file path, line number,
+    remediation class, and whether it is runtime-reachable.
+  - >-
+    The verifier exits non-zero when any finding remains UNKNOWN or when required
+    scan roots are skipped.
+
+proof_limitations:
+  - >-
+    This task does not remove any bypass dependency.
+  - >-
+    This task does not prove dynamic runtime reachability beyond static surface
+    classification.
+  - >-
+    This task does not prove tenant isolation after remediation; later runtime proof
+    tasks own that.
+  - >-
+    This task does not update baseline artifacts.
+
+depends_on: []
+blocks:
+  - TSK-P2-RLS-BYPASS-002
+  - TSK-P2-RLS-BYPASS-003
+  - TSK-P2-RLS-BYPASS-004
+
+touches:
+  - scripts/audit/verify_rls_bypass_dependency_inventory.sh
+  - evidence/phase2/rls_bypass_dependency_inventory.json
+  - tasks/TSK-P2-RLS-BYPASS-001/meta.yml
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-001/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-001/EXEC_LOG.md
+
+deliverable_files:
+  - scripts/audit/verify_rls_bypass_dependency_inventory.sh
+  - evidence/phase2/rls_bypass_dependency_inventory.json
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-001/PLAN.md
+  - docs/plans/phase2/TSK-P2-RLS-BYPASS-001/EXEC_LOG.md
+
+invariants:
+  - INV-P0-TENANT-ISOLATION-RLS-BYPASS-001
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/verify_rls_bypass_dependency_inventory.sh
+    - evidence/phase2/rls_bypass_dependency_inventory.json
+  must_read:
+    - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+work:
+  - >-
+    [ID rls_bypass_001_w01] Create
+    scripts/audit/verify_rls_bypass_dependency_inventory.sh to scan schema,
+    migrations, source, scripts, tests, fixtures, CI workflow, and docs for
+    app.bypass_rls and set_config references.
+  - >-
+    [ID rls_bypass_001_w02] Classify every finding as RUNTIME, ADMIN, SEED, TEST,
+    MIGRATION, CI_BOOTSTRAP, DOCS, or UNKNOWN, and record remediation_required as
+    remove, isolate, refactor, rewrite_test, one_time_migration_only, document_only,
+    or investigate.
+  - >-
+    [ID rls_bypass_001_w03] Record each finding with file path, line number, matched
+    text class, execution surface, runtime_reachable boolean, and recommended follow-on
+    task owner.
+  - >-
+    [ID rls_bypass_001_w04] Fail the verifier if any required scan root is skipped,
+    if any finding is UNKNOWN, or if evidence is missing observed_paths,
+    observed_hashes, command_outputs, or execution_trace.
+  - >-
+    [ID rls_bypass_001_w05] Emit
+    evidence/phase2/rls_bypass_dependency_inventory.json with summary counts and
+    full finding rows.
+
+acceptance_criteria:
+  - >-
+    [ID rls_bypass_001_w01] The verifier scans at minimum schema/**, src/**,
+    scripts/**, tests/**, .github/workflows/**, docs/**, Program.cs if present,
+    and any fixture directories discovered by the repository file tree.
+  - >-
+    [ID rls_bypass_001_w02] Every finding has a non-UNKNOWN execution_surface and
+    remediation_required value.
+  - >-
+    [ID rls_bypass_001_w03] Evidence records file path, line number, matched text
+    class, runtime_reachable, and recommended follow-on owner for every finding.
+  - >-
+    [ID rls_bypass_001_w04] The verifier exits non-zero if any scan root is skipped,
+    any finding is UNKNOWN, or Wave-8 evidence required fields are absent.
+  - >-
+    [ID rls_bypass_001_w05] Evidence contains summary_counts, findings, scan_roots,
+    observed_paths, observed_hashes, command_outputs, and execution_trace.
+
+negative_tests:
+  - id: TSK-P2-RLS-BYPASS-001-N1
+    description: >-
+      Run the verifier against a fixture tree containing an app.bypass_rls reference
+      in an unclassified path. It must exit non-zero and report UNKNOWN classification.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-001-N2
+    description: >-
+      Run the verifier against a fixture where a required scan root is omitted from
+      scan_roots. It must exit non-zero and report skipped_scan_roots.
+    required: true
+  - id: TSK-P2-RLS-BYPASS-001-N3
+    description: >-
+      Run the verifier against a fixture evidence payload missing observed_hashes or
+      execution_trace. It must exit non-zero as inadmissible evidence.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-RLS-BYPASS-001-P1
+    description: >-
+      Run the verifier against the live repository. It must emit evidence with all
+      findings classified and unknown_findings_count: 0.
+    required: true
+
+verification:
+  - >-
+    # [ID rls_bypass_001_w01] [ID rls_bypass_001_w02] [ID rls_bypass_001_w03] [ID rls_bypass_001_w04] [ID rls_bypass_001_w05]
+    test -x scripts/audit/verify_rls_bypass_dependency_inventory.sh && bash scripts/audit/verify_rls_bypass_dependency_inventory.sh > evidence/phase2/rls_bypass_dependency_inventory.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-RLS-BYPASS-001 --evidence evidence/phase2/rls_bypass_dependency_inventory.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/rls_bypass_dependency_inventory.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - scan_roots
+      - findings
+      - summary_counts
+      - unknown_findings_count
+      - runtime_reachable_count
+      - remediation_classes
+
+failure_modes:
+  - >-
+    Verifier reports string matches without classifying execution surface and
+    remediation class => CRITICAL_FAIL
+  - >-
+    Runtime-reachable bypass dependency is classified as document-only or ignored
+    => CRITICAL_FAIL
+  - >-
+    Required scan root is skipped and evidence still reports PASS => CRITICAL_FAIL
+  - >-
+    Evidence lacks observed_paths, observed_hashes, command_outputs, or execution_trace
+    => CRITICAL_FAIL
+  - >-
+    Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PLANS-addendum_1.md
+  - SYMPHONY_TASKS_CREATION_SUMMARY.md
+  - tasks/TSK-P1-240/meta.yml
+  - docs/plans/phase1/TSK-P1-240/PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-RLS-BYPASS-001/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-RLS-BYPASS-001/EXEC_LOG.md
+notes: >-
+  This is the mandatory first task for the app.bypass_rls bug. It must complete
+  before any RLS policy, runtime source, seed, test, baseline, or operational
+  remediation task begins. Phase key is 2 because this is a Phase-2 closeout blocker
+  enforcing inherited baseline tenant-isolation constraints.
+client: codex_cli
+assigned_agent: security_guardian
+model: UNASSIGNED
