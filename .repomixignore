@@ -1,0 +1,12 @@
+# .repomixignore
+
+# Exclude specific folders anywhere in the directory tree
+**/bin/
+**/obj/
+**/.venv/
+**/_scratch/
+**/_staging/
+**/.toolchain/
+**/object/
+**/.cache/
+**/baselines/

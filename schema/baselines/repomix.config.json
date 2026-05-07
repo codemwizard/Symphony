@@ -1,0 +1,9 @@
+{
+  "input": {
+    "maxFileSize": 100000000  // Increase to 100MB
+  },
+  "output": {
+    "style": "markdown",
+    "splitOutput": 8000000      // Split into 2MB chunks
+  }
+}
