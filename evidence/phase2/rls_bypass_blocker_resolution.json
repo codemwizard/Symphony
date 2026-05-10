@@ -1,0 +1,43 @@
+{
+  "task_id": "TSK-P2-RLS-BYPASS-008",
+  "git_sha": "ef6d1c9bf7c20dfcc099bdee838fa86a3c12c011",
+  "timestamp_utc": "2026-05-08T05:50:43Z",
+  "status": "PASS",
+  "checks": [],
+  "observed_paths": [
+    "scripts/audit/verify_rls_bypass_blocker_resolution.sh",
+    "docs/governance/RLS_BYPASS_CLOSEOUT_BLOCKER_RESOLUTION.md"
+  ],
+  "observed_hashes": {
+    "docs/governance/RLS_BYPASS_CLOSEOUT_BLOCKER_RESOLUTION.md": "c2dbf086f2ef015746b6e2a6bffb9243894126c2fd1607b7c9f58a09276f89c6",
+    "evidence/phase2/rls_bypass_dependency_inventory.json": "8e65ae6c6ea737ace0eabbcd353f102161b8a119787c2cffee9ffbf818b50e9a",
+    "evidence/phase2/rls_bypass_runtime_removal.json": "c782dea0d96ed9c2e97cf564b4b0ab8cda42b62c0cf3a06ab506e4a9b5f5504f",
+    "evidence/phase2/rls_bypass_seed_refactor.json": "f5a893fc7b2acc11e35bef33c6d31f8d5453deca36db2e13b684728bd3821f94",
+    "evidence/phase2/rls_bypass_policy_migration.json": "9baa9e1a2cdd8c5437f9e96bb1a84d4b7081653a33ee49b1d4c1e17227b30953",
+    "evidence/phase2/rls_no_app_bypass_policies.json": "1f4a6e391c076cc1650a3f08b1e4d172a6c4d501571c69babce6c314327b28ba",
+    "evidence/phase2/rls_bypass_baseline_refresh.json": "148b878462a5bfd48f5a256166c1c7b5a512bb77b046a0b6e8b0bb44d5180f08",
+    "evidence/phase2/rls_bypass_runtime_isolation.json": "69858d6613e9f6480b81d5097de78fae7f7de39645f20416232befa7b5a3e4a5",
+    "verify_rls_bypass_blocker_resolution.sh": "1cb283586b9177e002fac1ca91696b2aa8926882697e8a6ab69d61d0dd23c7ec"
+  },
+  "command_outputs": [],
+  "execution_trace": [
+    "scan_started=2026-05-08T05:50:43Z",
+    "missing_evidence_count=0",
+    "inadmissible_evidence_count=0",
+    "overbroad_claims_count=0",
+    "status=PASS"
+  ],
+  "prerequisite_evidence": [
+    "evidence/phase2/rls_bypass_dependency_inventory.json",
+    "evidence/phase2/rls_bypass_runtime_removal.json",
+    "evidence/phase2/rls_bypass_seed_refactor.json",
+    "evidence/phase2/rls_bypass_policy_migration.json",
+    "evidence/phase2/rls_no_app_bypass_policies.json",
+    "evidence/phase2/rls_bypass_baseline_refresh.json",
+    "evidence/phase2/rls_bypass_runtime_isolation.json"
+  ],
+  "missing_evidence": [],
+  "inadmissible_evidence": [],
+  "blocker_resolution_status": "PASS",
+  "overbroad_claims": []
+}

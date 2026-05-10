@@ -1,0 +1,41 @@
+{
+  "task_id": "TSK-P2-RLS-BYPASS-002",
+  "git_sha": "ef6d1c9bf7c20dfcc099bdee838fa86a3c12c011",
+  "timestamp_utc": "2026-05-08T02:07:07Z",
+  "schema_fingerprint": "a45b29a3fc1625e742a8edb6cfc18f93704f0177a6a100557d50b7b381cc9549",
+  "status": "PASS",
+  "checks": [
+    "no_bypass_rls_in_runtime_source",
+    "no_bypassRls_parameter_in_interfaces",
+    "dotnet_build_succeeds"
+  ],
+  "build_status": "PASS",
+  "checked_files": [
+    "services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs",
+    "services/ledger-api/dotnet/src/LedgerApi/Commands/CommandContracts.cs",
+    "services/executor-worker/dotnet/src/ExecutorWorker/Program.cs"
+  ],
+  "violations": [],
+  "violation_count": 0,
+  "observed_paths": [
+    "services/executor-worker/dotnet/src/ExecutorWorker/Program.cs",
+    "services/ledger-api/dotnet/src/LedgerApi/Commands/CommandContracts.cs",
+    "services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs"
+  ],
+  "observed_hashes": {
+    "services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs": "21d82ca032a23002925c3cb8f82ab925b5fe04b158c2bf34adeac15bf7593a0c",
+    "services/ledger-api/dotnet/src/LedgerApi/Commands/CommandContracts.cs": "a55572ead7bf44b577736d4ddad790a14f51501012ddcfe1ceab20fedd6128bf",
+    "services/executor-worker/dotnet/src/ExecutorWorker/Program.cs": "39a44a797be5ca63a5811a1427d9d06219c9a8dc9ba89c904ccd94c476f1999f"
+  },
+  "command_outputs": [
+    "grep -cn bypass_rls|bypassRls <runtime_paths>",
+    "dotnet build LedgerApi.csproj"
+  ],
+  "execution_trace": [
+    "scan_started=2026-05-08T02:07:07Z",
+    "files_checked=3",
+    "violations_found=0",
+    "build_status=PASS",
+    "status=PASS"
+  ]
+}

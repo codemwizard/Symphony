@@ -92,10 +92,6 @@ sealed class DatabaseTenantReadinessProbe : ITenantReadinessProbe
         {
             await using var conn = await _dataSource.OpenConnectionAsync(cancellationToken);
             await using var cmd = conn.CreateCommand();
-            // Bypass RLS for this system-level probe
-            cmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
-            await cmd.ExecuteScalarAsync(cancellationToken);
-
             cmd.CommandText = @"
 SELECT EXISTS(
   SELECT 1 FROM public.tenant_registry

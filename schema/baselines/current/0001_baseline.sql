@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict O8ltdj1kpdti4ESud1raszzL13ZdcuURzBJU0fc6mtSFNM06H7C0NtodWKfRe1X
+\restrict qW3KaP8WDzqnWWUeebic49PGpmkb7nRkvdvRRA2VG3bOgFnfzFlhX6One1a8Uyx
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
--- Dumped by pg_dump version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
+-- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -14174,6 +14174,20 @@ CREATE POLICY rls_tenant_isolation_monitoring_records ON public.monitoring_recor
 
 
 --
+-- Name: programme_policy_binding rls_tenant_isolation_programme_policy_binding; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_programme_policy_binding ON public.programme_policy_binding USING ((tenant_id = (NULLIF(current_setting('app.current_tenant_id'::text, true), ''::text))::uuid));
+
+
+--
+-- Name: programme_registry rls_tenant_isolation_programme_registry; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_programme_registry ON public.programme_registry USING ((tenant_id = (NULLIF(current_setting('app.current_tenant_id'::text, true), ''::text))::uuid));
+
+
+--
 -- Name: projects rls_tenant_isolation_projects; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -14185,6 +14199,13 @@ CREATE POLICY rls_tenant_isolation_projects ON public.projects USING ((tenant_id
 --
 
 CREATE POLICY rls_tenant_isolation_retirement_events ON public.retirement_events USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: tenant_registry rls_tenant_isolation_tenant_registry; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_tenant_registry ON public.tenant_registry USING ((tenant_id = (NULLIF(current_setting('app.current_tenant_id'::text, true), ''::text))::uuid));
 
 
 --
@@ -14257,5 +14278,5 @@ ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict O8ltdj1kpdti4ESud1raszzL13ZdcuURzBJU0fc6mtSFNM06H7C0NtodWKfRe1X
+\unrestrict qW3KaP8WDzqnWWUeebic49PGpmkb7nRkvdvRRA2VG3bOgFnfzFlhX6One1a8Uyx
 

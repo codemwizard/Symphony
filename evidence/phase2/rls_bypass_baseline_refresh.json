@@ -1,0 +1,53 @@
+{
+  "task_id": "TSK-P2-RLS-BYPASS-006",
+  "git_sha": "ef6d1c9bf7c20dfcc099bdee838fa86a3c12c011",
+  "timestamp_utc": "2026-05-08T04:50:20Z",
+  "status": "PASS",
+  "checks": [
+    "baseline_meta_exists",
+    "provenance_pg_dump_version:PASS",
+    "provenance_pg_server_version:PASS",
+    "provenance_dump_source:PASS",
+    "provenance_normalized_schema_sha256:PASS",
+    "migration_head_ge_204:PASS",
+    "baseline_cutoff_includes_0204:PASS",
+    "app_bypass_rls_in_current_baseline:PASS:0",
+    "prereq_rls_bypass_policy_migration.json:PASS",
+    "prereq_rls_no_app_bypass_policies.json:PASS"
+  ],
+  "pg_dump_version": "pg_dump (PostgreSQL) 18.3 (Debian 18.3-1.pgdg13+1)",
+  "pg_server_version": "18.3 (Debian 18.3-1.pgdg13+1)",
+  "dump_source": "container:symphony-postgres",
+  "normalized_schema_sha256": "453190457697c25a732cd3c1078f4355e9a60bf02f3e7579eaaa7595d6c917a9",
+  "migration_head": "0204",
+  "baseline_paths": [
+    "schema/baseline.sql",
+    "schema/baselines/current/0001_baseline.sql",
+    "schema/baselines/current/baseline.meta.json"
+  ],
+  "app_bypass_rls_in_current_baseline": 0,
+  "observed_paths": [
+    "schema/baseline.sql",
+    "schema/baselines/current/0001_baseline.sql",
+    "schema/baselines/current/baseline.meta.json"
+  ],
+  "observed_hashes": {
+    "schema/baseline.sql": "d6dcd758cea7bd29ee558f3591effc6fbfdb1d218564aa30e01c778870554b69",
+    "schema/baselines/current/0001_baseline.sql": "d6dcd758cea7bd29ee558f3591effc6fbfdb1d218564aa30e01c778870554b69",
+    "schema/baselines/current/baseline.meta.json": "235d20603029a3630bdc46293a49deca2952808ef3d7f82874ab4d3b822c5861"
+  },
+  "command_outputs": [
+    "scripts/db/generate_baseline_snapshot.sh",
+    "grep -cE bypass_rls <baseline_paths>"
+  ],
+  "execution_trace": [
+    "scan_started=2026-05-08T04:50:20Z",
+    "migration_head=0204",
+    "pg_dump_version=pg_dump (PostgreSQL) 18.3 (Debian 18.3-1.pgdg13+1)",
+    "pg_server_version=18.3 (Debian 18.3-1.pgdg13+1)",
+    "dump_source=container:symphony-postgres",
+    "normalized_schema_sha256=453190457697c25a732cd3c1078f4355e9a60bf02f3e7579eaaa7595d6c917a9",
+    "bypass_in_baseline=0",
+    "status=PASS"
+  ]
+}

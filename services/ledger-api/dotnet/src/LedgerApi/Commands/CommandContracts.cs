@@ -198,11 +198,11 @@ record TenantRegistryResult(bool Success, TenantRegistryEntry? Entry, bool Creat
 
 interface ITenantRegistryStore
 {
-    Task<bool> ExistsAsync(Guid tenantId, CancellationToken cancellationToken, bool bypassRls = false);
-    Task<TenantRegistryEntry?> GetAsync(Guid tenantId, CancellationToken cancellationToken, bool bypassRls = false);
-    Task<IReadOnlyList<TenantRegistryEntry>> ListAsync(CancellationToken cancellationToken, bool bypassRls = false);
-    Task<TenantRegistryResult> UpsertAsync(Guid tenantId, string tenantKey, string displayName, CancellationToken cancellationToken, bool bypassRls = false);
-    Task<bool> RegisterSupplierAsync(Guid tenantId, string supplierId, string supplierName, string payoutTarget, string? supplierType, CancellationToken cancellationToken, bool bypassRls = false);
+    Task<bool> ExistsAsync(Guid tenantId, CancellationToken cancellationToken);
+    Task<TenantRegistryEntry?> GetAsync(Guid tenantId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<TenantRegistryEntry>> ListAsync(CancellationToken cancellationToken);
+    Task<TenantRegistryResult> UpsertAsync(Guid tenantId, string tenantKey, string displayName, CancellationToken cancellationToken);
+    Task<bool> RegisterSupplierAsync(Guid tenantId, string supplierId, string supplierName, string payoutTarget, string? supplierType, CancellationToken cancellationToken);
 }
 
 record ProgrammeEntry(
@@ -225,11 +225,11 @@ record ProgrammeResult(bool Success, ProgrammeEntry? Entry, bool CreatedNew, str
 
 interface IProgrammeStore
 {
-    Task<IReadOnlyList<ProgrammeEntry>> ListAsync(Guid? tenantId, CancellationToken cancellationToken, bool bypassRls = false);
-    Task<ProgrammeResult> CreateAsync(Guid tenantId, string programmeKey, string displayName, CancellationToken cancellationToken, bool bypassRls = false);
-    Task<ProgrammeResult> ActivateAsync(Guid programmeId, Guid tenantId, CancellationToken cancellationToken, bool bypassRls = false);
-    Task<ProgrammeResult> SuspendAsync(Guid programmeId, Guid tenantId, CancellationToken cancellationToken, bool bypassRls = false);
-    Task<ProgrammeResult> BindPolicyAsync(Guid programmeId, Guid tenantId, string policyCode, CancellationToken cancellationToken, bool bypassRls = false);
+    Task<IReadOnlyList<ProgrammeEntry>> ListAsync(Guid? tenantId, CancellationToken cancellationToken);
+    Task<ProgrammeResult> CreateAsync(Guid tenantId, string programmeKey, string displayName, CancellationToken cancellationToken);
+    Task<ProgrammeResult> ActivateAsync(Guid programmeId, Guid tenantId, CancellationToken cancellationToken);
+    Task<ProgrammeResult> SuspendAsync(Guid programmeId, Guid tenantId, CancellationToken cancellationToken);
+    Task<ProgrammeResult> BindPolicyAsync(Guid programmeId, Guid tenantId, string policyCode, CancellationToken cancellationToken);
 }
 
 record PilotSessionSwitchRequest(string tenant_id);

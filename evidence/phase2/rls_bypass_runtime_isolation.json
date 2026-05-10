@@ -1,0 +1,47 @@
+{
+  "task_id": "TSK-P2-RLS-BYPASS-007",
+  "git_sha": "ef6d1c9bf7c20dfcc099bdee838fa86a3c12c011",
+  "timestamp_utc": "2026-05-08T05:28:02Z",
+  "status": "PASS",
+  "checks": [
+    "temp_role_created:rls_test_1778218085",
+    "role_not_superuser:PASS",
+    "tenant_a_exists:a0000000-0000-0000-0000-000000000001",
+    "tenant_b_exists:b0000000-0000-0000-0000-000000000002",
+    "positive_same_tenant_read:PASS:count=1",
+    "negative_cross_tenant_read:PASS:count=0",
+    "negative_cross_tenant_write:PASS:rows_affected=0",
+    "negative_no_context_read:PASS:count=0",
+    "policy_cross_check:PASS:bypass_policies=0",
+    "bypass_not_set_during_test:PASS:value=SET",
+    "temp_role_cleaned"
+  ],
+  "runtime_role_used": "rls_test_1778218085",
+  "bypass_setting_used": false,
+  "positive_test_passed": true,
+  "negative_test_passed": true,
+  "policy_cross_check": "CLEAN",
+  "observed_paths": [
+    "scripts/audit/verify_rls_bypass_runtime_isolation.sh"
+  ],
+  "observed_hashes": {
+    "verify_rls_bypass_runtime_isolation.sh": "9988e8171a5888e415dc88c9ec8397dc81f9cec242a5a1173c21c74b37de1f72"
+  },
+  "command_outputs": [
+    "rolsuper=f",
+    "positive_same_tenant_count=1",
+    "negative_cross_tenant_count=0",
+    "negative_cross_tenant_write_affected=0",
+    "negative_no_context_count=0",
+    "bypass_rls_in_active_policies=0"
+  ],
+  "execution_trace": [
+    "scan_started=2026-05-08T05:28:02Z",
+    "runtime_role=rls_test_1778218085",
+    "positive_test_passed=True",
+    "negative_test_passed=True",
+    "bypass_setting_used=False",
+    "policy_cross_check=CLEAN",
+    "status=PASS"
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "task_id": "TSK-P2-RLS-BYPASS-003",
+  "git_sha": "ef6d1c9bf7c20dfcc099bdee838fa86a3c12c011",
+  "timestamp_utc": "2026-05-08T02:08:48Z",
+  "schema_fingerprint": "a45b29a3fc1625e742a8edb6cfc18f93704f0177a6a100557d50b7b381cc9549",
+  "status": "PASS",
+  "checks": [
+    "no_bypass_rls_in_program_cs",
+    "no_bypass_rls_in_tenant_readiness_probe",
+    "no_set_config_bypass_in_seed_paths"
+  ],
+  "checked_files": [
+    "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
+    "services/ledger-api/dotnet/src/LedgerApi/Security/ITenantReadinessProbe.cs"
+  ],
+  "violations": [],
+  "violation_count": 0,
+  "observed_paths": [
+    "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
+    "services/ledger-api/dotnet/src/LedgerApi/Security/ITenantReadinessProbe.cs"
+  ],
+  "observed_hashes": {
+    "services/ledger-api/dotnet/src/LedgerApi/Program.cs": "65958f0600d03cadb14ec1c7c63006e074ee6b502d7d322a1a872967d33ffdcc",
+    "services/ledger-api/dotnet/src/LedgerApi/Security/ITenantReadinessProbe.cs": "d634ebb2cc52ea5cb766eba28a9ea93607604643f8469f55d349889185a4f3ff"
+  },
+  "command_outputs": [
+    "grep -c bypass_rls|bypassRls <seed_paths>"
+  ],
+  "execution_trace": [
+    "scan_started=2026-05-08T02:08:48Z",
+    "files_checked=2",
+    "violations_found=0",
+    "status=PASS"
+  ]
+}
