@@ -1,0 +1,35 @@
+{
+  "task_id": "TSK-P2-RLS-BYPASS-005",
+  "git_sha": "ef6d1c9bf7c20dfcc099bdee838fa86a3c12c011",
+  "timestamp_utc": "2026-05-08T02:13:42Z",
+  "schema_fingerprint": "a45b29a3fc1625e742a8edb6cfc18f93704f0177a6a100557d50b7b381cc9549",
+  "status": "PASS",
+  "checks": [
+    "remediation_migration_exists",
+    "no_bypass_in_terminal_migrations:PASS",
+    "negative_fixture_detected:PASS",
+    "positive_fixture_clean:PASS"
+  ],
+  "terminal_bypass_count": 0,
+  "baseline_bypass_count": 0,
+  "violations": [],
+  "remediation_migration_hash": "26e5abbdc9a4eb78bf6adb7bf209f376de7bb231b4137acc2a5f9cc983a39eaa",
+  "observed_paths": [
+    "schema/migrations/0204_remove_app_bypass_rls_from_policies.sql"
+  ],
+  "observed_hashes": {
+    "schema/migrations/0204_remove_app_bypass_rls_from_policies.sql": "26e5abbdc9a4eb78bf6adb7bf209f376de7bb231b4137acc2a5f9cc983a39eaa"
+  },
+  "command_outputs": [
+    "grep -cE bypass_rls <terminal_migrations>",
+    "grep -cE bypass_rls <latest_baseline>"
+  ],
+  "execution_trace": [
+    "scan_started=2026-05-08T02:13:42Z",
+    "terminal_bypass_count=0",
+    "baseline_bypass_count=0",
+    "negative_fixture=detected",
+    "positive_fixture=clean",
+    "status=PASS"
+  ]
+}
