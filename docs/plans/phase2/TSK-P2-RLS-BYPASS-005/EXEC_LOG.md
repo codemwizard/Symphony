@@ -1,4 +1,6 @@
 # TSK-P2-RLS-BYPASS-005 EXEC_LOG
+Plan: docs/plans/phase2/TSK-P2-RLS-BYPASS-005/PLAN.md
+
 
 Append-only. Never delete or rewrite existing entries.
 
@@ -22,3 +24,8 @@ Proceed
 7:14 PM
 
 Batch 4 defines baseline/provenance regeneration and full runtime RLS proof. These are intentionally separate because baseline governance is a DB artifact concern, while runtime RLS proof is a security/runtime behavior concern.
+
+## Final Summary
+
+Task TSK-P2-RLS-BYPASS-005 is completed and verified. Evidence generated and validated in evidence/phase2/.
+

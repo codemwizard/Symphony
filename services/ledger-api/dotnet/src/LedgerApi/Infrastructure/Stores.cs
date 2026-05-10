@@ -1085,7 +1085,7 @@ static class ProjectionPayload
 
 sealed class NpgsqlTenantRegistryStore(ILogger logger, NpgsqlDataSource dataSource) : ITenantRegistryStore
 {
-    public async Task<bool> ExistsAsync(Guid tenantId, CancellationToken cancellationToken, bool bypassRls = false)
+    public async Task<bool> ExistsAsync(Guid tenantId, CancellationToken cancellationToken)
     {
         try
         {
@@ -1093,13 +1093,6 @@ sealed class NpgsqlTenantRegistryStore(ILogger logger, NpgsqlDataSource dataSour
             await using var tx = await conn.BeginTransactionAsync(cancellationToken);
             await using var cmd = conn.CreateCommand();
             cmd.Transaction = tx;
-
-            if (bypassRls)
-            {
-                cmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
-                await cmd.ExecuteScalarAsync(cancellationToken);
-            }
-
             cmd.CommandText = "SELECT set_config('app.current_tenant_id', @tenant_id::text, true)";
             cmd.Parameters.AddWithValue("tenant_id", tenantId);
             await cmd.ExecuteScalarAsync(cancellationToken);
@@ -1124,7 +1117,7 @@ SELECT EXISTS(
         }
     }
 
-    public async Task<TenantRegistryEntry?> GetAsync(Guid tenantId, CancellationToken cancellationToken, bool bypassRls = false)
+    public async Task<TenantRegistryEntry?> GetAsync(Guid tenantId, CancellationToken cancellationToken)
     {
         try
         {
@@ -1132,13 +1125,6 @@ SELECT EXISTS(
             await using var tx = await conn.BeginTransactionAsync(cancellationToken);
             await using var cmd = conn.CreateCommand();
             cmd.Transaction = tx;
-
-            if (bypassRls)
-            {
-                cmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
-                await cmd.ExecuteScalarAsync(cancellationToken);
-            }
-
             cmd.CommandText = "SELECT set_config('app.current_tenant_id', @tenant_id::text, true)";
             cmd.Parameters.AddWithValue("tenant_id", tenantId);
             await cmd.ExecuteScalarAsync(cancellationToken);
@@ -1171,7 +1157,7 @@ LIMIT 1;";
         }
     }
 
-    public async Task<IReadOnlyList<TenantRegistryEntry>> ListAsync(CancellationToken cancellationToken, bool bypassRls = false)
+    public async Task<IReadOnlyList<TenantRegistryEntry>> ListAsync(CancellationToken cancellationToken)
     {
         var results = new List<TenantRegistryEntry>();
         try
@@ -1180,13 +1166,6 @@ LIMIT 1;";
             await using var tx = await conn.BeginTransactionAsync(cancellationToken);
             await using var cmd = conn.CreateCommand();
             cmd.Transaction = tx;
-
-            if (bypassRls)
-            {
-                cmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
-                await cmd.ExecuteScalarAsync(cancellationToken);
-            }
-
             cmd.CommandText = @"
 SELECT tenant_id::text, tenant_key, display_name, status, created_at, updated_at
 FROM public.tenant_registry
@@ -1210,7 +1189,7 @@ LIMIT 1000;";
         return results;
     }
 
-    public async Task<TenantRegistryResult> UpsertAsync(Guid tenantId, string tenantKey, string displayName, CancellationToken cancellationToken, bool bypassRls = false)
+    public async Task<TenantRegistryResult> UpsertAsync(Guid tenantId, string tenantKey, string displayName, CancellationToken cancellationToken)
     {
         try
         {
@@ -1218,13 +1197,6 @@ LIMIT 1000;";
             await using var tx = await conn.BeginTransactionAsync(cancellationToken);
             await using var cmd = conn.CreateCommand();
             cmd.Transaction = tx;
-
-            if (bypassRls)
-            {
-                cmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
-                await cmd.ExecuteScalarAsync(cancellationToken);
-            }
-
             // Set RLS context first
             cmd.CommandText = "SELECT set_config('app.current_tenant_id', @tenant_id::text, true)";
             cmd.Parameters.AddWithValue("tenant_id", tenantId);
@@ -1265,7 +1237,7 @@ RETURNING tenant_id::text, tenant_key, display_name, status, created_at, updated
             return TenantRegistryResult.Fail(StoreErrorMessages.PersistenceUnavailable);
         }
     }
-    public async Task<bool> RegisterSupplierAsync(Guid tenantId, string supplierId, string supplierName, string payoutTarget, string? supplierType, CancellationToken cancellationToken, bool bypassRls = false)
+    public async Task<bool> RegisterSupplierAsync(Guid tenantId, string supplierId, string supplierName, string payoutTarget, string? supplierType, CancellationToken cancellationToken)
     {
         try
         {
@@ -1273,13 +1245,6 @@ RETURNING tenant_id::text, tenant_key, display_name, status, created_at, updated
             await using var tx = await conn.BeginTransactionAsync(cancellationToken);
             await using var cmd = conn.CreateCommand();
             cmd.Transaction = tx;
-
-            if (bypassRls)
-            {
-                cmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
-                await cmd.ExecuteScalarAsync(cancellationToken);
-            }
-
             cmd.CommandText = "SELECT set_config('app.current_tenant_id', @tenant_id::text, true)";
             cmd.Parameters.AddWithValue("tenant_id", tenantId);
             await cmd.ExecuteScalarAsync(cancellationToken);
@@ -1314,7 +1279,7 @@ ON CONFLICT (tenant_id, supplier_id) DO UPDATE SET
 
 sealed class NpgsqlProgrammeStore(ILogger logger, NpgsqlDataSource dataSource) : IProgrammeStore
 {
-    public async Task<IReadOnlyList<ProgrammeEntry>> ListAsync(Guid? tenantId, CancellationToken cancellationToken, bool bypassRls = false)
+    public async Task<IReadOnlyList<ProgrammeEntry>> ListAsync(Guid? tenantId, CancellationToken cancellationToken)
     {
         var results = new List<ProgrammeEntry>();
         try
@@ -1323,13 +1288,6 @@ sealed class NpgsqlProgrammeStore(ILogger logger, NpgsqlDataSource dataSource) :
             await using var tx = await conn.BeginTransactionAsync(cancellationToken);
             await using var cmd = conn.CreateCommand();
             cmd.Transaction = tx;
-
-            if (bypassRls)
-            {
-                cmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
-                await cmd.ExecuteScalarAsync(cancellationToken);
-            }
-
             if (tenantId.HasValue)
             {
                 cmd.CommandText = "SELECT set_config('app.current_tenant_id', @tenant_id::text, true)";
@@ -1375,7 +1333,7 @@ sealed class NpgsqlProgrammeStore(ILogger logger, NpgsqlDataSource dataSource) :
         return results;
     }
 
-    public async Task<ProgrammeResult> CreateAsync(Guid tenantId, string programmeKey, string displayName, CancellationToken cancellationToken, bool bypassRls = false)
+    public async Task<ProgrammeResult> CreateAsync(Guid tenantId, string programmeKey, string displayName, CancellationToken cancellationToken)
     {
         try
         {
@@ -1383,13 +1341,6 @@ sealed class NpgsqlProgrammeStore(ILogger logger, NpgsqlDataSource dataSource) :
             await using var tx = await conn.BeginTransactionAsync(cancellationToken);
             await using var cmd = conn.CreateCommand();
             cmd.Transaction = tx;
-
-            if (bypassRls)
-            {
-                cmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
-                await cmd.ExecuteScalarAsync(cancellationToken);
-            }
-
             // Set RLS context first
             cmd.CommandText = "SELECT set_config('app.current_tenant_id', @tenant_id::text, true)";
             cmd.Parameters.AddWithValue("tenant_id", tenantId);
@@ -1431,13 +1382,13 @@ RETURNING id::text, tenant_id::text, programme_key, display_name, status, create
         }
     }
 
-    public async Task<ProgrammeResult> ActivateAsync(Guid programmeId, Guid tenantId, CancellationToken cancellationToken, bool bypassRls = false)
-        => await UpdateStatusAsync(programmeId, tenantId, "ACTIVE", cancellationToken, bypassRls);
+    public async Task<ProgrammeResult> ActivateAsync(Guid programmeId, Guid tenantId, CancellationToken cancellationToken)
+        => await UpdateStatusAsync(programmeId, tenantId, "ACTIVE", cancellationToken);
 
-    public async Task<ProgrammeResult> SuspendAsync(Guid programmeId, Guid tenantId, CancellationToken cancellationToken, bool bypassRls = false)
-        => await UpdateStatusAsync(programmeId, tenantId, "SUSPENDED", cancellationToken, bypassRls);
+    public async Task<ProgrammeResult> SuspendAsync(Guid programmeId, Guid tenantId, CancellationToken cancellationToken)
+        => await UpdateStatusAsync(programmeId, tenantId, "SUSPENDED", cancellationToken);
 
-    private async Task<ProgrammeResult> UpdateStatusAsync(Guid programmeId, Guid tenantId, string newStatus, CancellationToken cancellationToken, bool bypassRls = false)
+    private async Task<ProgrammeResult> UpdateStatusAsync(Guid programmeId, Guid tenantId, string newStatus, CancellationToken cancellationToken)
     {
         try
         {
@@ -1445,13 +1396,6 @@ RETURNING id::text, tenant_id::text, programme_key, display_name, status, create
             await using var tx = await conn.BeginTransactionAsync(cancellationToken);
             await using var cmd = conn.CreateCommand();
             cmd.Transaction = tx;
-
-            if (bypassRls)
-            {
-                cmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
-                await cmd.ExecuteScalarAsync(cancellationToken);
-            }
-
             // Set RLS context first
             cmd.CommandText = "SELECT set_config('app.current_tenant_id', @tenant_id::text, true)";
             cmd.Parameters.AddWithValue("tenant_id", tenantId);
@@ -1489,21 +1433,12 @@ RETURNING id::text, tenant_id::text, programme_key, display_name, status, create
         }
     }
 
-    public async Task<ProgrammeResult> BindPolicyAsync(Guid programmeId, Guid tenantId, string policyCode, CancellationToken cancellationToken, bool bypassRls = false)
+    public async Task<ProgrammeResult> BindPolicyAsync(Guid programmeId, Guid tenantId, string policyCode, CancellationToken cancellationToken)
     {
         try
         {
             await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
             await using var tx = await conn.BeginTransactionAsync(cancellationToken);
-
-            if (bypassRls)
-            {
-                await using var bypassCmd = conn.CreateCommand();
-                bypassCmd.Transaction = tx;
-                bypassCmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
-                await bypassCmd.ExecuteScalarAsync(cancellationToken);
-            }
-
             // Set RLS context first
             await using var setConfig = conn.CreateCommand();
             setConfig.Transaction = tx;

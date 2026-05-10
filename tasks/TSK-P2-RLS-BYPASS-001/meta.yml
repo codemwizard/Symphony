@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-RLS-BYPASS-001
 title: "Inventory all app.bypass_rls dependency surfaces before remediation"
 owner_role: SECURITY_GUARDIAN
-status: planned
+status: completed
 priority: CRITICAL
 risk_class: SECURITY
 blast_radius: CI_GATES

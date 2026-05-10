@@ -1517,7 +1517,7 @@ app.MapPost("/api/admin/onboarding/tenants", async (JsonElement body, HttpContex
     var tenantKey = body.TryGetProperty("tenant_key", out var tkProp) ? (tkProp.GetString() ?? $"ten-{tenantId.ToString("N")[..12]}") : $"ten-{tenantId.ToString("N")[..12]}";
     var displayName = body.TryGetProperty("display_name", out var dnProp) ? (dnProp.GetString() ?? "Unnamed") : "Unnamed";
 
-    var result = await tenantRegistryStore.UpsertAsync(tenantId, tenantKey, displayName, cancellationToken, bypassRls: true);
+    var result = await tenantRegistryStore.UpsertAsync(tenantId, tenantKey, displayName, cancellationToken);
     if (!result.Success || result.Entry is null)
         return Results.Json(new { error_code = "ONBOARDING_FAILED", errors = new[] { result.Error ?? "tenant registry upsert failed" } }, statusCode: 503);
 
@@ -1543,7 +1543,7 @@ app.MapGet("/api/admin/onboarding/tenants", async (HttpContext httpContext, Canc
             return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
     }
 
-    var tenants = await tenantRegistryStore.ListAsync(cancellationToken, bypassRls: true);
+    var tenants = await tenantRegistryStore.ListAsync(cancellationToken);
     return Results.Json(new
     {
         tenants = tenants.Select(t => new
@@ -1574,7 +1574,7 @@ app.MapPost("/api/admin/onboarding/programmes", async (JsonElement body, HttpCon
         return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "programme_key is required" } }, statusCode: 400);
     var displayName = body.TryGetProperty("display_name", out var dnProp) ? (dnProp.GetString() ?? "Unnamed Programme") : "Unnamed Programme";
 
-    var result = await programmeStore.CreateAsync(tenantId, pkProp.GetString()!.Trim(), displayName, cancellationToken, bypassRls: true);
+    var result = await programmeStore.CreateAsync(tenantId, pkProp.GetString()!.Trim(), displayName, cancellationToken);
     if (!result.Success || result.Entry is null)
         return Results.Json(new { error_code = "PROGRAMME_CREATE_FAILED", errors = new[] { result.Error ?? "programme create failed" } }, statusCode: 503);
 
@@ -1616,7 +1616,7 @@ app.MapPost("/api/admin/onboarding/suppliers", async (JsonElement body, HttpCont
         return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "payout_target is required" } }, statusCode: 400);
 
     var supplierType = body.TryGetProperty("supplier_type", out var stProp) ? stProp.GetString() : null;
-    var success = await tenantRegistryStore.RegisterSupplierAsync(tenantId, supplierId.ToString(), snProp.GetString()!.Trim(), ptProp.GetString()!.Trim(), supplierType, cancellationToken, bypassRls: true);
+    var success = await tenantRegistryStore.RegisterSupplierAsync(tenantId, supplierId.ToString(), snProp.GetString()!.Trim(), ptProp.GetString()!.Trim(), supplierType, cancellationToken);
     if (!success)
         return Results.Json(new { error_code = "SUPPLIER_CREATE_FAILED", errors = new[] { "supplier register failed" } }, statusCode: 503);
 
@@ -1642,7 +1642,7 @@ app.MapGet("/api/admin/onboarding/programmes", async (HttpContext httpContext, C
     if (httpContext.Request.Query.TryGetValue("tenant_id", out var tq) && Guid.TryParse(tq.ToString(), out var tf))
         tenantFilter = tf;
 
-    var programmes = await programmeStore.ListAsync(tenantFilter, cancellationToken, bypassRls: true);
+    var programmes = await programmeStore.ListAsync(tenantFilter, cancellationToken);
     return Results.Json(new
     {
         programmes = programmes.Select(p => new
@@ -1676,7 +1676,7 @@ app.MapPut("/api/admin/onboarding/programmes/{id}/activate", async (string id, P
     if (!Guid.TryParse(request.tenant_id, out var tenantId))
         return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "tenant_id must be a valid UUID" } }, statusCode: 400);
 
-    var result = await programmeStore.ActivateAsync(programmeId, tenantId, cancellationToken, bypassRls: true);
+    var result = await programmeStore.ActivateAsync(programmeId, tenantId, cancellationToken);
     if (!result.Success || result.Entry is null)
         return Results.Json(new { error_code = "ACTIVATION_FAILED", errors = new[] { result.Error ?? "activation failed" } }, statusCode: result.Error == "programme not found" ? 404 : 503);
 
@@ -1698,7 +1698,7 @@ app.MapPut("/api/admin/onboarding/programmes/{id}/suspend", async (string id, Pr
     if (!Guid.TryParse(request.tenant_id, out var tenantId))
         return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "tenant_id must be a valid UUID" } }, statusCode: 400);
 
-    var result = await programmeStore.SuspendAsync(programmeId, tenantId, cancellationToken, bypassRls: true);
+    var result = await programmeStore.SuspendAsync(programmeId, tenantId, cancellationToken);
     if (!result.Success || result.Entry is null)
         return Results.Json(new { error_code = "SUSPENSION_FAILED", errors = new[] { result.Error ?? "suspension failed" } }, statusCode: result.Error == "programme not found" ? 404 : 503);
 
@@ -1721,14 +1721,14 @@ app.MapPost("/api/admin/onboarding/programmes/{id}/policy-binding", async (strin
     if (!body.TryGetProperty("policy_code", out var pcProp) || string.IsNullOrWhiteSpace(pcProp.GetString()))
         return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "policy_code is required" } }, statusCode: 400);
 
-    var result = await programmeStore.BindPolicyAsync(programmeId, tenantId, pcProp.GetString()!.Trim(), cancellationToken, bypassRls: true);
+    var result = await programmeStore.BindPolicyAsync(programmeId, tenantId, pcProp.GetString()!.Trim(), cancellationToken);
     if (!result.Success || result.Entry is null)
     {
         // Treat "already exists" as idempotent success — the desired state is already achieved
         if (result.Error == "policy binding already exists")
         {
             // Re-read the programme to return current state
-            var progs = await programmeStore.ListAsync(tenantId, cancellationToken, bypassRls: true);
+            var progs = await programmeStore.ListAsync(tenantId, cancellationToken);
             var existing = progs.FirstOrDefault(p => p.ProgrammeId == programmeId.ToString());
             if (existing is not null)
                 return Results.Json(new { programme_id = existing.ProgrammeId, policy_code = existing.PolicyCode, status = existing.Status, updated_at = existing.UpdatedAt.ToString("O"), already_bound = true }, statusCode: 200);
@@ -1763,8 +1763,8 @@ app.MapGet("/api/admin/onboarding/status", async (HttpContext httpContext, Cance
         }
     }
 
-    var tenants = await tenantRegistryStore.ListAsync(cancellationToken, bypassRls: true);
-    var programmes = await programmeStore.ListAsync(null, cancellationToken, bypassRls: true);
+    var tenants = await tenantRegistryStore.ListAsync(cancellationToken);
+    var programmes = await programmeStore.ListAsync(null, cancellationToken);
     return Results.Json(new
     {
         tenants = tenants.Select(t => new
@@ -1820,11 +1820,11 @@ async Task<Guid?> SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgramme
             tenantId = CreateStableGuid(demoTenantKey);
         }
 
-        var exists = await trs.ExistsAsync(tenantId, default, true);
+        var exists = await trs.ExistsAsync(tenantId, default);
         if (!exists)
         {
             l.LogInformation("Auto-seeding default Pilot Demo tenant and programme...");
-            var tenantResult = await trs.UpsertAsync(tenantId, demoTenantKey, "Zambia Green MFI", default, true);
+            var tenantResult = await trs.UpsertAsync(tenantId, demoTenantKey, "Zambia Green MFI", default);
             if (tenantResult.Success && tenantResult.Entry is not null)
             {
                 // Use the actual tenant_id from the DB (may differ from computed one on ON CONFLICT)
@@ -1835,16 +1835,16 @@ async Task<Guid?> SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgramme
                     actualTenantId, "Zambia Green MFI", "ZM", "enterprise", $"seed:{actualTenantId}"
                 ), CancellationToken.None);
 
-                var progResult = await ps.CreateAsync(actualTenantId, "PGM-ZAMBIA-GRN-001", "GreenTech4CE · Solar Cluster A", default, true);
+                var progResult = await ps.CreateAsync(actualTenantId, "PGM-ZAMBIA-GRN-001", "GreenTech4CE · Solar Cluster A", default);
                 if (progResult.Success && progResult.Entry is not null)
                 {
                     var pidStr = progResult.Entry.ProgrammeId;
                     if (Guid.TryParse(pidStr, out var pidGuid))
                     {
-                        await ps.ActivateAsync(pidGuid, actualTenantId, default, true);
+                        await ps.ActivateAsync(pidGuid, actualTenantId, default);
                         try
                         {
-                            var bindResult = await ps.BindPolicyAsync(pidGuid, actualTenantId, "green_eq_v1", default, true);
+                            var bindResult = await ps.BindPolicyAsync(pidGuid, actualTenantId, "green_eq_v1", default);
                             if (bindResult.Success)
                             {
                                 l.LogInformation("Successfully auto-seeded default Pilot Demo tenant and programme.");
@@ -1868,11 +1868,9 @@ async Task<Guid?> SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgramme
                                 await using var legacyConn = await ds.OpenConnectionAsync(default);
                                 await using var legacyTx = await legacyConn.BeginTransactionAsync(default);
 
-                                // Set RLS context + bypass for superuser seeding
+                                // Set RLS context for demo seeding
                                 await using var ctxCmd = legacyConn.CreateCommand();
                                 ctxCmd.Transaction = legacyTx;
-                                ctxCmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
-                                await ctxCmd.ExecuteScalarAsync();
 
                                 await using var ctxCmd2 = legacyConn.CreateCommand();
                                 ctxCmd2.Transaction = legacyTx;
@@ -1957,7 +1955,7 @@ async Task<Guid?> SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgramme
             //         // Ensure programme is activated
             //         try
             //         {
-            //             await ps.ActivateAsync(pidGuid, tenantId, default, true);
+            //             await ps.ActivateAsync(pidGuid, tenantId, default);
             //         }
             //         catch (Exception activateEx)
             //         {
@@ -1967,7 +1965,7 @@ async Task<Guid?> SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgramme
             //         // Ensure policy is bound
             //         try
             //         {
-            //             var bindResult = await ps.BindPolicyAsync(pidGuid, tenantId, "green_eq_v1", default, true);
+            //             var bindResult = await ps.BindPolicyAsync(pidGuid, tenantId, "green_eq_v1", default);
             //             if (!bindResult.Success)
             //             {
             //                 l.LogInformation($"Pilot Demo binding skipped: {bindResult.Error}");
@@ -1986,11 +1984,9 @@ async Task<Guid?> SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgramme
             //                 await using var legacyConn = await ds.OpenConnectionAsync(default);
             //                 await using var legacyTx = await legacyConn.BeginTransactionAsync(default);
 
-            //                 // Set RLS context + bypass for superuser seeding
+            //                 // Set RLS context for seeding
             //                 await using var ctxCmd = legacyConn.CreateCommand();
             //                 ctxCmd.Transaction = legacyTx;
-            //                 ctxCmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
-            //                 await ctxCmd.ExecuteScalarAsync();
 
             //                 await using var ctxCmd2 = legacyConn.CreateCommand();
             //                 ctxCmd2.Transaction = legacyTx;

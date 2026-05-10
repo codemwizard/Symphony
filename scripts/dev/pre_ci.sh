@@ -608,7 +608,7 @@ if [[ "${FRESH_DB}" == "1" ]]; then
   echo "   DATABASE_URL set to ephemeral DB: ${TEMP_DB}"
   echo "   Linting migrations before applying..."
   if [[ -x scripts/db/lint_migrations.sh ]]; then
-    scripts/db/lint_migrations.sh
+    scripts/db/lint_migrations.sh 2>&1 || { echo "Lint script failed with exit code $?"; exit 1; }
   else
     echo "ERROR: scripts/db/lint_migrations.sh not found"
     exit 1

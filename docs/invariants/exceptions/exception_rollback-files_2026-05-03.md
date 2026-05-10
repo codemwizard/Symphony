@@ -2,6 +2,7 @@
 exception_id: EXC-002
 inv_scope: change-rule
 expiry: 2026-05-10
+closed_at: 2026-05-10
 follow_up_ticket: TSK-RLS-ARCH-REM-001
 reason: Bug fix implementation requires creating schema/rollbacks/ directory and 0095 rollback files. These are not migration files but rollback artifacts required by the original task plan.
 author: cascade_agent

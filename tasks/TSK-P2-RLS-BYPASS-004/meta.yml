@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-RLS-BYPASS-004
 title: "Create forward-only migration removing app.bypass_rls from RLS policies"
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 priority: CRITICAL
 risk_class: SECURITY
 blast_radius: DB_SCHEMA

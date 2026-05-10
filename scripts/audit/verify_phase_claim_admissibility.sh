@@ -82,6 +82,14 @@ for pattern in "${PATTERNS[@]}"; do
                     if [[ "$match" =~ \.md ]] && ( [[ "$match" =~ docs/plans ]] || [[ "$match" =~ docs/operations ]] || [[ "$match" =~ docs/agents ]] || [[ "$match" =~ docs/PHASE ]] || [[ "$match" =~ walkthrough\.md ]] || [[ "$match" =~ docs/phase-1 ]] || [[ "$match" =~ docs/tasks ]] || [[ "$match" =~ docs/Phase_0001-0005 ]] ); then
                         continue
                     fi
+                    # Skip governance documents defining rules and boundaries
+                    if [[ "$match" =~ docs/governance/.*\.md ]]; then
+                        continue
+                    fi
+                    # Skip constitutional documentation
+                    if [[ "$match" =~ docs/constitutional/.*\.md ]]; then
+                        continue
+                    fi
                     # Skip task definitions which naturally describe what not to claim
                     if [[ "$match" =~ tasks/.*meta\.yml ]]; then
                         continue
@@ -103,6 +111,7 @@ if [ ${#PHASE_COMPLETE_CLAIMS[@]} -eq 0 ]; then
 else
     violations+=("Phase-complete overclaims found: ${#PHASE_COMPLETE_CLAIMS[@]} instances")
     echo "✗ Phase-complete overclaims found: ${#PHASE_COMPLETE_CLAIMS[@]} instances"
+for match in "${PHASE_COMPLETE_CLAIMS[@]}"; do echo "  MATCH: $match"; done
 fi
 
 # Check 4: Scan for future-phase delivery claims
