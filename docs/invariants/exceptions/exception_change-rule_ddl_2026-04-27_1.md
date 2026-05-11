@@ -6,6 +6,7 @@ follow_up_ticket: TSK-P2-W8-GOV-001
 reason: Auto-generated: structural change detected; invariants linkage missing in commit.
 author: system
 created_at: 2026-04-27
+closed_at: 2026-05-11
 ---
 
 # Exception: ddl structural change without invariants linkage

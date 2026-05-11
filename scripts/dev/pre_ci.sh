@@ -1368,7 +1368,7 @@ echo "PRECI trace log: $PRECI_TRACE_LOG"
 if [[ "${RUN_PHASE2_GATES:-0}" == "1" ]]; then
   echo "==> Phase-2 contract verification (RUN_PHASE2_GATES=1)"
   if [[ -x "scripts/audit/verify_phase2_contract.sh" ]]; then
-    bash scripts/audit/verify_phase2_contract.sh > evidence/phase2/phase2_contract_status.json || {
+    bash scripts/audit/verify_phase2_contract.sh || {
       echo "ERROR: Phase-2 contract verification failed" >&2
       exit 1
     }

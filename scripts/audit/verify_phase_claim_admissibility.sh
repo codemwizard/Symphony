@@ -79,7 +79,7 @@ for pattern in "${PATTERNS[@]}"; do
                         continue
                     fi
                     # Skip historical logs, plans, and architectural docs which contain context terms naturally
-                    if [[ "$match" =~ \.md ]] && ( [[ "$match" =~ docs/plans ]] || [[ "$match" =~ docs/operations ]] || [[ "$match" =~ docs/agents ]] || [[ "$match" =~ docs/PHASE ]] || [[ "$match" =~ walkthrough\.md ]] || [[ "$match" =~ docs/phase-1 ]] || [[ "$match" =~ docs/tasks ]] || [[ "$match" =~ docs/Phase_0001-0005 ]] ); then
+                    if [[ "$match" =~ \.md ]] && ( [[ "$match" =~ docs/plans ]] || [[ "$match" =~ docs/operations ]] || [[ "$match" =~ docs/agents ]] || [[ "$match" =~ docs/PHASE ]] || [[ "$match" =~ walkthrough\.md ]] || [[ "$match" =~ docs/phase-1 ]] || [[ "$match" =~ docs/tasks ]] || [[ "$match" =~ docs/Phase_0001-0005 ]] || [[ "$match" =~ docs/architecture ]] ); then
                         continue
                     fi
                     # Skip governance documents defining rules and boundaries
