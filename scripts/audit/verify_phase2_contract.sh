@@ -35,6 +35,7 @@ fi
 python3 << 'PYTHON_EOF'
 import yaml
 import json
+import subprocess
 import sys
 
 def load_contract():
@@ -118,10 +119,17 @@ def main():
     violations = validate_contract()
     
     # Generate evidence
+    git_sha = subprocess.check_output(
+        ['git', 'rev-parse', 'HEAD'], text=True, stderr=subprocess.DEVNULL
+    ).strip() or 'unknown'
+    timestamp_utc = subprocess.check_output(
+        ['date', '-u', '+%Y-%m-%dT%H:%M:%SZ'], text=True
+    ).strip()
+
     evidence = {
         "task_id": "TSK-P2-GOV-CONV-006",
-        "git_sha": "$(git rev-parse HEAD 2>/dev/null || echo unknown)",
-        "timestamp_utc": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
+        "git_sha": git_sha,
+        "timestamp_utc": timestamp_utc,
         "contract_file": "docs/PHASE2/phase2_contract.yml",
         "status": "PASS" if all(len(v) == 0 for v in violations.values()) else "FAIL",
         "violations": violations,

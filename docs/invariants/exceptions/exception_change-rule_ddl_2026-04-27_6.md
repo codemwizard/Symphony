@@ -6,6 +6,7 @@ follow_up_ticket: MULTI-WAVE-CONSOLIDATION-2026-04-27
 reason: Multi-wave consolidation commit (Wave 4/5/6/7/8) with new DDL from Wave 5 stabilization
 author: system
 created_at: 2026-04-27
+closed_at: 2026-05-11
 ---
 
 # Exception: ddl structural change without invariants linkage

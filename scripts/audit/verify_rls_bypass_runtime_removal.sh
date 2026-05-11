@@ -47,9 +47,24 @@ for target in "${RUNTIME_PATHS[@]}"; do
 done
 
 # Build verification — must compile cleanly
-build_status="NOT_RUN"
-build_output=""
 if command -v dotnet >/dev/null 2>&1; then
+    # Build and verify .NET code with proper error handling
+    if build_output=$(dotnet build services/ledger-api/dotnet/ 2>&1); then
+        build_status="COMPLETED"
+        # Build succeeded - continue verification
+    else
+        build_status="FAIL"
+        # Build failed - set overall status to FAIL but continue to record evidence
+        status="FAIL"
+        violations+=("dotnet build failed")
+    fi
+else
+    # .NET not available - mark as NOT_RUN but still verify runtime changes
+    build_status="NOT_RUN"
+    build_output="dotnet command not found"
+fi
+# Only run build verification if .NET is available and build_status wasn't already set
+if [[ "$build_status" == "COMPLETED" ]]; then
   if dotnet build "$ROOT_DIR/services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj" -nologo -v minimal >/dev/null 2>&1; then
     build_status="PASS"
   else

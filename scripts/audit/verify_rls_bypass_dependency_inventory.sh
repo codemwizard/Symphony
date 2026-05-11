@@ -332,7 +332,7 @@ with open(evidence_file, 'w', encoding='utf-8') as out:
     json.dump(evidence, out, indent=2)
     out.write('\n')
 
-print(f"Evidence written: {evidence_file}")
+print(f"Evidence written: {evidence_file}", file=sys.stderr)
 print(f"  Status: {status}")
 print(f"  Total findings: {len(findings)}")
 print(f"  Unknown: {unknown_count}")

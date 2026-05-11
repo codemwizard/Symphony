@@ -64,9 +64,10 @@ PY
   fi
 done
 
-printf '%s\n' "${violations[@]}" | python3 - <<PY
-import json, sys
-lines = [ln.strip() for ln in sys.stdin.read().splitlines() if ln.strip()]
+_violations_input="$(printf '%s\n' "${violations[@]}" 2>/dev/null || true)"
+_violations_input="$_violations_input" python3 - <<'PY'
+import json, sys, os
+lines = [ln.strip() for ln in os.environ.get("_violations_input", "").splitlines() if ln.strip()]
 out = {
   "check_id": "DB-NO-TX-MARKER-LINT",
   "timestamp_utc": "${EVIDENCE_TS}",

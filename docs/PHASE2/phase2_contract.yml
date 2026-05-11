@@ -1,6 +1,6 @@
 phase: "2"
 phase_name: "Internal Ledger Truth"
-status: "planned"
+status: "closed"
 rows:
   - invariant_id: "INV-156"
     status: "implemented"

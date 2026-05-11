@@ -1,7 +1,7 @@
 {
   "task_id": "TSK-P2-GOV-CONV-006",
-  "git_sha": "$(git rev-parse HEAD 2>/dev/null || echo unknown)",
-  "timestamp_utc": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
+  "git_sha": "80ad9493fc7e88fe7045b37f5328dd1b0547a23e",
+  "timestamp_utc": "2026-05-11T06:14:19Z",
   "contract_file": "docs/PHASE2/phase2_contract.yml",
   "status": "PASS",
   "violations": {

@@ -385,7 +385,7 @@ Phase-2 closes when:
 3. All `deferred_to_phase3` rows (currently zero) are explicitly staged.
 4. A Phase-2 closeout approval artifact is created.
 
-**Current Phase-2 closeout status: NOT TRIGGERED.**
+**Current Phase-2 closeout status: CLOSED.**
 
 ---
 

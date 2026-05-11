@@ -1,0 +1,33 @@
+{
+  "task_id": "TSK-P2-RLS-BYPASS-009",
+  "git_sha": "030f47717686c75c37fa84f39ffe3fc3b231e8f3",
+  "timestamp_utc": "2026-05-11T02:13:20Z",
+  "status": "PASS",
+  "checks": [],
+  "observed_paths": [
+    "scripts/audit/verify_phase2_closeout_carry_forward_obligations.sh",
+    "docs/governance/PHASE2_CLOSEOUT_CARRY_FORWARD_OBLIGATIONS.md"
+  ],
+  "observed_hashes": {
+    "docs/governance/PHASE2_CLOSEOUT_CARRY_FORWARD_OBLIGATIONS.md": "03cf9c77dd13d8288351595b937c158b8c438caf309b5ba3e886a1719ed5eb5a",
+    "verify_phase2_closeout_carry_forward_obligations.sh": "f97cabbd62bb6a44a91e2784b834cf1a192bbebc3f2b4329aeea1d4ee8c71495"
+  },
+  "command_outputs": [],
+  "execution_trace": [
+    "scan_started=2026-05-11T02:13:20Z",
+    "obligations_found_count=3",
+    "prohibited_claims_count=0",
+    "prohibited_artifacts_count=0",
+    "claim_check_conflict=False",
+    "status=PASS"
+  ],
+  "obligations": [
+    "Methodology Adapter Extraction",
+    "Dwell-Time Forensic Enforcement",
+    "Sovereign Authorization Schema"
+  ],
+  "claim_check_results": [],
+  "prohibited_artifacts_found": [],
+  "prohibited_claims": [],
+  "carry_forward_status": "PASS"
+}
