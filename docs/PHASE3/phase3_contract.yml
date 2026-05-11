@@ -1,13 +1,97 @@
+version: 1
 phase: "3"
-phase_name: "External Trust Surfaces"
-status: "planned"
-rows: []
-notes: "Phase-3 is non-claimable and not open for implementation. This contract contains zero implementation rows to prevent premature work initiation."
-
-# Governance metadata
-claimability: "non-claimable"
+phase_name: "Constraint and Legitimacy Engine"
+status: "open"
+effective_date: "2026-05-10"
+authority: "ROOT"
+claimability: "claimable"
 anti_drift_enforcement: true
-premature_work_prevention: true
+premature_work_prevention: false
 
-# Phase-3 will be opened in future iterations when external trust surface work is required
-# Current status: Stub documentation only - no implementation tasks available
+notes: >
+  Phase 3 is the Constraint and Legitimacy Engine phase. It implements
+  typed dependency graphs, recursive legitimacy chains, contradiction
+  detection, failure composition, authority scope enforcement,
+  conflict-of-interest enforcement, and spatial/DNSH gates.
+  This contract was opened by PHASE3_OPENING_ACT.md on 2026-05-10
+  under ROOT constitutional authority.
+  Capability boundary: docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md.
+  Invariant register: docs/PHASE3/PHASE3_INVARIANT_REGISTER.md.
+
+rows:
+  - id: "P3-001"
+    title: "Typed Dependency Graph"
+    objective: "Implement machine-traversable dependency declarations for every decision and fact record."
+    invariants: ["INV-302"]
+    phase_scope: "PHASE-3"
+    status: "planned"
+    phase_spec_ref: "§3.1"
+
+  - id: "P3-002"
+    title: "Recursive Legitimacy Engine"
+    objective: "Implement legitimacy chain tracer that blocks decisions with illegitimate ancestors."
+    invariants: ["INV-303", "INV-310"]
+    phase_scope: "PHASE-3"
+    status: "planned"
+    phase_spec_ref: "§3.2"
+    notes: "INV-310 (Dwell-Time Forensic) is included here as temporal legitimacy is a sub-class of recursive legitimacy. Resolves CF-2."
+
+  - id: "P3-003"
+    title: "Contradiction Detection Engine"
+    objective: "Implement active blocking of direct, temporal, and authority-based conflicting decisions."
+    invariants: ["INV-304"]
+    phase_scope: "PHASE-3"
+    status: "planned"
+    phase_spec_ref: "§3.3"
+
+  - id: "P3-004"
+    title: "Failure Composition Engine"
+    objective: "Implement machine-readable, append-only failure decomposition records for all legitimacy rejections."
+    invariants: ["INV-306", "INV-305"]
+    phase_scope: "PHASE-3"
+status: "planned"
+    phase_spec_ref: "§3.4"
+    notes: "INV-305 re-scoped from MADD-MAIN (Phase 8A) to Cross-System Evidence Exchange Continuity."
+
+  - id: "P3-005"
+    title: "Authority Scope Engine"
+    objective: "Implement authority-to-resource binding enforcement and traceable delegation through dependency graph."
+    invariants: ["INV-307"]
+    phase_scope: "PHASE-3"
+    status: "planned"
+    phase_spec_ref: "§3.5"
+
+  - id: "P3-006"
+    title: "Regulator Override Rules"
+    objective: "Implement precedence rules for conflicting regulator determinations and fraud detection at authority boundary."
+    invariants: ["INV-301"]
+    phase_scope: "PHASE-3"
+    status: "planned"
+    phase_spec_ref: "§3.6"
+
+  - id: "P3-007"
+    title: "Conflict-of-Interest Enforcement"
+    objective: "Implement DB-layer separation of duties enforcement generalised across all decision types."
+    invariants: ["INV-308"]
+    phase_scope: "PHASE-3"
+    status: "planned"
+    phase_spec_ref: "§3.7"
+    notes: "Extends INV-169 (Reg 26 separation of duties) to all decision types platform-wide."
+
+  - id: "P3-008"
+    title: "Spatial Legality and DNSH Gates"
+    objective: "Generalise spatial legality and DNSH enforcement to all decision types across the platform."
+    invariants: ["INV-309"]
+    phase_scope: "PHASE-3"
+    status: "planned"
+    phase_spec_ref: "§3.8"
+    notes: "Extends INV-178 (project DNSH spatial check) to platform-wide gate."
+
+  - id: "P3-009"
+    title: "Phase 3 Verifier and CI Enforcement"
+    objective: "Create verifier scripts and CI gates for all Phase 3 invariants (INV-301 through INV-310)."
+    invariants: ["INV-301", "INV-302", "INV-303", "INV-304", "INV-305", "INV-306", "INV-307", "INV-308", "INV-309", "INV-310"]
+    phase_scope: "PHASE-3"
+    status: "planned"
+    phase_spec_ref: "§Exit Criteria"
+    notes: "All verifiers must be blocking CI jobs. All must emit evidence artifacts. All negative tests must pass."
