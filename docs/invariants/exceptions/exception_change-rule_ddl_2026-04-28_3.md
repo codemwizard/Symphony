@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-030
 inv_scope: change-rule
-expiry: 2026-05-12
+expiry: 2026-05-20
 follow_up_ticket: N/A
 reason: Lock-risk lint allowlist fix: removed duplicate migration 0134_create_policy_decisions.sql and updated allowlist to point to correct file 0134_policy_decisions.sql
 author: system

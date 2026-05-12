@@ -1,18 +1,18 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-PRE-001
-title: "Reconcile Phase 2 Constitutional Status"
-owner_role: ARCHITECT
-status: planned
+title: "Verify wave8_crypto extension operational status for Phase 3 entry"
+owner_role: SECURITY_GUARDIAN
+status: completed
 priority: HIGH
 risk_class: GOVERNANCE
-blast_radius: DOCS_ONLY
+blast_radius: CI_GATES
 depends_on: []
 invariants: []
 
 deliverable_files:
-  - scripts/audit/verify_tsk_p3_pre_001.sh
-  - evidence/phase3/tsk_p3_pre_001_status_reconciliation.json
+  - scripts/audit/verify_ed25519_available.sh
+  - evidence/phase3/wave8_crypto_operational_status.json
   - docs/plans/phase3/TSK-P3-PRE-001/PLAN.md
   - docs/plans/phase3/TSK-P3-PRE-001/EXEC_LOG.md
 
@@ -21,7 +21,7 @@ regulated_surface_compliance:
   approval_workflow: stage_a_stage_b
   stage_a_required_before_edit: true
   regulated_paths:
-    - scripts/audit/verify_tsk_p3_pre_001.sh
+    - scripts/audit/verify_ed25519_available.sh
   must_read:
     - docs/operations/REGULATED_SURFACE_PATHS.yml
     - docs/operations/approval_metadata.schema.json
@@ -50,48 +50,48 @@ proof_limitations:
   - "Does not prove runtime API integration (deferred)."
 
 touches:
-  - scripts/audit/verify_tsk_p3_pre_001.sh
-  - evidence/phase3/tsk_p3_pre_001_status_reconciliation.json
+  - scripts/audit/verify_ed25519_available.sh
+  - evidence/phase3/wave8_crypto_operational_status.json
   - tasks/TSK-P3-PRE-001/meta.yml
   - docs/plans/phase3/TSK-P3-PRE-001/PLAN.md
   - docs/plans/phase3/TSK-P3-PRE-001/EXEC_LOG.md
 
 work:
-  - "[ID tsk_p3_pre_001_w01] Read PHASE_CAPABILITY_LEGALITY_MATRIX.md §3.3 and identify all references to FORMALLY UNOPENED for Phase 2."
-  - "[ID tsk_p3_pre_001_w02] Update §3.3 constitutional posture from FORMALLY UNOPENED to CLOSED with citation to approvals/2026-05-10/PHASE2_CLOSEOUT_APPROVAL.json and approvals/2026-05-03/PHASE2-RATIFICATION.md."
-  - "[ID tsk_p3_pre_001_w03] Update PROHIB-05 (line 651-656) to reflect Phase 2 is now closed, not unopened."
-  - "[ID tsk_p3_pre_001_w04] Update §3.4 (Phase 3 entry condition) to confirm Phase 2 closeout dependency is now satisfied."
-  - "[ID tsk_p3_pre_001_w05] Verify no other section of the document contains stale Phase 2 status references."
+  - "[ID tsk_p3_pre_001_work_item_01] Create scripts/audit/verify_ed25519_available.sh that confirms ed25519_verify() is callable in the Postgres runtime environment by executing a known-bad signature test and verifying it returns FALSE rather than a function-not-found error."
+  - "[ID tsk_p3_pre_001_work_item_02] Emit evidence to evidence/phase3/wave8_crypto_operational_status.json recording function existence in pg_proc, extension load status, call result, git_sha, and timestamp_utc."
+  - "[ID tsk_p3_pre_001_work_item_03] Wire the script as a Tier 0 CI gate that blocks all Phase 3 work if ed25519_verify() is not callable."
 
 acceptance_criteria:
-  - "[ID tsk_p3_pre_001_w01] grep -c 'FORMALLY UNOPENED' docs/constitutional/PHASE_CAPABILITY_LEGALITY_MATRIX.md returns 0 for Phase 2 references."
-  - "[ID tsk_p3_pre_001_w02] §3.3 cites both approval artifacts with dates."
-  - "[ID tsk_p3_pre_001_w03] PROHIB-05 accurately reflects closure."
-  - "[ID tsk_p3_pre_001_w04] §3.4 entry condition reads as satisfied."
-  - "[ID tsk_p3_pre_001_w05] Manual review or script confirms no other references."
+  - "[ID tsk_p3_pre_001_work_item_01] verify_ed25519_available.sh exits 0 when ed25519_verify() returns FALSE for a random bad signature, and exits 1 when the function is not found."
+  - "[ID tsk_p3_pre_001_work_item_02] Evidence JSON contains task_id, git_sha, timestamp_utc, status, ed25519_verify_callable, function_exists_in_catalog, extension_loaded, and call_result fields."
+  - "[ID tsk_p3_pre_001_work_item_03] Script uses DATABASE_URL for psql connection and emits structured evidence on both success and failure paths."
 
 negative_tests:
   - id: TSK-P3-PRE-001-N1
-    description: "Verify that execution fails transactionally when boundary conditions are violated for: grep -c 'FORMALLY UNOPENED' docs/constitutional/PHASE_CAPABILITY_LEGALITY_MATRIX.md returns 0 for Phase 2 references."
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: verify_ed25519_available.sh exits 0 when ed25519_verify() returns FALSE for a random bad signature, and exits 1 when the function is not found."
     required: true
 
 positive_tests:
   - id: TSK-P3-PRE-001-P1
-    description: "Verify that execution exits 0 on success path for: grep -c 'FORMALLY UNOPENED' docs/constitutional/PHASE_CAPABILITY_LEGALITY_MATRIX.md returns 0 for Phase 2 references."
+    description: "Verify that execution exits 0 on success path for: verify_ed25519_available.sh exits 0 when ed25519_verify() returns FALSE for a random bad signature, and exits 1 when the function is not found."
     required: true
 
 verification:
-  - '# [ID tsk_p3_pre_001_w01] [ID tsk_p3_pre_001_w02] [ID tsk_p3_pre_001_w03] [ID tsk_p3_pre_001_w04] [ID tsk_p3_pre_001_w05] test -x scripts/audit/verify_tsk_p3_pre_001.sh && bash scripts/audit/verify_tsk_p3_pre_001.sh > evidence/phase3/tsk_p3_pre_001_status_reconciliation.json || exit 1'
+  - '# [ID tsk_p3_pre_001_work_item_01] [ID tsk_p3_pre_001_work_item_02] [ID tsk_p3_pre_001_work_item_03] bash scripts/audit/verify_ed25519_available.sh || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-PRE-001 --evidence evidence/phase3/wave8_crypto_operational_status.json'
+  - 'RUN_PHASE3_GATES=1 bash scripts/dev/pre_ci.sh'
 
 evidence:
-  - path: evidence/phase3/tsk_p3_pre_001_status_reconciliation.json
+  - path: evidence/phase3/wave8_crypto_operational_status.json
     must_include:
       - task_id
       - git_sha
       - timestamp_utc
       - status
-      - checks
-      - observed_hashes
+      - ed25519_verify_callable
+      - function_exists_in_catalog
+      - extension_loaded
+      - call_result
 
 failure_modes:
   - "Evidence file missing => FAIL"
@@ -105,5 +105,5 @@ implementation_plan: docs/plans/phase3/TSK-P3-PRE-001/PLAN.md
 implementation_log: docs/plans/phase3/TSK-P3-PRE-001/EXEC_LOG.md
 notes: 'Generated via scripts/agent/generate_task_pack.py'
 client: cursor
-assigned_agent: architect
+assigned_agent: security_guardian
 model: claude-sonnet-4-20250514

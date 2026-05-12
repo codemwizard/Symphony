@@ -1760,3 +1760,93 @@
     touch execution_records. Child column naming (interpretation_version_id)
     is retained for historical compatibility; FK target is
     interpretation_packs(interpretation_pack_id).
+
+- id: INV-301
+  aliases: ["I-P3-REGSOV-01"]
+  status: roadmap
+  severity: P0
+  title: "Regulatory Sovereignty Partitioning"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 14
+  verification: "scripts/audit/verify_p3_regulatory_sovereignty_partitioning.sh"
+
+- id: INV-302
+  aliases: ["I-P3-DEPGRAPH-01"]
+  status: roadmap
+  severity: P0
+  title: "Typed Dependency Graph Completeness"
+  owners: ["team-db", "team-platform"]
+  sla_days: 14
+  verification: "scripts/db/verify_p3_typed_dependency_graph.sh"
+
+- id: INV-303
+  aliases: ["I-P3-LEGIT-01"]
+  status: roadmap
+  severity: P0
+  title: "Recursive Legitimacy Chain Enforced"
+  owners: ["team-db", "team-platform"]
+  sla_days: 14
+  verification: "scripts/db/verify_p3_recursive_legitimacy_engine.sh"
+
+- id: INV-304
+  aliases: ["I-P3-CONTRA-01"]
+  status: roadmap
+  severity: P0
+  title: "Contradiction Detection Active"
+  owners: ["team-db", "team-platform"]
+  sla_days: 14
+  verification: "scripts/db/verify_p3_contradiction_detection.sh"
+
+- id: INV-305
+  aliases: ["I-P3-XSYS-01"]
+  status: roadmap
+  severity: P0
+  title: "Cross-System Evidence Exchange Continuity"
+  owners: ["team-platform", "team-db"]
+  sla_days: 14
+  verification: "scripts/audit/verify_p3_cross_system_evidence_continuity.sh"
+
+- id: INV-306
+  aliases: ["I-P3-FAILCOMP-01"]
+  status: roadmap
+  severity: P1
+  title: "Failure Composition Machine-Readable"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_p3_failure_composition_engine.sh"
+
+- id: INV-307
+  aliases: ["I-P3-AUTHSCOPE-01"]
+  status: roadmap
+  severity: P0
+  title: "Authority Scope Engine Enforced"
+  owners: ["team-db", "team-security"]
+  sla_days: 14
+  verification: "scripts/db/verify_p3_authority_scope_engine.sh"
+
+- id: INV-308
+  aliases: ["I-P3-COI-01"]
+  status: roadmap
+  severity: P0
+  title: "Conflict-of-Interest DB-Layer Enforced"
+  owners: ["team-db", "team-security"]
+  sla_days: 14
+  verification: "scripts/db/verify_p3_conflict_of_interest_enforcement.sh"
+
+- id: INV-309
+  aliases: ["I-P3-DNSH-01"]
+  status: roadmap
+  severity: P0
+  title: "Spatial Legality and DNSH Gates Generalised"
+  owners: ["team-db", "team-platform", "team-security"]
+  sla_days: 14
+  verification: "scripts/db/verify_p3_spatial_legality_dnsh_gates.sh"
+
+- id: INV-310
+  aliases: ["I-P3-DWELL-01"]
+  status: roadmap
+  severity: P1
+  title: "Dwell-Time Forensic Enforcement (CF-2 Resolution)"
+  owners: ["team-security", "team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_p3_dwell_time_forensic_enforcement.sh"

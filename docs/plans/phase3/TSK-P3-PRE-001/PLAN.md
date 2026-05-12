@@ -1,7 +1,7 @@
-# TSK-P3-PRE-001 PLAN — Reconcile Phase 2 Constitutional Status
+# TSK-P3-PRE-001 PLAN — Verify wave8_crypto extension operational status for Phase 3 entry
 
 Task: TSK-P3-PRE-001
-Owner: ARCHITECT
+Owner: SECURITY_GUARDIAN
 failure_signature: PHASE3.STRICT.TSK-P3-PRE-001.PROOF_FAIL
 canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
@@ -25,7 +25,7 @@ canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 ---
 ## Objective
 
-Reconcile Phase 2 Constitutional Status. This task forms a closed proof graph from work items to acceptance criteria to execution trace.
+Verify wave8_crypto extension operational status for Phase 3 entry. This task forms a closed proof graph from work items to acceptance criteria to execution trace.
 
 ---
 
@@ -40,8 +40,8 @@ Reconcile Phase 2 Constitutional Status. This task forms a closed proof graph fr
 
 | File | Action | Reason |
 |------|--------|--------|
-| `scripts/audit/verify_tsk_p3_pre_001.sh` | CREATE | Verifier for this task |
-| `evidence/phase3/tsk_p3_pre_001_status_reconciliation.json` | CREATE | Output artifact |
+| `scripts/audit/verify_ed25519_available.sh` | CREATE | Verifier for this task |
+| `evidence/phase3/wave8_crypto_operational_status.json` | CREATE | Output artifact |
 | `tasks/TSK-P3-PRE-001/meta.yml` | MODIFY | Update status upon success |
 | `docs/plans/phase3/TSK-P3-PRE-001/EXEC_LOG.md` | MODIFY | Append completion data |
 
@@ -61,17 +61,15 @@ Reconcile Phase 2 Constitutional Status. This task forms a closed proof graph fr
 ### Step 1: Implement Work Items
 **What:** Execute the work items linked via ID.
 **How:**
-- [ID tsk_p3_pre_001_w01] Read PHASE_CAPABILITY_LEGALITY_MATRIX.md §3.3 and identify all references to FORMALLY UNOPENED for Phase 2.
-- [ID tsk_p3_pre_001_w02] Update §3.3 constitutional posture from FORMALLY UNOPENED to CLOSED with citation to approvals/2026-05-10/PHASE2_CLOSEOUT_APPROVAL.json and approvals/2026-05-03/PHASE2-RATIFICATION.md.
-- [ID tsk_p3_pre_001_w03] Update PROHIB-05 (line 651-656) to reflect Phase 2 is now closed, not unopened.
-- [ID tsk_p3_pre_001_w04] Update §3.4 (Phase 3 entry condition) to confirm Phase 2 closeout dependency is now satisfied.
-- [ID tsk_p3_pre_001_w05] Verify no other section of the document contains stale Phase 2 status references.
+- [ID tsk_p3_pre_001_work_item_01] Create scripts/audit/verify_ed25519_available.sh that confirms ed25519_verify() is callable in the Postgres runtime environment by executing a known-bad signature test and verifying it returns FALSE rather than a function-not-found error.
+- [ID tsk_p3_pre_001_work_item_02] Emit evidence to evidence/phase3/wave8_crypto_operational_status.json recording function existence in pg_proc, extension load status, call result, git_sha, and timestamp_utc.
+- [ID tsk_p3_pre_001_work_item_03] Wire the script as a Tier 0 CI gate that blocks all Phase 3 work if ed25519_verify() is not callable.
 **Done when:** All items are implemented.
 
 ### Step 2: Implement Verifier
 **What:** Build the strictly mapped verifier script.
 **How:**
-- Implement `scripts/audit/verify_tsk_p3_pre_001.sh`.
+- Implement `scripts/audit/verify_ed25519_available.sh`.
 
 - Enforce failure domains.
 **Done when:** Script correctly evaluates acceptance criteria and exits 0 on success.
@@ -80,7 +78,7 @@ Reconcile Phase 2 Constitutional Status. This task forms a closed proof graph fr
 **What:** Run verifier and check evidence schema.
 **How:**
 ```bash
-bash scripts/audit/verify_tsk_p3_pre_001.sh > evidence/phase3/tsk_p3_pre_001_status_reconciliation.json
+bash scripts/audit/verify_ed25519_available.sh > evidence/phase3/wave8_crypto_operational_status.json
 ```
 **Done when:** Commands exit 0 and evidence format complies.
 
@@ -91,7 +89,7 @@ bash scripts/audit/verify_tsk_p3_pre_001.sh > evidence/phase3/tsk_p3_pre_001_sta
 
 ```bash
 # 1. Task-specific verifier
-bash scripts/audit/verify_tsk_p3_pre_001.sh
+bash scripts/audit/verify_ed25519_available.sh
 
 # 2. Local parity check
 RUN_PHASE3_GATES=1 bash scripts/dev/pre_ci.sh

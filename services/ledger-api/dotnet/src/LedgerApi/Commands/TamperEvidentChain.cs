@@ -201,6 +201,60 @@ static class TamperEvidentChain
         return null;
     }
 
+    /// <summary>
+    /// External Verifier Workflow — TSK-P3-W8-ARCH-001
+    /// 
+    /// This method bridges the application-layer NDJSON hash chain to the DB-layer
+    /// Merkle tree in proof_pack_batches / proof_pack_batch_leaves (migration 0066).
+    /// 
+    /// The 5-step external verifier workflow:
+    /// 1. Regulator receives the Merkle root from proof_pack_batches.merkle_root
+    /// 2. Regulator receives leaf proofs from proof_pack_batch_leaves.merkle_proof
+    /// 3. Regulator independently recomputes SHA-256 leaf hashes from the NDJSON log
+    ///    using this ExtractLeafHashes method (or equivalent independent implementation)
+    /// 4. Regulator verifies each leaf hash against its Merkle proof using
+    ///    EpochSealingCommand.VerifyMerkleProof()
+    /// 5. Regulator reconstructs constitutional state from verified evidence nodes,
+    ///    confirming the system's integrity without trusting Symphony's internal state
+    /// </summary>
+    public sealed record LeafHashEntry(string ArtifactId, string LeafHash);
+
+    /// <summary>
+    /// Extract (artifact_id, leaf_hash) pairs from an NDJSON chain file.
+    /// artifact_id = instruction_id from each entry
+    /// leaf_hash = chain_record.current_hash from each entry
+    /// Skips empty lines. Throws InvalidOperationException on malformed JSON.
+    /// </summary>
+    public static IEnumerable<LeafHashEntry> ExtractLeafHashes(string ndjsonPath)
+    {
+        foreach (var line in File.ReadLines(ndjsonPath))
+        {
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+
+            JsonObject? node;
+            try
+            {
+                node = JsonNode.Parse(line) as JsonObject;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Malformed JSON in NDJSON file: {ex.Message}", ex);
+            }
+
+            if (node is null)
+                throw new InvalidOperationException("NDJSON line parsed to null");
+
+            var artifactId = node["instruction_id"]?.GetValue<string>()
+                ?? throw new InvalidOperationException("Missing instruction_id in NDJSON entry");
+
+            var leafHash = node["chain_record"]?["current_hash"]?.GetValue<string>()
+                ?? throw new InvalidOperationException("Missing chain_record.current_hash in NDJSON entry");
+
+            yield return new LeafHashEntry(artifactId, leafHash);
+        }
+    }
+
     private static string? GetCurrentHash(JsonObject envelope)
         => envelope["chain_record"]?["current_hash"]?.GetValue<string>();
 

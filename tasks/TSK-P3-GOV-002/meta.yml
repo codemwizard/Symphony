@@ -1,0 +1,124 @@
+schema_version: 1
+phase: '3'
+task_id: TSK-P3-GOV-002
+title: "Seed Phase 3 invariants INV-301 through INV-310 into invariant_registry table"
+owner_role: DB_FOUNDATION
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DB_SCHEMA
+depends_on: ["TSK-P3-W1-DB-007"]
+invariants: []
+
+deliverable_files:
+  - scripts/db/verify_p3_invariant_registry_seed.sh
+  - evidence/phase3/tsk_p3_gov_002_invariant_seed.json
+  - docs/plans/phase3/TSK-P3-GOV-002/PLAN.md
+  - docs/plans/phase3/TSK-P3-GOV-002/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/db/verify_p3_invariant_registry_seed.sh
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - 0144: "Wave 5 remediation baseline"
+  table_dependencies:
+    - schema_migrations: "must track migrations"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON correctly demonstrates enforcement via state evaluation."
+proof_limitations:
+  - "Does not prove runtime API integration (deferred)."
+
+touches:
+  - scripts/db/verify_p3_invariant_registry_seed.sh
+  - evidence/phase3/tsk_p3_gov_002_invariant_seed.json
+  - tasks/TSK-P3-GOV-002/meta.yml
+  - docs/plans/phase3/TSK-P3-GOV-002/PLAN.md
+  - docs/plans/phase3/TSK-P3-GOV-002/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_gov_002_work_item_01] Create migration 0206_phase3_invariant_registry_seed.sql inserting all 10 Phase 3 invariants (INV-301 through INV-310) from PHASE3_INVARIANT_REGISTER.md into invariant_registry with is_blocking=FALSE, placeholder checksums, and correct severity/execution_layer per the register."
+  - "[ID tsk_p3_gov_002_work_item_02] Verify that exactly 10 rows exist in invariant_registry with invariant_id LIKE 'INV-3%' after migration applies, with correct verifier_type, severity, and execution_layer values matching PHASE3_INVARIANT_REGISTER.md."
+
+acceptance_criteria:
+  - "[ID tsk_p3_gov_002_work_item_01] Migration 0206 applies cleanly on top of 0205. SELECT COUNT(*) FROM invariant_registry WHERE invariant_id LIKE 'INV-3%' returns 10. All rows have is_blocking=FALSE."
+  - "[ID tsk_p3_gov_002_work_item_02] Each row's severity matches PHASE3_INVARIANT_REGISTER.md (8 CRITICAL, 2 HIGH). Each row's execution_layer matches (7 DB, 3 CI). No duplicate invariant_ids."
+  - "[ID tsk_p3_gov_002_work_item_02] All 10 rows have placeholder checksums and is_blocking=FALSE, confirming roadmap status. No row has is_blocking=TRUE (promotion requires human authorization)."
+
+negative_tests:
+  - id: TSK-P3-GOV-002-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: Migration 0206 applies cleanly on top of 0205. SELECT COUNT(*) FROM invariant_registry WHERE invariant_id LIKE 'INV-3%' returns 10. All rows have is_blocking=FALSE."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-GOV-002-P1
+    description: "Verify that execution exits 0 on success path for: Migration 0206 applies cleanly on top of 0205. SELECT COUNT(*) FROM invariant_registry WHERE invariant_id LIKE 'INV-3%' returns 10. All rows have is_blocking=FALSE."
+    required: true
+
+verification:
+  - 'bash scripts/db/verify_p3_invariant_registry_seed.sh || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-GOV-002 --evidence evidence/phase3/tsk_p3_gov_002_invariant_seed.json'
+  - 'RUN_PHASE3_GATES=1 bash scripts/dev/pre_ci.sh'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_gov_002_invariant_seed.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - invariant_count
+      - all_non_blocking
+      - severity_distribution
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+implementation_plan: docs/plans/phase3/TSK-P3-GOV-002/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-GOV-002/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py'
+client: cursor
+assigned_agent: db_foundation
+model: claude-sonnet-4-20250514

@@ -1,29 +1,29 @@
 {
   "check_id": "APPROVAL-METADATA",
   "schema_version": "1.0",
-  "timestamp_utc": "2026-05-04T12:36:00Z",
-  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
+  "timestamp_utc": "2026-05-13T01:45:00Z",
+  "git_sha": "43042779",
   "change_scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
-      "docs/decisions/ADR-0010-baseline-policy.md",
-      "docs/security/security_definer_dynamic_sql_allowlist.txt",
-      "schema/baseline.meta.json",
-      "schema/baseline.sql"
+      "schema/migrations/0205_evidence_nodes_data_class.sql",
+      "schema/migrations/0206_phase3_invariant_registry_seed.sql",
+      "docs/invariants/INVARIANTS_MANIFEST.yml",
+      "docs/invariants/INVARIANTS_ROADMAP.md",
+      "docs/contracts/sqlstate_map.yml"
     ]
   },
   "ai": {
-    "ai_prompt_hash": "c3f594d8fadba4761f865ae91177fb0c23cf7977302b97438dc0d7d5fd11a553",
-    "model_id": "claude-sonnet-4-20250514",
+    "ai_prompt_hash": "a3a8fd82e385f694856356953fb4d56581b3d78557242fcf5588b79dbf28d95e",
+    "model_id": "gemini-3-flash",
     "client": "symphony_agent",
-    "session_id": "gov-conv-015-020-implementation"
+    "session_id": "phase3-readiness-scaffolding"
   },
   "human_approval": {
-    "approver_id": "security_guardian",
-    "approval_artifact_ref": "approvals/2026-05-03/BRANCH-implement-gov-conv-015-020.md",
-    "change_reason": "Implement Phase 2 Governance Convergence tasks 015-020 following Symphony anti-drift principles",
-    "approved_at_utc": "2026-05-03T20:52:00Z"
+    "approver_id": "mwiza",
+    "approval_artifact_ref": "approvals/2026-05-13/BRANCH-feature-phase3-readiness-scaffolding.md",
+    "change_reason": "Establish Phase 3 readiness scaffolding and remediate evidentiary gaps for Merkle sealing and data classification.",
+    "approved_at_utc": "2026-05-13T01:45:00Z"
   },
-  "status": "PASS",
-  "notes": "Implementation of Phase 2 Governance Convergence tasks 015-020 including CI wiring, violation reporting, and Phase 3/4 stub documentation with anti-drift enforcement."
+  "status": "PASS"
 }

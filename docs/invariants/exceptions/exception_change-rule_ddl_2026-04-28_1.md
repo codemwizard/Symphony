@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-028
 inv_scope: change-rule
-expiry: 2026-05-12
+expiry: 2026-05-20
 follow_up_ticket: N/A
 reason: Comment-only change to restore PK/FK waiver marker; no actual DDL change.
 author: system

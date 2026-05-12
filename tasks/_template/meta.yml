@@ -70,6 +70,7 @@ task_id: <TASK-ID>                      # REQUIRED: matches DAG node id exactly
 title: "<Verb> <object> so that <outcome>"  # REQUIRED: one sentence, outcome-oriented
 owner_role: <AGENT-ROLE>               # REQUIRED: from AGENTS.md agent list
 status: planned                        # planned | ready | in-progress | completed | blocked
+archived: false                        # Set to true (with human authorization) to exclude from CI traversal
 priority: NORMAL                       # CRITICAL | HIGH | NORMAL | LOW
 risk_class: GOVERNANCE                 # SECURITY | GOVERNANCE | INTEGRITY | PERFORMANCE | INFRASTRUCTURE
 blast_radius: DOCS_ONLY               # DB_SCHEMA | APP_LAYER | CI_GATES | DOCS_ONLY | INFRA

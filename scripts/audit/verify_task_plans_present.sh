@@ -76,6 +76,10 @@ for meta in sorted(tasks_dir.rglob("meta.yml")):
         errors.append(f"{meta}: meta_not_mapping")
         continue
 
+    # TSK-P3-GOV-003: Skip archived tasks from CI traversal
+    if data.get("archived") is True:
+        continue
+
     task_id = str(data.get("task_id", meta.parent.name))
     status = str(data.get("status", "")).lower()
     if status not in ("in_progress", "completed"):

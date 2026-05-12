@@ -177,6 +177,7 @@ nonconforming = []
 v0 = 0
 v1 = 0
 
+archived_count = 0
 for p in files:
     rel = p.as_posix()
     if not p.exists():
@@ -189,6 +190,11 @@ for p in files:
 
     if not isinstance(obj, dict):
         errors.append({"path": rel, "error": "meta_not_mapping"})
+        continue
+
+    # TSK-P3-GOV-003: Skip archived tasks from CI traversal
+    if obj.get("archived") is True:
+        archived_count += 1
         continue
 
     issues = []
@@ -219,6 +225,7 @@ report = {
     "status": "PASS",
     "summary": {
         "files_scanned": len(files),
+        "archived_skipped": archived_count,
         "v0_count": v0,
         "v1_count": v1,
         "nonconforming_count": len(nonconforming),
