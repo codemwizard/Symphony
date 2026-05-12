@@ -1,0 +1,109 @@
+schema_version: 1
+phase: '3'
+task_id: TSK-P3-PRE-001
+title: "Reconcile Phase 2 Constitutional Status"
+owner_role: ARCHITECT
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+depends_on: []
+invariants: []
+
+deliverable_files:
+  - scripts/audit/verify_tsk_p3_pre_001.sh
+  - evidence/phase3/tsk_p3_pre_001_status_reconciliation.json
+  - docs/plans/phase3/TSK-P3-PRE-001/PLAN.md
+  - docs/plans/phase3/TSK-P3-PRE-001/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/verify_tsk_p3_pre_001.sh
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON correctly demonstrates enforcement via state evaluation."
+proof_limitations:
+  - "Does not prove runtime API integration (deferred)."
+
+touches:
+  - scripts/audit/verify_tsk_p3_pre_001.sh
+  - evidence/phase3/tsk_p3_pre_001_status_reconciliation.json
+  - tasks/TSK-P3-PRE-001/meta.yml
+  - docs/plans/phase3/TSK-P3-PRE-001/PLAN.md
+  - docs/plans/phase3/TSK-P3-PRE-001/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_pre_001_w01] Read PHASE_CAPABILITY_LEGALITY_MATRIX.md §3.3 and identify all references to FORMALLY UNOPENED for Phase 2."
+  - "[ID tsk_p3_pre_001_w02] Update §3.3 constitutional posture from FORMALLY UNOPENED to CLOSED with citation to approvals/2026-05-10/PHASE2_CLOSEOUT_APPROVAL.json and approvals/2026-05-03/PHASE2-RATIFICATION.md."
+  - "[ID tsk_p3_pre_001_w03] Update PROHIB-05 (line 651-656) to reflect Phase 2 is now closed, not unopened."
+  - "[ID tsk_p3_pre_001_w04] Update §3.4 (Phase 3 entry condition) to confirm Phase 2 closeout dependency is now satisfied."
+  - "[ID tsk_p3_pre_001_w05] Verify no other section of the document contains stale Phase 2 status references."
+
+acceptance_criteria:
+  - "[ID tsk_p3_pre_001_w01] grep -c 'FORMALLY UNOPENED' docs/constitutional/PHASE_CAPABILITY_LEGALITY_MATRIX.md returns 0 for Phase 2 references."
+  - "[ID tsk_p3_pre_001_w02] §3.3 cites both approval artifacts with dates."
+  - "[ID tsk_p3_pre_001_w03] PROHIB-05 accurately reflects closure."
+  - "[ID tsk_p3_pre_001_w04] §3.4 entry condition reads as satisfied."
+  - "[ID tsk_p3_pre_001_w05] Manual review or script confirms no other references."
+
+negative_tests:
+  - id: TSK-P3-PRE-001-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: grep -c 'FORMALLY UNOPENED' docs/constitutional/PHASE_CAPABILITY_LEGALITY_MATRIX.md returns 0 for Phase 2 references."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-PRE-001-P1
+    description: "Verify that execution exits 0 on success path for: grep -c 'FORMALLY UNOPENED' docs/constitutional/PHASE_CAPABILITY_LEGALITY_MATRIX.md returns 0 for Phase 2 references."
+    required: true
+
+verification:
+  - '# [ID tsk_p3_pre_001_w01] [ID tsk_p3_pre_001_w02] [ID tsk_p3_pre_001_w03] [ID tsk_p3_pre_001_w04] [ID tsk_p3_pre_001_w05] test -x scripts/audit/verify_tsk_p3_pre_001.sh && bash scripts/audit/verify_tsk_p3_pre_001.sh > evidence/phase3/tsk_p3_pre_001_status_reconciliation.json || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_pre_001_status_reconciliation.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+implementation_plan: docs/plans/phase3/TSK-P3-PRE-001/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-PRE-001/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py'
+client: cursor
+assigned_agent: architect
+model: claude-sonnet-4-20250514

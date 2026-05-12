@@ -1,0 +1,109 @@
+schema_version: 1
+phase: '3'
+task_id: TSK-P3-PRE-004
+title: "Adapt meta.yml Template for Phase 3"
+owner_role: ARCHITECT
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+depends_on: ["TSK-P3-PRE-003"]
+invariants: []
+
+deliverable_files:
+  - scripts/audit/verify_tsk_p3_pre_004.sh
+  - evidence/phase3/tsk_p3_pre_004_template_adaptation.json
+  - docs/plans/phase3/TSK-P3-PRE-004/PLAN.md
+  - docs/plans/phase3/TSK-P3-PRE-004/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: false
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/verify_tsk_p3_pre_004.sh
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: false
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON correctly demonstrates enforcement via state evaluation."
+proof_limitations:
+  - "Does not prove runtime API integration (deferred)."
+
+touches:
+  - scripts/audit/verify_tsk_p3_pre_004.sh
+  - evidence/phase3/tsk_p3_pre_004_template_adaptation.json
+  - tasks/TSK-P3-PRE-004/meta.yml
+  - docs/plans/phase3/TSK-P3-PRE-004/PLAN.md
+  - docs/plans/phase3/TSK-P3-PRE-004/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_pre_004_w01] Add wave field to the meta.yml template with comment documenting valid values."
+  - "[ID tsk_p3_pre_004_w02] Update default must_read entries to include Phase 3 constitutional documents: PHASE3_CAPABILITY_BOUNDARY.md, PHASE3_INVARIANT_REGISTER.md."
+  - "[ID tsk_p3_pre_004_w03] Update path mapping comments to include phase: 3 -> docs/plans/phase3/<TASK_ID>/PLAN.md."
+  - "[ID tsk_p3_pre_004_w04] Add docs/operations/TASK_ID_NOMENCLATURE.md to must_read for all Phase 3 tasks."
+  - "[ID tsk_p3_pre_004_w05] Verify template remains backward compatible — existing Phase 0-2 tasks must not break."
+
+acceptance_criteria:
+  - "[ID tsk_p3_pre_004_w01] wave field present in template with valid-value documentation."
+  - "[ID tsk_p3_pre_004_w02] Phase 3 must_read defaults are present."
+  - "[ID tsk_p3_pre_004_w03] Path mapping includes phase: 3."
+  - "[ID tsk_p3_pre_004_w04] docs/operations/TASK_ID_NOMENCLATURE.md added to must_read."
+  - "[ID tsk_p3_pre_004_w05] verify_task_meta_schema.sh --mode inventory exits 0 (no regressions)."
+
+negative_tests:
+  - id: TSK-P3-PRE-004-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: wave field present in template with valid-value documentation."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-PRE-004-P1
+    description: "Verify that execution exits 0 on success path for: wave field present in template with valid-value documentation."
+    required: true
+
+verification:
+  - '# [ID tsk_p3_pre_004_w01] [ID tsk_p3_pre_004_w02] [ID tsk_p3_pre_004_w03] [ID tsk_p3_pre_004_w04] [ID tsk_p3_pre_004_w05] test -x scripts/audit/verify_tsk_p3_pre_004.sh && bash scripts/audit/verify_tsk_p3_pre_004.sh > evidence/phase3/tsk_p3_pre_004_template_adaptation.json || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_pre_004_template_adaptation.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+implementation_plan: docs/plans/phase3/TSK-P3-PRE-004/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-PRE-004/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py'
+client: cursor
+assigned_agent: architect
+model: claude-sonnet-4-20250514
