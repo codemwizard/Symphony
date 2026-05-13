@@ -316,7 +316,7 @@ Search by signature name (e.g., `PRECI.DB.ENVIRONMENT`) to find all prior incide
 
 ## PRECI.AUDIT.GATES
 
-**Prior incidents (17):**
+**Prior incidents (18):**
 
 - 🔴 `REM-2026-05-12_pre_ci-phase0_ordered_checks` (2026-05-12) — status: OPEN
   - Plan: `docs/plans/phase1/REM-2026-05-12_pre_ci-phase0_ordered_checks/PLAN.md`
