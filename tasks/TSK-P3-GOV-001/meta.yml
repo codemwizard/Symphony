@@ -1,0 +1,110 @@
+schema_version: 1
+phase: '3'
+task_id: TSK-P3-GOV-001
+title: "Build constitutional compilation pipeline validating Phase 3 invariant-to-task-to-verifier wiring"
+owner_role: INVARIANTS_CURATOR
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+depends_on: ["TSK-P3-GOV-002", "TSK-P3-W1-DB-007"]
+invariants: []
+
+deliverable_files:
+  - scripts/constitutional/compile_phase3_constraints.py
+  - evidence/phase3/constitutional_constraint_manifest.json
+  - docs/plans/phase3/TSK-P3-GOV-001/PLAN.md
+  - docs/plans/phase3/TSK-P3-GOV-001/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/constitutional/compile_phase3_constraints.py
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON correctly demonstrates enforcement via state evaluation."
+proof_limitations:
+  - "Does not prove runtime API integration (deferred)."
+
+touches:
+  - scripts/constitutional/compile_phase3_constraints.py
+  - evidence/phase3/constitutional_constraint_manifest.json
+  - tasks/TSK-P3-GOV-001/meta.yml
+  - docs/plans/phase3/TSK-P3-GOV-001/PLAN.md
+  - docs/plans/phase3/TSK-P3-GOV-001/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_gov_001_work_item_01] Create scripts/constitutional/compile_phase3_constraints.py that parses PHASE3_INVARIANT_REGISTER.md and validates every INV-3xx has a verifier script path, severity, and negative test declaration."
+  - "[ID tsk_p3_gov_001_work_item_02] Validate that data_class_registry.yml contains all six constitutional data classes with complete typed fields (deletion_permission, replay_obligation, redaction_permission, retention_floor)."
+  - "[ID tsk_p3_gov_001_work_item_03] Emit evidence/phase3/constitutional_constraint_manifest.json with per-invariant wiring status, data class registry completeness, and overall pass/fail determination."
+
+acceptance_criteria:
+  - "[ID tsk_p3_gov_001_work_item_01] Script parses all 10 invariants from register. Reports verifier_exists, negative_test_declared, severity for each. Exits 1 if any invariant has a broken verifier path link."
+  - "[ID tsk_p3_gov_001_work_item_02] Script confirms data_class_registry.yml exists and contains all six classes (identity, evidentiary, provenance, replay, regulator, operational) with all required fields."
+  - "[ID tsk_p3_gov_001_work_item_03] Evidence JSON contains invariant_count, invariants_wired, invariants_broken, data_class_registry completeness, and per-invariant detail array."
+
+negative_tests:
+  - id: TSK-P3-GOV-001-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: Script parses all 10 invariants from register. Reports verifier_exists, negative_test_declared, severity for each. Exits 1 if any invariant has a broken verifier path link."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-GOV-001-P1
+    description: "Verify that execution exits 0 on success path for: Script parses all 10 invariants from register. Reports verifier_exists, negative_test_declared, severity for each. Exits 1 if any invariant has a broken verifier path link."
+    required: true
+
+verification:
+  - 'python3 scripts/constitutional/compile_phase3_constraints.py || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-GOV-001 --evidence evidence/phase3/constitutional_constraint_manifest.json'
+  - 'RUN_PHASE3_GATES=1 bash scripts/dev/pre_ci.sh'
+
+evidence:
+  - path: evidence/phase3/constitutional_constraint_manifest.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - invariant_count
+      - invariants_wired
+      - invariants_broken
+      - data_class_registry
+      - invariant_details
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+implementation_plan: docs/plans/phase3/TSK-P3-GOV-001/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-GOV-001/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py'
+client: cursor
+assigned_agent: invariants_curator
+model: claude-sonnet-4-20250514

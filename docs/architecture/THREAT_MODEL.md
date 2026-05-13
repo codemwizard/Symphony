@@ -275,3 +275,21 @@ Mitigations:
 - Evidence pointer: `evidence/phase2/tsk_p2_preauth_003_rem_05.json`.
 - Scope limitation: this threat entry covers the append-only execution-truth layer only. Mutable lifecycle state, retry semantics, and adapter invocation identity are covered by the separate `REM-2026-04-20_execution-lifecycle` casefile and MUST NOT touch `execution_records`.
 - 2026-05-02: Remediation `REM-2026-05-02_pre_ci-enforce_change_rule` updates structural execution record bindings (`0199_tsk_p2_w5_rem_01_expand.sql`, `0201`, `0202`) with `entity_type` and `entity_id` constraints to enforce bound calculation claims. `0095_rls_dual_policy_architecture.sql` drift resolved to ensure dual-policy bootstrapping integrity across missing environments.
+
+### evidence-node data-class downgrade (Phase-3 Pre-Entry)
+- Threat name: `evidence-node data-class downgrade`.
+- Assets: `evidence_nodes.data_class` column — constitutional lifecycle classification for evidence records (operational, evidentiary, provenance, constitutional, replay, archival).
+- Actors: compromised service identity or insider with UPDATE privileges attempting to weaken evidence classification.
+- Attack vectors: (a) UPDATE of `data_class` to a lower-ranked value (e.g., evidentiary→operational) to de-classify a constitutional evidence node and bypass provenance checks; (b) direct manipulation of the `constitutional_data_class` ENUM to add permissive values.
+- Mitigation: Migration `0205_evidence_nodes_data_class.sql` installs trigger `trg_enforce_data_class_monotonicity` which enforces monotonic-only transitions (upgrades allowed, downgrades rejected with SQLSTATE P3101). ENUM type `constitutional_data_class` has 6 ranked values. INV-301 through INV-310 registered at roadmap status in `INVARIANTS_MANIFEST.yml`.
+- Verifier: `scripts/db/verify_p3_evidence_nodes_data_class.sh` (5 checks: ENUM exists, column exists, trigger exists, positive upgrade, negative downgrade P3101).
+- Evidence pointer: `evidence/phase3/tsk_p3_w1_db_007_data_class.json`.
+
+### epoch-seal tamper (Phase-3 Pre-Entry)
+- Threat name: `epoch-seal tamper`.
+- Assets: `proof_pack_batches` table contents, Merkle root commitments for epoch-sealed evidence batches.
+- Actors: attacker who modifies or removes evidence records after epoch sealing, breaking the Merkle commitment chain.
+- Attack vectors: (a) retroactive modification of leaf records after Merkle root is committed; (b) substitution of proof entries to fake inclusion.
+- Mitigation: `EpochSealingCommand.cs` implements Bitcoin-standard Merkle tree construction (SHA-256 leaf hashing, node duplication for odd counts) with per-leaf proof generation and verification. `TamperEvidentChain.ExtractLeafHashes()` bridges NDJSON hash chains to Merkle tree input. `IsConstitutionalClass()` filters to evidentiary/provenance/replay nodes only.
+- Verifier: `scripts/db/verify_p3_epoch_sealing.sh` (methods present, 15 unit tests pass).
+- Evidence pointer: `evidence/phase3/tsk_p3_w8_seal_001_epoch_sealing.json`.

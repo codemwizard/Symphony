@@ -1,0 +1,199 @@
+{
+  "check_id": "P3-GOV-001-CONSTITUTIONAL-CONSTRAINT-MANIFEST",
+  "task_id": "TSK-P3-GOV-001",
+  "timestamp_utc": "2026-05-12T16:39:00Z",
+  "git_sha": "3fdf144a3178ac2e0a4dd50d7f242d22250f9f7c",
+  "status": "FAIL",
+  "pass": false,
+  "invariant_count": 10,
+  "invariants_wired": 0,
+  "invariants_broken": 10,
+  "data_class_registry": {
+    "registry_exists": true,
+    "expected_classes": [
+      "identity",
+      "evidentiary",
+      "provenance",
+      "replay",
+      "regulator",
+      "operational"
+    ],
+    "classes_found": [
+      "identity",
+      "evidentiary",
+      "provenance",
+      "replay",
+      "regulator",
+      "operational"
+    ],
+    "complete": true
+  },
+  "invariant_details": [
+    {
+      "invariant_id": "INV-301",
+      "title": "Regulatory Sovereignty Partitioning",
+      "severity": "P0",
+      "status": "roadmap",
+      "verifier_path": "scripts/audit/verify_p3_regulatory_sovereignty_partitioning.sh",
+      "verifier_exists": false,
+      "evidence_path": "evidence/phase3/inv_301_regulatory_sovereignty_partitioning.json",
+      "negative_test_declared": true,
+      "implementing_tasks": [],
+      "implementing_task_count": 0,
+      "errors": [
+        "verifier script not found: scripts/audit/verify_p3_regulatory_sovereignty_partitioning.sh"
+      ],
+      "wiring_complete": false
+    },
+    {
+      "invariant_id": "INV-302",
+      "title": "Typed Dependency Graph Completeness",
+      "severity": "P0",
+      "status": "roadmap",
+      "verifier_path": "scripts/db/verify_p3_typed_dependency_graph.sh",
+      "verifier_exists": false,
+      "evidence_path": "evidence/phase3/inv_302_typed_dependency_graph.json",
+      "negative_test_declared": true,
+      "implementing_tasks": [],
+      "implementing_task_count": 0,
+      "errors": [
+        "verifier script not found: scripts/db/verify_p3_typed_dependency_graph.sh"
+      ],
+      "wiring_complete": false
+    },
+    {
+      "invariant_id": "INV-303",
+      "title": "Recursive Legitimacy Chain Enforced",
+      "severity": "P0",
+      "status": "roadmap",
+      "verifier_path": "scripts/db/verify_p3_recursive_legitimacy_engine.sh",
+      "verifier_exists": false,
+      "evidence_path": "evidence/phase3/inv_303_recursive_legitimacy_engine.json",
+      "negative_test_declared": true,
+      "implementing_tasks": [],
+      "implementing_task_count": 0,
+      "errors": [
+        "verifier script not found: scripts/db/verify_p3_recursive_legitimacy_engine.sh"
+      ],
+      "wiring_complete": false
+    },
+    {
+      "invariant_id": "INV-304",
+      "title": "Contradiction Detection Active",
+      "severity": "P0",
+      "status": "roadmap",
+      "verifier_path": "scripts/db/verify_p3_contradiction_detection.sh",
+      "verifier_exists": false,
+      "evidence_path": "evidence/phase3/inv_304_contradiction_detection.json",
+      "negative_test_declared": false,
+      "implementing_tasks": [],
+      "implementing_task_count": 0,
+      "errors": [
+        "verifier script not found: scripts/db/verify_p3_contradiction_detection.sh",
+        "no negative test declaration in register"
+      ],
+      "wiring_complete": false
+    },
+    {
+      "invariant_id": "INV-305",
+      "title": "Cross-System Evidence Exchange Continuity",
+      "severity": "P0",
+      "status": "roadmap",
+      "verifier_path": "scripts/audit/verify_p3_cross_system_evidence_continuity.sh",
+      "verifier_exists": false,
+      "evidence_path": "evidence/phase3/inv_305_cross_system_evidence_continuity.json",
+      "negative_test_declared": true,
+      "implementing_tasks": [],
+      "implementing_task_count": 0,
+      "errors": [
+        "verifier script not found: scripts/audit/verify_p3_cross_system_evidence_continuity.sh"
+      ],
+      "wiring_complete": false
+    },
+    {
+      "invariant_id": "INV-306",
+      "title": "Failure Composition Machine-Readable",
+      "severity": "P1",
+      "status": "roadmap",
+      "verifier_path": "scripts/audit/verify_p3_failure_composition_engine.sh",
+      "verifier_exists": false,
+      "evidence_path": "evidence/phase3/inv_306_failure_composition_engine.json",
+      "negative_test_declared": true,
+      "implementing_tasks": [],
+      "implementing_task_count": 0,
+      "errors": [
+        "verifier script not found: scripts/audit/verify_p3_failure_composition_engine.sh"
+      ],
+      "wiring_complete": false
+    },
+    {
+      "invariant_id": "INV-307",
+      "title": "Authority Scope Engine Enforced",
+      "severity": "P0",
+      "status": "roadmap",
+      "verifier_path": "scripts/db/verify_p3_authority_scope_engine.sh",
+      "verifier_exists": false,
+      "evidence_path": "evidence/phase3/inv_307_authority_scope_engine.json",
+      "negative_test_declared": true,
+      "implementing_tasks": [],
+      "implementing_task_count": 0,
+      "errors": [
+        "verifier script not found: scripts/db/verify_p3_authority_scope_engine.sh"
+      ],
+      "wiring_complete": false
+    },
+    {
+      "invariant_id": "INV-308",
+      "title": "Conflict-of-Interest DB-Layer Enforced",
+      "severity": "P0",
+      "status": "roadmap",
+      "verifier_path": "scripts/db/verify_p3_conflict_of_interest_enforcement.sh",
+      "verifier_exists": false,
+      "evidence_path": "evidence/phase3/inv_308_conflict_of_interest_enforcement.json",
+      "negative_test_declared": true,
+      "implementing_tasks": [],
+      "implementing_task_count": 0,
+      "errors": [
+        "verifier script not found: scripts/db/verify_p3_conflict_of_interest_enforcement.sh"
+      ],
+      "wiring_complete": false
+    },
+    {
+      "invariant_id": "INV-309",
+      "title": "Spatial Legality and DNSH Gates Generalised",
+      "severity": "P0",
+      "status": "roadmap",
+      "verifier_path": "scripts/db/verify_p3_spatial_legality_dnsh_gates.sh",
+      "verifier_exists": false,
+      "evidence_path": "evidence/phase3/inv_309_spatial_legality_dnsh_gates.json",
+      "negative_test_declared": true,
+      "implementing_tasks": [],
+      "implementing_task_count": 0,
+      "errors": [
+        "verifier script not found: scripts/db/verify_p3_spatial_legality_dnsh_gates.sh"
+      ],
+      "wiring_complete": false
+    },
+    {
+      "invariant_id": "INV-310",
+      "title": "Dwell-Time Forensic Enforcement (CF-2 Resolution)",
+      "severity": "P1",
+      "status": "roadmap",
+      "verifier_path": "scripts/audit/verify_p3_dwell_time_forensic_enforcement.sh",
+      "verifier_exists": false,
+      "evidence_path": "evidence/phase3/inv_310_dwell_time_forensic_enforcement.json",
+      "negative_test_declared": true,
+      "implementing_tasks": [],
+      "implementing_task_count": 0,
+      "errors": [
+        "verifier script not found: scripts/audit/verify_p3_dwell_time_forensic_enforcement.sh"
+      ],
+      "wiring_complete": false
+    }
+  ],
+  "ai_prompt_hash": "a3a8fd82e385f694856356953fb4d56581b3d78557242fcf5588b79dbf28d95e",
+  "model_id": "gemini-3-flash",
+  "approver_id": "mwiza",
+  "approval_artifact_ref": "approvals/2026-05-13/BRANCH-feature-phase3-readiness-scaffolding.approval.json",
+  "change_reason": "Establish Phase 3 readiness scaffolding and remediate evidentiary gaps for Merkle sealing and data classification."
+}

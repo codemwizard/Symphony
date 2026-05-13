@@ -70,6 +70,10 @@ task_id: <TASK-ID>                      # REQUIRED: matches DAG node id exactly
 title: "<Verb> <object> so that <outcome>"  # REQUIRED: one sentence, outcome-oriented
 owner_role: <AGENT-ROLE>               # REQUIRED: from AGENTS.md agent list
 status: planned                        # planned | ready | in-progress | completed | blocked
+archived: false                        # TSK-P3-GOV-003: Set to true (by human authorization only)
+                                       # to exclude this task from active CI traversal.
+                                       # Constitutional rule: only tasks with status=completed AND
+                                       # no current Phase 3 dependencies may be archived.
 priority: NORMAL                       # CRITICAL | HIGH | NORMAL | LOW
 risk_class: GOVERNANCE                 # SECURITY | GOVERNANCE | INTEGRITY | PERFORMANCE | INFRASTRUCTURE
 blast_radius: DOCS_ONLY               # DB_SCHEMA | APP_LAYER | CI_GATES | DOCS_ONLY | INFRA

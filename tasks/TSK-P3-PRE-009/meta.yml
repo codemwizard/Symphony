@@ -1,0 +1,109 @@
+schema_version: 1
+phase: '3'
+task_id: TSK-P3-PRE-009
+title: "Phase 3 Readiness Exit Gate"
+owner_role: QA_VERIFIER
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+depends_on: ["TSK-P3-PRE-001", "TSK-P3-PRE-002", "TSK-P3-PRE-008"]
+invariants: []
+
+deliverable_files:
+  - scripts/audit/verify_tsk_p3_pre_009.sh
+  - evidence/phase3/tsk_p3_pre_009_readiness_gate.json
+  - docs/plans/phase3/TSK-P3-PRE-009/PLAN.md
+  - docs/plans/phase3/TSK-P3-PRE-009/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: false
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/verify_tsk_p3_pre_009.sh
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: false
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON correctly demonstrates enforcement via state evaluation."
+proof_limitations:
+  - "Does not prove runtime API integration (deferred)."
+
+touches:
+  - scripts/audit/verify_tsk_p3_pre_009.sh
+  - evidence/phase3/tsk_p3_pre_009_readiness_gate.json
+  - tasks/TSK-P3-PRE-009/meta.yml
+  - docs/plans/phase3/TSK-P3-PRE-009/PLAN.md
+  - docs/plans/phase3/TSK-P3-PRE-009/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_pre_009_w01] Verify Phase 2 status is reconciled: grep -c 'FORMALLY UNOPENED' returns 0 for Phase 2 in capability matrix."
+  - "[ID tsk_p3_pre_009_w02] Verify task infrastructure is functional: generate a test Phase 3 task pack and confirm it passes verify_task_meta_schema.sh."
+  - "[ID tsk_p3_pre_009_w03] Verify nomenclature is formalized: docs/operations/TASK_ID_NOMENCLATURE.md exists and contains Phase 3 group registry."
+  - "[ID tsk_p3_pre_009_w04] Verify registry is populated: docs/PHASE3/phase3_task_registry.yml exists, is valid YAML, and task_count matches actual entry count."
+  - "[ID tsk_p3_pre_009_w05] Run full pre_ci.sh to confirm no regressions."
+
+acceptance_criteria:
+  - "[ID tsk_p3_pre_009_w01] Phase 2 check passes."
+  - "[ID tsk_p3_pre_009_w02] Test task pack generation succeeds end-to-end."
+  - "[ID tsk_p3_pre_009_w03] TASK_ID_NOMENCLATURE.md exists."
+  - "[ID tsk_p3_pre_009_w04] Registry YAML check passes."
+  - "[ID tsk_p3_pre_009_w05] pre_ci.sh exits 0."
+
+negative_tests:
+  - id: TSK-P3-PRE-009-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: Phase 2 check passes."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-PRE-009-P1
+    description: "Verify that execution exits 0 on success path for: Phase 2 check passes."
+    required: true
+
+verification:
+  - '# [ID tsk_p3_pre_009_w01] [ID tsk_p3_pre_009_w02] [ID tsk_p3_pre_009_w03] [ID tsk_p3_pre_009_w04] [ID tsk_p3_pre_009_w05] test -x scripts/audit/verify_tsk_p3_pre_009.sh && bash scripts/audit/verify_tsk_p3_pre_009.sh > evidence/phase3/tsk_p3_pre_009_readiness_gate.json || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_pre_009_readiness_gate.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+implementation_plan: docs/plans/phase3/TSK-P3-PRE-009/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-PRE-009/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py'
+client: cursor
+assigned_agent: qa_verifier
+model: claude-sonnet-4-20250514

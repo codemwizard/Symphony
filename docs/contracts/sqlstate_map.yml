@@ -16,6 +16,7 @@
     "docs/contracts/"
   ],
   "ranges": {
+    "P31xx": "phase3_evidence_invariants",
     "P71xx": "outbox_invariants",
     "P72xx": "ingress_invariants",
     "P73xx": "policy_invariants",
@@ -41,6 +42,12 @@
       "class": "C",
       "subsystem": "platform",
       "meaning": "uuidv7() function required (PostgreSQL 18+)",
+      "retryable": false
+    },
+    "P3101": {
+      "class": "C",
+      "subsystem": "evidence",
+      "meaning": "evidence-node data-class downgrade attempted (monotonicity violation)",
       "retryable": false
     },
     "P7002": {

@@ -1,0 +1,111 @@
+schema_version: 1
+phase: '3'
+task_id: TSK-P3-PRE-008
+title: "Populate Phase 3 Task Registry"
+owner_role: ARCHITECT
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+depends_on: ["TSK-P3-PRE-003", "TSK-P3-PRE-007"]
+invariants: []
+
+deliverable_files:
+  - scripts/audit/verify_tsk_p3_pre_008.sh
+  - evidence/phase3/tsk_p3_pre_008_registry_population.json
+  - docs/plans/phase3/TSK-P3-PRE-008/PLAN.md
+  - docs/plans/phase3/TSK-P3-PRE-008/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: false
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/verify_tsk_p3_pre_008.sh
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: false
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON correctly demonstrates enforcement via state evaluation."
+proof_limitations:
+  - "Does not prove runtime API integration (deferred)."
+
+touches:
+  - scripts/audit/verify_tsk_p3_pre_008.sh
+  - evidence/phase3/tsk_p3_pre_008_registry_population.json
+  - tasks/TSK-P3-PRE-008/meta.yml
+  - docs/plans/phase3/TSK-P3-PRE-008/PLAN.md
+  - docs/plans/phase3/TSK-P3-PRE-008/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_pre_008_w01] Extract all task IDs from phase_3_constraint_legitimacy_engine_task_plan.md, applying nomenclature rules."
+  - "[ID tsk_p3_pre_008_w02] Assign each task a task_type from the approved taxonomy."
+  - "[ID tsk_p3_pre_008_w03] Assign each task a wave from the approved group registry."
+  - "[ID tsk_p3_pre_008_w04] Assign each task a ci_tier from the CI tier model (mark all as proposed)."
+  - "[ID tsk_p3_pre_008_w05] Link VERIFY tasks to their IMPL parents via verifies field."
+  - "[ID tsk_p3_pre_008_w06] Populate docs/PHASE3/phase3_task_registry.yml with all tasks, replacing the 3 example tasks with the verified inventory."
+
+acceptance_criteria:
+  - "[ID tsk_p3_pre_008_w01] Registry contains all tasks from phase 3 plan."
+  - "[ID tsk_p3_pre_008_w02] Every task has a valid task_type."
+  - "[ID tsk_p3_pre_008_w03] Every task has a valid wave."
+  - "[ID tsk_p3_pre_008_w04] Every task has a proposed ci_tier."
+  - "[ID tsk_p3_pre_008_w05] Every VERIFY task has a verifies field pointing to an existing IMPL task."
+  - "[ID tsk_p3_pre_008_w06] Registry is valid YAML and task_count matches."
+
+negative_tests:
+  - id: TSK-P3-PRE-008-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: Registry contains all tasks from phase 3 plan."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-PRE-008-P1
+    description: "Verify that execution exits 0 on success path for: Registry contains all tasks from phase 3 plan."
+    required: true
+
+verification:
+  - '# [ID tsk_p3_pre_008_w01] [ID tsk_p3_pre_008_w02] [ID tsk_p3_pre_008_w03] [ID tsk_p3_pre_008_w04] [ID tsk_p3_pre_008_w05] [ID tsk_p3_pre_008_w06] test -x scripts/audit/verify_tsk_p3_pre_008.sh && bash scripts/audit/verify_tsk_p3_pre_008.sh > evidence/phase3/tsk_p3_pre_008_registry_population.json || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_pre_008_registry_population.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+implementation_plan: docs/plans/phase3/TSK-P3-PRE-008/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-PRE-008/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py'
+client: cursor
+assigned_agent: architect
+model: claude-sonnet-4-20250514

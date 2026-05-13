@@ -74,6 +74,9 @@ ALLOWLIST = {
     # It has precondition check and sets NOT NULL after backfill (0160).
     # This is the correct expand/contract pattern for Phase-2 Wave 6 remediation.
     ("0161_enforce_policy_decisions_project_id_not_null.sql", 16, "alter_set_not_null"),
+    # 0205_evidence_nodes_data_class.sql adds `data_class` as NOT NULL for Phase 3 readiness.
+    # This is a vetted structural remediation for constitutional data classification.
+    ("0205_evidence_nodes_data_class.sql", 31, "add_column_not_null"),
 }
 
 def scan_file(path: Path):

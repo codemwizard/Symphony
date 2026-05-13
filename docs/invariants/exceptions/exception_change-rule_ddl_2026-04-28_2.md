@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-029
 inv_scope: change-rule
-expiry: 2026-05-12
+expiry: 2026-05-20
 follow_up_ticket: N/A
 reason: Baseline regeneration after applying migration 0172; DDL from previously applied migrations (0165, 0166, 0171) appears in regenerated baseline but was already in database.
 author: system

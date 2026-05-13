@@ -1,0 +1,87 @@
+# Constitutional Data Class Registry
+# Machine-readable materialisation of DATA_SOVEREIGNTY_AND_RETENTION_DOCTRINE.md §3
+# Cross-referenced with MRV_ARTIFACT_MUTABILITY_AND_RETENTION_CLASSIFICATION.md Tables 1-4
+#
+# Task: TSK-P3-W1-DB-007
+# Schema: constitutional_data_class ENUM (migration 0205)
+
+registry_version: "1.0.0"
+effective_date: "2026-05-12"
+authority_document: "docs/constitutional/DATA_SOVEREIGNTY_AND_RETENTION_DOCTRINE.md"
+authority_rank: 9
+
+classes:
+  identity:
+    description: "Conditionally deletable; tombstoned on erasure after retention floor"
+    mrv_amrc_table: 2  # TOMBSTONE-ONLY
+    deletion_permission: "tombstone_only"
+    replay_obligation: "structural_position_preserved"
+    redaction_permission: "raw_pii_fields_only"
+    retention_floor: "per_regime_max"
+    retention_floor_examples:
+      - regime: "ZM-BOZ"
+        floor: "5 years from relationship end"
+      - regime: "ZM-DPA"
+        floor: "3 years standard; 5 years where BoZ floor applies"
+    monotonicity_rank: 2  # Can be upgraded to regulator/replay/provenance/evidentiary
+
+  evidentiary:
+    description: "Immutable; no deletion; permanent replay obligation"
+    mrv_amrc_table: 1  # IMMUTABLE
+    deletion_permission: "never"
+    replay_obligation: "full_independent_replay"
+    redaction_permission: "none"
+    retention_floor: "permanent"
+    retention_floor_examples:
+      - regime: "INT-ART6"
+        floor: "permanent (treaty-obligated)"
+      - regime: "ZM-ZEMA"
+        floor: "permanent"
+    monotonicity_rank: 6  # Highest rank; cannot be downgraded
+
+  provenance:
+    description: "Immutable; chain must remain intact"
+    mrv_amrc_table: 1  # IMMUTABLE
+    deletion_permission: "never"
+    replay_obligation: "chain_integrity_preserved"
+    redaction_permission: "none"
+    retention_floor: "permanent"
+    monotonicity_rank: 5  # Can only be upgraded to evidentiary
+
+  replay:
+    description: "Immutable; required for constitutional reconstruction"
+    mrv_amrc_table: 1  # IMMUTABLE
+    deletion_permission: "never"
+    replay_obligation: "reconstruction_critical"
+    redaction_permission: "none"
+    retention_floor: "permanent"
+    monotonicity_rank: 4  # Can be upgraded to provenance/evidentiary
+
+  regulator:
+    description: "Per-regulator mandatory retention; no Symphony deletion authority"
+    mrv_amrc_table: 1  # IMMUTABLE (per-regime)
+    deletion_permission: "never_by_symphony"
+    replay_obligation: "regime_specific"
+    redaction_permission: "none"
+    retention_floor: "per_regime"
+    retention_floor_examples:
+      - regime: "ZM-BOZ"
+        floor: "10 years post-instrument-maturity"
+      - regime: "EU-CBAM"
+        floor: "5 years from declaration date"
+    monotonicity_rank: 3  # Can be upgraded to replay/provenance/evidentiary; cannot go to operational
+
+  operational:
+    description: "Permitted deletion after retention floor; no replay obligation"
+    mrv_amrc_table: 4  # EXHAUSTIBLE
+    deletion_permission: "after_retention_floor"
+    replay_obligation: "none"
+    redaction_permission: "full"
+    retention_floor: "90_days_to_2_years"
+    retention_floor_examples:
+      - regime: "ZM-ZICTA"
+        floor: "90 days (dev/test); 2 years (production)"
+    monotonicity_rank: 1  # Lowest rank; can be upgraded to anything
+
+# Monotonicity rule: A data_class with rank N cannot be changed to a class with rank < N.
+# This is enforced by the trg_enforce_data_class_monotonicity trigger in migration 0205.
