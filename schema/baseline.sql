@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict qW3KaP8WDzqnWWUeebic49PGpmkb7nRkvdvRRA2VG3bOgFnfzFlhX6One1a8Uyx
+\restrict vv77v7OrE3cGKQDoOgK4rjcC5NFA8MmrbmPQgpoafMXnLftgNxdpzvVdUr66aMe
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
@@ -50,6 +50,20 @@ CREATE TYPE public.attestation_source_type AS ENUM (
     'runtime_gate',
     'manual_audit',
     'deferred'
+);
+
+
+--
+-- Name: constitutional_data_class; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.constitutional_data_class AS ENUM (
+    'identity',
+    'evidentiary',
+    'provenance',
+    'replay',
+    'regulator',
+    'operational'
 );
 
 
@@ -2136,6 +2150,48 @@ BEGIN
         RAISE EXCEPTION 'CONF003: Insufficient confidence for issuance. Required: %, Actual: %. Batch: %',
             v_required_threshold, v_confidence_score, NEW.asset_batch_id
             USING ERRCODE = 'GF022';
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: enforce_data_class_monotonicity(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_data_class_monotonicity() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    -- Evidentiary is the highest classification; cannot be downgraded to anything
+    IF OLD.data_class = 'evidentiary' AND NEW.data_class <> 'evidentiary' THEN
+        RAISE EXCEPTION 'Evidentiary data class cannot be downgraded (evidence_node_id=%)',
+            OLD.evidence_node_id
+            USING ERRCODE = 'P3101';
+    END IF;
+
+    -- Provenance can only be upgraded to evidentiary, not downgraded
+    IF OLD.data_class = 'provenance' AND NEW.data_class NOT IN ('evidentiary', 'provenance') THEN
+        RAISE EXCEPTION 'Provenance data class cannot be downgraded below provenance (evidence_node_id=%)',
+            OLD.evidence_node_id
+            USING ERRCODE = 'P3101';
+    END IF;
+
+    -- Replay can be upgraded to provenance or evidentiary, not downgraded
+    IF OLD.data_class = 'replay' AND NEW.data_class NOT IN ('evidentiary', 'provenance', 'replay') THEN
+        RAISE EXCEPTION 'Replay data class cannot be downgraded below replay (evidence_node_id=%)',
+            OLD.evidence_node_id
+            USING ERRCODE = 'P3101';
+    END IF;
+
+    -- Regulator can be upgraded to evidentiary/provenance/replay, not downgraded to operational
+    IF OLD.data_class = 'regulator' AND NEW.data_class = 'operational' THEN
+        RAISE EXCEPTION 'Regulator data class cannot be downgraded to operational (evidence_node_id=%)',
+            OLD.evidence_node_id
+            USING ERRCODE = 'P3101';
     END IF;
 
     RETURN NEW;
@@ -7181,7 +7237,8 @@ CREATE TABLE public.evidence_nodes (
     monitoring_record_id uuid,
     node_type text NOT NULL,
     node_payload_json jsonb DEFAULT '{}'::jsonb NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    data_class public.constitutional_data_class DEFAULT 'operational'::public.constitutional_data_class NOT NULL
 );
 
 ALTER TABLE ONLY public.evidence_nodes FORCE ROW LEVEL SECURITY;
@@ -10985,6 +11042,13 @@ CREATE INDEX idx_evidence_edges_tenant_id ON public.evidence_edges USING btree (
 
 
 --
+-- Name: idx_evidence_nodes_data_class; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_evidence_nodes_data_class ON public.evidence_nodes USING btree (data_class);
+
+
+--
 -- Name: idx_evidence_nodes_project_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -12125,6 +12189,13 @@ CREATE TRIGGER trg_deny_revoked_tokens_mutation BEFORE DELETE OR UPDATE ON publi
 --
 
 CREATE TRIGGER trg_deny_sim_swap_alerts_mutation BEFORE DELETE OR UPDATE ON public.sim_swap_alerts FOR EACH ROW EXECUTE FUNCTION public.deny_sim_swap_alerts_mutation();
+
+
+--
+-- Name: evidence_nodes trg_enforce_data_class_monotonicity; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_enforce_data_class_monotonicity BEFORE UPDATE ON public.evidence_nodes FOR EACH ROW EXECUTE FUNCTION public.enforce_data_class_monotonicity();
 
 
 --
@@ -14278,5 +14349,5 @@ ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict qW3KaP8WDzqnWWUeebic49PGpmkb7nRkvdvRRA2VG3bOgFnfzFlhX6One1a8Uyx
+\unrestrict vv77v7OrE3cGKQDoOgK4rjcC5NFA8MmrbmPQgpoafMXnLftgNxdpzvVdUr66aMe
 
