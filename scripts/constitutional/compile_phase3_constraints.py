@@ -30,7 +30,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 INVARIANT_REGISTER = REPO_ROOT / "docs" / "PHASE3" / "PHASE3_INVARIANT_REGISTER.md"
 DATA_CLASS_REGISTRY = REPO_ROOT / "docs" / "constitutional" / "data_class_registry.yml"
-TASKS_DIR = REPO_ROOT / "docs" / "tasks"
+TASKS_DIR = REPO_ROOT / "tasks"
 EVIDENCE_DIR = REPO_ROOT / "evidence" / "phase3"
 EVIDENCE_FILE = EVIDENCE_DIR / "constitutional_constraint_manifest.json"
 

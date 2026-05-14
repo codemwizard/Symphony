@@ -1,10 +1,10 @@
 {
-  "baseline_date": "2026-05-08",
-  "baseline_path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/baselines/2026-05-08/0001_baseline.sql",
-  "baseline_cutoff": "0204_remove_app_bypass_rls_from_policies.sql",
-  "normalized_schema_sha256": "453190457697c25a732cd3c1078f4355e9a60bf02f3e7579eaaa7595d6c917a9",
+  "baseline_date": "2026-05-13",
+  "baseline_path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/baselines/current/0001_baseline.sql",
+  "baseline_cutoff": "0206_phase3_invariant_registry_seed.sql",
+  "normalized_schema_sha256": "c2cf2e917434ce4bdd5424bbe68cb473f82f76f33c168659e366ae13cddd687e",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.3 (Debian 18.3-1.pgdg13+1)",
   "pg_server_version": "18.3 (Debian 18.3-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-05-08T04:45:37.275110+00:00"
+  "generated_at_utc": "2026-05-13T03:45:00+00:00"
 }
