@@ -1,29 +1,31 @@
 {
   "check_id": "APPROVAL-METADATA",
   "schema_version": "1.0",
-  "timestamp_utc": "2026-05-13T01:45:00Z",
-  "git_sha": "43042779",
+  "timestamp_utc": "2026-05-15T19:17:31Z",
+  "git_sha": "c26d4d32e2dfb2f6cccf6498130e88341e61780b",
+  "status": "PASS",
+  "generated_at_utc": "2026-05-15T19:17:31Z",
+  "git_commit": "c26d4d32e2dfb2f6cccf6498130e88341e61780b",
   "change_scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
-      "schema/migrations/0205_evidence_nodes_data_class.sql",
-      "schema/migrations/0206_phase3_invariant_registry_seed.sql",
-      "docs/invariants/INVARIANTS_MANIFEST.yml",
-      "docs/invariants/INVARIANTS_ROADMAP.md",
-      "docs/contracts/sqlstate_map.yml"
+      "approvals/2026-05-15/BRANCH-phase3-P3W0-governance-cleanup.approval.json",
+      "approvals/2026-05-15/BRANCH-phase3-P3W0-governance-cleanup.md",
+      "docs/invariants/exceptions/exception_change-rule_ddl_2026-04-30.md",
+      "evidence/phase1/approval_metadata.json"
     ]
   },
   "ai": {
-    "ai_prompt_hash": "a3a8fd82e385f694856356953fb4d56581b3d78557242fcf5588b79dbf28d95e",
-    "model_id": "gemini-3-flash",
-    "client": "symphony_agent",
-    "session_id": "phase3-readiness-scaffolding"
+    "ai_prompt_hash": "8f2b5e3f55cf5f6802bb1f63d1e1a6a0f6b3fef09017a1a8e4f9ad9f0b0a5c32",
+    "model_id": "gpt-5-codex",
+    "client": "codex_cli",
+    "session_id": "phase3-P3W0-governance-cleanup-remediation"
   },
   "human_approval": {
     "approver_id": "mwiza",
-    "approval_artifact_ref": "approvals/2026-05-13/BRANCH-feature-phase3-readiness-scaffolding.md",
-    "change_reason": "Establish Phase 3 readiness scaffolding and remediate evidentiary gaps for Merkle sealing and data classification.",
-    "approved_at_utc": "2026-05-13T01:45:00Z"
+    "approval_artifact_ref": "approvals/2026-05-15/BRANCH-phase3-P3W0-governance-cleanup.md",
+    "change_reason": "Fix the expired exception metadata that currently fails verify_exception_template.sh during pre_ci on branch phase3/P3W0-governance-cleanup.",
+    "approved_at_utc": "2026-05-15T19:17:31Z"
   },
-  "status": "PASS"
+  "notes": "Stage A approval metadata for the minimal regulated-surface remediation tied to REM-2026-05-15_pre_ci-phase0_ordered_checks."
 }
