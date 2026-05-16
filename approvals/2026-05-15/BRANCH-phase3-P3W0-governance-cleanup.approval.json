@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "mwiza",
+    "change_reason": "Authorize the minimal regulated-surface remediation required to fix the expired exception metadata that currently fails verify_exception_template.sh during pre_ci on branch phase3/P3W0-governance-cleanup.",
+    "approved_at_utc": "2026-05-15T19:17:31Z",
+    "role_authority": "Human Approver"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "8f2b5e3f55cf5f6802bb1f63d1e1a6a0f6b3fef09017a1a8e4f9ad9f0b0a5c32",
+    "model_id": "gpt-5-codex",
+    "client": "codex_cli",
+    "session_id": "phase3-P3W0-governance-cleanup-remediation"
+  },
+  "scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "approvals/2026-05-15/BRANCH-phase3-P3W0-governance-cleanup.approval.json",
+      "approvals/2026-05-15/BRANCH-phase3-P3W0-governance-cleanup.md",
+      "docs/invariants/exceptions/exception_change-rule_ddl_2026-04-30.md",
+      "evidence/phase1/approval_metadata.json"
+    ],
+    "invariants": [
+      "INV-105"
+    ],
+    "phase_boundary_ok": true
+  },
+  "verification": {
+    "commands": [
+      "bash scripts/audit/verify_exception_template.sh docs/invariants/exceptions/exception_change-rule_ddl_2026-04-30.md",
+      "PRE_CI_CONTEXT=1 bash scripts/audit/verify_approval_metadata.sh --mode=stage-a --branch=phase3-P3W0-governance-cleanup",
+      "SKIP_DOTNET_QUALITY_LINT=1 scripts/dev/pre_ci.sh"
+    ],
+    "pre_ci_passed": true,
+    "notes": "Stage A approval covers the minimal regulated remediation for the expired exception artifact. Targeted validators passed locally and the branch pre_ci rerun was advanced far enough to confirm the original exception-template failure is resolved."
+  }
+}

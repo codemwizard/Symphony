@@ -2,6 +2,7 @@
 exception_id: EXC-801
 inv_scope: change-rule
 expiry: 2026-05-14
+closed_at: 2026-05-15
 follow_up_ticket: TSK-P2-W8-CLOSURE
 reason: Wave 8 completion. Structural changes are verified via explicit task evidence JSON files and pre_ci gating rather than invariant linkage.
 author: system
