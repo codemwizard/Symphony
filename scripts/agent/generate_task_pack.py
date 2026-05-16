@@ -14,9 +14,35 @@ Usage:
 import argparse
 import json
 import os
+import re
 import sys
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+PHASE3_ALLOWED_WAVES = {
+    "ACT",
+    "PRE",
+    "CLEAN",
+    "GOV",
+    "WP",
+    "SUPPORT",
+    "CI",
+    "W1",
+    "W2",
+    "W3",
+    "W4",
+    "W5",
+    "W6",
+    "W7",
+    "W8",
+    "W9",
+    "W10",
+}
+PHASE3_TASK_ID_RE = re.compile(r"^TSK-P3-(ACT|PRE|CLEAN|GOV|WP|SUPPORT|CI|W(?:10|[1-9]))(?:-[A-Z0-9]+)*-\d{3}$")
+PHASE3_REQUIRED_MUST_READ = [
+    "docs/operations/TASK_ID_NOMENCLATURE.md",
+    "docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md",
+    "docs/PHASE3/PHASE3_INVARIANT_REGISTER.md",
+]
 
 def die(msg):
     print(f"[FAIL] {msg}", file=sys.stderr)
@@ -39,6 +65,31 @@ def get_evidence_path(evidence):
             die("Evidence dict must contain a 'path' key.")
         return path
     return evidence
+
+def derive_phase3_wave(task_id):
+    parts = task_id.split("-")
+    if len(parts) < 4:
+        return None
+    candidate = parts[2]
+    return candidate if candidate in PHASE3_ALLOWED_WAVES else None
+
+def normalize_phase3_config(data):
+    task_id = data["task_id"]
+    if not PHASE3_TASK_ID_RE.match(task_id):
+        die(f"Invalid Phase 3 task_id: {task_id}. Must match {PHASE3_TASK_ID_RE.pattern}")
+
+    wave = data.get("wave") or derive_phase3_wave(task_id)
+    if wave not in PHASE3_ALLOWED_WAVES:
+        die(f"Invalid or missing Phase 3 wave for {task_id}: {wave}")
+    data["wave"] = wave
+
+    must_read = list(data.get("must_read", []))
+    for item in PHASE3_REQUIRED_MUST_READ:
+        if item not in must_read:
+            must_read.append(item)
+    data["must_read"] = must_read
+    data["is_regulated"] = True
+    return data
 
 def generate_plan(data, plan_dir):
     task_id = data["task_id"]
@@ -70,6 +121,14 @@ def generate_plan(data, plan_dir):
 - **Docker Context**: The container is `symphony-postgres`.
 
 ---
+"""
+
+    phase3_preconditions = ""
+    if str(data["phase"]) == "3":
+        phase3_preconditions = """
+- [ ] `docs/operations/TASK_ID_NOMENCLATURE.md` reviewed for task-family and wave rules.
+- [ ] `docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md` reviewed for scope boundaries.
+- [ ] `docs/PHASE3/PHASE3_INVARIANT_REGISTER.md` reviewed for invariant references.
 """
 
     work_items = "\n".join([f"- {w}" for w in data["work"]])
@@ -117,6 +176,7 @@ canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 - [ ] This PLAN.md has been reviewed and approved.
 - [ ] Stage A Approval artifact generated for regulated changes.
+{phase3_preconditions}
 
 ---
 
@@ -228,9 +288,22 @@ def generate_meta(data, task_dir):
     blast_radius = data["blast_radius"]
     is_regulated = data.get("is_regulated", True)
     is_db_task = blast_radius in ["DB_SCHEMA", "DATABASE"]
-    
+    must_read = list(data.get("must_read", []))
+    base_must_read = [
+        "docs/operations/AI_AGENT_OPERATION_MANUAL.md",
+        "docs/operations/TASK_CREATION_PROCESS.md",
+        "docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md",
+    ]
+    for item in base_must_read:
+        if item not in must_read:
+            must_read.insert(base_must_read.index(item), item)
+    must_read_lines = "\n".join([f"  - {item}" for item in must_read])
+
     reg_enabled = "true" if is_regulated else "false"
     rem_enabled = "true" if is_regulated or is_db_task else "false"
+    wave_line = ""
+    if str(data["phase"]) == "3" and data.get("wave"):
+        wave_line = f"wave: '{data['wave']}'\n"
 
     db_section = ""
     if is_db_task:
@@ -263,7 +336,7 @@ migration_dependencies:
 
     meta_content = f"""schema_version: 1
 phase: '{data["phase"]}'
-task_id: {task_id}
+{wave_line}task_id: {task_id}
 title: "{data["title"]}"
 owner_role: {data["owner"]}
 status: planned
@@ -345,9 +418,7 @@ failure_modes:
   - "Verifier exits 0 on negative test => CRITICAL_FAIL"
 
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - docs/operations/TASK_CREATION_PROCESS.md
-  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+{must_read_lines}
 implementation_plan: docs/plans/phase{data["phase"]}/{task_id}/PLAN.md
 implementation_log: docs/plans/phase{data["phase"]}/{task_id}/EXEC_LOG.md
 notes: 'Generated via scripts/agent/generate_task_pack.py'
@@ -363,6 +434,8 @@ model: claude-sonnet-4-20250514
 def main():
     parser = argparse.ArgumentParser(description="Generate a strictly compliant task pack.")
     parser.add_argument("--config", required=True, help="Path to JSON config defining the task")
+    parser.add_argument("--phase3", action="store_true", help="Apply Phase 3 defaults and validation")
+    parser.add_argument("--base-dir", default=BASE_DIR, help="Override output root (useful for verifier temp dirs)")
     args = parser.parse_args()
 
     config_path = os.path.abspath(args.config)
@@ -374,6 +447,12 @@ def main():
             data = json.load(f)
         except Exception as e:
             die(f"Failed to parse JSON config: {e}")
+
+    if args.phase3:
+        data["phase"] = "3"
+        data = normalize_phase3_config(data)
+    elif str(data.get("phase")) == "3":
+        data = normalize_phase3_config(data)
 
     # Enforce strict presence of cognitive input
     require_field(data, "task_id")
@@ -389,8 +468,9 @@ def main():
     if len(data["work"]) != len(data["acceptance_criteria"]):
         die("Proof graph error: 'work' items and 'acceptance_criteria' must be mapped 1:1 via IDs.")
 
-    task_dir = os.path.join(BASE_DIR, "tasks", data["task_id"])
-    plan_dir = os.path.join(BASE_DIR, f"docs/plans/phase{data['phase']}", data["task_id"])
+    output_root = os.path.abspath(args.base_dir)
+    task_dir = os.path.join(output_root, "tasks", data["task_id"])
+    plan_dir = os.path.join(output_root, f"docs/plans/phase{data['phase']}", data["task_id"])
 
     os.makedirs(task_dir, exist_ok=True)
     os.makedirs(plan_dir, exist_ok=True)

@@ -93,6 +93,7 @@ SCAN_ROOT="$SCAN_ROOT" MODE="$MODE" ALLOW_LEGACY="$ALLOW_LEGACY" DENY_LEGACY="$D
 import json
 import os
 from pathlib import Path
+import re
 import yaml  # type: ignore
 
 scan_root = Path(os.environ["SCAN_ROOT"])
@@ -143,6 +144,32 @@ legacy_keys = {
     "role",
     "assignee_role",
 }
+
+phase3_required_reads = {
+    "docs/operations/TASK_ID_NOMENCLATURE.md",
+    "docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md",
+    "docs/PHASE3/PHASE3_INVARIANT_REGISTER.md",
+}
+phase3_allowed_waves = {
+    "ACT",
+    "PRE",
+    "CLEAN",
+    "GOV",
+    "WP",
+    "SUPPORT",
+    "CI",
+    "W1",
+    "W2",
+    "W3",
+    "W4",
+    "W5",
+    "W6",
+    "W7",
+    "W8",
+    "W9",
+    "W10",
+}
+phase3_task_id_re = re.compile(r"^TSK-P3-(ACT|PRE|CLEAN|GOV|WP|SUPPORT|CI|W(?:10|[1-9]))(?:-[A-Z0-9]+)*-\d{3}$")
 
 if not scan_root.exists():
     raise SystemExit(f"ERROR: scan root missing: {scan_root}")
@@ -212,6 +239,35 @@ for p in files:
     present_legacy = sorted([k for k in legacy_keys if k in obj])
     if present_legacy:
         issues.append(f"legacy_keys_present:{','.join(present_legacy)}")
+
+    phase = str(obj.get("phase", "")).strip()
+    if phase == "3":
+        task_id = str(obj.get("task_id", "")).strip()
+        wave = str(obj.get("wave", "")).strip()
+        invariants = obj.get("invariants", [])
+        must_read = obj.get("must_read", [])
+
+        phase3_applicable = bool(wave) or str(obj.get("status", "")).strip() != "completed"
+        if phase3_applicable:
+            if not phase3_task_id_re.match(task_id):
+                issues.append("phase3_task_id_invalid")
+            if wave not in phase3_allowed_waves:
+                issues.append(f"phase3_wave_invalid:{wave}")
+            if not isinstance(must_read, list):
+                issues.append("phase3_must_read_not_list")
+            else:
+                missing_reads = sorted(phase3_required_reads.difference(set(must_read)))
+                if missing_reads:
+                    issues.append(f"phase3_missing_must_read:{','.join(missing_reads)}")
+            if not isinstance(invariants, list):
+                issues.append("phase3_invariants_not_list")
+            else:
+                invalid_invariants = [
+                    inv for inv in invariants
+                    if not re.match(r"^INV-3[0-9]{2}$", str(inv))
+                ]
+                if invalid_invariants:
+                    issues.append(f"phase3_invalid_invariants:{','.join(map(str, invalid_invariants))}")
 
     if issues:
         nonconforming.append({"path": rel, "issues": issues})

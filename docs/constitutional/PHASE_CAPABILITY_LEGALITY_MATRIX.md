@@ -131,11 +131,11 @@ current phase. The deferral is not a gap; it is an explicit constitutional
 forward-reservation. Phase-1 examples: INV-039 (`deferred_to_phase2`,
 `phase1_contract.yml`), INV-048 (`deferred_to_phase2`, `phase1_contract.yml`).
 
-**R-LEGAL-04**: Phase-3 and Phase-4 capabilities, as defined in
-PHASE_LIFECYCLE.md Sections 8 and 9, are legally absent from the current
-repository state. Their absence does not constitute a defect. Their
-constitutional territory is reserved. Scaffolding them before their phases
-open is a sovereign expansion seam activity, not premature implementation.
+**R-LEGAL-04**: Phase-4 capabilities, as defined in PHASE_LIFECYCLE.md
+Section 9, are legally absent from the current repository state. Their absence
+does not constitute a defect. Their constitutional territory is reserved.
+Scaffolding them before Phase-4 opens is a sovereign expansion seam activity,
+not premature implementation.
 
 **R-LEGAL-05**: A capability in STATE-5 with an explicitly documented limited
 posture is legally absent from full enforcement. Example: INV-125
@@ -143,12 +143,13 @@ posture is legally absent from full enforcement. Example: INV-125
 a simulated stub with explicit pending Phase-2 live finality wiring. The
 stub posture is legally enforced; the full posture is constitutionally deferred.
 
-**R-LEGAL-06**: The absence of `docs/PHASE3/`, `docs/PHASE4/` directories,
-their contract files, verifier scripts, and opening approval artifacts is
-legally required under the current constitutional state. No Phase-3 or
-Phase-4 delivery claim may be made until the full required artifact set
-(PHASE_LIFECYCLE.md Section 3) is created and merged with an opening
-approval artifact.
+**R-LEGAL-06**: The absence of unopened future-phase directories, contract
+files, verifier scripts, and opening approval artifacts remains legally
+required under the current constitutional state for those future phases. For
+Phase 3 specifically, once the full required artifact set
+(PHASE_LIFECYCLE.md Section 3) exists and the opening approval artifact is
+merged, Phase-3 lifecycle and activation claims become constitutionally
+admissible subject to the active execution envelope.
 
 **R-LEGAL-07**: A wave schedule that partitions Phase-N tasks into named
 execution batches does not constitute a phase boundary. Wave absence, wave
@@ -269,16 +270,12 @@ constitutionally enforced at the DB layer by migration 0131–0133.
 
 ### 3.3 Phase-2 (Controlled Expansion and Governance Automation)
 
-**Constitutional posture**: FORMALLY UNOPENED.
+**Constitutional posture**: HISTORICAL AND SUPERSEDED BY OPEN PHASE-3 GOVERNANCE.
 
-No Phase-2 opening approval artifact exists in `approvals/`. Phase-2 is
-constitutionally not open. All Phase-2 delivery claims are inadmissible under
-PHASE_LIFECYCLE.md Section 2F, regardless of the volume of executed work or
-evidence artifacts present under `evidence/phase2/`.
-
-This is a legal constitutional state, not a defect. The work executed under
-Phase-2 task identifiers constitutes constitutionally valid preparatory work.
-It becomes delivery-claimable only after Phase-2 formally opens.
+Phase-2 is no longer the active lifecycle surface. Phase-3 is open and governs
+current execution posture. Phase-2 evidence remains historically admissible as
+executed preparatory and delivery work within its own constitutional boundary,
+but it is not the active phase-routing authority for current task creation.
 
 | Capability | State | Legality | Authoritative Source |
 |---|---|---|---|
@@ -323,22 +320,22 @@ issuance decision to the live invariant_registry state at the time of insertion.
 
 ### 3.4 Phase-3 (Scaled Runtime Assurance)
 
-**Constitutional posture**: CONSTITUTIONALLY RESERVED, NOT OPENED.
+**Constitutional posture**: OPEN FOR ACTIVATION GOVERNANCE, RUNTIME IMPLEMENTATION STILL GATED.
 
 | Capability | State | Legality | Authoritative Source |
 |---|---|---|---|
-| All Phase-3 capability classes | STATE-3 or STATE-4 | LEGAL to be absent — Phase-3 is not open | PHASE_LIFECYCLE.md Section 8 |
-| `docs/PHASE3/` directory | STATE-4 | LEGAL to be absent currently; recommended scaffolding | PHASE_LIFECYCLE.md Section 8.4 |
-| `docs/PHASE3/PHASE3_CONTRACT.md` | STATE-4 | LEGAL to be absent; required before Phase-3 opens | PHASE_LIFECYCLE.md Section 3 |
-| `docs/PHASE3/phase3_contract.yml` | STATE-4 | LEGAL to be absent; required before Phase-3 opens | PHASE_LIFECYCLE.md Section 3 |
-| `scripts/audit/verify_phase3_contract.sh` | STATE-4 | LEGAL to be absent; required before Phase-3 opens | PHASE_LIFECYCLE.md Section 3 |
-| Any task metadata referencing `phase: '3'` | V-VIOLATION-02 | VIOLATION — Phase-3 is not open; `verify_phase_claim_admissibility.sh` will reject | Mechanically enforced |
-| Phase-3 decomposition planning documents | STATE-3 | LEGAL as planning intent; not delivery-claimable | PHASE_LIFECYCLE.md Section 2F |
+| Phase-3 lifecycle artifact set | STATE-1 | REQUIRED and present for opened-phase activation claims | PHASE_LIFECYCLE.md Section 3; approvals/2026-05-16/PHASE3-OPENING.md |
+| `docs/PHASE3/` directory | STATE-1 | REQUIRED and present | Active Phase-3 artifact set |
+| `docs/PHASE3/PHASE3_CONTRACT.md` | STATE-1 | REQUIRED and present | PHASE_LIFECYCLE.md Section 3 |
+| `docs/PHASE3/phase3_contract.yml` | STATE-1 | REQUIRED and present | PHASE_LIFECYCLE.md Section 3 |
+| `scripts/audit/verify_phase3_contract.sh` | STATE-1 | REQUIRED and present | PHASE_LIFECYCLE.md Section 3 |
+| Activation task metadata referencing `phase: '3'` | STATE-1 | LEGAL for opened-phase activation work when backed by approval and the active envelope | PHASE_EXECUTION_ENVELOPE.md |
+| Broader Phase-3 runtime implementation tasks beyond the activation sequence | STATE-2 | PLANNED but not yet executable; gated by the active envelope | PHASE_EXECUTION_ENVELOPE.md |
+| Historical Phase-3 planning and evidence artifacts | STATE-4 | LEGAL to exist but not automatically delivery-claimable until classified or regenerated | PHASE_EXECUTION_ENVELOPE.md Section 12 |
 
-**Entry condition**: Phase-3 may not open until Phase-2 closeout is complete
-and all required Phase-3 opening artifacts are created and merged. Phase-2
-must be formally opened before Phase-3 planning documents may reference Phase-3
-capabilities as delivery-claimable.
+**Entry condition satisfied**: Phase-3 opening artifacts exist and Phase 3 is
+constitutionally open for activation governance. Broader runtime implementation
+remains subject to the active envelope and the remaining activation tasks.
 
 ### 3.4A Phase-3 Doctrine-Routed Task-Plan Legality
 
@@ -678,8 +675,8 @@ It carries no constitutional admissibility weight.
 
 **PROHIB-05 — Phase-2 Evidence Existence Is Not Phase-2 Opening**
 It is prohibited to interpret the existence of ~90 evidence files under
-`evidence/phase2/**` as evidence that Phase-2 is open, delivery-claimable,
-or constitutionally active. Phase-2 is formally unopened. Evidence artifacts
+`evidence/phase2/**` as evidence that Phase-2 is the currently active phase,
+or that later-phase routing may be ignored. Evidence artifacts
 produced before phase opening are preparatory work; they become
 delivery-claimable only after the opening approval artifact is merged.
 

@@ -8,6 +8,7 @@
 
 ## Pre-Edit Documentation
 - Stage A approval sidecar created.
+- Plan: PLAN.md (`docs/plans/phase3/TSK-P3-PRE-006/PLAN.md`)
 
 ## Implementation Notes
 - (Agent to append notes here during execution)
@@ -16,5 +17,9 @@
 **verification_commands_run**:
 ```bash
 bash scripts/audit/verify_tsk_p3_pre_006.sh > evidence/phase3/tsk_p3_pre_006_validator_update.json
+python3 scripts/audit/validate_evidence.py --task TSK-P3-PRE-006 --evidence evidence/phase3/tsk_p3_pre_006_validator_update.json
 ```
-**final_status**: pending
+**final_status**: PASS
+
+## Final Summary
+- Extended the task meta schema validator with Phase 3 task ID, wave, invariant, and must-read enforcement.

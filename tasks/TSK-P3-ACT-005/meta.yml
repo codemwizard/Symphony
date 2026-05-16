@@ -1,0 +1,137 @@
+schema_version: 1
+phase: '3'
+task_id: TSK-P3-ACT-005
+title: "Normalize existing Phase 3 plans and evidence for opened-phase use"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: GOVERNANCE
+depends_on: ["TSK-P3-ACT-004"]
+invariants: []
+
+deliverable_files:
+  - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+  - docs/PHASE3/README.md
+  - docs/PHASE3/PHASE3_SOURCE_PACK.md
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - docs/PHASE3/PHASE3_OPENING_ACT.md
+  - docs/plans/phase3/phase3_artifact_classification_manifest.json
+  - docs/plans/phase3/PHASE3_OPENED_PHASE_ARTIFACT_CLASSIFICATION.md
+  - scripts/agent/verify_tsk_p3_act_005.sh
+  - docs/tasks/PHASE3_ACTIVATION_TASKS.md
+  - evidence/phase3/tsk_p3_act_005_artifact_normalization.json
+  - docs/plans/phase3/TSK-P3-ACT-005/PLAN.md
+  - docs/plans/phase3/TSK-P3-ACT-005/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+    - evidence/phase3/tsk_p3_act_005_artifact_normalization.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If any current docs/plans/phase3/** or evidence/phase3/** artifact remains unclassified."
+  - "If any pre-opening cleanup, PRE, GOV, or legacy runtime-adjacent artifact is silently classified as admissible opened-phase proof."
+  - "If the task mutates historical artifacts instead of classifying them."
+proof_guarantees:
+  - "Evidence JSON demonstrates that every current Phase 3 plan and evidence artifact is classified and that admissible opened-phase proof is limited to the activation set."
+proof_limitations:
+  - "Does not implement broader Phase 3 runtime capability work; it only normalizes artifact admissibility posture."
+
+touches:
+  - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+  - docs/PHASE3/README.md
+  - docs/PHASE3/PHASE3_SOURCE_PACK.md
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - docs/PHASE3/PHASE3_OPENING_ACT.md
+  - docs/plans/phase3/phase3_artifact_classification_manifest.json
+  - docs/plans/phase3/PHASE3_OPENED_PHASE_ARTIFACT_CLASSIFICATION.md
+  - scripts/agent/verify_tsk_p3_act_005.sh
+  - docs/tasks/PHASE3_ACTIVATION_TASKS.md
+  - evidence/phase3/tsk_p3_act_005_artifact_normalization.json
+  - tasks/TSK-P3-ACT-005/meta.yml
+  - docs/plans/phase3/TSK-P3-ACT-005/PLAN.md
+  - docs/plans/phase3/TSK-P3-ACT-005/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_act_005_work_01] Create a machine-readable classification manifest for existing docs/plans/phase3/** and evidence/phase3/** artifacts that assigns each artifact to one of: admissible_opened_phase_activation, historical_planning_only, or regenerate_required."
+  - "[ID tsk_p3_act_005_work_02] Create a human-readable Phase 3 artifact classification summary and update the dependent Phase 3 governance posture docs so they reflect that the activation sequence is complete and broader Phase 3 runtime task creation may now proceed under the active envelope."
+  - "[ID tsk_p3_act_005_work_03] Create scripts/agent/verify_tsk_p3_act_005.sh to verify every current Phase 3 plan/evidence artifact is classified, that only the activation evidence set is marked admissible for opened-phase use, emit evidence/phase3/tsk_p3_act_005_artifact_normalization.json, and register TSK-P3-ACT-005 in docs/tasks/PHASE3_ACTIVATION_TASKS.md."
+
+acceptance_criteria:
+  - "[ID tsk_p3_act_005_work_01] A machine-readable classification manifest exists and covers every current artifact under docs/plans/phase3/** and evidence/phase3/** with an explicit class and rationale."
+  - "[ID tsk_p3_act_005_work_02] A human-readable summary exists that states pre-opening cleanup, PRE, GOV, and legacy runtime-adjacent artifacts are not silently admissible as opened-phase proof and explains when regeneration is required, and the dependent Phase 3 governance posture docs no longer state that activation remains incomplete."
+  - "[ID tsk_p3_act_005_work_03] scripts/agent/verify_tsk_p3_act_005.sh exits 0 only when the manifest covers every current artifact, only the activation evidence set is classified as admissible_opened_phase_activation, and it emits structured evidence."
+  - "[ID tsk_p3_act_005_work_03] docs/tasks/PHASE3_ACTIVATION_TASKS.md registers TSK-P3-ACT-005 with its dependency, classification artifacts, verifier, and evidence path."
+
+negative_tests:
+  - id: TSK-P3-ACT-005-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: A machine-readable classification manifest exists and covers every current artifact under docs/plans/phase3/** and evidence/phase3/** with an explicit class and rationale."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-ACT-005-P1
+    description: "Verify that execution exits 0 on success path for: A machine-readable classification manifest exists and covers every current artifact under docs/plans/phase3/** and evidence/phase3/** with an explicit class and rationale."
+    required: true
+
+verification:
+  - '# [ID tsk_p3_act_005_work_01] [ID tsk_p3_act_005_work_02] [ID tsk_p3_act_005_work_03] test -x scripts/agent/verify_tsk_p3_act_005.sh && bash scripts/agent/verify_tsk_p3_act_005.sh || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-ACT-005 --evidence evidence/phase3/tsk_p3_act_005_artifact_normalization.json || exit 1'
+  - 'PRE_CI_CONTEXT=1 bash scripts/audit/verify_approval_metadata.sh --mode=stage-a --branch=chore-phase3-planning-followup || exit 1'
+  - 'bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P3-ACT-005 || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_act_005_artifact_normalization.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+  - "Unclassified Phase 3 artifact remains in docs/plans/phase3/** or evidence/phase3/** => CRITICAL_FAIL"
+  - "Non-activation artifact misclassified as admissible opened-phase proof => CRITICAL_FAIL"
+
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - approvals/2026-05-16/PHASE3-OPENING.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-012_phase3_activation_alignment.md
+implementation_plan: docs/plans/phase3/TSK-P3-ACT-005/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-ACT-005/EXEC_LOG.md
+notes: 'Completed under the human-authorized Phase 3 activation sequence after manifest coverage verification, posture-doc completion checks, and artifact normalization evidence validation all passed.'
+client: cursor
+assigned_agent: architect
+model: gpt-5-codex

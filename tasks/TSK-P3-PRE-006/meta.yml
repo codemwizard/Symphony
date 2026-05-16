@@ -1,9 +1,10 @@
 schema_version: 1
 phase: '3'
+wave: PRE
 task_id: TSK-P3-PRE-006
 title: "Update Task Schema Validator for Phase 3"
 owner_role: SECURITY_GUARDIAN
-status: planned
+status: completed
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: SCRIPTS
@@ -11,6 +12,7 @@ depends_on: ["TSK-P3-PRE-005"]
 invariants: []
 
 deliverable_files:
+  - scripts/audit/verify_task_meta_schema.sh
   - scripts/audit/verify_tsk_p3_pre_006.sh
   - evidence/phase3/tsk_p3_pre_006_validator_update.json
   - docs/plans/phase3/TSK-P3-PRE-006/PLAN.md
@@ -21,7 +23,9 @@ regulated_surface_compliance:
   approval_workflow: stage_a_stage_b
   stage_a_required_before_edit: true
   regulated_paths:
+    - scripts/audit/verify_task_meta_schema.sh
     - scripts/audit/verify_tsk_p3_pre_006.sh
+    - evidence/phase3/tsk_p3_pre_006_validator_update.json
   must_read:
     - docs/operations/REGULATED_SURFACE_PATHS.yml
     - docs/operations/approval_metadata.schema.json
@@ -50,6 +54,7 @@ proof_limitations:
   - "Does not prove runtime API integration (deferred)."
 
 touches:
+  - scripts/audit/verify_task_meta_schema.sh
   - scripts/audit/verify_tsk_p3_pre_006.sh
   - evidence/phase3/tsk_p3_pre_006_validator_update.json
   - tasks/TSK-P3-PRE-006/meta.yml
@@ -61,7 +66,7 @@ work:
   - "[ID tsk_p3_pre_006_w02] Add wave field validation: when present and phase: 3, value must be from approved Phase 3 group list."
   - "[ID tsk_p3_pre_006_w03] Add invariants range validation: when phase: 3, invariant references must match ^INV-3[0-9]{2}$ pattern."
   - "[ID tsk_p3_pre_006_w04] Add Phase 3 must_read validation: when phase: 3, must_read must include Phase 3 constitutional docs."
-  - "[ID tsk_p3_pre_006_w05] Ensure ALL Phase 3 validation rules are conditionally gated behind if obj.get('phase') == '3': to preserve backward compatibility."
+  - "[ID tsk_p3_pre_006_w05] Ensure ALL Phase 3 validation rules are conditionally gated behind Phase 3 applicability checks to preserve backward compatibility."
 
 acceptance_criteria:
   - "[ID tsk_p3_pre_006_w01] Validator rejects Phase 3 tasks with invalid task ID format."
@@ -82,6 +87,8 @@ positive_tests:
 
 verification:
   - '# [ID tsk_p3_pre_006_w01] [ID tsk_p3_pre_006_w02] [ID tsk_p3_pre_006_w03] [ID tsk_p3_pre_006_w04] [ID tsk_p3_pre_006_w05] test -x scripts/audit/verify_tsk_p3_pre_006.sh && bash scripts/audit/verify_tsk_p3_pre_006.sh > evidence/phase3/tsk_p3_pre_006_validator_update.json || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-PRE-006 --evidence evidence/phase3/tsk_p3_pre_006_validator_update.json'
+  - 'RUN_PHASE3_GATES=1 bash scripts/dev/pre_ci.sh'
 
 evidence:
   - path: evidence/phase3/tsk_p3_pre_006_validator_update.json
@@ -101,6 +108,9 @@ must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
   - docs/operations/TASK_CREATION_PROCESS.md
   - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
 implementation_plan: docs/plans/phase3/TSK-P3-PRE-006/PLAN.md
 implementation_log: docs/plans/phase3/TSK-P3-PRE-006/EXEC_LOG.md
 notes: 'Generated via scripts/agent/generate_task_pack.py'

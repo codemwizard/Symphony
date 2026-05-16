@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "classes": {
+    "admissible_opened_phase_activation": "Verifier-backed activation artifacts created after formal Phase 3 opening and admissible as opened-phase activation proof.",
+    "historical_planning_only": "Historical planning, cleanup, remediation, or governance artifacts that remain useful context but are not opened-phase delivery proof.",
+    "regenerate_required": "Legacy runtime-adjacent artifacts that must be regenerated under the opened Phase 3 regime before they can be treated as admissible implementation proof."
+  },
+  "rules": [
+    {
+      "pattern": "docs/plans/phase3/TSK-P3-ACT-00[1-5]/*.md",
+      "class": "admissible_opened_phase_activation",
+      "rationale": "Activation task plans and execution logs are part of the opened-phase activation proof chain."
+    },
+    {
+      "pattern": "docs/plans/phase3/PHASE3_OPENED_PHASE_ARTIFACT_CLASSIFICATION.md",
+      "class": "admissible_opened_phase_activation",
+      "rationale": "Human-readable normalization summary created by TSK-P3-ACT-005."
+    },
+    {
+      "pattern": "docs/plans/phase3/phase3_artifact_classification_manifest.json",
+      "class": "admissible_opened_phase_activation",
+      "rationale": "Machine-readable normalization manifest created by TSK-P3-ACT-005."
+    },
+    {
+      "pattern": "docs/plans/phase3/REM-2026-05-16_phase3_activation_human_intervention/*.md",
+      "class": "historical_planning_only",
+      "rationale": "Human intervention remediation records remain audit context, not opened-phase delivery proof."
+    },
+    {
+      "pattern": "docs/plans/phase3/TSK-P3-CLEAN-*/*.md",
+      "class": "historical_planning_only",
+      "rationale": "Cleanup task plans were created before opened-phase activation and are retained as historical planning context."
+    },
+    {
+      "pattern": "docs/plans/phase3/TSK-P3-GOV-*/*.md",
+      "class": "historical_planning_only",
+      "rationale": "Pre-activation governance task plans are contextual but not opened-phase proof."
+    },
+    {
+      "pattern": "docs/plans/phase3/TSK-P3-PRE-*/*.md",
+      "class": "historical_planning_only",
+      "rationale": "Pre-entry remediation plans remain historical readiness artifacts."
+    },
+    {
+      "pattern": "docs/plans/phase3/TSK-P3-W1-*/*.md",
+      "class": "regenerate_required",
+      "rationale": "Legacy runtime-adjacent Wave 1 planning artifacts must be regenerated under the opened-phase task regime."
+    },
+    {
+      "pattern": "docs/plans/phase3/TSK-P3-W8-*/*.md",
+      "class": "regenerate_required",
+      "rationale": "Legacy Wave 8 crossover planning artifacts must be regenerated before opened-phase use."
+    },
+    {
+      "pattern": "evidence/phase3/tsk_p3_act_00[1-5]_*.json",
+      "class": "admissible_opened_phase_activation",
+      "rationale": "Verifier-backed activation evidence emitted after formal opening."
+    },
+    {
+      "pattern": "evidence/phase3/constitutional_constraint_manifest.json",
+      "class": "historical_planning_only",
+      "rationale": "Planning-era constitutional manifest retained as context, not opened-phase proof."
+    },
+    {
+      "pattern": "evidence/phase3/tsk_p3_clean_*.json",
+      "class": "historical_planning_only",
+      "rationale": "Cleanup evidence predates the opened-phase activation posture and is historical only."
+    },
+    {
+      "pattern": "evidence/phase3/tsk_p3_gov_*.json",
+      "class": "historical_planning_only",
+      "rationale": "Governance evidence emitted before the opened-phase activation sequence remains historical."
+    },
+    {
+      "pattern": "evidence/phase3/tsk_p3_w1_*.json",
+      "class": "regenerate_required",
+      "rationale": "Wave 1 implementation evidence must be regenerated under the opened-phase verifier set before use."
+    },
+    {
+      "pattern": "evidence/phase3/tsk_p3_w8_*.json",
+      "class": "regenerate_required",
+      "rationale": "Legacy Wave 8 crossover evidence must be regenerated before it can support Phase 3 runtime claims."
+    },
+    {
+      "pattern": "evidence/phase3/wave8_crypto_operational_status.json",
+      "class": "regenerate_required",
+      "rationale": "Legacy runtime-adjacent operational status evidence is not admissible opened-phase proof without regeneration."
+    }
+  ]
+}

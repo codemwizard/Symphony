@@ -219,7 +219,9 @@ Upon ratification of this opening act:
 - Phase 3 contract obligations (P3-001 through P3-009) are **binding**.
 - Phase 3 invariants (INV-301 through INV-310) are **mandatory** — they must be
   mechanically implemented before Phase 3 exit criteria can be claimed.
-- Phase 3 work may be **admitted into planning only** (execution is mechanically gated).
+- Phase 3 activation governance work is admissible and executable under the
+  active envelope; broader runtime implementation remains gated until the
+  activation sequence completes.
 - Phase 3 tasks generated under the defective prior boundary are **constitutionally
   void** and must be regenerated under the corrected boundary.
 
@@ -230,9 +232,16 @@ Upon ratification of this opening act:
 **Conflict:** This opening act initially declared Phase 3 fully open for execution, contradicting the `PHASE_EXECUTION_ENVELOPE.md` which contained strict mechanical blocks preventing Phase 3 claims.
 
 **Resolution Status: RESOLVED**
-The conflict was escalated to the human constitutional custodian. The `PHASE_EXECUTION_ENVELOPE.md` was manually updated on 2026-05-15 by the human custodian to authorize Pre-Phase 3 governance cleanup task packs.
+The conflict was escalated to the human constitutional custodian and resolved by
+the 2026-05-16 opening approval set plus the rewritten
+`PHASE_EXECUTION_ENVELOPE.md`, which now makes Phase 3 activation governance the
+active execution surface.
 
-**Controlling Authority:** The root `PHASE_EXECUTION_ENVELOPE.md` remains the absolute controlling authority. Phase 3 is currently in a planning-only posture, and no Phase 3 task may claim executable status until explicitly permitted by the execution envelope.
+**Controlling Authority:** The root `PHASE_EXECUTION_ENVELOPE.md` remains the
+absolute controlling authority. Phase 3 is open, its lifecycle/evidence
+namespace is admissible, and the activation sequence has completed. Broader
+runtime task creation may now proceed through the governed Phase 3 DAG and task
+pack workflow.
 
 ---
 

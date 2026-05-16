@@ -1,0 +1,120 @@
+schema_version: 1
+phase: '3'
+task_id: TSK-P3-ACT-002
+title: "Create the formal Phase 3 opening approval artifact set"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: GOVERNANCE
+depends_on: ["TSK-P3-ACT-001"]
+invariants: []
+
+deliverable_files:
+  - approvals/2026-05-16/PHASE3-OPENING.md
+  - approvals/2026-05-16/PHASE3-OPENING.approval.json
+  - scripts/agent/verify_tsk_p3_act_002.sh
+  - evidence/phase3/tsk_p3_act_002_opening_approval.json
+  - docs/plans/phase3/TSK-P3-ACT-002/PLAN.md
+  - docs/plans/phase3/TSK-P3-ACT-002/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: false
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: false
+  regulated_paths: []
+  must_read: []
+
+remediation_trace_compliance:
+  enabled: false
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If the opening artifact set claims that Phase 3 runtime implementation is complete."
+  - "If the opening markdown and approval sidecar diverge on approval status or scope."
+  - "If required regulated reconciliation surfaces are omitted from the approval sidecar scope."
+proof_guarantees:
+  - "Evidence JSON demonstrates the opening markdown and sidecar exist, align, and preserve scope boundaries."
+proof_limitations:
+  - "Does not prove PHASE_EXECUTION_ENVELOPE.md or legality-layer reconciliation; those are follow-on activation tasks."
+
+touches:
+  - approvals/2026-05-16/PHASE3-OPENING.md
+  - approvals/2026-05-16/PHASE3-OPENING.approval.json
+  - scripts/agent/verify_tsk_p3_act_002.sh
+  - docs/tasks/PHASE3_ACTIVATION_TASKS.md
+  - evidence/phase3/tsk_p3_act_002_opening_approval.json
+  - tasks/TSK-P3-ACT-002/meta.yml
+  - docs/plans/phase3/TSK-P3-ACT-002/PLAN.md
+  - docs/plans/phase3/TSK-P3-ACT-002/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_act_002_work_01] Create approvals/2026-05-16/PHASE3-OPENING.md documenting human approval to open Phase 3 and the exact regulated and non-regulated activation scope."
+  - "[ID tsk_p3_act_002_work_02] Create approvals/2026-05-16/PHASE3-OPENING.approval.json conforming to the approval sidecar schema and linking the opening record to the activation surfaces."
+  - "[ID tsk_p3_act_002_work_03] Create scripts/agent/verify_tsk_p3_act_002.sh to validate the opening markdown and sidecar for required fields, scope references, and no overclaim of runtime completion, then emit evidence/phase3/tsk_p3_act_002_opening_approval.json."
+
+acceptance_criteria:
+  - "[ID tsk_p3_act_002_work_01] PHASE3-OPENING.md exists, records APPROVED status, cites the activation scope and verification plan, and does not claim that Phase 3 runtime implementation is complete."
+  - "[ID tsk_p3_act_002_work_02] PHASE3-OPENING.approval.json exists, validates against the approval sidecar schema, and records the regulated surfaces and activation artifact paths accurately."
+  - "[ID tsk_p3_act_002_work_03] verify_tsk_p3_act_002.sh exits 0 only when the opening markdown and sidecar exist, align on approval status and scope, and the evidence artifact is emitted with structured checks."
+
+negative_tests:
+  - id: TSK-P3-ACT-002-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: PHASE3-OPENING.md exists, records APPROVED status, cites the activation scope and verification plan, and does not claim that Phase 3 runtime implementation is complete."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-ACT-002-P1
+    description: "Verify that execution exits 0 on success path for: PHASE3-OPENING.md exists, records APPROVED status, cites the activation scope and verification plan, and does not claim that Phase 3 runtime implementation is complete."
+    required: true
+
+verification:
+  - '# [ID tsk_p3_act_002_work_01] [ID tsk_p3_act_002_work_02] [ID tsk_p3_act_002_work_03] test -x scripts/agent/verify_tsk_p3_act_002.sh && bash scripts/agent/verify_tsk_p3_act_002.sh || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-ACT-002 --evidence evidence/phase3/tsk_p3_act_002_opening_approval.json || exit 1'
+  - 'bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P3-ACT-002 || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_act_002_opening_approval.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+  - "Opening artifact set overclaims runtime completion => CRITICAL_FAIL"
+  - "Opening markdown and sidecar scope diverge => CRITICAL_FAIL"
+
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/PHASE_LIFECYCLE.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - approvals/2026-05-16/BRANCH-chore-phase3-planning-followup.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-012_phase3_activation_alignment.md
+implementation_plan: docs/plans/phase3/TSK-P3-ACT-002/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-ACT-002/EXEC_LOG.md
+notes: 'Completed during the human-authorized Phase 3 activation sequence; opening artifacts and verifier are in place.'
+client: cursor
+assigned_agent: architect
+model: gpt-5-codex

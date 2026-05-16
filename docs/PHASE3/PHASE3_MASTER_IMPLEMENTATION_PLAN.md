@@ -52,10 +52,10 @@ task `EXEC_LOG.md` files, migrations, verifier scripts, or evidence artifacts.
 
 ## Execution Envelope Caveat
 
-This plan is a planning artifact only. Current execution posture is governed by
-`docs/operations/PHASE_EXECUTION_ENVELOPE.md`, which states that Phase 3 is not
-the active execution phase. Any downstream implementation or atomic task
-creation must first resolve the Wave 0 execution-envelope blocker in this plan.
+This plan remains a planning artifact, but the current execution posture is now
+governed by the active Phase 3 envelope and opening approval set. The activation
+sequence is complete, so broader Phase 3 runtime task creation may proceed
+through the repo's task-pack workflow and DAG dependencies.
 
 ## Planning Hierarchy
 
@@ -132,6 +132,16 @@ They are planning nodes, not atomic task packs.
 | TSK-P3-CLEAN-006 | P3-SURF-000 | planned | IMPLEMENT | Verify archived Phase 3 files remain non-canonical and excluded. |
 | TSK-P3-CLEAN-007 | P3-SURF-000 | planned | IMPLEMENT | Maintain Phase 3 DAG artifacts after cleanup. |
 | TSK-P3-CLEAN-008 | P3-SURF-000 | planned | IMPLEMENT | Maintain implementation-plan registry and status index. |
+
+### Wave 0A - Phase Activation Governance Alignment
+
+| DAG Node | Surface | Status | Doctrine Outcome | Purpose |
+|---|---|---|---|---|
+| TSK-P3-ACT-001 | P3-SURF-000 | planned | IMPLEMENT | Build the missing Phase 3 lifecycle artifact set. |
+| TSK-P3-ACT-002 | P3-SURF-000 | planned | IMPLEMENT | Create the formal Phase 3 opening approval artifact set. |
+| TSK-P3-ACT-003 | P3-SURF-000 | planned | IMPLEMENT | Rewrite the root execution envelope for active Phase 3 status. |
+| TSK-P3-ACT-004 | P3-SURF-000 | planned | IMPLEMENT | Reconcile the legality layer and dependent Phase 3 planning posture. |
+| TSK-P3-ACT-005 | P3-SURF-000 | planned | IMPLEMENT | Normalize existing Phase 3 plans and evidence for opened-phase use. |
 
 ### Wave 1 - Lineage Foundations
 
@@ -261,6 +271,7 @@ Surface-specific plans are expected under
 | TSK-P3-CAP-009 | `TSK-P3-CAP-009_spatial_dnsh.md` | P3-SURF-009 | TSK-P3-WP-009 | not-created |
 | TSK-P3-CAP-010 | `TSK-P3-CAP-010_dwell_time_forensics.md` | P3-SURF-010 | TSK-P3-WP-010 | not-created |
 | TSK-P3-CAP-011 | `TSK-P3-CAP-011_verifier_ci.md` | P3-SURF-011 | TSK-P3-WP-011 | not-created |
+| TSK-P3-CAP-012 | `TSK-P3-CAP-012_phase3_activation_alignment.md` | P3-SURF-000 | TSK-P3-ACT-001 through TSK-P3-ACT-005 | created-planning |
 
 ## Atomic Task Creation Gate
 
@@ -297,10 +308,12 @@ This plan does not:
 
 ## Immediate Next Planning Actions
 
-1. Resolve or formally route Wave 0 cleanup nodes, especially
-   TSK-P3-CLEAN-001 and TSK-P3-CLEAN-004.
-2. Create surface-specific implementation plans from the registry in this file.
-3. Update `docs/PHASE3/phase3_task_dag.yml` statuses only after blockers or
-   surface plans change.
+1. Use `TSK-P3-CAP-012` to formalize the Phase 3 activation sweep and create
+   the corresponding `TSK-P3-ACT-00*` planning nodes.
+2. Create surface-specific implementation plans from the remaining registry
+   entries once the activation posture is reconciled.
+3. Update `docs/PHASE3/phase3_task_dag.yml` statuses only after blockers,
+   activation posture, or surface plans change.
 4. Begin `CREATE-TASK` only from a blocker-free DAG node with a completed
-   surface-specific implementation plan and all required citations.
+   surface-specific implementation plan, required lifecycle artifacts, and all
+   required citations.
