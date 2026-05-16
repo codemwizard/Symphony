@@ -8,7 +8,7 @@ Owner: Operations / Governance
 This document defines the decision procedure for classifying an incoming prompt
 and selecting the execution path that follows.
 
-The agent must identify exactly one mode from the five modes below.
+The agent must identify exactly one mode from the modes below.
 If no mode matches unambiguously after non-mutating inspection of repo state:
 STOP and ask the human which mode applies.
 
@@ -19,6 +19,63 @@ The first required read is `AGENT_ENTRYPOINT.md`.
 
 If `AGENT_ENTRYPOINT.md` is missing or unreadable: STOP and ask the human
 for guidance before doing any work.
+
+## Mode 0 - CREATE-IMPLEMENTATION-PLAN
+
+### Trigger
+
+The prompt asks to create, revise, compare, or prepare a broad implementation
+plan, phase source-pack index, execution-surface map, master implementation
+plan, phase DAG, surface-specific implementation plan, capability-specific
+plan, cleanup plan, readiness plan, or task-planning input before atomic task
+packs are created.
+
+This mode applies when the requested artifact is not itself a
+`tasks/<TASK_ID>/meta.yml` task pack and does not yet require verifier commands
+or evidence outputs for a single atomic implementation unit.
+
+### Required inputs before creating files
+
+All of the following must be discoverable from the prompt or repository:
+
+1. Lifecycle phase or planning scope.
+2. Governing capability boundary or doctrine source.
+3. Intended planning artifact type, such as source-pack index, execution
+   surface map, master implementation plan, phase DAG, surface-specific
+   implementation plan, cleanup plan, or readiness plan.
+4. Whether the plan is allowed to create atomic task packs. Default: no.
+
+If the active execution envelope conflicts with the requested phase, record the
+conflict as a blocker in the implementation plan. Do not silently treat the
+phase as executable.
+
+### Execution path
+
+Follow `docs/operations/IMPLEMENTATION_PLAN_CREATION_PROCESS.md`.
+
+This mode must not create `tasks/<TASK_ID>/meta.yml`, task `PLAN.md`,
+task `EXEC_LOG.md`, migrations, verifier scripts, or evidence artifacts.
+
+This mode may create or update planning-only artifacts such as:
+
+- `docs/PHASE<N>/PHASE<N>_SOURCE_PACK.md`
+- `docs/PHASE<N>/PHASE<N>_EXECUTION_SURFACE_MAP.md`
+- `docs/PHASE<N>/PHASE<N>_MASTER_IMPLEMENTATION_PLAN.md`
+- `docs/PHASE<N>/PHASE<N>_TASK_DAG.md`
+- `docs/PHASE<N>/phase<N>_task_dag.yml`
+- `docs/PHASE<N>/implementation_plans/README.md`
+- `docs/PHASE<N>/implementation_plans/<TSK-P<N>-WP-###>_<short_name>.md`
+
+Planning artifacts must treat tasks as implementation slices of
+constitutionally owned execution surfaces. They must not define doctrine or
+claim that a blocked phase is executable.
+
+When this mode finishes, atomic task creation must use CREATE-TASK mode and
+`docs/operations/TASK_CREATION_PROCESS.md`.
+
+For the complete AI-agent handoff from implementation planning to task-pack
+creation, see
+`docs/operations/AI_AGENT_PHASE_PLANNING_TO_TASK_HANDOFF_GUIDE.md`.
 
 ## Mode 1 — CREATE-TASK
 
@@ -73,7 +130,12 @@ Run in order and stop on first failure.
 5. Dependencies satisfied:
    Every task in `depends_on` must be `completed`.
    If not, report `STATE: blocked` and list the blocking tasks.
-6. If all pass:
+6. Active blockers resolved:
+   Every item in `blocked_by`, if present, must be resolved by the task's
+   governing plan, evidence, or blocker-clearance rule. `blocked_by` is for
+   active impediments and must not duplicate normal `depends_on` predecessors.
+   If any blocker remains unresolved, report `STATE: blocked` and list it.
+7. If all pass:
    Report `STATE: resume-ready` and continue to IMPLEMENT-TASK mode.
 
 The agent must not implement from any state other than `resume-ready`.

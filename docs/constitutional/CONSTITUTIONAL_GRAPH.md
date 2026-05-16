@@ -117,6 +117,21 @@
 | `instruction_effect_seals` | constrains | dispatch via `verify_dispatch_effect_seal` | HARD | High |
 | `deny_final_instruction_mutation` | forbids_replacement_of | `instruction_settlement_finality` rows | ABSOLUTE | Highest |
 
+### Phase 3 Doctrine Dependency Edges
+
+| Source | Edge Type | Target | Enforcement Status | Sovereignty Weight |
+|---|---|---|---|---|
+| `PHASE3_CAPABILITY_BOUNDARY.md` | routes_to | `LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md` | DOCTRINAL | Phase capability |
+| `PHASE3_CAPABILITY_BOUNDARY.md` | routes_to | `AUTHORITY_SCOPE_AND_DELEGATION_DOCTRINE.md` | DOCTRINAL | Phase capability |
+| `PHASE3_CAPABILITY_BOUNDARY.md` | routes_to | `CONTRADICTION_CLASSIFICATION_DOCTRINE.md` | DOCTRINAL | Phase capability |
+| `PHASE3_CAPABILITY_BOUNDARY.md` | routes_to | `FAILURE_COMPOSITION_TAXONOMY.md` | DOCTRINAL | Phase capability |
+| `PHASE3_CAPABILITY_BOUNDARY.md` | routes_to | `SPATIAL_CONSTRAINTS_AND_DNSH_DOCTRINE.md` | DOCTRINAL | Phase capability |
+| `PHASE3_CAPABILITY_BOUNDARY.md` | routes_to | `POLICY_ARTIFACT_AND_AUTHORITY_LINEAGE_DOCTRINE.md` | DOCTRINAL | Phase capability |
+| `LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md` | depends_on | `REPLAY_AND_HISTORICAL_TRUTH_PRIMACY.md` | DOCTRINAL | Replay authority |
+| `LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md` | depends_on | `TEMPORAL_VALIDITY_AND_REPLAY_DOCTRINE.md` | DOCTRINAL | Replay authority |
+| `CONTRADICTION_CLASSIFICATION_DOCTRINE.md` | depends_on | `AUTHORITY_SCOPE_AND_DELEGATION_DOCTRINE.md` | DOCTRINAL | Phase capability |
+| `SPATIAL_CONSTRAINTS_AND_DNSH_DOCTRINE.md` | depends_on | `POLICY_ARTIFACT_AND_AUTHORITY_LINEAGE_DOCTRINE.md` | DOCTRINAL | Phase capability |
+
 ---
 
 ## DISCONNECTED GRAPH ISLANDS

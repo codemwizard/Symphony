@@ -1,0 +1,133 @@
+schema_version: 1
+phase: '3'
+task_id: TSK-P3-CLEAN-008
+title: "Maintain Phase 3 implementation-plan registry after DAG maintenance so that registry status matches actual plan files"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  After DAG maintenance (CLEAN-007), the implementation-plan registry
+  (docs/PHASE3/implementation_plans/README.md) and the master implementation
+  plan must be updated so their status entries match actual plan files on disk.
+  No registry entry may claim task packs exist when they do not.
+
+depends_on:
+  - TSK-P3-CLEAN-007
+blocked_by: []
+invariants: []
+
+deliverable_files:
+  - scripts/audit/verify_tsk_p3_clean_008.sh
+  - evidence/phase3/tsk_p3_clean_008.json
+  - docs/plans/phase3/TSK-P3-CLEAN-008/PLAN.md
+  - docs/plans/phase3/TSK-P3-CLEAN-008/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: false
+  approval_workflow: none
+  stage_a_required_before_edit: false
+  regulated_paths: []
+  must_read: []
+
+remediation_trace_compliance:
+  enabled: false
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Creating new implementation plans or surface-specific plans."
+  - "Modifying existing implementation plan content."
+  - "Storing atomic task PLAN.md or EXEC_LOG.md content in the registry."
+
+stop_conditions:
+  - "If registry claims task packs exist when no tasks/<ID>/meta.yml exists on disk => STOP."
+  - "If registry stores atomic PLAN or EXEC_LOG content => STOP."
+  - "If registry status does not match actual file state on disk => STOP."
+
+proof_guarantees:
+  - "Verifier mechanically confirms TSK-P3-CAP-000 is listed as 'created-planning' in the registry."
+  - "Verifier mechanically confirms all plan file references in the registry resolve to existing files on disk."
+  - "Verifier mechanically confirms no registry entry claims atomic task packs exist for nodes lacking tasks/<ID>/meta.yml."
+
+proof_limitations:
+  - "Does not verify implementation plan content correctness beyond file existence."
+  - "Does not verify master plan semantic accuracy beyond registry consistency."
+
+touches:
+  - docs/PHASE3/implementation_plans/README.md
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - scripts/audit/verify_tsk_p3_clean_008.sh
+  - evidence/phase3/tsk_p3_clean_008.json
+  - tasks/TSK-P3-CLEAN-008/meta.yml
+  - docs/plans/phase3/TSK-P3-CLEAN-008/PLAN.md
+  - docs/plans/phase3/TSK-P3-CLEAN-008/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_clean_008_work_01] Update docs/PHASE3/implementation_plans/README.md to reflect the current status of all listed implementation plans after DAG maintenance."
+  - "[ID tsk_p3_clean_008_work_02] Update docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md registry entries to match actual plan file states on disk."
+  - "[ID tsk_p3_clean_008_work_03] Confirm registry does not claim task packs exist when they do not, and does not store atomic PLAN or EXEC_LOG content."
+
+acceptance_criteria:
+  - "[ID tsk_p3_clean_008_work_01] implementation_plans/README.md status for TSK-P3-CAP-000 is 'created-planning' and all downstream plans match disk state."
+  - "[ID tsk_p3_clean_008_work_02] PHASE3_MASTER_IMPLEMENTATION_PLAN.md plan registry entries match existing files on disk with no phantom references."
+  - "[ID tsk_p3_clean_008_work_03] No registry entry claims atomic task packs exist for nodes that lack tasks/<ID>/meta.yml on disk."
+
+negative_tests:
+  - id: TSK-P3-CLEAN-008-N1
+    description: "Feed a registry that lists a plan file that does not exist on disk; verifier must reject."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-CLEAN-008-P1
+    description: "Feed a registry where all entries match disk state and TSK-P3-CAP-000 is created-planning; verifier must pass."
+    required: true
+
+verification:
+  - '# [ID tsk_p3_clean_008_work_01] [ID tsk_p3_clean_008_work_02] [ID tsk_p3_clean_008_work_03] test -x scripts/audit/verify_tsk_p3_clean_008.sh && bash scripts/audit/verify_tsk_p3_clean_008.sh > evidence/phase3/tsk_p3_clean_008.json || exit 1'
+  - 'bash scripts/dev/pre_ci.sh || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_clean_008.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Registry claims task packs exist without meta.yml on disk => CRITICAL_FAIL"
+  - "Registry status does not match disk state => FAIL"
+  - "Registry stores atomic PLAN/EXEC_LOG content => CRITICAL_FAIL"
+
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/IMPLEMENTATION_PLAN_CREATION_PROCESS.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-000_governance_cleanup.md
+
+implementation_plan: docs/plans/phase3/TSK-P3-CLEAN-008/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-CLEAN-008/EXEC_LOG.md
+notes: >-
+  Structural dependency on CLEAN-007 via depends_on. Terminal node of
+  Pre-Phase 3 Wave 0. Phase Key: P3W0. Phase Name: Pre-Phase 3
+  Governance Cleanup.
+client: cursor
+assigned_agent: architect
+model: <UNASSIGNED>

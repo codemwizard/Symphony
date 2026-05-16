@@ -231,14 +231,14 @@ model, or prior conversation.
 
 ### 6.1 Phase Boundary Violations
 
-- `phase: '3'` or `phase: '4'` must not appear in any task meta.yml, branch name,
+- `phase: '4'` must not appear in any task meta.yml, branch name,
   commit message, approval artifact, evidence file, or documentation file.
-- Do not create `docs/PHASE3/PHASE3_CONTRACT.md`.
-- Do not create `docs/operations/AGENTIC_SDLC_PHASE3_POLICY.md`.
-- Do not create `scripts/audit/verify_phase3_contract.sh`.
-- Do not create any Phase-3 or Phase-4 opening approval artifact.
-- Do not write to `evidence/phase3/**` or `evidence/phase4/**`.
-- Do not use language: "Phase-3 ready", "Phase-2 complete", "Phase-4 aligned",
+- Do not create `docs/PHASE4/PHASE4_CONTRACT.md`.
+- Do not create `docs/operations/AGENTIC_SDLC_PHASE4_POLICY.md`.
+- Do not create `scripts/audit/verify_phase4_contract.sh`.
+- Do not create Phase-4 opening approval artifact.
+- Do not write to `evidence/phase4/**` or `evidence/phase4/**`.
+- Do not use language: "Phase-4 ready", "Phase-3 complete", "Phase-5 aligned",
   "Phase done", "Phase ready" in any task field or document.
 
 ### 6.2 False Completion

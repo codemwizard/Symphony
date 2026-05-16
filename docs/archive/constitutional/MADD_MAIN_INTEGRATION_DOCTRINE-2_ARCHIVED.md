@@ -2,16 +2,17 @@ The existing `MADD_MAIN_INTEGRATION_DOCTRINE.md` is already a comprehensive, aut
 
 ---
 
-# MADD_MAIN_INTEGRATION_DOCTRINE.md
+# MADD_MAIN_INTEGRATION_DOCTRINE-2_ARCHIVED.md
 
 ---
 
-**Constitutional-Status:** AUTHORITATIVE
-**Interpretation-Authority:** ROOT
-**NotebookLM-Ingestion:** CANONICAL
-**Authority-Rank:** 8
-**Phase-Scope:** GLOBAL
-**Supersedes:** Any operational integration specification, API contract, data exchange agreement, or workflow configuration document that purports to define the constitutional relationship between Symphony and MGEE, MADD, MAIN, or ZEMA without explicit constitutional grounding.
+**Constitutional-Status:** ARCHIVED (NON-CANONICAL)
+**Interpretation-Authority:** NONE
+**NotebookLM-Ingestion:** DO-NOT-INGEST
+**Authority-Rank:** 0
+**Phase-Scope:** NONE
+**Supersedes:** NONE
+**Superseded-By:** docs/constitutional/MADD_MAIN_INTEGRATION_DOCTRINE.md
 **Depends-On:**
 - `docs/constitutional/CONSTITUTIONAL_AUTHORITY_HIERARCHY.md`
 - `docs/constitutional/SYSTEM_SOVEREIGNTY_MODEL.md`

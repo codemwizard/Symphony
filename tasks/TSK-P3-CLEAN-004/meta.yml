@@ -1,0 +1,135 @@
+schema_version: 1
+phase: '3'
+task_id: TSK-P3-CLEAN-004
+title: "Reconcile Phase 3 opening posture with active execution envelope so that the conflict is explicitly resolved or escalated"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  docs/PHASE3/PHASE3_OPENING_ACT.md claims an opening posture that conflicts
+  with the active PHASE_EXECUTION_ENVELOPE.md. This task explicitly resolves,
+  defers, or escalates the conflict while preserving the root envelope as the
+  controlling authority. Doctrine-gap status is ESCALATE-DOCTRINE per DAG.
+
+depends_on: []
+blocked_by:
+  - TSK-P3-CLEAN-001
+invariants: []
+
+deliverable_files:
+  - scripts/audit/verify_tsk_p3_clean_004.sh
+  - evidence/phase3/tsk_p3_clean_004.json
+  - docs/plans/phase3/TSK-P3-CLEAN-004/PLAN.md
+  - docs/plans/phase3/TSK-P3-CLEAN-004/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: false
+  approval_workflow: none
+  stage_a_required_before_edit: false
+  regulated_paths: []
+  must_read: []
+
+remediation_trace_compliance:
+  enabled: false
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Updating the root execution envelope without human authority."
+  - "Claiming Phase 3 executable status."
+  - "Modifying Phase 3 contract, invariant register, or DAG artifacts."
+  - "Resolving the conflict unilaterally without recording the governance decision."
+
+stop_conditions:
+  - "If the task attempts to update the root envelope without human authority => STOP."
+  - "If the task claims Phase 3 executable status => STOP."
+  - "If the conflict resolution is not explicitly recorded with an outcome (RESOLVED/DEFERRED/ESCALATED) => STOP."
+
+proof_guarantees:
+  - "Verifier mechanically confirms PHASE3_OPENING_ACT.md contains a conflict-resolution section citing PHASE_EXECUTION_ENVELOPE.md."
+  - "Verifier mechanically confirms a recorded outcome (RESOLVED, DEFERRED, or ESCALATED) exists."
+  - "Verifier mechanically confirms no executable-status claim is present."
+
+proof_limitations:
+  - "Does not verify the governance decision is the correct one — that requires human judgment."
+  - "Does not verify the root envelope has been updated to reflect the resolution."
+
+touches:
+  - docs/PHASE3/PHASE3_OPENING_ACT.md
+  - scripts/audit/verify_tsk_p3_clean_004.sh
+  - evidence/phase3/tsk_p3_clean_004.json
+  - tasks/TSK-P3-CLEAN-004/meta.yml
+  - docs/plans/phase3/TSK-P3-CLEAN-004/PLAN.md
+  - docs/plans/phase3/TSK-P3-CLEAN-004/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_clean_004_work_01] Document the conflict between docs/PHASE3/PHASE3_OPENING_ACT.md and the active execution envelope (PHASE_EXECUTION_ENVELOPE.md)."
+  - "[ID tsk_p3_clean_004_work_02] Resolve, defer, or escalate the opening posture conflict with an explicit governance decision recorded in the opening act."
+  - "[ID tsk_p3_clean_004_work_03] Confirm the root execution envelope remains the controlling authority and no unauthorized Phase 3 executable status is claimed."
+
+acceptance_criteria:
+  - "[ID tsk_p3_clean_004_work_01] PHASE3_OPENING_ACT.md contains an explicit conflict-resolution section citing PHASE_EXECUTION_ENVELOPE.md."
+  - "[ID tsk_p3_clean_004_work_02] The opening posture conflict has a recorded outcome: RESOLVED, DEFERRED, or ESCALATED with rationale."
+  - "[ID tsk_p3_clean_004_work_03] No text in the opening act claims Phase 3 is executable, implementation-ready, or overrides the root envelope."
+
+negative_tests:
+  - id: TSK-P3-CLEAN-004-N1
+    description: "Feed an opening act that claims Phase 3 is executable; verifier must reject."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-CLEAN-004-P1
+    description: "Feed a correctly reconciled opening act with explicit outcome and envelope citation; verifier must pass."
+    required: true
+
+verification:
+  - '# [ID tsk_p3_clean_004_work_01] [ID tsk_p3_clean_004_work_02] [ID tsk_p3_clean_004_work_03] test -x scripts/audit/verify_tsk_p3_clean_004.sh && bash scripts/audit/verify_tsk_p3_clean_004.sh > evidence/phase3/tsk_p3_clean_004.json || exit 1'
+  - 'bash scripts/dev/pre_ci.sh || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_clean_004.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "No conflict-resolution section in opening act => CRITICAL_FAIL"
+  - "Executable-status claim present => CRITICAL_FAIL"
+  - "Envelope updated without human authority => CRITICAL_FAIL"
+
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/IMPLEMENTATION_PLAN_CREATION_PROCESS.md
+  - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-000_governance_cleanup.md
+
+implementation_plan: docs/plans/phase3/TSK-P3-CLEAN-004/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-CLEAN-004/EXEC_LOG.md
+notes: >-
+  Doctrine-gap status is ESCALATE-DOCTRINE per DAG. This task records the
+  execution-envelope conflict as its substantive cleanup target. It is not
+  the root wave blocker. Phase Key: P3W0. Phase Name: Pre-Phase 3
+  Governance Cleanup.
+client: cursor
+assigned_agent: architect
+model: <UNASSIGNED>

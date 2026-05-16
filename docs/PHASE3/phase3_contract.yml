@@ -25,7 +25,7 @@ rows:
     invariants: ["INV-302"]
     phase_scope: "PHASE-3"
     status: "planned"
-    phase_spec_ref: "ง3.1"
+    phase_spec_ref: "ยง3.1"
 
   - id: "P3-002"
     title: "Recursive Legitimacy Engine"
@@ -33,7 +33,7 @@ rows:
     invariants: ["INV-303", "INV-310"]
     phase_scope: "PHASE-3"
     status: "planned"
-    phase_spec_ref: "ง3.2"
+    phase_spec_ref: "ยง3.2"
     notes: "INV-310 (Dwell-Time Forensic) is included here as temporal legitimacy is a sub-class of recursive legitimacy. Resolves CF-2."
 
   - id: "P3-003"
@@ -42,15 +42,15 @@ rows:
     invariants: ["INV-304"]
     phase_scope: "PHASE-3"
     status: "planned"
-    phase_spec_ref: "ง3.3"
+    phase_spec_ref: "ยง3.3"
 
   - id: "P3-004"
     title: "Failure Composition Engine"
     objective: "Implement machine-readable, append-only failure decomposition records for all legitimacy rejections."
     invariants: ["INV-306", "INV-305"]
     phase_scope: "PHASE-3"
-status: "planned"
-    phase_spec_ref: "ง3.4"
+    status: "planned"
+    phase_spec_ref: "ยง3.4"
     notes: "INV-305 re-scoped from MADD-MAIN (Phase 8A) to Cross-System Evidence Exchange Continuity."
 
   - id: "P3-005"
@@ -59,7 +59,7 @@ status: "planned"
     invariants: ["INV-307"]
     phase_scope: "PHASE-3"
     status: "planned"
-    phase_spec_ref: "ง3.5"
+    phase_spec_ref: "ยง3.5"
 
   - id: "P3-006"
     title: "Regulator Override Rules"
@@ -67,7 +67,7 @@ status: "planned"
     invariants: ["INV-301"]
     phase_scope: "PHASE-3"
     status: "planned"
-    phase_spec_ref: "ง3.6"
+    phase_spec_ref: "ยง3.6"
 
   - id: "P3-007"
     title: "Conflict-of-Interest Enforcement"
@@ -75,7 +75,7 @@ status: "planned"
     invariants: ["INV-308"]
     phase_scope: "PHASE-3"
     status: "planned"
-    phase_spec_ref: "ง3.7"
+    phase_spec_ref: "ยง3.7"
     notes: "Extends INV-169 (Reg 26 separation of duties) to all decision types platform-wide."
 
   - id: "P3-008"
@@ -84,7 +84,7 @@ status: "planned"
     invariants: ["INV-309"]
     phase_scope: "PHASE-3"
     status: "planned"
-    phase_spec_ref: "ง3.8"
+    phase_spec_ref: "ยง3.8"
     notes: "Extends INV-178 (project DNSH spatial check) to platform-wide gate."
 
   - id: "P3-009"
@@ -93,5 +93,5 @@ status: "planned"
     invariants: ["INV-301", "INV-302", "INV-303", "INV-304", "INV-305", "INV-306", "INV-307", "INV-308", "INV-309", "INV-310"]
     phase_scope: "PHASE-3"
     status: "planned"
-    phase_spec_ref: "งExit Criteria"
+    phase_spec_ref: "ยงExit Criteria"
     notes: "All verifiers must be blocking CI jobs. All must emit evidence artifacts. All negative tests must pass."

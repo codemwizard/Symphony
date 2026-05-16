@@ -1,35 +1,32 @@
-# Phase 3 - External Trust Surfaces
+# Phase 3 - Constraint and Legitimacy Engine
 
-**Status: NOT OPEN FOR IMPLEMENTATION**
+**Status: PLANNING POSTURE ONLY — NOT OPEN FOR IMPLEMENTATION**
 
 ## Overview
 
-Phase 3 is a future phase that will address external trust surfaces and integration patterns. This phase is currently **non-claimable** and not open for task implementation.
+Phase 3 implements typed dependency graphs, recursive legitimacy chains, contradiction detection, failure composition, authority scope enforcement, conflict-of-interest enforcement, and spatial/DNSH gates.
+
+This phase is currently in a **planning-only posture**. The execution of Phase 3 tasks is mechanically blocked by governance gates pending explicit human authorization.
+
+## Canonical Documentation
+
+The following canonical documents govern the Phase 3 planning and structure:
+
+- [Phase 3 Source Pack](PHASE3_SOURCE_PACK.md): Registry of canonical inputs and requirements.
+- [Phase 3 Capability Boundary](PHASE3_CAPABILITY_BOUNDARY.md): Defines the strict capability limits and scope.
+- [Phase 3 Task DAG](PHASE3_TASK_DAG.md): Master dependency graph of all planned execution nodes.
+- [Phase 3 Master Implementation Plan](PHASE3_MASTER_IMPLEMENTATION_PLAN.md): The overarching architectural execution plan.
 
 ## Anti-Drift Enforcement
 
-This stub documentation prevents premature Phase-3 work initiation. Any attempts to claim Phase-3 tasks before the official Phase-3 opening will be rejected by governance gates.
-
-## Future Scope (Placeholder)
-
-When Phase-3 becomes available, it will likely include:
-
-- External API integration patterns
-- Third-party trust surface management
-- Cross-organizational governance
-- External audit and compliance interfaces
+This documentation establishes the planning posture to prevent premature Phase-3 work initiation. Any attempts to claim Phase-3 tasks as claimable before the official opening will be rejected by structural governance gates.
 
 ## Current Governance Status
 
-- **Phase Status**: Not Open
-- **Claimability**: Non-claimable
-- **Implementation Rows**: 0 (empty)
-- **Governance**: Anti-drift enforcement active
+- **Phase Status**: Planning
+- **Claimability**: Non-claimable for implementation
+- **Implementation Rows**: Tracked in master plan
 
 ## Contact
 
-Do not attempt to initiate Phase-3 work. All Phase-3 related inquiries should be directed to the Architecture team for future planning discussions.
-
----
-
-*This stub is maintained to prevent premature Phase-3 work initiation and ensure proper governance sequencing.*
+Do not attempt to initiate Phase-3 implementation work.

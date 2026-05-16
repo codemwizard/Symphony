@@ -1,0 +1,27 @@
+{
+  "task_id": "TSK-P3-CLEAN-005",
+  "git_sha": "c26d4d32e2dfb2f6cccf6498130e88341e61780b",
+  "timestamp_utc": "2026-05-15T15:48:35Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "removed_from_constitutional",
+      "result": "PASS",
+      "detail": "Duplicate removed from docs/constitutional/"
+    },
+    {
+      "name": "canonical_exists",
+      "result": "PASS",
+      "detail": "Canonical MADD_MAIN_INTEGRATION_DOCTRINE.md exists"
+    },
+    {
+      "name": "archived_and_marked",
+      "result": "PASS",
+      "detail": "Duplicate archived and marked DO-NOT-INGEST"
+    }
+  ],
+  "observed_paths": [
+    "docs/archive/constitutional/MADD_MAIN_INTEGRATION_DOCTRINE-2_ARCHIVED.md"
+  ],
+  "observed_hashes": {}
+}

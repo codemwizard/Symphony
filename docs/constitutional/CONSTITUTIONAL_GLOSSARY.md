@@ -500,6 +500,67 @@ Non-collapse doctrine is the constitutional basis for: sovereign orthogonality, 
 
 ---
 
+## Phase 3 Boundary Doctrine Definitions
+
+The following definitions are added to support Phase 3 boundary and doctrine
+readiness. They are canonical terms for task-plan scoping and must not be
+redefined by Phase 3 task plans.
+
+### Projection Universe
+
+A bounded interpretive context used to derive a legitimacy, admissibility,
+contradiction, or failure view from historical truth under declared policy,
+authority, temporal, jurisdictional, regulator, and replay inputs. A projection
+universe is a derived context. It is not historical truth and does not mutate
+historical truth.
+
+### Historical Truth
+
+The append-only canonical record of what Symphony knew, accepted, rejected,
+signed, referenced, and persisted at the time an event or decision occurred.
+Historical truth is evaluated by replay and projection, but it is not rewritten
+by later replay or projection results.
+
+### Replay Reconstruction
+
+The deterministic recomputation of a historical decision, admissibility view, or
+legitimacy view from persisted canonical artifacts under declared replay rules
+and declared projection context.
+
+### Operational Exhaust
+
+Runtime memory, mutable caches, telemetry, transient queue state, dashboard
+state, temporary files, non-evidence logs, and ephemeral service responses.
+Operational exhaust has no constitutional authority unless separately promoted
+into an admissible evidence artifact under governing doctrine.
+
+### Authority Lineage
+
+The replayable chain from an asserted authority claim back to the constitutional,
+regulator, policy, or delegated source that grants authority for the specific
+act, resource, time, and context being evaluated.
+
+### Policy Artifact
+
+A versioned, replay-addressable constitutional, regulator, jurisdictional,
+methodology, or governance input that defines a rule used by Phase 3 evaluation.
+Runtime configuration, AI synthesis, task prose, and dashboard state are not
+policy artifacts unless they are separately versioned, authority-linked, and
+admitted by governing doctrine.
+
+### Contradiction Quarantine
+
+The append-only preservation state applied when records, findings, or policy
+artifacts cannot safely be relied on pending contradiction resolution. Quarantine
+prevents reliance; it does not delete, rewrite, or erase the quarantined record.
+
+### Derived Legitimacy State
+
+The output of replay reconstruction or projection evaluation within a declared
+projection universe. A derived legitimacy state may affect future reliance or
+future operations, but it does not retroactively mutate the historical record
+that was evaluated.
+
 ## Constitutional Self-Validation
 
 **Sovereignty domains governed by this document:**

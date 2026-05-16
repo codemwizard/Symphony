@@ -1,4 +1,4 @@
-# Evidence Churn Cleanup Policy v3.3
+# Evidence Churn Cleanup Policy v3.4
 
 ## Summary
 
@@ -120,16 +120,45 @@ Where `canonical_candidate == true` if any of these are true:
 
 If any term is false or unknown, do not exclude it without manual inspection. Never permanently delete it.
 
+## Branch-Wide Non-Churn Rule
+
+Batch scoping is a keep-set construction tool, not permission to ignore older
+intentional branch work.
+
+After computing the active-batch keep-set, inspect the full branch worktree and
+classify every modified file into exactly one of these states:
+- `commit_now`
+- `leave_unstaged_as_churn`
+- `stop_for_manual_ownership_review`
+
+A file must be classified as `commit_now` if all of the following are true:
+- it does not satisfy the churn exclusion predicate
+- it is intentional branch work rather than incidental local output
+- it belongs to the current feature branch's deliverable set, even if it
+  predates the most recent remediation, verifier run, or sub-batch
+
+The agent must not treat valid branch work as disposable merely because:
+- it is outside the most recent active batch
+- it was created before the latest remediation case
+- it is not required to satisfy the newest narrow verifier failure
+- the branch name or most recent task suggests a smaller local commit scope
+
+If a file is neither provable churn nor provably unrelated to the branch, do
+not leave it behind silently. Either include it in an intentional branch commit
+or stop for manual ownership review.
+
 ## Required Cleanup Process
 
 Before cleanup:
 1. identify the active branch batch
 2. if the batch is wave-based, identify the active wave
 3. compute the keep-set
-4. inspect tracked modified evidence
-5. leave untracked or unstage files that satisfy the exclusion predicate (DO NOT use `rm`)
-6. re-run `git status --short`
-7. confirm the staged evidence matches the batch deliverable
+4. inspect the full branch worktree, not just the newest task or remediation slice
+5. classify every modified file as `commit_now`, `leave_unstaged_as_churn`, or `stop_for_manual_ownership_review`
+6. inspect tracked modified evidence
+7. leave untracked or unstage files that satisfy the exclusion predicate (DO NOT use `rm`)
+8. re-run `git status --short`
+9. confirm the staged set contains all non-churn branch work intended for the branch deliverable, not merely the newest batch subset
 
 Do not start with exclusion or deletion.
 Start with keep-set construction.
@@ -166,6 +195,8 @@ has already been computed.
 - approval metadata is canonical evidence, not noise.
 - branch-batch commits preserve the proof set for that batch, not every
   artifact ever generated locally.
+- batch-aware cleanup does not authorize leaving intentional non-churn branch
+  deliverables uncommitted just because they are outside the newest sub-batch.
 - `scripts/ci/clean_evidence.sh` must not be run blindly on a mixed working
   tree.
 - cleanup must happen on an approved feature branch, never on `main`.
@@ -197,5 +228,7 @@ It should not contain:
 In short:
 - proof stays in the commit
 - noise is excluded from the commit (but kept on disk)
+- non-churn branch work is classified and committed intentionally, even when it
+  predates the newest narrow batch
 - tracked or ambiguous artifacts are inspected, not guessed
 - permanent deletion happens only after a confirmed remote merge

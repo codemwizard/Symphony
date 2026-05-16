@@ -42,6 +42,7 @@ Before writing any file, determine which mode applies.
 See: `docs/operations/AGENT_PROMPT_ROUTER.md`
 
 Permitted modes:
+- CREATE-IMPLEMENTATION-PLAN
 - CREATE-TASK
 - RESUME-TASK
 - IMPLEMENT-TASK
@@ -79,5 +80,7 @@ Do not retry without remediation discipline.
  - `docs/operations/AGENT_PROMPT_ROUTER.md`
 - `docs/operations/AI_AGENT_OPERATION_MANUAL.md`
 - `docs/operations/POLICY_PRECEDENCE.md`
+- `docs/operations/AI_AGENT_PHASE_PLANNING_TO_TASK_HANDOFF_GUIDE.md`
+- `docs/operations/IMPLEMENTATION_PLAN_CREATION_PROCESS.md`
 - `docs/operations/TASK_CREATION_PROCESS.md`
 - `docs/operations/REMEDIATION_TRACE_WORKFLOW.md`

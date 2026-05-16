@@ -1,0 +1,130 @@
+schema_version: 1
+phase: '3'
+task_id: TSK-P3-CLEAN-002
+title: "Rewrite Phase 3 README to match planning-only posture so that it no longer describes the stale external-trust-surface posture"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  docs/PHASE3/README.md still describes a stale external-trust-surface posture
+  from an earlier planning draft. This task rewrites it to state the current
+  planning-only posture and point to the canonical planning artifacts (source
+  pack, capability boundary, DAG, master implementation plan).
+
+depends_on: []
+blocked_by:
+  - TSK-P3-CLEAN-001
+invariants: []
+
+deliverable_files:
+  - scripts/audit/verify_tsk_p3_clean_002.sh
+  - evidence/phase3/tsk_p3_clean_002.json
+  - docs/plans/phase3/TSK-P3-CLEAN-002/PLAN.md
+  - docs/plans/phase3/TSK-P3-CLEAN-002/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: false
+  approval_workflow: none
+  stage_a_required_before_edit: false
+  regulated_paths: []
+  must_read: []
+
+remediation_trace_compliance:
+  enabled: false
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Creating or modifying Phase 3 contract, invariant register, or DAG artifacts."
+  - "Claiming Phase 3 implementation is executable under the active envelope."
+  - "Adding new planning scope beyond the existing Phase 3 planning universe."
+
+stop_conditions:
+  - "If README claims Phase 3 implementation is executable under the active envelope => STOP."
+  - "If README introduces new planning scope not present in the master implementation plan => STOP."
+  - "If stale external-trust-surface phrases remain after rewrite => STOP."
+
+proof_guarantees:
+  - "Verifier mechanically confirms stale external-trust-surface phrases are absent."
+  - "Verifier mechanically confirms canonical planning references (source pack, boundary, DAG, master plan) are present."
+
+proof_limitations:
+  - "Does not verify the semantic accuracy of the planning posture statement beyond reference presence."
+  - "Does not verify downstream documents are consistent with the README rewrite."
+
+touches:
+  - docs/PHASE3/README.md
+  - scripts/audit/verify_tsk_p3_clean_002.sh
+  - evidence/phase3/tsk_p3_clean_002.json
+  - tasks/TSK-P3-CLEAN-002/meta.yml
+  - docs/plans/phase3/TSK-P3-CLEAN-002/PLAN.md
+  - docs/plans/phase3/TSK-P3-CLEAN-002/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_clean_002_work_01] Remove all stale external-trust-surface posture language from docs/PHASE3/README.md."
+  - "[ID tsk_p3_clean_002_work_02] Add planning-only posture statement and canonical references to source pack, capability boundary, DAG, and master implementation plan."
+  - "[ID tsk_p3_clean_002_work_03] Confirm the README does not claim Phase 3 implementation is executable under the active execution envelope."
+
+acceptance_criteria:
+  - "[ID tsk_p3_clean_002_work_01] No stale external-trust-surface phrases remain in docs/PHASE3/README.md."
+  - "[ID tsk_p3_clean_002_work_02] README contains explicit references to PHASE3_SOURCE_PACK.md, PHASE3_CAPABILITY_BOUNDARY.md, PHASE3_TASK_DAG.md, and PHASE3_MASTER_IMPLEMENTATION_PLAN.md."
+  - "[ID tsk_p3_clean_002_work_03] No string matching 'implementation ready', 'executable', or 'Phase 3 is open' appears in README.md."
+
+negative_tests:
+  - id: TSK-P3-CLEAN-002-N1
+    description: "Feed a README that still contains stale 'external trust surface' phrases; verifier must reject."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-CLEAN-002-P1
+    description: "Feed a correctly rewritten README with planning posture and canonical refs; verifier must pass."
+    required: true
+
+verification:
+  - '# [ID tsk_p3_clean_002_work_01] [ID tsk_p3_clean_002_work_02] [ID tsk_p3_clean_002_work_03] test -x scripts/audit/verify_tsk_p3_clean_002.sh && bash scripts/audit/verify_tsk_p3_clean_002.sh > evidence/phase3/tsk_p3_clean_002.json || exit 1'
+  - 'bash scripts/dev/pre_ci.sh || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_clean_002.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Stale posture phrases remain => CRITICAL_FAIL"
+  - "Canonical planning references missing => FAIL"
+  - "Execution-readiness claim introduced => CRITICAL_FAIL"
+
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/IMPLEMENTATION_PLAN_CREATION_PROCESS.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-000_governance_cleanup.md
+
+implementation_plan: docs/plans/phase3/TSK-P3-CLEAN-002/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-CLEAN-002/EXEC_LOG.md
+notes: >-
+  Independent cleanup node, wave-gated by CLEAN-001 via blocked_by.
+  Phase Key: P3W0. Phase Name: Pre-Phase 3 Governance Cleanup.
+client: cursor
+assigned_agent: architect
+model: <UNASSIGNED>
