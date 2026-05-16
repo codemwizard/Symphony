@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "mwiza",
+    "change_reason": "Authorize the formal Phase 3 opening artifact set and the immediate governance-reconciliation tasks required to align the stale root execution envelope with the intended Phase 3 state.",
+    "approved_at_utc": "2026-05-16T06:17:21Z",
+    "role_authority": "Human Approver"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "7a9d5a378da7de98a3363114ea6d9b8745424edbdda0b9286f838b5ec14015e1",
+    "model_id": "gpt-5-codex",
+    "client": "codex_cli",
+    "session_id": "phase3-opening-approval"
+  },
+  "scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "approvals/2026-05-16/PHASE3-OPENING.md",
+      "approvals/2026-05-16/PHASE3-OPENING.approval.json",
+      "docs/operations/AGENTIC_SDLC_PHASE3_POLICY.md",
+      "docs/operations/PHASE_EXECUTION_ENVELOPE.md",
+      "scripts/audit/verify_phase3_contract.sh",
+      "docs/PHASE3/PHASE3_CONTRACT.md",
+      "evidence/phase3/tsk_p3_act_001_lifecycle_artifacts.json",
+      "evidence/phase3/tsk_p3_act_002_opening_approval.json"
+    ],
+    "phase_boundary_ok": true
+  },
+  "verification": {
+    "commands": [
+      "bash scripts/agent/verify_tsk_p3_act_002.sh",
+      "python3 scripts/audit/validate_evidence.py --task TSK-P3-ACT-002 --evidence evidence/phase3/tsk_p3_act_002_opening_approval.json"
+    ],
+    "pre_ci_passed": false,
+    "notes": "Formal phase-opening approval created during the activation sequence. Full pre_ci reconciliation is deferred to later activation tasks that update the root execution envelope and legality layers."
+  }
+}

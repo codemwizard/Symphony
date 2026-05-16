@@ -1,9 +1,10 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-PRE-005
+wave: PRE
 title: "Update Task Generator for Phase 3 Mode"
 owner_role: SECURITY_GUARDIAN
-status: planned
+status: completed
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: SCRIPTS
@@ -11,6 +12,7 @@ depends_on: ["TSK-P3-PRE-004"]
 invariants: []
 
 deliverable_files:
+  - scripts/agent/generate_task_pack.py
   - scripts/audit/verify_tsk_p3_pre_005.sh
   - evidence/phase3/tsk_p3_pre_005_generator_update.json
   - docs/plans/phase3/TSK-P3-PRE-005/PLAN.md
@@ -22,6 +24,7 @@ regulated_surface_compliance:
   stage_a_required_before_edit: true
   regulated_paths:
     - scripts/audit/verify_tsk_p3_pre_005.sh
+    - evidence/phase3/tsk_p3_pre_005_generator_update.json
   must_read:
     - docs/operations/REGULATED_SURFACE_PATHS.yml
     - docs/operations/approval_metadata.schema.json
@@ -50,6 +53,7 @@ proof_limitations:
   - "Does not prove runtime API integration (deferred)."
 
 touches:
+  - scripts/agent/generate_task_pack.py
   - scripts/audit/verify_tsk_p3_pre_005.sh
   - evidence/phase3/tsk_p3_pre_005_generator_update.json
   - tasks/TSK-P3-PRE-005/meta.yml
@@ -82,6 +86,8 @@ positive_tests:
 
 verification:
   - '# [ID tsk_p3_pre_005_w01] [ID tsk_p3_pre_005_w02] [ID tsk_p3_pre_005_w03] [ID tsk_p3_pre_005_w04] [ID tsk_p3_pre_005_w05] test -x scripts/audit/verify_tsk_p3_pre_005.sh && bash scripts/audit/verify_tsk_p3_pre_005.sh > evidence/phase3/tsk_p3_pre_005_generator_update.json || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-PRE-005 --evidence evidence/phase3/tsk_p3_pre_005_generator_update.json'
+  - 'RUN_PHASE3_GATES=1 bash scripts/dev/pre_ci.sh'
 
 evidence:
   - path: evidence/phase3/tsk_p3_pre_005_generator_update.json
@@ -101,6 +107,9 @@ must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
   - docs/operations/TASK_CREATION_PROCESS.md
   - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
 implementation_plan: docs/plans/phase3/TSK-P3-PRE-005/PLAN.md
 implementation_log: docs/plans/phase3/TSK-P3-PRE-005/EXEC_LOG.md
 notes: 'Generated via scripts/agent/generate_task_pack.py'

@@ -8,6 +8,7 @@
 
 ## Pre-Edit Documentation
 - Stage A approval sidecar created.
+- Plan: PLAN.md (`docs/plans/phase3/TSK-P3-PRE-003/PLAN.md`)
 
 ## Implementation Notes
 - (Agent to append notes here during execution)
@@ -16,5 +17,9 @@
 **verification_commands_run**:
 ```bash
 bash scripts/audit/verify_tsk_p3_pre_003.sh > evidence/phase3/tsk_p3_pre_003_nomenclature.json
+python3 scripts/audit/validate_evidence.py --task TSK-P3-PRE-003 --evidence evidence/phase3/tsk_p3_pre_003_nomenclature.json
 ```
-**final_status**: pending
+**final_status**: PASS
+
+## Final Summary
+- Formalized Phase 3 task ID nomenclature, group registry, and legacy-family rejection rules.

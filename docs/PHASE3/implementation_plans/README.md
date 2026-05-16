@@ -54,6 +54,7 @@ Each file in this directory must include:
 | TSK-P3-CAP-009 | `TSK-P3-CAP-009_spatial_dnsh.md` | P3-SURF-009 | TSK-P3-WP-009 | not-created | Depends on lineage and failure surfaces |
 | TSK-P3-CAP-010 | `TSK-P3-CAP-010_dwell_time_forensics.md` | P3-SURF-010 | TSK-P3-WP-010 | not-created | Depends on projection, contradiction, and failure surfaces |
 | TSK-P3-CAP-011 | `TSK-P3-CAP-011_verifier_ci.md` | P3-SURF-011 | TSK-P3-WP-011 | not-created | Depends on all implementation surfaces |
+| TSK-P3-CAP-012 | `TSK-P3-CAP-012_phase3_activation_alignment.md` | P3-SURF-000 | TSK-P3-ACT-001 through TSK-P3-ACT-005 | created-planning | Depends on completion of the governance cleanup wave |
 
 ## Atomic Task Handoff
 

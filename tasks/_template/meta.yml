@@ -14,7 +14,10 @@
 # FIELD REFERENCE (what each field means and what makes it good vs hollow):
 # ─────────────────────────────────────────────────────────────────────────
 # schema_version    : Always 1. Do not change.
-# phase             : String. '0', '1', 'sec-revamp', etc. Must match DAG stage.
+# phase             : String. '0', '1', '3', 'sec-revamp', etc. Must match DAG stage.
+# wave              : Optional for legacy phases. REQUIRED for new Phase 3 packs.
+#                     Approved Phase 3 values: ACT, PRE, CLEAN, GOV, WP, SUPPORT,
+#                     CI, W1-W10. Used by registry + CI tier assignment.
 # task_id           : Exact ID used in DAG nodes and depends_on chains.
 # title             : One sentence. Verb + noun + outcome. NOT "do the thing".
 # owner_role        : From AGENTS.md agent list. Determines allowed file paths.
@@ -66,6 +69,7 @@
 
 schema_version: 1
 phase: '<PHASE>'                        # REQUIRED: '0', '1', 'sec-revamp', etc.
+wave: '<WAVE>'                         # OPTIONAL generally; REQUIRED for new Phase 3 task packs
 task_id: <TASK-ID>                      # REQUIRED: matches DAG node id exactly
 title: "<Verb> <object> so that <outcome>"  # REQUIRED: one sentence, outcome-oriented
 owner_role: <AGENT-ROLE>               # REQUIRED: from AGENTS.md agent list
@@ -225,12 +229,16 @@ failure_modes:
 # ── Required reading ───────────────────────────────────────────────────────
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md  # Always first.
+  # For new Phase 3 packs also include:
+  # - docs/operations/TASK_ID_NOMENCLATURE.md
+  # - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  # - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
   - <domain-specific doc 1>
   - <domain-specific doc 2>
 
 # ── Companion documents ────────────────────────────────────────────────────
-implementation_plan: docs/plans/<phase>/<TASK-ID>/PLAN.md     # Must exist before status='in-progress'
-implementation_log: docs/plans/<phase>/<TASK-ID>/EXEC_LOG.md  # Append-only; never rewrite history
+implementation_plan: docs/plans/<phase>/<TASK-ID>/PLAN.md     # For Phase 3 use docs/plans/phase3/<TASK-ID>/PLAN.md
+implementation_log: docs/plans/<phase>/<TASK-ID>/EXEC_LOG.md  # For Phase 3 use docs/plans/phase3/<TASK-ID>/EXEC_LOG.md
 
 # ── Metadata ───────────────────────────────────────────────────────────────
 notes: >-

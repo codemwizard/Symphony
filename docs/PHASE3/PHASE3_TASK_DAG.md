@@ -48,11 +48,21 @@ This is not an atomic task pack and does not authorize implementation.
 | TSK-P3-CLEAN-007 | P3-SURF-000 | TSK-P3-CLEAN-001, TSK-P3-CLEAN-003 | None | tasks-created | Maintain Phase 3 DAG artifacts. |
 | TSK-P3-CLEAN-008 | P3-SURF-000 | TSK-P3-CLEAN-007 | None | tasks-created | Maintain implementation-plan registry/status index. |
 
+## Wave 0A - Phase Activation Governance Alignment
+
+| DAG Node | Surface | Depends On | Blocked By | Status | Purpose |
+|---|---|---|---|---|---|
+| TSK-P3-ACT-001 | P3-SURF-000 | TSK-P3-CLEAN-001, TSK-P3-CLEAN-002, TSK-P3-CLEAN-003, TSK-P3-CLEAN-004, TSK-P3-CLEAN-005, TSK-P3-CLEAN-006, TSK-P3-CLEAN-007, TSK-P3-CLEAN-008 | None | planned | Build the missing Phase 3 lifecycle artifact set. |
+| TSK-P3-ACT-002 | P3-SURF-000 | TSK-P3-ACT-001 | None | planned | Create the formal Phase 3 opening approval artifact set. |
+| TSK-P3-ACT-003 | P3-SURF-000 | TSK-P3-ACT-001, TSK-P3-ACT-002 | None | planned | Rewrite the root execution envelope for active Phase 3 status. |
+| TSK-P3-ACT-004 | P3-SURF-000 | TSK-P3-ACT-003 | None | planned | Reconcile the legality layer and dependent Phase 3 planning posture. |
+| TSK-P3-ACT-005 | P3-SURF-000 | TSK-P3-ACT-004 | None | planned | Normalize existing Phase 3 plans and evidence for opened-phase use. |
+
 ## Wave 1 - Lineage Foundations
 
 | DAG Node | Surface | Depends On | Status | Purpose |
 |---|---|---|---|---|
-| TSK-P3-WP-001 | P3-SURF-001 | TSK-P3-CLEAN-001 through TSK-P3-CLEAN-008 | planned | Typed dependency graph lineage and traversal substrate. |
+| TSK-P3-WP-001 | P3-SURF-001 | TSK-P3-ACT-005 | planned | Typed dependency graph lineage and traversal substrate. |
 | TSK-P3-WP-002 | P3-SURF-002 | TSK-P3-WP-001 | planned | Policy artifact and authority lineage foundation. |
 | TSK-P3-SUPPORT-DB-001 | P3-SURF-001, P3-SURF-002 | TSK-P3-WP-001, TSK-P3-WP-002 | planned | Persistence model for dependency, policy, and authority lineage surfaces. |
 | TSK-P3-SUPPORT-SEC-001 | P3-SURF-001, P3-SURF-002 | TSK-P3-SUPPORT-DB-001 | planned | Access-control and privilege model for lineage surfaces. |
@@ -130,4 +140,6 @@ No DAG node may be converted to atomic tasks until:
 - the surface has ownership, replay, mutability, ontology, determinism, and
   doctrine-gap classifications;
 - the node has a doctrine-gap outcome of `IMPLEMENT` or `SPLIT`;
-- no future-phase routing conflict remains.
+- no future-phase routing conflict remains;
+- the Phase 3 activation nodes are complete when the node depends on the
+  opened-phase governance posture.

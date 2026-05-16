@@ -69,10 +69,45 @@ nodes:
     blocked_by: []
     status: tasks-created
     doctrine_gap_status: IMPLEMENT
+  - id: TSK-P3-ACT-001
+    wave: 0
+    surface_ids: [P3-SURF-000]
+    depends_on: [TSK-P3-CLEAN-001, TSK-P3-CLEAN-002, TSK-P3-CLEAN-003, TSK-P3-CLEAN-004, TSK-P3-CLEAN-005, TSK-P3-CLEAN-006, TSK-P3-CLEAN-007, TSK-P3-CLEAN-008]
+    blocked_by: []
+    status: planned
+    doctrine_gap_status: IMPLEMENT
+  - id: TSK-P3-ACT-002
+    wave: 0
+    surface_ids: [P3-SURF-000]
+    depends_on: [TSK-P3-ACT-001]
+    blocked_by: []
+    status: planned
+    doctrine_gap_status: IMPLEMENT
+  - id: TSK-P3-ACT-003
+    wave: 0
+    surface_ids: [P3-SURF-000]
+    depends_on: [TSK-P3-ACT-001, TSK-P3-ACT-002]
+    blocked_by: []
+    status: planned
+    doctrine_gap_status: IMPLEMENT
+  - id: TSK-P3-ACT-004
+    wave: 0
+    surface_ids: [P3-SURF-000]
+    depends_on: [TSK-P3-ACT-003]
+    blocked_by: []
+    status: planned
+    doctrine_gap_status: IMPLEMENT
+  - id: TSK-P3-ACT-005
+    wave: 0
+    surface_ids: [P3-SURF-000]
+    depends_on: [TSK-P3-ACT-004]
+    blocked_by: []
+    status: planned
+    doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-WP-001
     wave: 1
     surface_ids: [P3-SURF-001]
-    depends_on: [TSK-P3-CLEAN-001, TSK-P3-CLEAN-002, TSK-P3-CLEAN-003, TSK-P3-CLEAN-004, TSK-P3-CLEAN-005, TSK-P3-CLEAN-006, TSK-P3-CLEAN-007, TSK-P3-CLEAN-008]
+    depends_on: [TSK-P3-ACT-005]
     status: planned
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-WP-002

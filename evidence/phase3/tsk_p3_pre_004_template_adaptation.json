@@ -1,0 +1,39 @@
+{
+  "task_id": "TSK-P3-PRE-004",
+  "git_sha": "30d5d02497e6c3ad43b8283a85b79a6037b2134a",
+  "timestamp_utc": "2026-05-16T08:23:17Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "pre004_template_exists",
+      "result": "PASS",
+      "detail": "template exists"
+    },
+    {
+      "id": "pre004_wave_field",
+      "result": "PASS",
+      "detail": "wave field is present in template"
+    },
+    {
+      "id": "pre004_phase3_reads",
+      "result": "PASS",
+      "detail": "Phase 3 must_read guidance is present"
+    },
+    {
+      "id": "pre004_phase3_path_mapping",
+      "result": "PASS",
+      "detail": "Phase 3 path mapping comments are present"
+    },
+    {
+      "id": "pre004_inventory_validator",
+      "result": "PASS",
+      "detail": "validator inventory mode passes with template adaptation"
+    }
+  ],
+  "observed_paths": [
+    "tasks/_template/meta.yml"
+  ],
+  "observed_hashes": {
+    "tasks/_template/meta.yml": "33d895736d3aa45e3c0013448fb32f281acc53478da4d06a887c895df4b368bb"
+  }
+}

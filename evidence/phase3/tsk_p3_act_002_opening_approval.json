@@ -1,0 +1,64 @@
+{
+  "task_id": "TSK-P3-ACT-002",
+  "git_sha": "30d5d02497e6c3ad43b8283a85b79a6037b2134a",
+  "timestamp_utc": "2026-05-16T06:52:48Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "P3-OPENING-FILES-EXIST",
+      "result": "PASS",
+      "detail": "opening markdown and sidecar exist"
+    },
+    {
+      "id": "P3-OPENING-MD-CONTENT",
+      "result": "PASS",
+      "detail": "opening markdown contains required status and boundary sections"
+    },
+    {
+      "id": "P3-OPENING-MD-BOUNDARY",
+      "result": "PASS",
+      "detail": "opening markdown does not overclaim runtime completion"
+    },
+    {
+      "id": "P3-OPENING-JSON-CONTENT",
+      "result": "PASS",
+      "detail": "opening sidecar contains required approval and ai fields"
+    },
+    {
+      "id": "P3-OPENING-JSON-SCOPE",
+      "result": "PASS",
+      "detail": "opening sidecar scope includes opening artifacts and envelope reconciliation surface"
+    },
+    {
+      "id": "P3-OPENING-CROSS-ALIGNMENT",
+      "result": "PASS",
+      "detail": "opening markdown and sidecar align on approved opening state"
+    }
+  ],
+  "observed_paths": [
+    "approvals/2026-05-16/PHASE3-OPENING.md",
+    "approvals/2026-05-16/PHASE3-OPENING.approval.json"
+  ],
+  "observed_hashes": {
+    "approvals/2026-05-16/PHASE3-OPENING.md": "5cf007fa1e62592659378b46c633e2b7abf3aac1133a8f5edd52be2bb291856e",
+    "approvals/2026-05-16/PHASE3-OPENING.approval.json": "2a5704db80b0bc63ff5e1574fc82c81bcc12d5b662eed7f4c6b9d92bf3290d71"
+  },
+  "command_outputs": [
+    "git_sha=30d5d02497e6c3ad43b8283a85b79a6037b2134a",
+    "timestamp_utc=2026-05-16T06:52:48Z",
+    "P3-OPENING-FILES-EXIST=PASS",
+    "P3-OPENING-MD-CONTENT=PASS",
+    "P3-OPENING-MD-BOUNDARY=PASS",
+    "P3-OPENING-JSON-CONTENT=PASS",
+    "P3-OPENING-JSON-SCOPE=PASS",
+    "P3-OPENING-CROSS-ALIGNMENT=PASS"
+  ],
+  "execution_trace": [
+    "P3-OPENING-FILES-EXIST:PASS:opening markdown and sidecar exist",
+    "P3-OPENING-MD-CONTENT:PASS:opening markdown contains required status and boundary sections",
+    "P3-OPENING-MD-BOUNDARY:PASS:opening markdown does not overclaim runtime completion",
+    "P3-OPENING-JSON-CONTENT:PASS:opening sidecar contains required approval and ai fields",
+    "P3-OPENING-JSON-SCOPE:PASS:opening sidecar scope includes opening artifacts and envelope reconciliation surface",
+    "P3-OPENING-CROSS-ALIGNMENT:PASS:opening markdown and sidecar align on approved opening state"
+  ]
+}

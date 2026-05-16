@@ -1,6 +1,7 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-CLEAN-008
+wave: CLEAN
 title: "Maintain Phase 3 implementation-plan registry after DAG maintenance so that registry status matches actual plan files"
 owner_role: ARCHITECT
 status: completed

@@ -69,7 +69,8 @@ canonical_keys = {
     "negative_tests","positive_tests",
     "domain","pilot","second_pilot_test","pilot_scope_ref",
     "deliverable_files","regulated_surface_compliance","remediation_trace_compliance",
-    "database_connection","migration_dependencies","primary_enforcement_domain"
+    "database_connection","migration_dependencies","primary_enforcement_domain",
+    "wave"
 }
 
 list_fields = {
@@ -79,7 +80,7 @@ list_fields = {
 
 scalar_fields = {
     "phase","task_id","title","owner_role","status","notes","client","assigned_agent","model",
-    "implementation_plan","implementation_log"
+    "implementation_plan","implementation_log","wave"
 }
 
 required_keys = {

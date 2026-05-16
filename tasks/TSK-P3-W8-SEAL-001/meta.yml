@@ -1,6 +1,7 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-W8-SEAL-001
+wave: W8
 title: "Activate epoch sealing process by implementing EpochSealingCommand populating proof_pack_batches Merkle tree"
 owner_role: DB_FOUNDATION
 status: completed

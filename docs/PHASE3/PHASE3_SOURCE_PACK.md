@@ -46,9 +46,8 @@ authority, or supersede the active execution envelope.
 
 | Blocker | Source | Effect |
 |---|---|---|
-| Execution-envelope conflict | `docs/operations/PHASE_EXECUTION_ENVELOPE.md` says Phase 3 is not the current execution surface while Phase 3 opening artifacts claim opening/claimability | Atomic Phase 3 task creation and execution must not proceed until the conflict is resolved by the governing authority |
 | Contract parse defect | `docs/PHASE3/phase3_contract.yml` row P3-004 contains malformed indentation | Contract-dependent task planning must not consume the row until repaired |
-| README drift | `docs/PHASE3/README.md` still describes old external-trust-surface posture | Agent orientation and corpus hygiene remain blocked |
+| Historical runtime-adjacent artifacts | Classification is complete; artifacts marked `regenerate_required` still need opened-phase regeneration before implementation claims rely on them | Runtime-adjacent legacy artifacts remain non-admissible until regenerated under current task packs and verifiers |
 | Invariant doctrine-reference gaps | `docs/PHASE3/PHASE3_INVARIANT_REGISTER.md` does not yet cite all new Phase 3 governing doctrines per invariant | Atomic task scoping requires cleanup before task packs are generated |
 | Duplicate MADD/MAIN doctrine copy | `docs/constitutional/MADD_MAIN_INTEGRATION_DOCTRINE-2.md` remains a non-canonical duplicate candidate | Citation hygiene must route to the canonical doctrine only |
 
@@ -56,5 +55,6 @@ authority, or supersede the active execution envelope.
 
 This source pack may be used to create execution-surface maps, master
 implementation plans, phase DAGs, and surface-specific implementation plans.
-It must not be used to create atomic task packs until the task-creation gate in
-`docs/operations/IMPLEMENTATION_PLAN_CREATION_PROCESS.md` is satisfied.
+It may now be used to create atomic task packs when the task-creation gate in
+`docs/operations/IMPLEMENTATION_PLAN_CREATION_PROCESS.md` is satisfied and DAG
+dependencies permit the node.

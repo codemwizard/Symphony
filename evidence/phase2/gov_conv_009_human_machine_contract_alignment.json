@@ -1,7 +1,7 @@
 {
   "task_id": "TSK-P2-GOV-CONV-009",
-  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
-  "timestamp_utc": "2026-05-03T19:51:12Z",
+  "git_sha": "unknown",
+  "timestamp_utc": "unknown",
   "status": "PASS",
   "checks": [
     "prerequisite_tasks_complete:PASS",

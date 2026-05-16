@@ -1,6 +1,7 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-GOV-002
+wave: GOV
 title: "Seed Phase 3 invariants INV-301 through INV-310 into invariant_registry table"
 owner_role: DB_FOUNDATION
 status: completed

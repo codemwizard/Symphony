@@ -1,6 +1,7 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-CLEAN-002
+wave: CLEAN
 title: "Rewrite Phase 3 README to match planning-only posture so that it no longer describes the stale external-trust-surface posture"
 owner_role: ARCHITECT
 status: completed

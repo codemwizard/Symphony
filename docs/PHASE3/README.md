@@ -1,32 +1,37 @@
 # Phase 3 - Constraint and Legitimacy Engine
 
-**Status: PLANNING POSTURE ONLY — NOT OPEN FOR IMPLEMENTATION**
+**Status: OPEN FOR PHASE 3 EXECUTION**
 
 ## Overview
 
-Phase 3 implements typed dependency graphs, recursive legitimacy chains, contradiction detection, failure composition, authority scope enforcement, conflict-of-interest enforcement, and spatial/DNSH gates.
+Phase 3 implements typed dependency graphs, recursive legitimacy chains,
+contradiction detection, failure composition, authority scope enforcement,
+conflict-of-interest enforcement, and spatial/DNSH gates.
 
-This phase is currently in a **planning-only posture**. The execution of Phase 3 tasks is mechanically blocked by governance gates pending explicit human authorization.
+Phase 3 is formally open through the 2026-05-16 opening approval set and the
+active execution envelope. The activation sequence is complete, so broader Phase
+3 runtime task creation may now proceed under the task DAG and task-pack rules.
 
 ## Canonical Documentation
 
-The following canonical documents govern the Phase 3 planning and structure:
+The following canonical documents govern the current Phase 3 posture:
 
 - [Phase 3 Source Pack](PHASE3_SOURCE_PACK.md): Registry of canonical inputs and requirements.
-- [Phase 3 Capability Boundary](PHASE3_CAPABILITY_BOUNDARY.md): Defines the strict capability limits and scope.
-- [Phase 3 Task DAG](PHASE3_TASK_DAG.md): Master dependency graph of all planned execution nodes.
+- [Phase 3 Capability Boundary](PHASE3_CAPABILITY_BOUNDARY.md): Defines strict capability limits and scope.
+- [Phase 3 Task DAG](PHASE3_TASK_DAG.md): Master dependency graph of planned execution nodes.
 - [Phase 3 Master Implementation Plan](PHASE3_MASTER_IMPLEMENTATION_PLAN.md): The overarching architectural execution plan.
-
-## Anti-Drift Enforcement
-
-This documentation establishes the planning posture to prevent premature Phase-3 work initiation. Any attempts to claim Phase-3 tasks as claimable before the official opening will be rejected by structural governance gates.
+- [Phase 3 Contract](PHASE3_CONTRACT.md): Human-readable contract companion.
+- [Root Execution Envelope](../operations/PHASE_EXECUTION_ENVELOPE.md): Active execution authority.
 
 ## Current Governance Status
 
-- **Phase Status**: Planning
-- **Claimability**: Non-claimable for implementation
-- **Implementation Rows**: Tracked in master plan
+- **Phase Status**: Open and execution-eligible
+- **Claimability**: Lifecycle and activation claims are claimable when verifier-backed
+- **Current Sequence**: Activation complete; next runtime node is `TSK-P3-WP-001`
+- **Broader Runtime Work**: Permitted through the repo's task DAG and task-pack workflow
 
-## Contact
+## Anti-Drift Enforcement
 
-Do not attempt to initiate Phase-3 implementation work.
+Phase 3 documents must not regress to a planning-only posture and must not
+overclaim full runtime completion. The active envelope governs what is
+executable at any given moment.

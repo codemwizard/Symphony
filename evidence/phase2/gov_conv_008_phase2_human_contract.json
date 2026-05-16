@@ -1,17 +1,10 @@
 {
   "task_id": "TSK-P2-GOV-CONV-008",
-  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
-  "timestamp_utc": "2026-05-03T19:47:26Z",
+  "git_sha": "30d5d02497e6c3ad43b8283a85b79a6037b2134a",
+  "timestamp_utc": "2026-05-16T06:55:59Z",
   "status": "PASS",
   "checks": [
-    "prerequisite_task_complete:PASS",
-    "human_contract_exists:PASS",
-    "required_sections_present:PASS",
-    "authority_boundary_declared:PASS",
-    "verifier_referenced:PASS",
-    "evidence_referenced:PASS",
-    "invariant_references_present:PASS",
-    "no_new_claims:PASS"
+    "prerequisite_task_complete:PASS"    "human_contract_exists:PASS"    "required_sections_present:PASS"    "authority_boundary_declared:PASS"    "verifier_referenced:PASS"    "evidence_referenced:PASS"    "invariant_references_present:PASS"    "no_new_claims:PASS"
   ],
   "human_contract": {
     "file": "docs/PHASE2/PHASE2_CONTRACT.md",

@@ -1,6 +1,7 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-CLEAN-004
+wave: CLEAN
 title: "Reconcile Phase 3 opening posture with active execution envelope so that the conflict is explicitly resolved or escalated"
 owner_role: ARCHITECT
 status: completed

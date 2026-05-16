@@ -1,0 +1,131 @@
+schema_version: 1
+phase: '3'
+task_id: TSK-P3-ACT-003
+wave: ACT
+title: "Rewrite the root execution envelope for active Phase 3 status"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: GOVERNANCE
+depends_on: ["TSK-P3-ACT-001", "TSK-P3-ACT-002"]
+invariants: []
+
+deliverable_files:
+  - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+  - scripts/agent/verify_tsk_p3_act_003.sh
+  - docs/tasks/PHASE3_ACTIVATION_TASKS.md
+  - evidence/phase3/tsk_p3_act_003_envelope_alignment.json
+  - docs/plans/phase3/TSK-P3-ACT-003/PLAN.md
+  - docs/plans/phase3/TSK-P3-ACT-003/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If approval metadata does not cover the envelope rewrite before the first regulated edit."
+  - "If the envelope opens non-Phase-3 execution surfaces implicitly."
+  - "If the envelope still states that Phase 2 is the only legal execution surface."
+  - "If the rewrite overclaims full Phase 3 runtime completion instead of activation status."
+proof_guarantees:
+  - "Evidence JSON demonstrates that the root execution envelope aligns with the Phase 3 lifecycle artifact set and opening approval."
+proof_limitations:
+  - "Does not prove legality-layer or historical-evidence reconciliation beyond the rewritten envelope."
+
+touches:
+  - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+  - scripts/agent/verify_tsk_p3_act_003.sh
+  - docs/tasks/PHASE3_ACTIVATION_TASKS.md
+  - evidence/phase3/tsk_p3_act_003_envelope_alignment.json
+  - tasks/TSK-P3-ACT-003/meta.yml
+  - docs/plans/phase3/TSK-P3-ACT-003/PLAN.md
+  - docs/plans/phase3/TSK-P3-ACT-003/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_act_003_work_01] Rewrite docs/operations/PHASE_EXECUTION_ENVELOPE.md so it names Phase 3 as the active lifecycle phase, aligns allowed and forbidden capabilities to the opened Phase 3 state, and removes unopened-phase treatment of evidence/phase3/**."
+  - "[ID tsk_p3_act_003_work_02] Create scripts/agent/verify_tsk_p3_act_003.sh to validate that the envelope aligns with Phase 3 lifecycle artifacts, opening approval artifacts, and the active execution surface claims, then emit evidence/phase3/tsk_p3_act_003_envelope_alignment.json."
+  - "[ID tsk_p3_act_003_work_03] Register TSK-P3-ACT-003 in docs/tasks/PHASE3_ACTIVATION_TASKS.md and update the task pack status, plan, and execution log after the verifier and readiness checks pass."
+
+acceptance_criteria:
+  - "[ID tsk_p3_act_003_work_01] docs/operations/PHASE_EXECUTION_ENVELOPE.md identifies lifecycle phase 3 as active, names the Phase 3 contract, policy, verifier, evidence namespace, and gate flag, and no longer states that Phase 2 is the only legal execution surface."
+  - "[ID tsk_p3_act_003_work_01] The envelope's allowed and forbidden capability sections admit Phase 3 activation artifacts and evidence/phase3/** while preserving the prohibition on unauthorized future-phase work and false completion claims."
+  - "[ID tsk_p3_act_003_work_02] scripts/agent/verify_tsk_p3_act_003.sh exits 0 only when the envelope aligns with docs/operations/PHASE_LIFECYCLE.md, docs/PHASE3/phase3_contract.yml, docs/PHASE3/PHASE3_CONTRACT.md, docs/operations/AGENTIC_SDLC_PHASE3_POLICY.md, and approvals/2026-05-16/PHASE3-OPENING.approval.json, and it emits structured evidence."
+  - "[ID tsk_p3_act_003_work_03] docs/tasks/PHASE3_ACTIVATION_TASKS.md registers TSK-P3-ACT-003 with its title, dependencies, governed touch set, and evidence path."
+
+negative_tests:
+  - id: TSK-P3-ACT-003-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: docs/operations/PHASE_EXECUTION_ENVELOPE.md identifies lifecycle phase 3 as active, names the Phase 3 contract, policy, verifier, evidence namespace, and gate flag, and no longer states that Phase 2 is the only legal execution surface."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-ACT-003-P1
+    description: "Verify that execution exits 0 on success path for: docs/operations/PHASE_EXECUTION_ENVELOPE.md identifies lifecycle phase 3 as active, names the Phase 3 contract, policy, verifier, evidence namespace, and gate flag, and no longer states that Phase 2 is the only legal execution surface."
+    required: true
+
+verification:
+  - '# [ID tsk_p3_act_003_work_01] [ID tsk_p3_act_003_work_02] [ID tsk_p3_act_003_work_03] test -x scripts/agent/verify_tsk_p3_act_003.sh && bash scripts/agent/verify_tsk_p3_act_003.sh || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-ACT-003 --evidence evidence/phase3/tsk_p3_act_003_envelope_alignment.json || exit 1'
+  - 'PRE_CI_CONTEXT=1 bash scripts/audit/verify_approval_metadata.sh --mode=stage-a --branch=chore-phase3-planning-followup || exit 1'
+  - 'bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P3-ACT-003 || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_act_003_envelope_alignment.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+  - "Envelope still asserts Phase 2 as the only legal execution surface => CRITICAL_FAIL"
+  - "Envelope rewrite opens future-phase work or overclaims runtime completion => CRITICAL_FAIL"
+
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/PHASE_LIFECYCLE.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+  - approvals/2026-05-16/BRANCH-chore-phase3-planning-followup.md
+  - approvals/2026-05-16/PHASE3-OPENING.md
+  - approvals/2026-05-16/PHASE3-OPENING.approval.json
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-012_phase3_activation_alignment.md
+implementation_plan: docs/plans/phase3/TSK-P3-ACT-003/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-ACT-003/EXEC_LOG.md
+notes: 'Completed under the human-authorized Phase 3 activation sequence after approval metadata validation, proof-graph validation, task-pack readiness, and the task-specific envelope verifier all passed.'
+client: cursor
+assigned_agent: architect
+model: gpt-5-codex

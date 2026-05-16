@@ -1,0 +1,291 @@
+# Phase 3 Task Registry
+# Governance contract:
+# - read-only planning and execution index for Phase 3 task families
+# - task_type vocabulary: IMPL, VERIFY, CERT, GOV, PERSIST, API, DOC, OPS
+# - ci_tier vocabulary: T0, T1, T2, T3, T4
+# - schema_examples demonstrate the expected shape; tasks contains the live inventory
+
+version: 1
+governance_contract: read-only planning and execution index
+approved_task_types:
+  - IMPL
+  - VERIFY
+  - CERT
+  - GOV
+  - PERSIST
+  - API
+  - DOC
+  - OPS
+approved_ci_tiers:
+  - T0
+  - T1
+  - T2
+  - T3
+  - T4
+approved_waves:
+  - ACT
+  - PRE
+  - CLEAN
+  - GOV
+  - WP
+  - SUPPORT
+  - CI
+  - W1
+  - W2
+  - W3
+  - W4
+  - W5
+  - W6
+  - W7
+  - W8
+  - W9
+  - W10
+schema_examples:
+  - task_id: TSK-P3-WP-001
+    title: Typed dependency graph lineage and traversal substrate
+    wave: WP
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    source: docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - task_id: TSK-P3-CI-001
+    title: Example verifier-only gate
+    wave: CI
+    task_type: VERIFY
+    ci_tier: T1
+    ci_tier_status: proposed
+    verifies: TSK-P3-WP-001
+    source: docs/PHASE3/PHASE3_CI_TIER_MODEL.md
+  - task_id: TSK-P3-PRE-009
+    title: Phase 3 readiness exit gate
+    wave: PRE
+    task_type: CERT
+    ci_tier: T4
+    ci_tier_status: proposed
+    source: tasks/TSK-P3-PRE-009/meta.yml
+task_count: 28
+tasks:
+  - task_id: TSK-P3-ACT-001
+    title: Build the missing Phase 3 lifecycle artifact set
+    wave: ACT
+    task_type: OPS
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-ACT-001/meta.yml
+  - task_id: TSK-P3-ACT-002
+    title: Create the formal Phase 3 opening approval artifact set
+    wave: ACT
+    task_type: OPS
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-ACT-002/meta.yml
+  - task_id: TSK-P3-ACT-003
+    title: Rewrite the root execution envelope for active Phase 3 status
+    wave: ACT
+    task_type: OPS
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-ACT-003/meta.yml
+  - task_id: TSK-P3-ACT-004
+    title: Reconcile the legality layer and dependent Phase 3 planning posture
+    wave: ACT
+    task_type: OPS
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-ACT-004/meta.yml
+  - task_id: TSK-P3-ACT-005
+    title: Normalize existing Phase 3 plans and evidence for opened-phase use
+    wave: ACT
+    task_type: OPS
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-ACT-005/meta.yml
+  - task_id: TSK-P3-CLEAN-001
+    title: Fix docs/PHASE3/phase3_contract.yml parse/indentation defect
+    wave: CLEAN
+    task_type: DOC
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-CLEAN-001/meta.yml
+  - task_id: TSK-P3-CLEAN-002
+    title: Rewrite Phase 3 README to match Phase 3 planning posture
+    wave: CLEAN
+    task_type: DOC
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-CLEAN-002/meta.yml
+  - task_id: TSK-P3-CLEAN-003
+    title: Add doctrine references to INV-301 through INV-310
+    wave: CLEAN
+    task_type: DOC
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-CLEAN-003/meta.yml
+  - task_id: TSK-P3-CLEAN-004
+    title: Reconcile Phase 3 opening posture with the active execution envelope
+    wave: CLEAN
+    task_type: GOV
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-CLEAN-004/meta.yml
+  - task_id: TSK-P3-CLEAN-005
+    title: Resolve duplicate or non-canonical MADD/MAIN doctrine copy
+    wave: CLEAN
+    task_type: DOC
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-CLEAN-005/meta.yml
+  - task_id: TSK-P3-CLEAN-006
+    title: Verify archived Phase 3 files remain non-canonical and excluded
+    wave: CLEAN
+    task_type: DOC
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-CLEAN-006/meta.yml
+  - task_id: TSK-P3-CLEAN-007
+    title: Maintain Phase 3 DAG artifacts after cleanup
+    wave: CLEAN
+    task_type: GOV
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-CLEAN-007/meta.yml
+  - task_id: TSK-P3-CLEAN-008
+    title: Maintain implementation-plan registry and status index
+    wave: CLEAN
+    task_type: GOV
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-CLEAN-008/meta.yml
+  - task_id: TSK-P3-GOV-001
+    title: Compile Phase 3 constitutional constraints
+    wave: GOV
+    task_type: GOV
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-GOV-001/meta.yml
+  - task_id: TSK-P3-GOV-002
+    title: Seed Phase 3 invariants into invariant_registry
+    wave: GOV
+    task_type: PERSIST
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-GOV-002/meta.yml
+  - task_id: TSK-P3-GOV-003
+    title: Skip archived tasks in task-pack traversal gates
+    wave: GOV
+    task_type: GOV
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-GOV-003/meta.yml
+  - task_id: TSK-P3-PRE-001
+    title: Verify wave8_crypto extension operational status for Phase 3 entry
+    wave: PRE
+    task_type: OPS
+    ci_tier: T0
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-PRE-001/meta.yml
+  - task_id: TSK-P3-PRE-002
+    title: Define Phase 3 CI Tier Model
+    wave: PRE
+    task_type: GOV
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: planned
+    source: tasks/TSK-P3-PRE-002/meta.yml
+  - task_id: TSK-P3-PRE-003
+    title: Formalize Task ID Nomenclature Standard
+    wave: PRE
+    task_type: GOV
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: planned
+    source: tasks/TSK-P3-PRE-003/meta.yml
+  - task_id: TSK-P3-PRE-004
+    title: Adapt meta.yml Template for Phase 3
+    wave: PRE
+    task_type: GOV
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: planned
+    source: tasks/TSK-P3-PRE-004/meta.yml
+  - task_id: TSK-P3-PRE-005
+    title: Update Task Generator for Phase 3 Mode
+    wave: PRE
+    task_type: OPS
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: planned
+    source: tasks/TSK-P3-PRE-005/meta.yml
+  - task_id: TSK-P3-PRE-006
+    title: Update Task Schema Validator for Phase 3
+    wave: PRE
+    task_type: OPS
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: planned
+    source: tasks/TSK-P3-PRE-006/meta.yml
+  - task_id: TSK-P3-PRE-007
+    title: Define Phase 3 Task Registry Schema
+    wave: PRE
+    task_type: GOV
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: planned
+    source: tasks/TSK-P3-PRE-007/meta.yml
+  - task_id: TSK-P3-PRE-008
+    title: Populate Phase 3 Task Registry
+    wave: PRE
+    task_type: GOV
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: planned
+    source: tasks/TSK-P3-PRE-008/meta.yml
+  - task_id: TSK-P3-PRE-009
+    title: Phase 3 Readiness Exit Gate
+    wave: PRE
+    task_type: CERT
+    ci_tier: T4
+    ci_tier_status: proposed
+    status: planned
+    source: tasks/TSK-P3-PRE-009/meta.yml
+  - task_id: TSK-P3-W1-DB-007
+    title: Phase 3 data classification and persistence boundary foundation
+    wave: W1
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-W1-DB-007/meta.yml
+  - task_id: TSK-P3-W8-ARCH-001
+    title: Hash-chain bridge for architecture evidence
+    wave: W8
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-W8-ARCH-001/meta.yml
+  - task_id: TSK-P3-W8-SEAL-001
+    title: Epoch sealing verifier path
+    wave: W8
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-W8-SEAL-001/meta.yml

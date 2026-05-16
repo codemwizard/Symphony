@@ -1,6 +1,7 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-W8-ARCH-001
+wave: W8
 title: "Connect TamperEvidentChain application hash chain to DB proof_pack_batches Merkle system"
 owner_role: ARCHITECT
 status: completed
