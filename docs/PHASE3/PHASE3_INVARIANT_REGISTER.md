@@ -60,6 +60,7 @@ phase is constitutionally opened.
 |---|---|
 | Constitutional Requirement | Legitimacy engine enforces regulator-specific rule sets independently; no cross-regime equivalence is asserted |
 | Phase Spec Reference | §3.6 Regulator Override Rules; §3.3 Contradiction Detection |
+| Governing Doctrine | [docs/constitutional/REGULATORY_ALIGNMENT_CONSTITUTION.md](docs/constitutional/REGULATORY_ALIGNMENT_CONSTITUTION.md) |
 | Status | roadmap |
 | Severity | P0 |
 | Owners | team-platform, team-invariants |
@@ -77,6 +78,7 @@ phase is constitutionally opened.
 |---|---|
 | Constitutional Requirement | Every decision record declares its typed upstream dependencies; the dependency graph is machine-traversable |
 | Phase Spec Reference | §3.1 Typed Dependency Graph |
+| Governing Doctrine | [docs/constitutional/CONSTITUTIONAL_GRAPH.md](docs/constitutional/CONSTITUTIONAL_GRAPH.md) |
 | Status | roadmap |
 | Severity | P0 |
 | Owners | team-db, team-platform |
@@ -94,6 +96,7 @@ phase is constitutionally opened.
 |---|---|
 | Constitutional Requirement | Any decision with an illegitimate ancestor is blocked; legitimacy is evaluated recursively upward |
 | Phase Spec Reference | §3.2 Recursive Legitimacy Engine |
+| Governing Doctrine | [docs/constitutional/LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md](docs/constitutional/LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md) |
 | Status | roadmap |
 | Severity | P0 |
 | Owners | team-db, team-platform |
@@ -111,6 +114,7 @@ phase is constitutionally opened.
 |---|---|
 | Constitutional Requirement | Direct, temporal, and authority-based contradictions are mechanically blocked; contradiction records are append-only |
 | Phase Spec Reference | §3.3 Contradiction Detection |
+| Governing Doctrine | [docs/constitutional/CONTRADICTION_CLASSIFICATION_DOCTRINE.md](docs/constitutional/CONTRADICTION_CLASSIFICATION_DOCTRINE.md) |
 | Status | roadmap |
 | Severity | P0 |
 | Owners | team-db, team-platform |
@@ -130,6 +134,7 @@ phase is constitutionally opened.
 |---|---|
 | Constitutional Requirement | Evidence records traversing internal system boundaries preserve complete provenance lineage and remain replay-survivable |
 | Phase Spec Reference | §3.4 Failure Composition Engine; §3.2 Recursive Legitimacy Engine (evidence ancestor tracing) |
+| Governing Doctrine | [docs/constitutional/EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md](docs/constitutional/EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md) |
 | Status | roadmap |
 | Severity | P0 |
 | Owners | team-platform, team-db |
@@ -148,6 +153,7 @@ phase is constitutionally opened.
 |---|---|
 | Constitutional Requirement | All rejections produce structured, traversable failure records; failure records are append-only constitutional evidence |
 | Phase Spec Reference | §3.4 Failure Composition Engine |
+| Governing Doctrine | [docs/constitutional/FAILURE_COMPOSITION_TAXONOMY.md](docs/constitutional/FAILURE_COMPOSITION_TAXONOMY.md) |
 | Status | roadmap |
 | Severity | P1 |
 | Owners | team-platform |
@@ -165,6 +171,7 @@ phase is constitutionally opened.
 |---|---|
 | Constitutional Requirement | Every authority claim is scoped to its declared resource; delegation is traceable through the dependency graph |
 | Phase Spec Reference | §3.5 Authority Scope Engine |
+| Governing Doctrine | [docs/constitutional/AUTHORITY_SCOPE_AND_DELEGATION_DOCTRINE.md](docs/constitutional/AUTHORITY_SCOPE_AND_DELEGATION_DOCTRINE.md) |
 | Status | roadmap |
 | Severity | P0 |
 | Owners | team-db, team-security |
@@ -182,6 +189,7 @@ phase is constitutionally opened.
 |---|---|
 | Constitutional Requirement | Submitters cannot be verifiers for the same decision or asset; enforcement is at DB layer, not application layer only |
 | Phase Spec Reference | §3.7 Conflict-of-Interest Enforcement; extends INV-169 (Reg 26 separation of duties) to all decision types |
+| Governing Doctrine | [docs/constitutional/POLICY_ARTIFACT_AND_AUTHORITY_LINEAGE_DOCTRINE.md](docs/constitutional/POLICY_ARTIFACT_AND_AUTHORITY_LINEAGE_DOCTRINE.md) |
 | Status | roadmap |
 | Severity | P0 |
 | Owners | team-db, team-security |
@@ -199,6 +207,7 @@ phase is constitutionally opened.
 |---|---|
 | Constitutional Requirement | Spatial legality and DNSH enforcement apply to all decision types, not only project registration; extends INV-178 to platform-wide gate |
 | Phase Spec Reference | §3.8 Spatial Legality and DNSH Gates; extends INV-178 (project DNSH spatial check) |
+| Governing Doctrine | [docs/constitutional/SPATIAL_CONSTRAINTS_AND_DNSH_DOCTRINE.md](docs/constitutional/SPATIAL_CONSTRAINTS_AND_DNSH_DOCTRINE.md) |
 | Status | roadmap |
 | Severity | P0 |
 | Owners | team-db, team-platform, team-security |
@@ -216,6 +225,7 @@ phase is constitutionally opened.
 |---|---|
 | Constitutional Requirement | Temporal anomalies in decision timelines are mechanically detected and enforced; decisions that have dwelled in intermediate states beyond authorized periods are blocked or flagged |
 | Phase Spec Reference | §3.2 Recursive Legitimacy Engine (temporal legitimacy); §3.3 Contradiction Detection (temporal contradiction class); CF-2 from PHASE2_CLOSEOUT_CARRY_FORWARD_OBLIGATIONS.md |
+| Governing Doctrine | [docs/constitutional/TEMPORAL_VALIDITY_AND_REPLAY_DOCTRINE.md](docs/constitutional/TEMPORAL_VALIDITY_AND_REPLAY_DOCTRINE.md) |
 | Status | roadmap |
 | Severity | P1 |
 | Owners | team-security, team-platform |

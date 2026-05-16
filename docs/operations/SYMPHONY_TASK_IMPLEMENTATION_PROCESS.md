@@ -38,7 +38,8 @@ If `.agent/rejection_context.md` does not exist: proceed to Mode Classification.
 Before any implementation work, the agent MUST:
 
 1. **Read AGENT_ENTRYPOINT.md** (canonical entry point)
-2. **Classify the incoming prompt** against all five modes in AGENT_PROMPT_ROUTER.md:
+2. **Classify the incoming prompt** against all modes in AGENT_PROMPT_ROUTER.md:
+   - Mode 0: CREATE-IMPLEMENTATION-PLAN
    - Mode 1: CREATE-TASK
    - Mode 2: RESUME-TASK
    - Mode 3: IMPLEMENT-TASK
@@ -741,7 +742,7 @@ Each task's evidence contract is defined in its meta.yml and PLAN.md. The agent 
 
 The coding agent must:
 - **Pre-Step**: Check for rejection_context.md and DRD lockout before any mode classification
-- **Mode Classification**: Classify prompt against all five modes in AGENT_PROMPT_ROUTER.md
+- **Mode Classification**: Classify prompt against all modes in AGENT_PROMPT_ROUTER.md
 - **Mode 2 Inspection**: Run RESUME-TASK inspection algorithm before IMPLEMENT-TASK
 - Follow IMPLEMENT-TASK mode (Mode 3) from AGENT_PROMPT_ROUTER.md
 - Execute the boot sequence: conformance → parity → task execution

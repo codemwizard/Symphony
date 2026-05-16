@@ -5,334 +5,246 @@ Interpretation-Authority: PHASE
 NotebookLM-Ingestion: CANONICAL
 Authority-Rank: 8
 Phase-Scope: PHASE-3
-Supersedes: PHASE3_CAPABILITY_BOUNDARY.md (initial draft — defective scope)
+Supersedes: PHASE3_CAPABILITY_BOUNDARY.md (defective self-contained doctrine posture)
 Depends-On:
   - docs/architecture/Symphony-Phase-Specification-Document_v1.md
   - docs/constitutional/CONSTITUTIONAL_AUTHORITY_HIERARCHY.md
-  - docs/constitutional/CONSTITUTIONAL_AMENDMENT_AND_EVOLUTION_DOCTRINE.md
-  - docs/constitutional/SYSTEM_SOVEREIGNTY_MODEL.md
-  - docs/constitutional/REGULATORY_ALIGNMENT_CONSTITUTION.md
+  - docs/constitutional/CONSTITUTIONAL_GLOSSARY.md
   - docs/constitutional/TASK_GENERATION_CONSTITUTION.md
-  - docs/constitutional/CRYPTOGRAPHIC_AND_RUNTIME_AUTHORITY_DOCTRINE.md
+  - docs/constitutional/PHASE_CAPABILITY_LEGALITY_MATRIX.md
+  - docs/constitutional/LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md
+  - docs/constitutional/AUTHORITY_SCOPE_AND_DELEGATION_DOCTRINE.md
+  - docs/constitutional/CONTRADICTION_CLASSIFICATION_DOCTRINE.md
+  - docs/constitutional/FAILURE_COMPOSITION_TAXONOMY.md
+  - docs/constitutional/SPATIAL_CONSTRAINTS_AND_DNSH_DOCTRINE.md
+  - docs/constitutional/POLICY_ARTIFACT_AND_AUTHORITY_LINEAGE_DOCTRINE.md
   - docs/constitutional/REPLAY_AND_HISTORICAL_TRUTH_PRIMACY.md
+  - docs/constitutional/TEMPORAL_VALIDITY_AND_REPLAY_DOCTRINE.md
+  - docs/constitutional/EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md
+  - docs/constitutional/REGULATOR_SOVEREIGNTY_NON_COLLAPSE_DOCTRINE.md
   - docs/constitutional/EXTERNAL_VERIFIER_INDEPENDENCE_DOCTRINE.md
-  - docs/governance/PHASE2_CLOSEOUT_CARRY_FORWARD_OBLIGATIONS.md
-
-Effective-Date: 2026-05-10
-Supersession-Authority: ROOT (human constitutional custodian decree, 2026-05-10)
+Effective-Date: 2026-05-14
 
 ---
 
-## Supersession Notice
+## Constitutional Purpose
 
-This document supersedes the initial PHASE3_CAPABILITY_BOUNDARY.md, which was
-found to be defective by human constitutional custodian decree on 2026-05-10.
-The defect was a scope misalignment: the prior draft defined Phase 3 as a
-regulatory sovereignty integration phase (ZEMA, BoZ, ZDPA, MADD/MAIN, Article 6,
-Verra, Gold Standard, EU CBAM). This characterization contradicts the canonical
-Phase Specification Document (docs/architecture/Symphony-Phase-Specification-Document_v1.md),
-which defines Phase 3 as the **Constraint and Legitimacy Engine** — an internal
-enforcement and decision-legitimacy layer, not an external regulatory integration layer.
+This document is a Phase 3 routing and scoping instrument. It does not define
+legitimacy, authority, replay, contradiction, spatial, policy, or sovereignty
+semantics locally. Those semantics are defined by the governing constitutional
+doctrines referenced in this document.
 
-External regulatory integration is the constitutional domain of Phase 8A (Sovereign
-Authorization Layer), Phase 8B (Registry Bridge Layer), and the carry-forward
-obligations correctly reassigned in this document.
+The purpose of this boundary is to constrain Phase 3 task-plan creation by
+answering four questions:
 
-No Phase 3 task generated under the defective prior boundary definition is
-constitutionally valid. All Phase 3 tasks must be regenerated under this
-corrected boundary.
+1. What may Phase 3 build?
+2. What must Phase 3 not build?
+3. Which doctrine governs each authorized capability?
+4. Which missing doctrine blocks task-plan creation?
+
+Agents may implement doctrine. Agents may not define doctrine.
 
 ---
 
-## Purpose
+## Phase 3 Scope Summary
 
-This document defines the explicit constitutional capability boundary for Phase 3
-of Symphony, derived exclusively from the canonical Phase Specification Document
-(Symphony-Phase-Specification-Document_v1.md §Phase 3: Constraint and Legitimacy
-Engine).
+Phase 3 is the Constraint and Legitimacy Engine phase. Its authorized purpose is
+to ensure that decisions are not only cryptographically or operationally valid,
+but formally legitimate under declared rule sets, authority scopes, replay
+requirements, contradiction rules, and failure-composition rules.
 
-Phase 3's constitutional purpose is: **Ensure decisions are not just cryptographically
-sound but formally legitimate under applicable rule sets.**
-
-This boundary document defines what Phase 3 is authorized to build, what it is
-prohibited from building, which sovereignty domains it touches, its entry conditions,
-its exit criteria, and the carry-forward obligations that have been reassigned away
-from Phase 3 to their correct phases.
+Phase 3 is internal legitimacy and constraint enforcement. It is not external
+regulatory integration, methodology execution, tax deduction enforcement,
+tokenization, registry export, UI workflow, or sovereign authorization runtime.
 
 ---
 
 ## Authorized Capability Domains
 
-Phase 3 is authorized to implement exclusively the following capabilities, as
-defined in Symphony-Phase-Specification-Document_v1.md §Phase 3:
+Phase 3 task plans may be created only for these capability domains:
 
-### 3.1 — Typed Dependency Graph
-Machine-traversable dependency structures for every decision and fact within the
-platform. Every decision record must declare its upstream dependencies. The graph
-must be machine-readable and traversable without human interpretation.
+1. Typed Dependency Graph
+2. Recursive Legitimacy and Replay Projection
+3. Contradiction Detection and Handling
+4. Failure Composition
+5. Authority Scope and Delegation Enforcement
+6. Regulator-Aware Arbitration Mechanics
+7. Conflict-of-Interest Enforcement
+8. Spatial Constraint and DNSH Gates
+9. Cross-System Evidence Continuity
+10. Dwell-Time Forensic Enforcement
+11. Phase 3 Verifier and CI Enforcement
 
-### 3.2 — Recursive Legitimacy Engine
-A legitimacy chain tracer that follows decision ancestry upward and rejects any
-decision whose legitimacy chain contains an illegitimate ancestor. Legitimacy
-is evaluated against applicable rule sets, not against runtime assertions.
-
-### 3.3 — Contradiction Detection
-Active blocking of conflicting decisions. Conflicts are classified as:
-- Direct contradiction (two decisions assert incompatible facts)
-- Temporal contradiction (two decisions conflict across time)
-- Authority-based contradiction (two decisions conflict in authority scope)
-
-### 3.4 — Failure Composition Engine
-Machine-readable failure decomposition. Rejections must produce structured,
-traversable failure records rather than opaque error states. Failure records
-are constitutional evidence and must be append-only.
-
-### 3.5 — Authority Scope Engine
-Enforcement of authority-to-resource binding. Every authority claim must be
-explicitly scoped to the resource it governs. Authority delegation must be
-traceable through the dependency graph.
-
-### 3.6 — Regulator Override Rules
-Precedence rules for conflicting regulator determinations. Fraud detection at
-the authority boundary. Override rules are statically declared, not runtime-
-configurable.
-
-### 3.7 — Conflict-of-Interest Enforcement
-Role-based separation of duties. Specifically: submitters cannot be verifiers
-for the same asset or decision. This enforcement is DB-layer, not application-
-layer only. The existing INV-169 (Regulation 26 separation of duties — GF-W1-SCH-008)
-is a precursor enforcement surface; Phase 3 generalises this to all decision types.
-
-### 3.8 — Spatial Legality and DNSH Gates
-Geospatial validation against Do No Significant Harm (DNSH) criteria and
-statutory restrictions. Spatial legality checks run at decision time, not at
-intake time. Phase 3 generalises the DNSH spatial check (INV-178) into a
-platform-wide spatial legality gate applicable to all constraint evaluation.
+Authorization means the capability may be scoped for task planning when all
+governing doctrine exists and the task surface stays within the limits below.
 
 ---
 
-## Constitutional Augmentations Required Within Phase 3
+## Capability-to-Doctrine Matrix
 
-Per the Phase Specification Constitutional Augmentation (Symphony-Phase-Specification-Document_v1.md
-§Phase-by-Phase Constitutional Augmentations — Phase 3), Phase 3 must also deliver:
-
-- Explicit regulatory sovereignty arbitration within the legitimacy engine
-- Replay-aware legitimacy: legitimacy chains must be replayable from persisted records
-- Historical policy replay: decisions evaluated against the policy version active at
-  decision time, not the current version
-- Evidence admissibility lineage: each decision record must carry its admissibility
-  chain derivable from persisted fields
-- Temporal legitimacy reconstruction: the legitimacy status of any historical decision
-  must be reconstructable without live runtime
-- Regulator-specific admissibility chains within the contradiction detection engine
-- Historical contradiction replay: contradiction findings must be replayable from
-  persisted records
-
----
-
-## Sovereignty Domains Affected
-
-Phase 3 affects the following sovereignty domains:
-
-| Domain | Nature of Effect |
-|---|---|
-| `WAVE4_OPERATIONAL` | EXTENDS — adds legitimacy enforcement on the operational write path |
-| `REPLAY_INFRASTRUCTURE` | EXTENDS — adds replay-aware legitimacy chain storage |
-| `PHASE_CAPABILITY` | DEFINES — establishes Phase 3 as the legitimacy enforcement phase |
-| `PROVENANCE_CHAIN` | EXTENDS — adds typed dependency graph to provenance records |
-
-Phase 3 does NOT affect:
-- `WAVE8_PROVENANCE` — cryptographic sovereignty surface is complete; Phase 3 does not modify it
-- `REGULATOR_PARTITION` — Phase 3 does not implement regulatory integration; it enforces
-  internal legitimacy rules that are regulator-aware but do not constitute integration
-- `EXTERNAL_VERIFIER` — Phase 3 does not modify signed payload schemas or key registry surfaces
+| Capability Domain | Status | Governing Doctrine | Tasks May Define | Tasks Must Not Define | Blocker Status |
+|---|---|---|---|---|---|
+| Typed Dependency Graph | Authorized | `POLICY_ARTIFACT_AND_AUTHORITY_LINEAGE_DOCTRINE.md`; `LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md`; `REPLAY_AND_HISTORICAL_TRUTH_PRIMACY.md` | schemas, traversal mechanics, dependency references, replay-addressable lineage | legitimacy meaning, policy meaning, historical truth mutation | Unblocked if lineage inputs are doctrine-cited |
+| Recursive Legitimacy and Replay Projection | Authorized | `LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md`; `TEMPORAL_VALIDITY_AND_REPLAY_DOCTRINE.md`; `EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md` | deterministic evaluation, projection storage, replay reconstruction, derived legitimacy outputs | sovereign policy meaning, regulator-specific admissibility, retroactive mutation | Unblocked |
+| Contradiction Detection and Handling | Authorized | `CONTRADICTION_CLASSIFICATION_DOCTRINE.md`; `LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md`; `AUTHORITY_SCOPE_AND_DELEGATION_DOCTRINE.md` | detection logic, contradiction records, quarantine, escalation, doctrine-defined outcome enforcement | new contradiction categories, conflict resolution without doctrine, source-record deletion | Unblocked |
+| Failure Composition | Authorized | `FAILURE_COMPOSITION_TAXONOMY.md`; `CONTRADICTION_CLASSIFICATION_DOCTRINE.md`; `EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md` | structured failure records, failure trees, severity mapping, rejection outputs | ad hoc failure categories, opaque-only errors, non-doctrine warning semantics | Unblocked |
+| Authority Scope and Delegation Enforcement | Authorized | `AUTHORITY_SCOPE_AND_DELEGATION_DOCTRINE.md`; `POLICY_ARTIFACT_AND_AUTHORITY_LINEAGE_DOCTRINE.md`; `SYSTEM_SOVEREIGNTY_MODEL.md` | authority-resource validation, delegation-chain traversal, effective-time checks | authority semantics, legal mandate meaning, regulator hierarchy | Unblocked |
+| Regulator-Aware Arbitration Mechanics | Authorized with limits | `REGULATOR_SOVEREIGNTY_NON_COLLAPSE_DOCTRINE.md`; `POLICY_ARTIFACT_AND_AUTHORITY_LINEAGE_DOCTRINE.md`; `CONTRADICTION_CLASSIFICATION_DOCTRINE.md` | enforcement of declared precedence, non-collapse preservation, escalation records | regulator precedence rules not already declared, regulator-domain merger, external integration | Unblocked only when precedence policy exists |
+| Conflict-of-Interest Enforcement | Authorized | `EXTERNAL_VERIFIER_INDEPENDENCE_DOCTRINE.md`; `AUTHORITY_SCOPE_AND_DELEGATION_DOCTRINE.md`; `FAILURE_COMPOSITION_TAXONOMY.md` | role separation checks, verifier independence enforcement, conflict failure records | verifier doctrine, regulator-specific independence law, external portal behavior | Unblocked |
+| Spatial Constraint and DNSH Gates | Authorized with limits | `SPATIAL_CONSTRAINTS_AND_DNSH_DOCTRINE.md`; `POLICY_ARTIFACT_AND_AUTHORITY_LINEAGE_DOCTRINE.md`; `FAILURE_COMPOSITION_TAXONOMY.md` | mechanical spatial predicates, DNSH gates, overlap checks, protected-area findings | statutory environmental interpretation, universal DNSH meaning, cross-registry legal completeness | Unblocked only when spatial policy artifact exists |
+| Cross-System Evidence Continuity | Authorized with limits | `EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md`; `REPLAY_AND_HISTORICAL_TRUTH_PRIMACY.md`; `POLICY_ARTIFACT_AND_AUTHORITY_LINEAGE_DOCTRINE.md` | evidence lineage references, continuity checks, replay-visible exchange records | external registry integration, Verra/Gold Standard exports, regulator submission packages | Unblocked if no external integration is implemented |
+| Dwell-Time Forensic Enforcement | Authorized | `TEMPORAL_VALIDITY_AND_REPLAY_DOCTRINE.md`; `CONTRADICTION_CLASSIFICATION_DOCTRINE.md`; `FAILURE_COMPOSITION_TAXONOMY.md` | temporal anomaly checks, dwell-time failures, replay-visible forensic findings | statutory time-limit meaning unless doctrine-defined, retroactive record mutation | Unblocked |
+| Phase 3 Verifier and CI Enforcement | Authorized | `TASK_GENERATION_CONSTITUTION.md`; `PHASE_CAPABILITY_LEGALITY_MATRIX.md`; all capability-specific doctrines above | verifier scripts, consistency checks, evidence expectations, anti-drift gates | doctrine creation by verifier, delivery claims unsupported by evidence | Unblocked after referenced doctrine exists |
 
 ---
 
-## Explicitly Prohibited Capabilities
+## Prohibited Capability Routing
 
-Phase 3 MUST NOT implement any of the following. These are capabilities assigned to
-other phases by the Phase Specification Document:
+The following capabilities are not Phase 3 work. A Phase 3 task plan proposing
+any of these must be rejected or routed to the correct phase.
 
 | Prohibited Capability | Correct Phase |
 |---|---|
-| MADD/MAIN integration with MGEE | Phase 8A — Sovereign Authorization Layer |
-| ZEMA registry bridge or API integration | Phase 8B — Registry Bridge Layer |
-| BoZ statutory deduction enforcement | Phase 4 — Financial Integrity |
-| ZDPA data residency or erasure controls | Phase 6 — UI and Field Reality Layer |
-| Article 6 authorization pack generation | Phase 8A — Sovereign Authorization Layer |
-| Verra issuance export packages | Phase 8B — Registry Bridge Layer |
-| Gold Standard certification interfaces | Phase 8B — Registry Bridge Layer |
-| EU CBAM evidence packages | Phase 8D — Corporate Disclosure Layer |
-| Methodology adapter framework | Phase 5 — Adapter Refactor and Methodology Runtime |
-| VVB portal or external audit interfaces | Phase 6 — UI and Field Reality Layer |
-| Settlement finality enforcement | Phase 4 — Financial Integrity |
-| Cross-registry credit reconciliation | Phase 8B — Registry Bridge Layer |
-| Tokenization or on-chain export | Phase 8C — Tokenization |
+| Methodology adapter framework or methodology execution runtime | Phase 5 |
+| BoZ statutory deduction enforcement or settlement finality | Phase 4 |
+| ZDPA erasure controls, user-facing data-subject workflows, or VVB portals | Phase 6 |
+| MAIN/MADD authorization runtime, Article 6 authorization packs, host-country authorization workflow | Phase 8A |
+| ZEMA, Verra, Gold Standard, or external registry bridge integrations | Phase 8B |
+| Tokenization or on-chain export | Phase 8C |
+| EU CBAM or corporate disclosure evidence packages | Phase 8D |
+| External reporting/portfolio workflows not required for internal legitimacy enforcement | Later phase assigned by phase specification |
 
-Phase 3 MUST NOT:
-- Replace or collapse Wave 4 and Wave 8 into a single authority surface.
-- Remove historical verification capability from any prior phase's evidence.
-- Introduce unverifiable regulatory shortcuts in place of mechanical enforcement.
-- Perform work constitutionally reserved for Phase 4, 5, 6, 7, or 8A-8E.
-- Introduce hardcoded methodology logic into the platform core.
-- Grant VVB portals or external audit roles any internal administration privileges.
+Phase 3 may reference doctrines from these later domains only to preserve
+authority boundaries. It must not implement their integration or runtime surface.
 
 ---
 
-## Carry-Forward Obligations — Phase Assignment Determination
+## Required Doctrine Inventory
 
-The following carry-forward obligations from Phase 2 (PHASE2_CLOSEOUT_CARRY_FORWARD_OBLIGATIONS.md)
-have been assessed against the Phase Specification Document and assigned to their
-correct implementation phases:
+Phase 3 task-plan creation requires these documents to exist and govern:
 
-### CF-1: Methodology Adapter Extraction
-**Correct Phase: Phase 5 — Adapter Refactor and Methodology Runtime**
-
-Rationale: The Phase Specification Document §Phase 5 defines the Adapter Refactor
-and Methodology Runtime as the phase that "shifts the platform from hardcoded
-methodology logic to an adapter-governed methodology runtime." CF-1 requires
-extraction of registry methodology from core application logic into a modular
-adapter. This is the canonical scope of Phase 5 (§5.1–5.4 Contract and Input
-Normalization). Assigning CF-1 to Phase 3 was the defect in the prior boundary
-document. Phase 3 must not implement any methodology adapter work.
-
-Escalation trigger (unchanged): Fires if a new registry methodology is introduced
-into the core without adapter abstraction before Phase 5 is open.
-
-### CF-2: Dwell-Time Forensic Enforcement
-**Correct Phase: Phase 3 — Constraint and Legitimacy Engine**
-
-Rationale: Dwell-time forensic enforcement is a legitimacy and constraint enforcement
-concern — it detects temporal anomalies in the decision timeline and enforces that
-decisions have not dwelled in intermediate states beyond authorized periods. This
-falls within Phase 3 §3.2 (Recursive Legitimacy Engine) and §3.3 (Contradiction
-Detection), specifically the temporal contradiction classification. Phase 3 is the
-correct implementation phase for CF-2.
-
-Entry condition: CF-2 must be addressed as a Phase 3 security verifier task. Its
-Phase 3 entry condition is: a dedicated dwell-time forensic verifier task must be
-scaffolded and evidenced within Phase 3 before Phase 3 exit criteria can be claimed.
-
-### CF-3: Sovereign Authorization Schema (MADD/MAIN)
-**Correct Phase: Phase 8A — Sovereign Authorization Layer**
-
-Rationale: The Phase Specification Document §Phase 8A defines the Sovereign
-Authorization Layer as the phase that builds "machine-readable host-country
-authorization request packs, LoA ingestion/recording workflows, corresponding
-adjustment bindings, and first-transfer proof attachments." CF-3 requires a
-specialized authorization schema for Article 6 sovereign contexts — this is
-precisely the scope of Phase 8A. The MADD/MAIN integration doctrine is constitutionally
-defined in docs/constitutional/MADD_MAIN_INTEGRATION_DOCTRINE.md (Authority-Rank 8,
-ROOT authority) and is operative as a doctrine document; the implementation of the
-MADD/MAIN integration boundary is Phase 8A work.
-
-Note: Phase 3's legitimacy engine (§3.2) will need to be aware of MADD/MAIN
-conceptual boundaries for its authority scope rules (§3.5), but it must NOT
-implement the MADD/MAIN integration itself. It uses the constitutional definitions
-from MADD_MAIN_INTEGRATION_DOCTRINE.md as authority boundary references, not as
-integration targets.
-
-Escalation trigger (unchanged): Fires if sovereign credit issuance is attempted
-without the Phase 8A authorization schema being implemented.
+| Doctrine | Status | Required For |
+|---|---|---|
+| `LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md` | Required | projection universes, replay reconstruction, derived legitimacy states |
+| `AUTHORITY_SCOPE_AND_DELEGATION_DOCTRINE.md` | Required | authority scope, authority-resource binding, delegation validation |
+| `CONTRADICTION_CLASSIFICATION_DOCTRINE.md` | Required | contradiction detection, contradiction outcomes, quarantine, escalation |
+| `FAILURE_COMPOSITION_TAXONOMY.md` | Required | structured failure categories and failure trees |
+| `SPATIAL_CONSTRAINTS_AND_DNSH_DOCTRINE.md` | Required | spatial gates, DNSH mechanics, overlap checks |
+| `POLICY_ARTIFACT_AND_AUTHORITY_LINEAGE_DOCTRINE.md` | Required | policy artifact classes, versioning, authority lineage |
+| `REPLAY_AND_HISTORICAL_TRUTH_PRIMACY.md` | Existing | non-mutation of historical truth |
+| `TEMPORAL_VALIDITY_AND_REPLAY_DOCTRINE.md` | Existing | temporal replay and dwell-time logic |
+| `EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md` | Existing | evidence admissibility and provenance lineage |
+| `REGULATOR_SOVEREIGNTY_NON_COLLAPSE_DOCTRINE.md` | Existing | regulator non-collapse and orthogonality |
+| `EXTERNAL_VERIFIER_INDEPENDENCE_DOCTRINE.md` | Existing | verifier independence and conflict-of-interest constraints |
+| `TASK_GENERATION_CONSTITUTION.md` | Existing | task-plan legality and anti-hallucination controls |
+| `PHASE_CAPABILITY_LEGALITY_MATRIX.md` | Existing | phase legality state and routing |
 
 ---
 
-## Phase 3 Entry Conditions
+## Missing Doctrine and Blocking Conditions
 
-Phase 3 may begin implementation only when ALL of the following conditions are met:
+If a capability requires doctrine not listed above, task-plan creation is
+blocked until the doctrine is created or an existing doctrine is explicitly
+amended to cover the gap.
 
-1. Phase 2 is confirmed closed (status: "closed" in phase2_contract.yml). ✅ SATISFIED
-2. Wave 8 is confirmed True-Complete (23/23 tasks). ✅ SATISFIED
-3. CF-1 escalation trigger is confirmed non-fired (methodology adapter not yet required). ✅ SATISFIED
-4. CF-3 escalation trigger is confirmed non-fired (sovereign credit issuance not yet attempted). ✅ SATISFIED
-5. CF-2 is acknowledged as a Phase 3 obligation (dwell-time forensic enforcement). ✅ SATISFIED — this document declares it.
-6. Phase 3 capability boundary (this document) is in repository. ✅ SATISFIED upon commit.
-7. Phase 3 invariant register is in repository with verifier paths declared. ⬜ PENDING
-8. Phase 3 opening act is ratified and registered in constitutional history. ⬜ PENDING
+Blocking examples:
 
----
+- A projection task that needs a projection input not defined by
+  `LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md`.
+- A contradiction task that needs a contradiction class not defined by
+  `CONTRADICTION_CLASSIFICATION_DOCTRINE.md`.
+- A spatial task that needs anti-double-counting completeness without a spatial
+  policy artifact defining scope.
+- An authority task that requires real-world regulator mandate interpretation
+  absent from authority doctrine.
+- A regulator arbitration task that lacks a precedence policy.
 
-## Phase 3 Exit Criteria
-
-Phase 3 is complete only when ALL of the following are satisfied, as defined in
-Symphony-Phase-Specification-Document_v1.md §Phase 3 Exit Criteria:
-
-- Decisions are entirely traceable through the typed dependency graph.
-- Contradictions (direct, temporal, authority-based) are actively blocked.
-- Authority scope violations are mechanically enforced.
-- Conflict-of-interest constraints are DB-layer enforced.
-- DNSH spatial gates are generalized and operational for all decision types.
-- CF-2 (Dwell-Time Forensic Enforcement) verifier task is evidenced and CI-wired.
-- All Phase 3 contract rows (P3-001 through P3-006) are satisfied per the updated
-  phase3_contract.yml.
-- All Phase 3 invariants (INV-301 through INV-310) have mechanical verifiers and evidence.
-- Phase 3 constitutional history entry is complete.
+Blocked implementation work must be converted into doctrine-gap work. Agents may
+not fill gaps inside task plans.
 
 ---
 
-## Constitutional Self-Validation
+## Task-Plan Generation Rules
 
-**Sovereignty domains governed:** Phase 3 capability boundary — what is and is not
-constitutionally legal within Phase 3. Governance of Wave4_Operational extensions
-for legitimacy enforcement, replay infrastructure extensions, and provenance chain
-extensions.
+Every Phase 3 task plan must declare:
 
-**Sovereignty domains this document MUST NOT redefine:** Wave 8 provenance sovereignty
-(complete, untouchable by Phase 3). Regulator partition doctrine (Phase 3 enforces
-internal legitimacy rules; it does not define or integrate with regulator domains).
-Root constitutional doctrine (Ranks 9–10). MADD/MAIN integration doctrine (defined
-at Rank 8 in MADD_MAIN_INTEGRATION_DOCTRINE.md; Phase 3 references but does not
-implement).
+1. authorized capability domain;
+2. governing doctrine document or documents;
+3. allowed implementation surface;
+4. prohibited doctrine surface;
+5. policy artifact and authority lineage inputs, if any;
+6. projection universe inputs, if any;
+7. failure categories and contradiction classes, if any;
+8. out-of-phase surfaces explicitly avoided;
+9. blocker status;
+10. verifier or evidence expectation appropriate to the eventual atomic task.
 
-**Replay obligations preserved:** Phase 3 must add replay-aware legitimacy chain
-storage. Legitimacy determinations must be replayable from persisted records. This
-document preserves all prior-phase replay obligations and extends them to Phase 3
-decision records.
+Task plans that introduce behavioral semantics not explicitly grounded in
+referenced doctrine are constitutionally invalid.
 
-**Regulator boundaries constraining this document:** Phase 3 is an internal
-legitimacy engine. It is regulator-aware (§3.6, §3.7, §3.8) but does not constitute
-external regulatory integration. Regulator sovereignty partitioning (REG-ZM-001
-through REG-INT-004) constrains the legitimacy engine's rule declarations but is
-not modified by Phase 3.
+---
 
-**Phases this document applies to:** PHASE-3 exclusively.
+## Boundary Compliance Checklist
 
-**Override authority:** Root Constitutional Doctrine (Rank 10), Wave Sovereignty
-Doctrine (Rank 9), and Symphony-Phase-Specification-Document_v1.md (Rank 7 within
-phase scope) possess override authority over this document.
+Before a Phase 3 task plan may be converted into atomic implementation tasks,
+the reviewer must confirm:
 
-**Lower-layer documents prohibited from reinterpretation:** All Phase 3 task
-definitions (meta.yml, PLAN.md), Phase 3 migration records, Phase 3 CI gate
-additions, and Phase 3 operational artifacts are prohibited from reinterpreting
-the capability boundary defined herein to expand Phase 3 scope into Phase 4, 5,
-6, 7, or 8A-8E domains.
+- the task maps to exactly one authorized capability domain or is explicitly
+  decomposed;
+- every governing doctrine exists and is canonical;
+- the task implements doctrine but does not define doctrine;
+- no prohibited capability is included;
+- no draft, assessment, archived, or Rank 0 source is cited as governing
+  doctrine;
+- all missing doctrine blockers are resolved or the work is reclassified as
+  doctrine-gap work;
+- expected verification is mechanical where implementation is later required.
+
+---
+
+## Pre-Phase 3 Cleanup Notes
+
+The following cleanup note is non-blocking for this boundary but must be resolved
+before any later task plan treats the affected source as governing doctrine:
+
+| Item | Finding | Required Disposition |
+|---|---|---|
+| `docs/constitutional/MADD_MAIN_INTEGRATION_DOCTRINE-2.md` | Duplicate/generated copy that begins with non-doctrinal prompt-response prose and duplicates `MADD_MAIN_INTEGRATION_DOCTRINE.md`. | Do not cite as governing doctrine. Canonical references must use `docs/constitutional/MADD_MAIN_INTEGRATION_DOCTRINE.md` unless a later cleanup task formally archives or supersedes the duplicate. |
+
+---
+
+## Constitutional Exit Conditions
+
+This boundary is satisfied for task-plan readiness when:
+
+- all authorized capability domains map to governing doctrine;
+- all task-plan rules above are enforceable by review or verifier;
+- all prohibited capability routing is explicit;
+- all draft and assessment artifacts are non-canonical or archived;
+- no Phase 3 task plan can proceed by inventing projection, replay, legitimacy,
+  authority, contradiction, spatial, or failure doctrine locally.
+
+Phase 3 implementation completion remains governed by the Phase 3 contract,
+invariant register, task plans, atomic implementation tasks, verifier results,
+and evidence records. This boundary does not itself complete Phase 3.
 
 ---
 
 ## Prohibited Misinterpretations
 
-**PM-CB-01 — Phase 3 as Regulatory Integration Phase (PROHIBITED):**
-Phase 3 is not a regulatory integration phase. It is an internal constraint and
-legitimacy enforcement phase. No Phase 3 task may implement ZEMA integration,
-BoZ statutory deductions, ZDPA erasure controls, Article 6 authorization packs,
-Verra export packages, Gold Standard certification interfaces, or EU CBAM evidence
-packages. These belong to later phases as specified in Symphony-Phase-Specification-Document_v1.md.
+**PM-CB-01 - Boundary as Doctrine Source:** This document must not be used as the
+source of legitimacy, authority, replay, contradiction, spatial, or policy
+semantics. It routes to governing doctrine.
 
-**PM-CB-02 — MADD/MAIN Implementation as Phase 3 Scope (PROHIBITED):**
-The MADD/MAIN integration is Phase 8A scope. Phase 3 may reference the MADD/MAIN
-constitutional definitions for authority scope rule declarations, but must not
-implement any MADD or MAIN integration surface, data exchange, or authorization
-schema. Any task that proposes MADD/MAIN implementation within Phase 3 is
-constitutionally defective.
+**PM-CB-02 - Agent Doctrine Invention:** Agents may implement doctrine but may
+not define doctrine inside task plans or atomic tasks.
 
-**PM-CB-03 — CF-3 as Phase 3 Entry Blocker (PROHIBITED):**
-CF-3 (Sovereign Authorization Schema) is not a Phase 3 entry blocker. It is a
-Phase 8A obligation. Its escalation trigger (sovereign credit issuance without
-schema) is currently non-fired. Phase 3 may proceed without CF-3 being resolved.
+**PM-CB-03 - Phase 3 as Regulatory Integration:** Phase 3 is not ZEMA, BoZ,
+ZDPA, MAIN/MADD, Article 6, Verra, Gold Standard, CBAM, tokenization, or
+external registry integration.
 
-**PM-CB-04 — Prior Defective Boundary as Authoritative (PROHIBITED):**
-The initial PHASE3_CAPABILITY_BOUNDARY.md (pre-2026-05-10) defined Phase 3 as a
-regulatory sovereignty integration phase. That definition is constitutionally void
-and is superseded by this document. Any task or analysis citing the prior boundary
-document as authoritative for Phase 3 scope is constitutionally defective.
+**PM-CB-04 - Missing Doctrine as Permission:** A doctrine gap blocks task-plan
+creation. It does not authorize local invention.
+
+**PM-CB-05 - Derived View as Historical Truth:** Projection and replay outputs
+are derived findings. They do not mutate historical truth.

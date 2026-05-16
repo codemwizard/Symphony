@@ -239,6 +239,23 @@ A contamination audit MUST be triggered when synthesis output contains: (a) doct
 
 ---
 
+### Phase 3 Draft and Assessment Isolation
+
+**Rule CP-006 - Phase 3 Draft and Assessment Isolation:**
+Phase 3 draft reviews, assessment documents, archived boundary drafts, and
+agent-generated comparative analyses are not governing doctrine unless they
+carry `Constitutional-Status: AUTHORITATIVE` and
+`NotebookLM-Ingestion: CANONICAL`. Files under `docs/PHASE3/archive/` must be
+treated as EXPLORATORY or SUPERSEDED according to their metadata and must not be
+used to define Phase 3 task semantics.
+
+**Rule CP-007 - Boundary Router Preservation:**
+`PHASE3_CAPABILITY_BOUNDARY.md` may route to governing doctrine, but NotebookLM
+must not infer missing doctrine from the boundary document itself. If the
+boundary identifies a required doctrine and that doctrine is absent, synthesis
+must report a doctrine gap rather than filling the gap from draft or assessment
+material.
+
 ## Part VI: Ontology Drift Prevention Controls
 
 Ontology drift occurs when the semantic meaning of foundational Symphony concepts shifts within the corpus through accumulation of lower-class sources, imprecise synthesis reformulations, or ADVISORY sources whose analytical framing implicitly redefines constitutional concepts.

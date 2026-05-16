@@ -1,0 +1,28 @@
+{
+  "task_id": "TSK-P3-CLEAN-006",
+  "git_sha": "c26d4d32e2dfb2f6cccf6498130e88341e61780b",
+  "timestamp_utc": "2026-05-15T15:56:16Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "all_files_marked_do_not_ingest",
+      "result": "PASS",
+      "detail": "All files in archive contain DO-NOT-INGEST"
+    },
+    {
+      "name": "all_files_marked_non_canonical",
+      "result": "PASS",
+      "detail": "All files in archive contain NON-CANONICAL"
+    }
+  ],
+  "observed_paths": [
+    "docs/PHASE3/archive/Phase3_Cleanup_walkthrough.md",
+    "docs/PHASE3/archive/PHASE3_CAPABILITY_BOUNDARY_DRAFT_CONSTITUTIONAL_REVIEW.md",
+    "docs/PHASE3/archive/PHASE3_BOUNDARY_REVIEW_ASSESSMENT.md"
+  ],
+  "observed_hashes": {
+    "docs/PHASE3/archive/Phase3_Cleanup_walkthrough.md": "cde8c304ae08f4cb0c18e9e5c8860ba7a66de166b2d6339249764f93ae60271a",
+    "docs/PHASE3/archive/PHASE3_CAPABILITY_BOUNDARY_DRAFT_CONSTITUTIONAL_REVIEW.md": "82e3bd78e635cb2b5536aae7afdb2ca6991ef48be1efe7d34326eb2df1751029",
+    "docs/PHASE3/archive/PHASE3_BOUNDARY_REVIEW_ASSESSMENT.md": "9250183c486f8e876a62678fa9771d89a284d485cea9bd049fe7707cfd95e01d"
+  }
+}

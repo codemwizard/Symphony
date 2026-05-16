@@ -66,6 +66,11 @@ Instead of manually creating and syncing `meta.yml`, `PLAN.md`, and `EXEC_LOG.md
 - Add: `depends_on`, `touches`, `invariants`, `work`, `acceptance_criteria`, `verification`, `evidence`, `failure_modes`, `must_read`, `implementation_plan`, `implementation_log`, `client`, `assigned_agent`, `model`.
 - Every concrete path listed under `evidence:` must also appear in `touches`.
   Evidence paths close scope but do not determine `assigned_agent`.
+- If the task uses `blocked_by`, it must identify active impediments only:
+  root wave gates, governance conflicts, missing doctrine, failed readiness
+  checks, remediation blockers, or execution-envelope conflicts. Do not duplicate
+  normal structural predecessors from `depends_on` in `blocked_by`; transitive
+  dependency blockage is derived from the DAG.
 
 ### Step 5 — Create execution log
 - Path mapping mirrors Step 3:

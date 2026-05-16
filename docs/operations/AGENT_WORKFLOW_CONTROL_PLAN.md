@@ -60,6 +60,7 @@ Before writing any file, determine which mode applies.
 See: `docs/operations/AGENT_PROMPT_ROUTER.md`
 
 Permitted modes:
+- CREATE-IMPLEMENTATION-PLAN
 - CREATE-TASK
 - RESUME-TASK
 - IMPLEMENT-TASK
@@ -96,6 +97,7 @@ Do not retry without remediation discipline.
 - `docs/operations/AGENT_PROMPT_ROUTER.md`
 - `docs/operations/AI_AGENT_OPERATION_MANUAL.md`
 - `docs/operations/POLICY_PRECEDENCE.md`
+- `docs/operations/IMPLEMENTATION_PLAN_CREATION_PROCESS.md`
 - `docs/operations/TASK_CREATION_PROCESS.md`
 - `docs/operations/REMEDIATION_TRACE_WORKFLOW.md`
 ```
@@ -115,7 +117,7 @@ Owner: Operations / Governance
 This document defines the decision procedure for classifying an incoming prompt
 and selecting the execution path that follows.
 
-The agent must identify exactly one mode from the five modes below.
+The agent must identify exactly one mode from the modes below.
 If no mode matches unambiguously after non-mutating inspection of repo state:
 STOP and ask the human which mode applies.
 

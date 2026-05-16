@@ -133,3 +133,14 @@ The pilot demo requires 5 tabs:
 5. Pilot Success Criteria (GF-W1-UI-012 through GF-W1-UI-023)
 
 All 23 tasks are now defined and ready for implementation.
+
+## Phase 3 Wave 0: Governance Cleanup (8 tasks)
+
+- **TSK-P3-CLEAN-001**: Repair Phase 3 contract YAML parse defect (status: complete)
+- **TSK-P3-CLEAN-002**: Rewrite Phase 3 README planning posture (status: complete)
+- **TSK-P3-CLEAN-003**: Add doctrine references to Phase 3 invariant register (status: complete)
+- **TSK-P3-CLEAN-004**: Reconcile Phase 3 opening posture with execution envelope (status: complete)
+- **TSK-P3-CLEAN-005**: Resolve non-canonical MADD/MAIN duplicate doctrine copy (status: complete)
+- **TSK-P3-CLEAN-006**: Verify archived Phase 3 files excluded from task generation (status: complete)
+- **TSK-P3-CLEAN-007**: Maintain Phase 3 DAG artifacts after cleanup (status: complete)
+- **TSK-P3-CLEAN-008**: Maintain Phase 3 implementation-plan registry (status: complete)

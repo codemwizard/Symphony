@@ -219,9 +219,20 @@ Upon ratification of this opening act:
 - Phase 3 contract obligations (P3-001 through P3-009) are **binding**.
 - Phase 3 invariants (INV-301 through INV-310) are **mandatory** — they must be
   mechanically implemented before Phase 3 exit criteria can be claimed.
-- Phase 3 work may be **admitted into planning and execution**.
+- Phase 3 work may be **admitted into planning only** (execution is mechanically gated).
 - Phase 3 tasks generated under the defective prior boundary are **constitutionally
   void** and must be regenerated under the corrected boundary.
+
+---
+
+## Execution Envelope Conflict Resolution
+
+**Conflict:** This opening act initially declared Phase 3 fully open for execution, contradicting the `PHASE_EXECUTION_ENVELOPE.md` which contained strict mechanical blocks preventing Phase 3 claims.
+
+**Resolution Status: RESOLVED**
+The conflict was escalated to the human constitutional custodian. The `PHASE_EXECUTION_ENVELOPE.md` was manually updated on 2026-05-15 by the human custodian to authorize Pre-Phase 3 governance cleanup task packs.
+
+**Controlling Authority:** The root `PHASE_EXECUTION_ENVELOPE.md` remains the absolute controlling authority. Phase 3 is currently in a planning-only posture, and no Phase 3 task may claim executable status until explicitly permitted by the execution envelope.
 
 ---
 

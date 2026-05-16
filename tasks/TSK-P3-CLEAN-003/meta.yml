@@ -1,0 +1,142 @@
+schema_version: 1
+phase: '3'
+task_id: TSK-P3-CLEAN-003
+title: "Add doctrine references to Phase 3 invariant register so that INV-301 through INV-310 cite governing doctrines"
+owner_role: INVARIANTS_CURATOR
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  INV-301 through INV-310 in docs/PHASE3/PHASE3_INVARIANT_REGISTER.md lack
+  governing doctrine citations. This task adds doctrine references to each
+  invariant row while preserving honest roadmap/implementation status. No
+  invariant may be promoted to implemented without verifier evidence.
+
+depends_on:
+  - TSK-P3-CLEAN-001
+invariants:
+  - INV-301
+  - INV-302
+  - INV-303
+  - INV-304
+  - INV-305
+  - INV-306
+  - INV-307
+  - INV-308
+  - INV-309
+  - INV-310
+
+deliverable_files:
+  - scripts/audit/verify_tsk_p3_clean_003.sh
+  - evidence/phase3/tsk_p3_clean_003.json
+  - docs/plans/phase3/TSK-P3-CLEAN-003/PLAN.md
+  - docs/plans/phase3/TSK-P3-CLEAN-003/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: false
+  approval_workflow: none
+  stage_a_required_before_edit: false
+  regulated_paths: []
+  must_read: []
+
+remediation_trace_compliance:
+  enabled: false
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Promoting any invariant to implemented status."
+  - "Creating verifier scripts for individual invariants."
+  - "Inventing doctrine locally; all citations must reference existing canonical docs."
+  - "Modifying invariant descriptions, IDs, or verification expectations."
+
+stop_conditions:
+  - "If any invariant is marked implemented without verifier evidence on disk => STOP."
+  - "If any doctrine citation does not resolve to an existing canonical document => STOP."
+  - "If doctrine is invented locally rather than cited from existing sources => STOP."
+
+proof_guarantees:
+  - "Verifier mechanically confirms every INV-301 through INV-310 has at least one doctrine reference."
+  - "Verifier mechanically confirms no invariant has status 'implemented' without a verifier file on disk."
+  - "Verifier mechanically confirms all cited doctrine files exist in the repository."
+
+proof_limitations:
+  - "Does not verify doctrine semantic applicability to each invariant."
+  - "Does not verify invariant descriptions are complete or correct beyond reference presence."
+
+touches:
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+  - scripts/audit/verify_tsk_p3_clean_003.sh
+  - evidence/phase3/tsk_p3_clean_003.json
+  - tasks/TSK-P3-CLEAN-003/meta.yml
+  - docs/plans/phase3/TSK-P3-CLEAN-003/PLAN.md
+  - docs/plans/phase3/TSK-P3-CLEAN-003/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_clean_003_work_01] Add governing doctrine citations to each invariant row INV-301 through INV-310 in docs/PHASE3/PHASE3_INVARIANT_REGISTER.md."
+  - "[ID tsk_p3_clean_003_work_02] Preserve existing roadmap or implementation status honestly; do not promote any invariant to implemented without verifier evidence."
+  - "[ID tsk_p3_clean_003_work_03] Ensure no doctrine is invented locally; all citations must reference existing canonical documents."
+
+acceptance_criteria:
+  - "[ID tsk_p3_clean_003_work_01] Every invariant INV-301 through INV-310 has at least one doctrine reference field that resolves to an existing canonical document."
+  - "[ID tsk_p3_clean_003_work_02] No invariant row has status 'implemented' unless a verifier script and evidence file exist on disk for it."
+  - "[ID tsk_p3_clean_003_work_03] All doctrine citations resolve to files that exist in the repository and are not marked archived or non-canonical."
+
+negative_tests:
+  - id: TSK-P3-CLEAN-003-N1
+    description: "Feed an invariant register where INV-305 has status 'implemented' but no verifier file exists; verifier must reject."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-CLEAN-003-P1
+    description: "Feed a correctly annotated register with all doctrine refs resolving; verifier must pass."
+    required: true
+
+verification:
+  - '# [ID tsk_p3_clean_003_work_01] [ID tsk_p3_clean_003_work_02] [ID tsk_p3_clean_003_work_03] test -x scripts/audit/verify_tsk_p3_clean_003.sh && bash scripts/audit/verify_tsk_p3_clean_003.sh > evidence/phase3/tsk_p3_clean_003.json || exit 1'
+  - 'bash scripts/dev/pre_ci.sh || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_clean_003.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Invariant promoted to implemented without verifier evidence => CRITICAL_FAIL"
+  - "Doctrine citation does not resolve to existing file => FAIL"
+  - "Doctrine invented locally => CRITICAL_FAIL"
+
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/IMPLEMENTATION_PLAN_CREATION_PROCESS.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-000_governance_cleanup.md
+
+implementation_plan: docs/plans/phase3/TSK-P3-CLEAN-003/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-CLEAN-003/EXEC_LOG.md
+notes: >-
+  Independent cleanup node, wave-gated by CLEAN-001 via blocked_by.
+  Structural dependency for CLEAN-007. Phase Key: P3W0.
+  Phase Name: Pre-Phase 3 Governance Cleanup.
+client: cursor
+assigned_agent: invariants_curator
+model: <UNASSIGNED>

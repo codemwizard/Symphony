@@ -340,6 +340,34 @@ and all required Phase-3 opening artifacts are created and merged. Phase-2
 must be formally opened before Phase-3 planning documents may reference Phase-3
 capabilities as delivery-claimable.
 
+### 3.4A Phase-3 Doctrine-Routed Task-Plan Legality
+
+The following legality matrix applies to Phase 3 boundary and doctrine readiness.
+It governs task-plan creation before atomic implementation tasks are generated.
+
+| Capability Domain | Legality | Condition |
+|---|---|---|
+| Typed Dependency Graph | AUTHORIZED | Must cite policy lineage, authority lineage, and replay doctrine. |
+| Recursive Legitimacy and Replay Projection | AUTHORIZED | Must cite `LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md` and replay/temporal doctrine. |
+| Contradiction Detection and Handling | AUTHORIZED | Must use classes in `CONTRADICTION_CLASSIFICATION_DOCTRINE.md`. |
+| Failure Composition | AUTHORIZED | Must use categories in `FAILURE_COMPOSITION_TAXONOMY.md`. |
+| Authority Scope and Delegation Enforcement | AUTHORIZED | Must cite `AUTHORITY_SCOPE_AND_DELEGATION_DOCTRINE.md`. |
+| Regulator-Aware Arbitration Mechanics | CONDITIONAL | Authorized only where governing regulator and precedence doctrine defines the rule. |
+| Spatial Constraint and DNSH Gates | CONDITIONAL | Authorized only where a spatial policy artifact defines the mechanical rule and scope. |
+| Cross-System Evidence Continuity | CONDITIONAL | Authorized only as internal evidence-continuity mechanics; external integrations are prohibited. |
+| Dwell-Time Forensic Enforcement | AUTHORIZED | Must cite temporal replay and contradiction doctrine. |
+| Phase 3 Verifier and CI Enforcement | AUTHORIZED | Must verify doctrine routing and phase-boundary compliance without defining doctrine. |
+| Methodology Runtime | PROHIBITED | Routed to Phase 5. |
+| BoZ statutory deductions or settlement finality | PROHIBITED | Routed to Phase 4. |
+| ZDPA erasure workflows or VVB portal workflows | PROHIBITED | Routed to Phase 6. |
+| MAIN/MADD authorization runtime or Article 6 packs | PROHIBITED | Routed to Phase 8A. |
+| External registry bridges or exports | PROHIBITED | Routed to Phase 8B. |
+| Tokenization or on-chain export | PROHIBITED | Routed to Phase 8C. |
+
+Phase 3 task plans are legal only when the capability maps to a governing
+doctrine and the task states what it may implement and what doctrine it must not
+define.
+
 ### 3.5 Phase-4 (Continuous Assurance and Evolution Governance)
 
 **Constitutional posture**: CONSTITUTIONALLY RESERVED, NOT OPENED.

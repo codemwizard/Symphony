@@ -1,0 +1,127 @@
+schema_version: 1
+phase: '3'
+task_id: TSK-P3-CLEAN-006
+title: "Verify archived Phase 3 files are excluded from task generation so that non-canonical drafts cannot become governing sources"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  docs/PHASE3/archive/ contains review and draft files from earlier planning.
+  This task verifies they are marked non-canonical and excluded from ingestion
+  and task-generation input, preventing stale drafts from becoming governing
+  sources for future atomic task creation.
+
+depends_on:
+  - TSK-P3-CLEAN-001
+invariants: []
+
+deliverable_files:
+  - scripts/audit/verify_tsk_p3_clean_006.sh
+  - evidence/phase3/tsk_p3_clean_006.json
+  - docs/plans/phase3/TSK-P3-CLEAN-006/PLAN.md
+  - docs/plans/phase3/TSK-P3-CLEAN-006/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: false
+  approval_workflow: none
+  stage_a_required_before_edit: false
+  regulated_paths: []
+  must_read: []
+
+remediation_trace_compliance:
+  enabled: false
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Deleting archived files; only marking and exclusion verification."
+  - "Reviewing archived file content for correctness."
+  - "Modifying Phase 3 planning scope or DAG based on archived content."
+
+stop_conditions:
+  - "If archived files remain eligible as doctrine or task-generation input => STOP."
+  - "If any archived file is cited as a governing source by a Phase 3 planning document => STOP."
+
+proof_guarantees:
+  - "Verifier mechanically confirms every file under docs/PHASE3/archive/ has a non-canonical marker."
+  - "Verifier mechanically confirms no planning document under docs/PHASE3/ cites an archived file as governing."
+
+proof_limitations:
+  - "Does not verify archived file content beyond header/marker presence."
+  - "Does not check citation paths outside docs/PHASE3/ directory."
+
+touches:
+  - docs/PHASE3/archive/
+  - scripts/audit/verify_tsk_p3_clean_006.sh
+  - evidence/phase3/tsk_p3_clean_006.json
+  - tasks/TSK-P3-CLEAN-006/meta.yml
+  - docs/plans/phase3/TSK-P3-CLEAN-006/PLAN.md
+  - docs/plans/phase3/TSK-P3-CLEAN-006/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_clean_006_work_01] Identify all files under docs/PHASE3/archive/ and verify each is marked non-canonical."
+  - "[ID tsk_p3_clean_006_work_02] Confirm archived files are excluded from ingestion and task-generation input by verifying exclusion in relevant config or policy docs."
+  - "[ID tsk_p3_clean_006_work_03] Ensure no Phase 3 planning node, DAG entry, or implementation plan cites an archived file as a governing or canonical source."
+
+acceptance_criteria:
+  - "[ID tsk_p3_clean_006_work_01] Every file under docs/PHASE3/archive/ has a non-canonical header or exclusion marker."
+  - "[ID tsk_p3_clean_006_work_02] No archived file path appears in any ingestion whitelist, task-generation config, or source-pack canonical-source list."
+  - "[ID tsk_p3_clean_006_work_03] A search of docs/PHASE3/ planning documents shows zero citations of archived file paths as governing sources."
+
+negative_tests:
+  - id: TSK-P3-CLEAN-006-N1
+    description: "Feed an archived file without a non-canonical marker; verifier must reject."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-CLEAN-006-P1
+    description: "Feed archived files all with non-canonical markers and no governing citations; verifier must pass."
+    required: true
+
+verification:
+  - '# [ID tsk_p3_clean_006_work_01] [ID tsk_p3_clean_006_work_02] [ID tsk_p3_clean_006_work_03] test -x scripts/audit/verify_tsk_p3_clean_006.sh && bash scripts/audit/verify_tsk_p3_clean_006.sh > evidence/phase3/tsk_p3_clean_006.json || exit 1'
+  - 'bash scripts/dev/pre_ci.sh || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_clean_006.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Archived file without non-canonical marker => FAIL"
+  - "Archived file cited as governing source => CRITICAL_FAIL"
+
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/IMPLEMENTATION_PLAN_CREATION_PROCESS.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-000_governance_cleanup.md
+
+implementation_plan: docs/plans/phase3/TSK-P3-CLEAN-006/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-CLEAN-006/EXEC_LOG.md
+notes: >-
+  Independent cleanup node, wave-gated by CLEAN-001 via blocked_by.
+  Phase Key: P3W0. Phase Name: Pre-Phase 3 Governance Cleanup.
+client: cursor
+assigned_agent: architect
+model: <UNASSIGNED>

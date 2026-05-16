@@ -17,6 +17,7 @@ EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 status="PASS"
 note=""
 mode="normal"
+audit_timeout_seconds="${DOTNET_DEP_AUDIT_TIMEOUT_SECONDS:-60}"
 tmp_out="$(mktemp)"
 trap 'rm -f "$tmp_out"' EXIT
 
@@ -35,6 +36,52 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+run_dotnet_audit() {
+  local target_path="$1"
+  local mode="${2:-no-restore}"
+  local args=(list "$target_path" package --vulnerable --include-transitive)
+  if [[ "$mode" == "no-restore" ]]; then
+    args+=(--no-restore)
+  fi
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "${audit_timeout_seconds}s" dotnet "${args[@]}"
+  else
+    dotnet "${args[@]}"
+  fi
+}
+
+requires_restore_retry() {
+  local output_file="$1"
+  rg -qi \
+    "assets file|project.assets.json|run a nuget package restore|please run restore|restore to generate|assets file .* not found" \
+    "$output_file"
+}
+
+run_dotnet_audit_with_fallback() {
+  local target_path="$1"
+  local output_file="$2"
+  local rc=0
+
+  run_dotnet_audit "$target_path" no-restore > "$output_file" 2>&1 || rc=$?
+  if [[ "$rc" -eq 0 ]]; then
+    return 0
+  fi
+
+  if command -v timeout >/dev/null 2>&1 && [[ "$rc" -eq 124 ]]; then
+    return "$rc"
+  fi
+
+  if requires_restore_retry "$output_file"; then
+    echo "" >> "$output_file"
+    echo "[fallback] retrying with restore-enabled dependency audit" >> "$output_file"
+    rc=0
+    run_dotnet_audit "$target_path" with-restore >> "$output_file" 2>&1 || rc=$?
+    return "$rc"
+  fi
+
+  return "$rc"
+}
 
 if [[ "$mode" == "dry-run" ]]; then
   note="dry_run"
@@ -108,8 +155,13 @@ else
 fi
 
 if [[ -n "$target" ]]; then
-  if ! dotnet list "$target" package --vulnerable --include-transitive > "$tmp_out" 2>&1; then
+  rc=0
+  run_dotnet_audit_with_fallback "$target" "$tmp_out" || rc=$?
+  if [[ "$rc" -ne 0 ]]; then
     status="FAIL"
+    if command -v timeout >/dev/null 2>&1 && [[ "$rc" -eq 124 ]]; then
+      note="dotnet_dependency_audit_timeout"
+    fi
   fi
 else
   # Runtime dependency posture gate: audit production projects only.
@@ -124,8 +176,13 @@ else
   else
     for p in "${projects[@]}"; do
       echo "=== $p ===" >> "$tmp_out"
-      if ! dotnet list "$p" package --vulnerable --include-transitive >> "$tmp_out" 2>&1; then
+      rc=0
+      run_dotnet_audit_with_fallback "$p" "$tmp_out" || rc=$?
+      if [[ "$rc" -ne 0 ]]; then
         status="FAIL"
+        if command -v timeout >/dev/null 2>&1 && [[ "$rc" -eq 124 ]]; then
+          note="dotnet_dependency_audit_timeout"
+        fi
       fi
       echo "" >> "$tmp_out"
     done

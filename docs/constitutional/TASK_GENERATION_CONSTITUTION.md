@@ -1064,6 +1064,25 @@ amendment are constitutionally illegal.
 and register its closing conditions in the constitutional history record — are
 themselves constitutional acts subject to all mandatory declarations in Part II.
 
+### 7.1A Phase 3 Doctrine-Routed Task-Plan Rules
+
+**PR-4A. Phase 3 Doctrine-Routed Task-Plan Rule.** Every Phase 3 task plan must
+identify an authorized capability domain from `PHASE3_CAPABILITY_BOUNDARY.md`,
+cite at least one governing canonical doctrine, declare the allowed
+implementation surface, declare the prohibited doctrine surface, and state
+whether any doctrine blocker remains unresolved.
+
+**PR-4B. Agents Implement Doctrine; Agents Do Not Define Doctrine.** A task plan
+or atomic implementation task may implement behavior defined by canonical
+doctrine. It may not introduce legitimacy, replay, authority, contradiction,
+spatial, policy, regulator, or failure semantics not already defined by
+governing doctrine.
+
+**PR-4C. Doctrine Gaps Block Implementation Tasks.** If a Phase 3 capability
+requires doctrine that does not exist or is insufficient, task generation must
+produce doctrine-gap work rather than implementation work. The absence of
+doctrine is not permission for local inference.
+
 ### 7.2 Wave Sovereignty and Phase Legality Interaction
 
 Wave 4 and Wave 8 operate as constitutionally orthogonal sovereignty surfaces

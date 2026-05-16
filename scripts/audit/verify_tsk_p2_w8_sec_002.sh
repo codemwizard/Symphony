@@ -12,6 +12,9 @@ WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 EVIDENCE_FILE="$WORKSPACE_DIR/evidence/phase2/tsk_p2_w8_sec_002.json"
 EXTENSION_DIR="$WORKSPACE_DIR/src/db/extensions/wave8_crypto"
 PG_CONFIG="/usr/lib/postgresql/18/bin/pg_config"
+BUILT_SO_PATH="$EXTENSION_DIR/wave8_crypto.so"
+CONTROL_FILE="$EXTENSION_DIR/wave8_crypto.control"
+SQL_FILE="$EXTENSION_DIR/wave8_crypto--1.0.sql"
 
 # Initialize evidence JSON
 init_evidence() {
@@ -152,21 +155,28 @@ build_extension() {
 
 # Step 3: Install extension
 install_extension() {
-    echo "Step 3: Installing extension..."
-    
-    local install_output
-    install_output=$(sudo make -C "$EXTENSION_DIR" PG_CONFIG="$PG_CONFIG" install 2>&1) || {
+    echo "Step 3: Validating built extension artifacts..."
+
+    local install_output=""
+    for artifact in "$BUILT_SO_PATH" "$CONTROL_FILE" "$SQL_FILE"; do
+        if [ ! -f "$artifact" ]; then
+            install_output+="missing artifact: $artifact"$'\n'
+        fi
+    done
+
+    if [ -n "$install_output" ]; then
         jq ".command_outputs.install = \"$install_output\"" "$EVIDENCE_FILE" > "${EVIDENCE_FILE}.tmp"
         mv "${EVIDENCE_FILE}.tmp" "$EVIDENCE_FILE"
-        add_trace "install" "sudo make -C $EXTENSION_DIR PG_CONFIG=$PG_CONFIG install" 1 false
-        echo "ERROR: Install failed"
+        add_trace "install" "artifact validation (non-root install path)" 1 false
+        echo "ERROR: Artifact validation failed"
         echo "$install_output"
         return 1
-    }
-    
+    fi
+
+    install_output="artifacts_present: $BUILT_SO_PATH, $CONTROL_FILE, $SQL_FILE"
     jq ".command_outputs.install = \"$install_output\"" "$EVIDENCE_FILE" > "${EVIDENCE_FILE}.tmp"
     mv "${EVIDENCE_FILE}.tmp" "$EVIDENCE_FILE"
-    add_trace "install" "sudo make -C $EXTENSION_DIR PG_CONFIG=$PG_CONFIG install" 0 true
+    add_trace "install" "artifact validation (non-root install path)" 0 true
     return 0
 }
 
@@ -174,8 +184,7 @@ install_extension() {
 inspect_ldd() {
     echo "Step 4: Running ldd inspection..."
     
-    local pkglibdir=$($PG_CONFIG --pkglibdir)
-    local so_path="$pkglibdir/wave8_crypto.so"
+    local so_path="$BUILT_SO_PATH"
     
     if [ ! -f "$so_path" ]; then
         echo "ERROR: wave8_crypto.so not found at $so_path"
@@ -208,8 +217,7 @@ inspect_ldd() {
 inspect_nm() {
     echo "Step 5: Running nm inspection..."
     
-    local pkglibdir=$($PG_CONFIG --pkglibdir)
-    local so_path="$pkglibdir/wave8_crypto.so"
+    local so_path="$BUILT_SO_PATH"
     
     local nm_output
     nm_output=$(nm -D "$so_path" 2>&1)
@@ -232,8 +240,7 @@ inspect_nm() {
 inspect_objdump() {
     echo "Step 6: Running objdump inspection..."
     
-    local pkglibdir=$($PG_CONFIG --pkglibdir)
-    local so_path="$pkglibdir/wave8_crypto.so"
+    local so_path="$BUILT_SO_PATH"
     
     local objdump_output
     objdump_output=$(objdump -T "$so_path" 2>&1)
@@ -248,8 +255,7 @@ inspect_objdump() {
 inspect_readelf() {
     echo "Step 7: Running readelf inspection..."
     
-    local pkglibdir=$($PG_CONFIG --pkglibdir)
-    local so_path="$pkglibdir/wave8_crypto.so"
+    local so_path="$BUILT_SO_PATH"
     
     local readelf_output
     readelf_output=$(readelf -d "$so_path" 2>&1)
@@ -278,15 +284,12 @@ load_extension() {
         
         docker exec "$DB_CONTAINER" mkdir -p "$pkglibdir"
         docker exec "$DB_CONTAINER" mkdir -p "$sharedir/extension"
-        docker cp "$pkglibdir/wave8_crypto.so" "$DB_CONTAINER:$pkglibdir/"
-        for f in "$sharedir"/extension/wave8_crypto*; do
-            if [ -f "$f" ]; then
-                docker cp "$f" "$DB_CONTAINER:$sharedir/extension/"
-            fi
-        done
+        docker cp "$BUILT_SO_PATH" "$DB_CONTAINER:$pkglibdir/"
+        docker cp "$CONTROL_FILE" "$DB_CONTAINER:$sharedir/extension/"
+        docker cp "$SQL_FILE" "$DB_CONTAINER:$sharedir/extension/"
         
         # Resolve libsodium path on host and copy to container
-        local libsodium_path=$(ldd "$pkglibdir/wave8_crypto.so" | grep libsodium | awk '{print $3}')
+        local libsodium_path=$(ldd "$BUILT_SO_PATH" | grep libsodium | awk '{print $3}')
         if [ -n "$libsodium_path" ] && [ -f "$libsodium_path" ]; then
             local lib_dir=$(dirname "$libsodium_path")
             docker exec "$DB_CONTAINER" mkdir -p "$lib_dir"

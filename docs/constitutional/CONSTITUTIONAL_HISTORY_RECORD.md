@@ -100,3 +100,55 @@ integrate with, modify, or redefine any regulator domain boundary.
 *This record is append-only. Future constitutional events must be added as new
 numbered entries (CHR-002, CHR-003, etc.) below this entry. No prior entry may
 be modified.*
+
+---
+
+### Entry CHR-002 - Phase 3 Boundary and Doctrine Readiness Alignment
+
+| Field | Value |
+|---|---|
+| Entry ID | CHR-002 |
+| Event Type | Doctrine Readiness Alignment |
+| Constitutional Moment | 2026-05-14 |
+| Authority | Human constitutional custodian instruction |
+| Phase Name | Constraint and Legitimacy Engine |
+| Phase Number | 3 |
+
+**Purpose:**
+Phase 3 task-plan creation is re-grounded so that `PHASE3_CAPABILITY_BOUNDARY.md`
+acts as a capability-to-doctrine router rather than a self-contained doctrine
+source. This prevents agents from inventing legitimacy, replay, projection,
+authority, contradiction, spatial, policy, or failure doctrine during task-plan
+creation.
+
+**Artifacts created:**
+
+| Artifact | Purpose |
+|---|---|
+| `docs/constitutional/LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md` | Projection universes, replay reconstruction, derived legitimacy states, replay acceleration, operational exhaust |
+| `docs/constitutional/AUTHORITY_SCOPE_AND_DELEGATION_DOCTRINE.md` | Authority scope, authority lineage, delegation validation |
+| `docs/constitutional/CONTRADICTION_CLASSIFICATION_DOCTRINE.md` | Contradiction classes and permitted outcomes |
+| `docs/constitutional/FAILURE_COMPOSITION_TAXONOMY.md` | Phase 3 failure categories, severity, and composition |
+| `docs/constitutional/SPATIAL_CONSTRAINTS_AND_DNSH_DOCTRINE.md` | Mechanical spatial constraints, DNSH gates, anti-double-counting boundaries |
+| `docs/constitutional/POLICY_ARTIFACT_AND_AUTHORITY_LINEAGE_DOCTRINE.md` | Policy artifact classes, versioning, policy lineage, authority linkage |
+
+**Artifacts amended:**
+
+| Artifact | Amendment |
+|---|---|
+| `docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md` | Rewritten as a doctrine router and task-plan scoping boundary |
+| `docs/constitutional/CONSTITUTIONAL_GLOSSARY.md` | Added Phase 3 projection and doctrine-readiness definitions |
+| `docs/constitutional/PHASE_CAPABILITY_LEGALITY_MATRIX.md` | Added Phase 3 doctrine-routed task-plan legality rows |
+| `docs/constitutional/TASK_GENERATION_CONSTITUTION.md` | Added Phase 3 doctrine-routing and anti-improvisation rules |
+| `docs/constitutional/NOTEBOOKLM_CONSTITUTIONAL_INGESTION_POLICY.md` | Added Phase 3 draft/assessment isolation rules |
+| `docs/constitutional/CONSTITUTIONAL_GRAPH.md` | Added Phase 3 doctrine dependency edges |
+
+**Replay survivability:**
+Prior Phase 3 drafts and assessments are preserved as non-canonical archived
+records where retained. They are not governing doctrine for current task-plan
+creation.
+
+**Admissibility continuity:**
+This event does not complete Phase 3 implementation. It prepares doctrine
+readiness and task-plan scoping only. Atomic implementation tasks, verifiers,
+and execution evidence remain downstream work.
