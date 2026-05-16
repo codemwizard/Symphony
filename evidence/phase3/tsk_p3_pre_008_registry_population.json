@@ -1,0 +1,95 @@
+{
+  "task_id": "TSK-P3-PRE-008",
+  "git_sha": "30d5d02497e6c3ad43b8283a85b79a6037b2134a",
+  "timestamp_utc": "2026-05-16T08:23:52Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "pre008_registry_exists",
+      "result": "PASS",
+      "detail": "registry exists"
+    },
+    {
+      "id": "pre008_task_count",
+      "result": "PASS",
+      "detail": "task_count matches registry entry count"
+    },
+    {
+      "id": "pre008_all_phase3_tasks_present",
+      "result": "PASS",
+      "detail": "registry contains all current Phase 3 tasks"
+    },
+    {
+      "id": "pre008_entry_shape",
+      "result": "PASS",
+      "detail": "every task has valid task_type, wave, and ci_tier"
+    },
+    {
+      "id": "pre008_verify_links",
+      "result": "PASS",
+      "detail": "every VERIFY task points at an existing IMPL task"
+    }
+  ],
+  "observed_paths": [
+    "docs/PHASE3/phase3_task_registry.yml",
+    "tasks/TSK-P3-PRE-008/meta.yml",
+    "tasks/TSK-P3-CLEAN-004/meta.yml",
+    "tasks/TSK-P3-PRE-004/meta.yml",
+    "tasks/TSK-P3-CLEAN-001/meta.yml",
+    "tasks/TSK-P3-ACT-005/meta.yml",
+    "tasks/TSK-P3-CLEAN-007/meta.yml",
+    "tasks/TSK-P3-PRE-003/meta.yml",
+    "tasks/TSK-P3-GOV-002/meta.yml",
+    "tasks/TSK-P3-ACT-001/meta.yml",
+    "tasks/TSK-P3-W8-ARCH-001/meta.yml",
+    "tasks/TSK-P3-PRE-001/meta.yml",
+    "tasks/TSK-P3-CLEAN-003/meta.yml",
+    "tasks/TSK-P3-PRE-006/meta.yml",
+    "tasks/TSK-P3-GOV-001/meta.yml",
+    "tasks/TSK-P3-CLEAN-008/meta.yml",
+    "tasks/TSK-P3-CLEAN-006/meta.yml",
+    "tasks/TSK-P3-PRE-002/meta.yml",
+    "tasks/TSK-P3-PRE-005/meta.yml",
+    "tasks/TSK-P3-ACT-003/meta.yml",
+    "tasks/TSK-P3-W1-DB-007/meta.yml",
+    "tasks/TSK-P3-ACT-004/meta.yml",
+    "tasks/TSK-P3-CLEAN-005/meta.yml",
+    "tasks/TSK-P3-ACT-002/meta.yml",
+    "tasks/TSK-P3-W8-SEAL-001/meta.yml",
+    "tasks/TSK-P3-GOV-003/meta.yml",
+    "tasks/TSK-P3-PRE-009/meta.yml",
+    "tasks/TSK-P3-PRE-007/meta.yml",
+    "tasks/TSK-P3-CLEAN-002/meta.yml"
+  ],
+  "observed_hashes": {
+    "docs/PHASE3/phase3_task_registry.yml": "463d3360e7b41f2363aff7e773865089a71d70b2d943ab8e047a517011731625",
+    "tasks/TSK-P3-PRE-008/meta.yml": "e77149723bb7a4ac69c2b4f216fee9eecf04074f9936d11e3130c238702b063b",
+    "tasks/TSK-P3-CLEAN-004/meta.yml": "4062d1f4ef895ea4916709fcb83d92313bb4f6a56da5dccbc20eda73334e2245",
+    "tasks/TSK-P3-PRE-004/meta.yml": "4a66d778077d9d340dcd666ee1f2c90fa7c74cfd81f037074ae0bc56632c1836",
+    "tasks/TSK-P3-CLEAN-001/meta.yml": "71ab1fdc0e27d660a9b1100772ba5ccec1e603d3a704ab55262ac0cd35178380",
+    "tasks/TSK-P3-ACT-005/meta.yml": "ad9e98b606fe77d6ad31f10824e012b53febdd5dbefa05936f851d2f498ca205",
+    "tasks/TSK-P3-CLEAN-007/meta.yml": "c647b5d81a7b96139d410238e14f08cf54515c9653b371935e816fb33b00f6bd",
+    "tasks/TSK-P3-PRE-003/meta.yml": "47bb1dd5986e863b30c4a44f3f752e5af7339632e63c211d56d0dbae3595b65b",
+    "tasks/TSK-P3-GOV-002/meta.yml": "33f78bda3867b04da7de5bb02ea1cc228c2f88c10be934279daaca12a1ed3708",
+    "tasks/TSK-P3-ACT-001/meta.yml": "073a37733013b3f55cf34db57d9ef17ccb79904386e3743b9b6001a03eb21178",
+    "tasks/TSK-P3-W8-ARCH-001/meta.yml": "046aea1fb6001e8a1ac94ff452d0250afff14b2da2111e5e585dbfd251ebaff0",
+    "tasks/TSK-P3-PRE-001/meta.yml": "ee691852b442735984600b93cae42939b44b2402690c44c56f50be8b04f4b13e",
+    "tasks/TSK-P3-CLEAN-003/meta.yml": "49f156ebf3d6ff09d3e817b977fcee204b639c1aa2893141b8a3490bdbf7dd74",
+    "tasks/TSK-P3-PRE-006/meta.yml": "42653ef171eccc6d5980a44899806c9232b39c3c602441109531d05ff42d8ae0",
+    "tasks/TSK-P3-GOV-001/meta.yml": "a667bd06b0b7a5b98d14451921f6dc81d52fcf8934a0cb2013c2e95b983e01c3",
+    "tasks/TSK-P3-CLEAN-008/meta.yml": "6ae8944d77e248272f5c31c1d7ef1df251f97e30330766d14286720c5f93071c",
+    "tasks/TSK-P3-CLEAN-006/meta.yml": "6a849c42a9db0e8528a0068ddf95609afd6339447f65392c88f020c666f2121d",
+    "tasks/TSK-P3-PRE-002/meta.yml": "65fc5e430f11d659ef292336eab4f723b66a8e03275ba336570569c4fb4cecfe",
+    "tasks/TSK-P3-PRE-005/meta.yml": "ce74148fb28e02feb27059965f79a7b3dc92de556926c79a8aacfc344836d8ee",
+    "tasks/TSK-P3-ACT-003/meta.yml": "53f20a60b2cd5f7640f40799c5190bc8fa04628cfd083188b36f1b5bca7e8175",
+    "tasks/TSK-P3-W1-DB-007/meta.yml": "f636576723f0e4a1ff790770a9e705ff338cd200091c32a5ad3594b5f84f1052",
+    "tasks/TSK-P3-ACT-004/meta.yml": "f474c96f4d495899314a3071d3b63524a99b6053253e3cec580d8ecc1ad9a9b7",
+    "tasks/TSK-P3-CLEAN-005/meta.yml": "c59711d65fd7913530f54b4523f74deb97fb91a96cd38d207163cf58830a1ff0",
+    "tasks/TSK-P3-ACT-002/meta.yml": "a8551e8b37a4052c9c113f8efbf057442845377c3288369657a7763add1b2f1c",
+    "tasks/TSK-P3-W8-SEAL-001/meta.yml": "59472dc9633d6885495804e187390d2f8ad5d178f17b5d8c6df4ae1f27a48e84",
+    "tasks/TSK-P3-GOV-003/meta.yml": "1a16f1550e0b08b7c202dc005648fc89b06042b8864380a7117558350d35694b",
+    "tasks/TSK-P3-PRE-009/meta.yml": "8ca68cdae56eda26f2afec504279a45796c70b44efa93615ed3b45b082ef7b5a",
+    "tasks/TSK-P3-PRE-007/meta.yml": "40518d276170f7fe00dc10fbeb2ab130717b3218367d8d51dc097174d28bad90",
+    "tasks/TSK-P3-CLEAN-002/meta.yml": "c6bda715d920af4bb8853bed6870fd2573b09f2efc2a5fe3dc57952eba11f331"
+  }
+}

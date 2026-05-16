@@ -1,7 +1,7 @@
 {
   "task_id": "TSK-P2-GOV-CONV-001",
-  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
-  "timestamp_utc": "2026-05-03T19:26:10Z",
+  "git_sha": "30d5d02497e6c3ad43b8283a85b79a6037b2134a",
+  "timestamp_utc": "2026-05-16T06:55:53Z",
   "status": "PASS",
   "checks": [
     "task_metadata_scan:PASS",
@@ -14,7 +14,7 @@
     {
       "task_id": "TSK-P2-GOV-CONV-009",
       "title": "Verify Phase-2 human and machine contract alignment",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "SECURITY_GUARDIAN",
       "evidence_exists": true,
@@ -34,7 +34,7 @@
     {
       "task_id": "TSK-P2-GOV-CONV-012",
       "title": "Create Phase-2 constitutional ratification approval artifacts",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "ARCHITECT",
       "evidence_exists": true,
@@ -52,6 +52,16 @@
       "invariant_id_exists": true
     },
     {
+      "task_id": "TSK-P2-W8-DB-006-REM-03",
+      "title": "Verify no other similar regressions exist",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION_AGENT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
       "task_id": "TSK-P2-PREAUTH-005-CLEANUP",
       "title": "Wave 5 Baseline Reconciliation - Delete monolith 0120 and update task plans",
       "status": "planned",
@@ -64,7 +74,7 @@
     {
       "task_id": "TSK-P2-W8-DB-005",
       "title": "Authoritative signer-resolution surface",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "DB_FOUNDATION",
       "evidence_exists": true,
@@ -82,9 +92,19 @@
       "invariant_id_exists": true
     },
     {
+      "task_id": "TSK-P2-RLS-BYPASS-008",
+      "title": "Aggregate RLS bypass blocker resolution evidence without claiming Phase-2 closeout",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
       "task_id": "TSK-P2-W8-GOV-001",
       "title": "Wave 8 governance truth repair",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "ARCHITECT",
       "evidence_exists": true,
@@ -114,7 +134,7 @@
     {
       "task_id": "TSK-P2-W8-ARCH-003",
       "title": "Signing and replay contract hardening",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "ARCHITECT",
       "evidence_exists": true,
@@ -138,6 +158,26 @@
       "phase": "2",
       "owner_role": "SECURITY_GUARDIAN",
       "evidence_exists": false,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W8-DB-006-REM-01",
+      "title": "Fix policy_decisions append-only trigger regression",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION_AGENT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W8-QA-001-REM-01",
+      "title": "Fix GitHub workflow evidence file corruption",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "QA_VERIFIER_AGENT",
+      "evidence_exists": true,
       "verifier_exists": true,
       "invariant_id_exists": true
     },
@@ -184,7 +224,7 @@
     {
       "task_id": "TSK-P2-GOV-CONV-004",
       "title": "Register W5 W6 and W8 Phase-2 invariant IDs from reconciliation manifest",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "INVARIANTS_CURATOR",
       "evidence_exists": true,
@@ -232,6 +272,16 @@
       "invariant_id_exists": false
     },
     {
+      "task_id": "TSK-P2-RLS-BYPASS-005",
+      "title": "Prove terminal RLS policies contain no app.bypass_rls predicate",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
       "task_id": "TSK-P2-PREAUTH-001-02",
       "title": "Implement resolve_interpretation_pack() function with exact signature",
       "status": "planned",
@@ -247,6 +297,16 @@
       "status": "completed",
       "phase": "2",
       "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-W8-DB-006-REM-04",
+      "title": "Fix Ed25519 signature format validation",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN_AGENT",
       "evidence_exists": true,
       "verifier_exists": true,
       "invariant_id_exists": true
@@ -314,7 +374,7 @@
     {
       "task_id": "TSK-P2-W8-ARCH-002",
       "title": "Transition hash contract",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "ARCHITECT",
       "evidence_exists": true,
@@ -330,6 +390,16 @@
       "evidence_exists": false,
       "verifier_exists": true,
       "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-RLS-BYPASS-003",
+      "title": "Refactor Ledger API demo seeding away from app.bypass_rls",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
     },
     {
       "task_id": "TSK-P2-W5-FIX-06",
@@ -374,7 +444,7 @@
     {
       "task_id": "TSK-P2-GOV-CONV-013",
       "title": "Verify Phase-2 ratification artifact integrity",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "SECURITY_GUARDIAN",
       "evidence_exists": true,
@@ -384,7 +454,7 @@
     {
       "task_id": "TSK-P2-W8-QA-002",
       "title": "Behavioral evidence pack",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "QA_VERIFIER",
       "evidence_exists": true,
@@ -464,7 +534,7 @@
     {
       "task_id": "TSK-P2-W8-DB-001",
       "title": "Authoritative Wave 8 dispatcher trigger topology",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "DB_FOUNDATION",
       "evidence_exists": true,
@@ -480,6 +550,16 @@
       "evidence_exists": false,
       "verifier_exists": true,
       "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-RLS-BYPASS-006",
+      "title": "Regenerate baseline with provenance after RLS bypass policy migration",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
     },
     {
       "task_id": "TSK-P2-PREAUTH-006C-02",
@@ -554,7 +634,7 @@
     {
       "task_id": "TSK-P2-W8-ARCH-006",
       "title": "SQLSTATE registration",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "ARCHITECT",
       "evidence_exists": true,
@@ -592,6 +672,16 @@
       "invariant_id_exists": false
     },
     {
+      "task_id": "TSK-P2-W8-DB-006-REM-02",
+      "title": "Add automated test for append-only enforcement",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION_AGENT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
       "task_id": "TSK-P2-PREAUTH-007-00",
       "title": "Create PLAN.md and verify alignment for invariant registration",
       "status": "completed",
@@ -604,7 +694,7 @@
     {
       "task_id": "TSK-P2-GOV-CONV-010",
       "title": "Author Phase-2 agentic SDLC policy document",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "ARCHITECT",
       "evidence_exists": true,
@@ -704,7 +794,7 @@
     {
       "task_id": "TSK-P2-W8-DB-002",
       "title": "Placeholder and legacy posture removal",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "DB_FOUNDATION",
       "evidence_exists": true,
@@ -714,7 +804,7 @@
     {
       "task_id": "TSK-P2-W8-SEC-000",
       "title": "Frozen .NET 10 Ed25519 Environment Fidelity Gate",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "SECURITY_GUARDIAN",
       "evidence_exists": true,
@@ -754,7 +844,7 @@
     {
       "task_id": "TSK-P2-W8-ARCH-005",
       "title": "System design patch for authoritative trigger model",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "ARCHITECT",
       "evidence_exists": true,
@@ -764,7 +854,7 @@
     {
       "task_id": "TSK-P2-GOV-CONV-008",
       "title": "Author Phase-2 human contract document",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "ARCHITECT",
       "evidence_exists": true,
@@ -794,7 +884,7 @@
     {
       "task_id": "TSK-P2-GOV-CONV-002",
       "title": "Register PREAUTH Phase-2 invariant IDs from reconciliation manifest",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "INVARIANTS_CURATOR",
       "evidence_exists": true,
@@ -854,7 +944,7 @@
     {
       "task_id": "TSK-P2-W8-ARCH-004",
       "title": "Data authority derivation contract",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "ARCHITECT",
       "evidence_exists": true,
@@ -884,7 +974,7 @@
     {
       "task_id": "TSK-P2-GOV-CONV-005",
       "title": "Rewrite Phase-2 machine contract to invariant-centric rows",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "INVARIANTS_CURATOR",
       "evidence_exists": true,
@@ -914,7 +1004,7 @@
     {
       "task_id": "TSK-P2-W8-ARCH-001",
       "title": "Canonical attestation payload contract",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "ARCHITECT",
       "evidence_exists": true,
@@ -924,7 +1014,7 @@
     {
       "task_id": "TSK-P2-GOV-CONV-014",
       "title": "Create semantic phase claim admissibility verifier",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "SECURITY_GUARDIAN",
       "evidence_exists": true,
@@ -934,7 +1024,7 @@
     {
       "task_id": "TSK-P2-W8-QA-001",
       "title": "Three-surface determinism vectors",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "QA_VERIFIER",
       "evidence_exists": true,
@@ -974,7 +1064,7 @@
     {
       "task_id": "TSK-P2-GOV-CONV-001",
       "title": "Produce Phase-2 reconciliation manifest from task metadata",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "INVARIANTS_CURATOR",
       "evidence_exists": true,
@@ -994,7 +1084,7 @@
     {
       "task_id": "TSK-P2-GOV-CONV-006",
       "title": "Create canonical Phase-2 contract verifier",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "SECURITY_GUARDIAN",
       "evidence_exists": true,
@@ -1010,6 +1100,16 @@
       "evidence_exists": false,
       "verifier_exists": true,
       "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-W8-DB-006-REM-05",
+      "title": "Add Ed25519 test vectors to validation suite",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN_AGENT",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
     },
     {
       "task_id": "TSK-P2-W5-REM-02",
@@ -1054,7 +1154,7 @@
     {
       "task_id": "TSK-P2-W8-DB-003",
       "title": "SQL-authoritative canonical payload construction",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "DB_FOUNDATION",
       "evidence_exists": true,
@@ -1104,7 +1204,7 @@
     {
       "task_id": "TSK-P2-W8-DB-008",
       "title": "Key lifecycle enforcement",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "DB_FOUNDATION",
       "evidence_exists": true,
@@ -1274,7 +1374,7 @@
     {
       "task_id": "TSK-P2-W8-DB-004",
       "title": "Deterministic attestation hash recomputation",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "DB_FOUNDATION",
       "evidence_exists": true,
@@ -1314,7 +1414,7 @@
     {
       "task_id": "TSK-P2-GOV-CONV-011",
       "title": "Verify Phase-2 policy authority alignment",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "SECURITY_GUARDIAN",
       "evidence_exists": true,
@@ -1372,6 +1472,26 @@
       "invariant_id_exists": true
     },
     {
+      "task_id": "TSK-P2-RLS-BYPASS-001",
+      "title": "Inventory all app.bypass_rls dependency surfaces before remediation",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
+      "task_id": "TSK-P2-RLS-BYPASS-002",
+      "title": "Remove runtime Ledger API app.bypass_rls dependencies",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
       "task_id": "TSK-P2-PREAUTH-006B-02",
       "title": "Implement enforce_asset_batch_authority() trigger",
       "status": "completed",
@@ -1404,7 +1524,7 @@
     {
       "task_id": "TSK-P2-GOV-CONV-003",
       "title": "Register REG and SEC Phase-2 invariant IDs from reconciliation manifest",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "INVARIANTS_CURATOR",
       "evidence_exists": true,
@@ -1474,7 +1594,7 @@
     {
       "task_id": "TSK-P2-W8-DB-007a",
       "title": "Scope authorization enforcement",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "DB_FOUNDATION",
       "evidence_exists": true,
@@ -1494,7 +1614,7 @@
     {
       "task_id": "TSK-P2-GOV-CONV-007",
       "title": "Wire Phase-2 contract verifier into local and CI gates",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "SECURITY_GUARDIAN",
       "evidence_exists": true,
@@ -1564,7 +1684,7 @@
     {
       "task_id": "TSK-P2-W8-SEC-001",
       "title": "Ed25519 verification primitive",
-      "status": "planned",
+      "status": "completed",
       "phase": "2",
       "owner_role": "SECURITY_GUARDIAN",
       "evidence_exists": true,
@@ -1580,6 +1700,16 @@
       "evidence_exists": true,
       "verifier_exists": true,
       "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-RLS-BYPASS-009",
+      "title": "Record non-immediate carry-forward obligations from Phase-2 closeout review",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "INVARIANTS_CURATOR",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
     },
     {
       "task_id": "TSK-P2-W5-FIX-11",
@@ -1610,6 +1740,16 @@
       "evidence_exists": false,
       "verifier_exists": true,
       "invariant_id_exists": false
+    },
+    {
+      "task_id": "TSK-P2-RLS-BYPASS-004",
+      "title": "Create forward-only migration removing app.bypass_rls from RLS policies",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "DB_FOUNDATION",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
     },
     {
       "task_id": "TSK-P2-REG-003-02",
@@ -1732,6 +1872,16 @@
       "invariant_id_exists": false
     },
     {
+      "task_id": "TSK-P2-RLS-BYPASS-007",
+      "title": "Prove runtime tenant isolation without app.bypass_rls",
+      "status": "completed",
+      "phase": "2",
+      "owner_role": "SECURITY_GUARDIAN",
+      "evidence_exists": true,
+      "verifier_exists": true,
+      "invariant_id_exists": true
+    },
+    {
       "task_id": "TSK-P2-SEC-001-01",
       "title": "Fix verifier scope and promote INV-130",
       "status": "completed",
@@ -1773,13 +1923,13 @@
     }
   ],
   "summary_counts": {
-    "total_tasks": 176,
-    "planned": 86,
-    "completed": 90,
+    "total_tasks": 191,
+    "planned": 54,
+    "completed": 137,
     "in_progress": 0
   },
-  "total_tasks": 176,
-  "evidence_complete": 77,
-  "verifier_complete": 176,
+  "total_tasks": 191,
+  "evidence_complete": 92,
+  "verifier_complete": 191,
   "inv_id_absent": 99
 }

@@ -1,0 +1,39 @@
+{
+  "task_id": "TSK-P3-PRE-007",
+  "git_sha": "30d5d02497e6c3ad43b8283a85b79a6037b2134a",
+  "timestamp_utc": "2026-05-16T08:23:52Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "pre007_registry_exists",
+      "result": "PASS",
+      "detail": "registry file exists"
+    },
+    {
+      "id": "pre007_header_contract",
+      "result": "PASS",
+      "detail": "header comments document the schema and governance contract"
+    },
+    {
+      "id": "pre007_examples_present",
+      "result": "PASS",
+      "detail": "schema examples are present"
+    },
+    {
+      "id": "pre007_example_types",
+      "result": "PASS",
+      "detail": "example tasks include IMPL, VERIFY, and CERT"
+    },
+    {
+      "id": "pre007_yaml_shape",
+      "result": "PASS",
+      "detail": "registry YAML shape is valid"
+    }
+  ],
+  "observed_paths": [
+    "docs/PHASE3/phase3_task_registry.yml"
+  ],
+  "observed_hashes": {
+    "docs/PHASE3/phase3_task_registry.yml": "463d3360e7b41f2363aff7e773865089a71d70b2d943ab8e047a517011731625"
+  }
+}

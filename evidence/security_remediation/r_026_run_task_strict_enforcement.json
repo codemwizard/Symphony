@@ -8,6 +8,7 @@
   "scope": "changed",
   "status": "PASS",
   "summary": {
+    "archived_skipped": 0,
     "error_count": 0,
     "files_scanned": 0,
     "nonconforming_count": 0,

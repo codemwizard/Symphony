@@ -1,0 +1,34 @@
+{
+  "task_id": "TSK-P3-PRE-005",
+  "git_sha": "30d5d02497e6c3ad43b8283a85b79a6037b2134a",
+  "timestamp_utc": "2026-05-16T08:23:52Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "pre005_valid_generation",
+      "result": "PASS",
+      "detail": "Phase 3 generator produces task pack in temp output root"
+    },
+    {
+      "id": "pre005_wave_and_reads",
+      "result": "PASS",
+      "detail": "generated meta includes Phase 3 wave and must_read defaults"
+    },
+    {
+      "id": "pre005_plan_references",
+      "result": "PASS",
+      "detail": "generated PLAN references Phase 3 constitutional docs"
+    },
+    {
+      "id": "pre005_invalid_id_rejected",
+      "result": "PASS",
+      "detail": "generator rejects invalid Phase 3 task IDs"
+    }
+  ],
+  "observed_paths": [
+    "scripts/agent/generate_task_pack.py"
+  ],
+  "observed_hashes": {
+    "scripts/agent/generate_task_pack.py": "8e9a4d075ebf2983ffce2f46325351def426b2695e2c5a4e3d94bf559db3f1dc"
+  }
+}

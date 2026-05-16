@@ -1,14 +1,10 @@
 {
   "task_id": "TSK-P2-GOV-CONV-006",
-  "git_sha": "21534c1335d0676131e9becbcb6003acd60599a1",
-  "timestamp_utc": "2026-05-03T19:36:49Z",
+  "git_sha": "30d5d02497e6c3ad43b8283a85b79a6037b2134a",
+  "timestamp_utc": "2026-05-16T06:55:58Z",
   "status": "PASS",
   "checks": [
-    "prerequisite_task_complete:PASS",
-    "canonical_verifier_exists:PASS",
-    "canonical_verifier_passes:PASS",
-    "evidence_file_generated:PASS",
-    "no_contract_violations:PASS"
+    "prerequisite_task_complete:PASS"    "canonical_verifier_exists:PASS"    "canonical_verifier_passes:PASS"    "evidence_file_generated:PASS"    "no_contract_violations:PASS"
   ],
   "canonical_verifier": "scripts/audit/verify_phase2_contract.sh",
   "contract_rows": 6,
