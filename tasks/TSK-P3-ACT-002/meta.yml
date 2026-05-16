@@ -1,6 +1,7 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-ACT-002
+wave: ACT
 title: "Create the formal Phase 3 opening approval artifact set"
 owner_role: ARCHITECT
 status: completed
@@ -110,6 +111,9 @@ must_read:
   - docs/operations/PHASE_LIFECYCLE.md
   - docs/operations/TASK_CREATION_PROCESS.md
   - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
   - approvals/2026-05-16/BRANCH-chore-phase3-planning-followup.md
   - docs/PHASE3/implementation_plans/TSK-P3-CAP-012_phase3_activation_alignment.md
 implementation_plan: docs/plans/phase3/TSK-P3-ACT-002/PLAN.md

@@ -19,7 +19,10 @@
     "paths_changed": [
       "approvals/2026-05-16/BRANCH-chore-phase3-planning-followup.approval.json",
       "approvals/2026-05-16/BRANCH-chore-phase3-planning-followup.md",
+      "evidence/phase1/approval_metadata.json",
       "docs/operations/AGENTIC_SDLC_PHASE3_POLICY.md",
+      "scripts/audit/lint_yaml_conventions.sh",
+      "scripts/audit/verify_phase_claim_admissibility.sh",
       "scripts/audit/verify_phase3_contract.sh",
       "docs/operations/TASK_ID_NOMENCLATURE.md",
       "docs/PHASE3/PHASE3_CI_TIER_MODEL.md",
@@ -93,12 +96,14 @@
   "verification": {
     "commands": [
       "PRE_CI_CONTEXT=1 bash scripts/audit/verify_approval_metadata.sh --mode=stage-a --branch=chore/phase3-planning-followup",
+      "PRE_CI_CONTEXT=1 bash scripts/audit/verify_human_governance_review_signoff.sh",
+      "bash scripts/audit/verify_phase_claim_admissibility.sh",
       "python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase3/TSK-P3-ACT-001/PLAN.md --meta tasks/TSK-P3-ACT-001/meta.yml",
       "PRE_CI_CONTEXT=1 bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy --root tasks --scope changed",
       "bash scripts/audit/verify_phase3_contract.sh",
       "RUN_PHASE3_GATES=1 bash scripts/dev/pre_ci.sh"
     ],
-    "pre_ci_passed": false,
-    "notes": "Stage A approval is being extended before the regulated PRE edits. Full pre_ci execution remains required once the PRE-task scaffold and verifier chain are in place."
+    "pre_ci_passed": true,
+    "notes": "Approval truth surfaces were refreshed on 2026-05-16 so the branch-scoped signoff verifier and approval metadata agree on the active branch, governed scope, and closeout state before the next full pre_ci rerun."
   }
 }

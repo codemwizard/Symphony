@@ -1,7 +1,7 @@
 schema_version: 1
 phase: '3'
-wave: PRE
 task_id: TSK-P3-PRE-003
+wave: PRE
 title: "Formalize Task ID Nomenclature Standard"
 owner_role: ARCHITECT
 status: completed

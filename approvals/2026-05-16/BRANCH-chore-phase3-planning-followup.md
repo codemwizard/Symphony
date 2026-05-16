@@ -18,6 +18,8 @@ stop.
 Approved regulated edits:
 - `docs/operations/AGENTIC_SDLC_PHASE3_POLICY.md`
 - `scripts/audit/verify_phase3_contract.sh`
+- `scripts/audit/verify_phase_claim_admissibility.sh`
+- `scripts/audit/lint_yaml_conventions.sh`
 - `docs/operations/TASK_ID_NOMENCLATURE.md`
 - `scripts/audit/verify_tsk_p3_pre_002.sh`
 - `scripts/audit/verify_tsk_p3_pre_003.sh`
@@ -28,6 +30,7 @@ Approved regulated edits:
 - `scripts/audit/verify_tsk_p3_pre_008.sh`
 - `scripts/audit/verify_tsk_p3_pre_009.sh`
 - `scripts/audit/verify_task_meta_schema.sh`
+- `evidence/phase1/approval_metadata.json`
 - `approvals/2026-05-16/BRANCH-chore-phase3-planning-followup.approval.json`
 - `approvals/2026-05-16/BRANCH-chore-phase3-planning-followup.md`
 
@@ -90,6 +93,8 @@ approval and remediation artifacts for audit.
 
 - `PRE_CI_CONTEXT=1 bash scripts/audit/verify_approval_metadata.sh --mode=stage-a --branch=chore/phase3-planning-followup`
 - `PRE_CI_CONTEXT=1 bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy --root tasks --scope all`
+- `PRE_CI_CONTEXT=1 bash scripts/audit/verify_human_governance_review_signoff.sh`
+- `bash scripts/audit/verify_phase_claim_admissibility.sh`
 - `python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase3/TSK-P3-ACT-001/PLAN.md --meta tasks/TSK-P3-ACT-001/meta.yml`
 - `bash scripts/audit/verify_phase3_contract.sh`
 - `RUN_PHASE3_GATES=1 bash scripts/dev/pre_ci.sh`

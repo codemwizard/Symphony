@@ -1,6 +1,7 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-ACT-004
+wave: ACT
 title: "Reconcile the legality layer and dependent Phase 3 planning posture"
 owner_role: ARCHITECT
 status: completed
@@ -122,6 +123,9 @@ must_read:
   - docs/operations/PHASE_LIFECYCLE.md
   - docs/operations/TASK_CREATION_PROCESS.md
   - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
   - approvals/2026-05-16/BRANCH-chore-phase3-planning-followup.md
   - approvals/2026-05-16/PHASE3-OPENING.md
   - approvals/2026-05-16/PHASE3-OPENING.approval.json

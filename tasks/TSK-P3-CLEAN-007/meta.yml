@@ -1,6 +1,7 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-CLEAN-007
+wave: CLEAN
 title: "Maintain Phase 3 DAG artifacts after cleanup so that human and machine DAGs agree on statuses and sequencing"
 owner_role: ARCHITECT
 status: completed

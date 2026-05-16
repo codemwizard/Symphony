@@ -1,7 +1,7 @@
 schema_version: 1
 phase: '3'
-wave: PRE
 task_id: TSK-P3-PRE-007
+wave: PRE
 title: "Define Phase 3 Task Registry Schema"
 owner_role: ARCHITECT
 status: completed

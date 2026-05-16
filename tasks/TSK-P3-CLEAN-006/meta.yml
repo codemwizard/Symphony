@@ -1,6 +1,7 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-CLEAN-006
+wave: CLEAN
 title: "Verify archived Phase 3 files are excluded from task generation so that non-canonical drafts cannot become governing sources"
 owner_role: ARCHITECT
 status: completed

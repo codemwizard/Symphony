@@ -1,7 +1,7 @@
 schema_version: 1
 phase: '3'
-wave: PRE
 task_id: TSK-P3-PRE-005
+wave: PRE
 title: "Update Task Generator for Phase 3 Mode"
 owner_role: SECURITY_GUARDIAN
 status: completed

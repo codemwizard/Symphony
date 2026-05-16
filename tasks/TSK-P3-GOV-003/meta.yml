@@ -1,6 +1,7 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-GOV-003
+wave: GOV
 title: "Implement task corpus archival gate to exclude completed tasks from active CI traversal"
 owner_role: SECURITY_GUARDIAN
 status: completed

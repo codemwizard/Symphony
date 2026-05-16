@@ -1,7 +1,7 @@
 schema_version: 1
 phase: '3'
-wave: PRE
 task_id: TSK-P3-PRE-006
+wave: PRE
 title: "Update Task Schema Validator for Phase 3"
 owner_role: SECURITY_GUARDIAN
 status: completed

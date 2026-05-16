@@ -1,7 +1,7 @@
 schema_version: 1
 phase: '3'
-wave: PRE
 task_id: TSK-P3-PRE-009
+wave: PRE
 title: "Phase 3 Readiness Exit Gate"
 owner_role: QA_VERIFIER
 status: blocked

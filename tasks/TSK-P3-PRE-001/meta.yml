@@ -1,6 +1,7 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-PRE-001
+wave: PRE
 title: "Verify wave8_crypto extension operational status for Phase 3 entry"
 owner_role: SECURITY_GUARDIAN
 status: completed

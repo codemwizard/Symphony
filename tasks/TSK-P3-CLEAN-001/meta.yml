@@ -1,6 +1,7 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-CLEAN-001
+wave: CLEAN
 title: "Repair Phase 3 contract YAML parse defect so that phase3_contract.yml is machine-parseable"
 owner_role: ARCHITECT
 status: completed

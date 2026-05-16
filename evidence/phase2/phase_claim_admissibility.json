@@ -1,41 +1,36 @@
 {
   "task_id": "verify_phase_claim_admissibility",
-  "git_sha": "30d5d02497e6c3ad43b8283a85b79a6037b2134a",
-  "timestamp_utc": "2026-05-16T06:58:22Z",
-  "status": "FAIL",
+  "git_sha": "e2b353e6b1aa024e2b53a2736575719405cafc14",
+  "timestamp_utc": "2026-05-16T11:44:39Z",
+  "status": "PASS",
   "checks": [
     "phase_lifecycle_readable:PASS",
     "valid_phase_keys:PASS",
+    "no_phase_complete_overclaims:PASS",
     "no_future_phase_claims:PASS",
     "no_capability_laundering:PASS",
     "valid_contexts_allowed:PASS"
   ],
-  "violations": [
-    "Phase-complete",
-    "overclaims",
-    "found:",
-    "4",
-    "instances"
-  ],
-  "admissibility_status": "FAIL",
+  "violations": [],
+  "admissibility_status": "PASS",
   "scan_results": {
     "phase_lifecycle_readable": true,
     "valid_phase_keys": true,
-    "no_phase_complete_overclaims": false,
+    "no_phase_complete_overclaims": true,
     "no_future_phase_claims": true,
     "no_capability_laundering": true,
     "valid_contexts_allowed": true
   },
   "violation_counts": {
     "invalid_phase_keys": 0,
-    "phase_complete_overclaims": 4,
+    "phase_complete_overclaims": 0,
     "future_phase_claims": 0,
     "capability_laundering": 0
   },
   "summary": {
-    "total_checks": 5,
-    "passed_checks": 5,
-    "failed_checks": 5,
-    "violation_count": 5
+    "total_checks": 6,
+    "passed_checks": 6,
+    "failed_checks": 0,
+    "violation_count": 0
   }
 }

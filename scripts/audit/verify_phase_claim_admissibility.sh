@@ -98,6 +98,12 @@ for pattern in "${PATTERNS[@]}"; do
                     if [[ "$match" =~ scripts/audit/.*\.sh ]]; then
                         continue
                     fi
+                    # Skip agent verifier fixtures which quote prohibited claim
+                    # language as negative-test tokens rather than making live
+                    # repository delivery claims.
+                    if [[ "$match" =~ scripts/agent/.*\.sh ]]; then
+                        continue
+                    fi
                     PHASE_COMPLETE_CLAIMS+=("$match")
                 done <<< "$matches"
             fi
@@ -143,6 +149,9 @@ for pattern in "${FUTURE_PATTERNS[@]}"; do
                     if [[ "$match" =~ scripts/audit/.*\.sh ]]; then
                         continue
                     fi
+                    if [[ "$match" =~ scripts/agent/.*\.sh ]]; then
+                        continue
+                    fi
                     if [[ "$match" =~ verify_phase_claim_admissibility\.sh ]]; then
                         continue
                     fi
@@ -186,6 +195,9 @@ for pattern in "${LAUNDERING_PATTERNS[@]}"; do
                         continue
                     fi
                     if [[ "$match" =~ scripts/audit/.*\.sh ]]; then
+                        continue
+                    fi
+                    if [[ "$match" =~ scripts/agent/.*\.sh ]]; then
                         continue
                     fi
                     if [[ "$match" =~ verify_phase_claim_admissibility\.sh ]]; then

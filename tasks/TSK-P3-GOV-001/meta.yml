@@ -1,6 +1,7 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-GOV-001
+wave: GOV
 title: "Build constitutional compilation pipeline validating Phase 3 invariant-to-task-to-verifier wiring"
 owner_role: INVARIANTS_CURATOR
 status: completed

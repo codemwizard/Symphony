@@ -1,6 +1,7 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-CLEAN-003
+wave: CLEAN
 title: "Add doctrine references to Phase 3 invariant register so that INV-301 through INV-310 cite governing doctrines"
 owner_role: INVARIANTS_CURATOR
 status: completed

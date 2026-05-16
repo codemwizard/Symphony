@@ -1,6 +1,7 @@
 schema_version: 1
 phase: '3'
 task_id: TSK-P3-W1-DB-007
+wave: W1
 title: "Add constitutional_data_class ENUM and data_class column to evidence_nodes with monotonicity trigger"
 owner_role: DB_FOUNDATION
 status: completed

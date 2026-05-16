@@ -1,7 +1,7 @@
 schema_version: 1
 phase: '3'
-wave: PRE
 task_id: TSK-P3-PRE-004
+wave: PRE
 title: "Adapt meta.yml Template for Phase 3"
 owner_role: ARCHITECT
 status: completed
