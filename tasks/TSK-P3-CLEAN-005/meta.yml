@@ -14,8 +14,7 @@ intent: >-
   task archives it, marks it non-canonical, or merges it with a source-lineage
   decision — ensuring Phase 3 planning cites only the canonical copy.
 
-depends_on: []
-blocked_by:
+depends_on:
   - TSK-P3-CLEAN-001
 invariants: []
 

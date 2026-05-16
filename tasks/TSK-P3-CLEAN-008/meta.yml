@@ -16,7 +16,6 @@ intent: >-
 
 depends_on:
   - TSK-P3-CLEAN-007
-blocked_by: []
 invariants: []
 
 deliverable_files:

@@ -14,8 +14,7 @@ intent: >-
   defers, or escalates the conflict while preserving the root envelope as the
   controlling authority. Doctrine-gap status is ESCALATE-DOCTRINE per DAG.
 
-depends_on: []
-blocked_by:
+depends_on:
   - TSK-P3-CLEAN-001
 invariants: []
 

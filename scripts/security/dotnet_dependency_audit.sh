@@ -17,6 +17,7 @@ EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 status="PASS"
 note=""
 mode="normal"
+audit_timeout_seconds="${DOTNET_DEP_AUDIT_TIMEOUT_SECONDS:-60}"
 tmp_out="$(mktemp)"
 trap 'rm -f "$tmp_out"' EXIT
 
@@ -35,6 +36,16 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+run_dotnet_audit() {
+  local target_path="$1"
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "${audit_timeout_seconds}s" \
+      dotnet list "$target_path" package --vulnerable --include-transitive --no-restore
+  else
+    dotnet list "$target_path" package --vulnerable --include-transitive --no-restore
+  fi
+}
 
 if [[ "$mode" == "dry-run" ]]; then
   note="dry_run"
@@ -108,8 +119,13 @@ else
 fi
 
 if [[ -n "$target" ]]; then
-  if ! dotnet list "$target" package --vulnerable --include-transitive > "$tmp_out" 2>&1; then
+  rc=0
+  run_dotnet_audit "$target" > "$tmp_out" 2>&1 || rc=$?
+  if [[ "$rc" -ne 0 ]]; then
     status="FAIL"
+    if command -v timeout >/dev/null 2>&1 && [[ "$rc" -eq 124 ]]; then
+      note="dotnet_dependency_audit_timeout"
+    fi
   fi
 else
   # Runtime dependency posture gate: audit production projects only.
@@ -124,8 +140,13 @@ else
   else
     for p in "${projects[@]}"; do
       echo "=== $p ===" >> "$tmp_out"
-      if ! dotnet list "$p" package --vulnerable --include-transitive >> "$tmp_out" 2>&1; then
+      rc=0
+      run_dotnet_audit "$p" >> "$tmp_out" 2>&1 || rc=$?
+      if [[ "$rc" -ne 0 ]]; then
         status="FAIL"
+        if command -v timeout >/dev/null 2>&1 && [[ "$rc" -eq 124 ]]; then
+          note="dotnet_dependency_audit_timeout"
+        fi
       fi
       echo "" >> "$tmp_out"
     done

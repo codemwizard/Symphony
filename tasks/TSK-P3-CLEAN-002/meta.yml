@@ -14,8 +14,7 @@ intent: >-
   planning-only posture and point to the canonical planning artifacts (source
   pack, capability boundary, DAG, master implementation plan).
 
-depends_on: []
-blocked_by:
+depends_on:
   - TSK-P3-CLEAN-001
 invariants: []
 

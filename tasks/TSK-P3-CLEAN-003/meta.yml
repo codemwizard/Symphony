@@ -14,8 +14,7 @@ intent: >-
   invariant row while preserving honest roadmap/implementation status. No
   invariant may be promoted to implemented without verifier evidence.
 
-depends_on: []
-blocked_by:
+depends_on:
   - TSK-P3-CLEAN-001
 invariants:
   - INV-301

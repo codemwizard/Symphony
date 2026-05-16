@@ -15,7 +15,6 @@ intent: >-
   Root cleanup gate for Pre-Phase 3 Wave 0.
 
 depends_on: []
-blocked_by: []
 invariants: []
 
 deliverable_files:

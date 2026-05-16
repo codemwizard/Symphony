@@ -14,8 +14,7 @@ intent: >-
   and task-generation input, preventing stale drafts from becoming governing
   sources for future atomic task creation.
 
-depends_on: []
-blocked_by:
+depends_on:
   - TSK-P3-CLEAN-001
 invariants: []
 
