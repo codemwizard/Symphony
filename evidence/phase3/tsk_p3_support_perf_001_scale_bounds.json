@@ -1,0 +1,56 @@
+{
+  "task_id": "TSK-P3-SUPPORT-PERF-001",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-18T06:05:24Z",
+  "status": "PASS",
+  "pass": true,
+  "checks": {
+    "doc_exists": {
+      "status": "PASS",
+      "detail": "docs/architecture/PHASE3_DETERMINISTIC_SCALE_BOUND_CONTRACT.md exists"
+    },
+    "contract_scope_complete": {
+      "status": "PASS",
+      "detail": "scale-bound contract covers all owning surfaces and replay-safe prohibitions"
+    },
+    "runtime_index_registered": {
+      "status": "PASS",
+      "detail": "runtime task index contains TSK-P3-SUPPORT-PERF-001"
+    },
+    "phase3_registry_registered": {
+      "status": "PASS",
+      "detail": "phase3 registry contains TSK-P3-SUPPORT-PERF-001"
+    },
+    "meta_completed": {
+      "status": "PASS",
+      "detail": "task meta status is completed"
+    }
+  },
+  "observed_paths": [
+    "docs/architecture/PHASE3_DETERMINISTIC_SCALE_BOUND_CONTRACT.md",
+    "scripts/agent/verify_tsk_p3_support_perf_001.sh",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md",
+    "docs/PHASE3/phase3_task_registry.yml",
+    "tasks/TSK-P3-SUPPORT-PERF-001/meta.yml",
+    "docs/plans/phase3/TSK-P3-SUPPORT-PERF-001/PLAN.md",
+    "docs/plans/phase3/TSK-P3-SUPPORT-PERF-001/EXEC_LOG.md"
+  ],
+  "observed_hashes": {
+    "docs/architecture/PHASE3_DETERMINISTIC_SCALE_BOUND_CONTRACT.md": "48af237a36773262612dfe1ab3ff77e2011e3d2e747e68658749051a1f56fe8a",
+    "scripts/agent/verify_tsk_p3_support_perf_001.sh": "955eceb307dfc30591e8b300089b9ff0f1e6f9763879141207f27055103e7bca",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md": "791ab43edaf18a36f7ef55a4bf1906197b985c046903d6837c1ec6572e0e979c",
+    "docs/PHASE3/phase3_task_registry.yml": "b01bd5e63e87064767ac202b3f91634acf0474383a8d87b912455921fff4a4fc",
+    "tasks/TSK-P3-SUPPORT-PERF-001/meta.yml": "b45a7bf30fa6bf7028484226c82cefa08ccf05438a857f332912e3f24440bdbf",
+    "docs/plans/phase3/TSK-P3-SUPPORT-PERF-001/PLAN.md": "fd79b72252c0a5bb2fbb25f2c5240badc33279e0cad69f15635315b94954bafa",
+    "docs/plans/phase3/TSK-P3-SUPPORT-PERF-001/EXEC_LOG.md": "ac0e77edcbcf8dc89b7fb44b1a6b3037d12f7a859a683179fb3861aa2869aed8"
+  },
+  "command_outputs": [
+    {
+      "command": "inspect deterministic scale-bound contract and runtime registration",
+      "status": "recorded"
+    }
+  ],
+  "execution_trace": [
+    "start verifier for TSK-P3-SUPPORT-PERF-001"
+  ]
+}

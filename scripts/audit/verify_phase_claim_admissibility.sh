@@ -75,7 +75,7 @@ for pattern in "${PATTERNS[@]}"; do
                         continue
                     fi
                     # Skip if in evidence files (status reporting is legitimate)
-                    if [[ "$match" =~ evidence/phase2/.*\.json ]]; then
+                    if [[ "$match" =~ evidence/phase2/.*\.json ]] || [[ "$match" =~ evidence/phase3/.*\.json ]]; then
                         continue
                     fi
                     # Skip historical logs, plans, and architectural docs which contain context terms naturally
@@ -96,6 +96,12 @@ for pattern in "${PATTERNS[@]}"; do
                     fi
                     # Skip self-references and verifiers in scripts/audit
                     if [[ "$match" =~ scripts/audit/.*\.sh ]]; then
+                        continue
+                    fi
+                    # Skip DB verifier fixtures which quote task-completion state
+                    # for evidence assertions rather than asserting repo-phase
+                    # closeout claims.
+                    if [[ "$match" =~ scripts/db/.*\.sh ]]; then
                         continue
                     fi
                     # Skip agent verifier fixtures which quote prohibited claim
@@ -149,6 +155,9 @@ for pattern in "${FUTURE_PATTERNS[@]}"; do
                     if [[ "$match" =~ scripts/audit/.*\.sh ]]; then
                         continue
                     fi
+                    if [[ "$match" =~ scripts/db/.*\.sh ]]; then
+                        continue
+                    fi
                     if [[ "$match" =~ scripts/agent/.*\.sh ]]; then
                         continue
                     fi
@@ -195,6 +204,9 @@ for pattern in "${LAUNDERING_PATTERNS[@]}"; do
                         continue
                     fi
                     if [[ "$match" =~ scripts/audit/.*\.sh ]]; then
+                        continue
+                    fi
+                    if [[ "$match" =~ scripts/db/.*\.sh ]]; then
                         continue
                     fi
                     if [[ "$match" =~ scripts/agent/.*\.sh ]]; then

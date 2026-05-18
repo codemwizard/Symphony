@@ -1,13 +1,51 @@
 phase: "4"
-phase_name: "Production Operations"
+phase_name: "Financial Integrity and Statutory Enforcement"
 status: "planned"
-rows: []
-notes: "Phase-4 is non-claimable and not open for implementation. This contract contains zero implementation rows to prevent premature work initiation."
-
-# Governance metadata
-claimability: "non-claimable"
-anti_drift_enforcement: true
-premature_work_prevention: true
-
-# Phase-4 will be opened in future iterations when production operations work is required
-# Current status: Stub documentation only - no implementation tasks available
+claimability: "opening_prepared_not_open"
+gate_flag: "RUN_PHASE4_GATES=1"
+evidence_namespace: "evidence/phase4/**"
+ai_free: true
+opening_blocked_by:
+  - "Phase-3 closeout is not yet claimed by the active envelope"
+  - "Formal PHASE4-OPENING approval bundle does not exist yet"
+  - "Root execution envelope still names lifecycle phase 3"
+notes: >
+  Phase 4 has a prepared canonical contract set but remains unopened until the
+  lifecycle entry threshold in docs/operations/PHASE_LIFECYCLE.md is satisfied.
+rows:
+  - invariant_id: P4-INV-001
+    status: planned
+    required: true
+    gate_id: p4.settlement.finality
+    verifier: scripts/audit/verify_phase4_contract.sh
+    evidence_path: evidence/phase4/settlement_finality.json
+  - invariant_id: P4-INV-002
+    status: planned
+    required: true
+    gate_id: p4.boz.fx.authority
+    verifier: scripts/audit/verify_phase4_contract.sh
+    evidence_path: evidence/phase4/boz_fx_reference_rate_authority.json
+  - invariant_id: P4-INV-003
+    status: planned
+    required: true
+    gate_id: p4.asset.settlement.binding
+    verifier: scripts/audit/verify_phase4_contract.sh
+    evidence_path: evidence/phase4/asset_to_settlement_hard_binding.json
+  - invariant_id: P4-INV-004
+    status: planned
+    required: true
+    gate_id: p4.currency.legality
+    verifier: scripts/audit/verify_phase4_contract.sh
+    evidence_path: evidence/phase4/currency_legality_gates.json
+  - invariant_id: P4-INV-005
+    status: planned
+    required: true
+    gate_id: p4.statutory.allocations
+    verifier: scripts/audit/verify_phase4_contract.sh
+    evidence_path: evidence/phase4/statutory_deductions_and_allocations.json
+  - invariant_id: P4-INV-006
+    status: planned
+    required: true
+    gate_id: p4.kill.criteria
+    verifier: scripts/audit/verify_phase4_contract.sh
+    evidence_path: evidence/phase4/statutory_kill_criteria.json

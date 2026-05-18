@@ -61,6 +61,26 @@ Governing doctrine
 An agent must not skip from master implementation plan directly to
 implementation.
 
+## Transition State Model
+
+The planning-to-task handoff uses four distinct states:
+
+- `planned`
+  - the node exists in planning truth only; no atomic task pack exists yet
+- `task-packed`
+  - `tasks/<TASK_ID>/meta.yml`, task `PLAN.md`, and task `EXEC_LOG.md` exist
+  - the verifier contract is real and structurally executable
+  - implementation deliverables do not need to exist yet
+- `resume-ready`
+  - the task-packed unit has passed strengthened readiness and blocker checks
+  - the unit may enter `IMPLEMENT-TASK`
+- `completed`
+  - deliverables exist, verifiers ran, evidence was emitted, and the task is
+    mechanically closed
+
+In existing Phase 3 truth surfaces, `tasks-created` should be read as
+`task-packed`, not as implementation-ready or completed.
+
 ## Artifact Ownership
 
 | Layer | Example | Purpose | Creates atomic task pack? |
@@ -198,6 +218,34 @@ Every atomic task pack must include:
 - `tasks/<TASK_ID>/meta.yml`;
 - `docs/plans/phase<N>/<TASK_ID>/PLAN.md`;
 - `docs/plans/phase<N>/<TASK_ID>/EXEC_LOG.md`;
+- the correct human task index registration for its phase and node type;
+- any mandatory governance closure surfaces required by its implementation
+  class, not just the future deliverables themselves.
+
+### Phase 3 DB Handoff Rule
+
+When a Phase 3 planning node becomes a DB task pack, the pack must include the
+canonical baseline-governance closure surfaces if the plan requires rebaseline
+or migration-head advancement:
+
+- `schema/migrations/MIGRATION_HEAD`
+- `schema/baseline.sql`
+- `schema/baselines/current/*`
+- dated baseline outputs for the implementation date
+- `docs/decisions/ADR-0010-baseline-policy.md`
+- `docs/contracts/sqlstate_map.yml`
+- `docs/PHASE3/phase3_task_registry.yml`
+- the correct human Phase 3 task index
+
+The correct human index is:
+
+- `docs/tasks/PHASE3_RUNTIME_TASKS.md` for runtime/support implementation nodes
+- `docs/tasks/PHASE3_TASKS.md` for follow-up governance or repair nodes
+
+These are task-pack scope requirements, not optional post-generation cleanup.
+- DB task packs must also carry explicit `migration_dependencies` metadata.
+  The generator must not emit generic placeholders for required migrations or
+  table dependencies.
 - exactly one primary objective;
 - `depends_on` for structural predecessors;
 - `blocked_by` only for active impediments;
@@ -209,7 +257,14 @@ Every atomic task pack must include:
 - stop conditions for scope drift and proof weakness;
 - proof graph alignment under `TSK-P1-240` rules.
 
-Implementation may not start until task-pack readiness passes.
+Additional handoff rules:
+
+- the primary verifier contract must be an executable command, not a quoted
+  comment, placeholder shell line, or inert decorative entry;
+- the task pack may be considered `task-packed` once these requirements and
+  task-pack readiness pass;
+- implementation may not start until `RESUME-TASK` confirms the task is
+  `resume-ready`.
 
 ## Stop Conditions For Agents
 
@@ -223,6 +278,10 @@ Stop and report instead of proceeding when:
 - a master implementation plan attempts to contain atomic task `PLAN.md` or
   `EXEC_LOG.md` content;
 - a task is treated as implementation-ready without generated task pack files;
+- a `tasks-created` or task-packed node is treated as completed merely because
+  implementation deliverables do not yet exist;
+- a primary verifier command is commented, quoted as a shell comment, or is
+  otherwise structurally present but operationally inert;
 - the execution envelope blocks the requested work.
 
 ## Human Programmer Use
@@ -237,4 +296,3 @@ For human programmers, this guide answers where to look:
 
 For AI agents, this guide is binding mode discipline: classify first, use the
 right artifact layer, and never invent readiness.
-

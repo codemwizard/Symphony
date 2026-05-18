@@ -1,0 +1,64 @@
+{
+  "task_id": "TSK-P3-GOV-005",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-18T08:10:27Z",
+  "status": "PASS",
+  "pass": true,
+  "checks": {
+    "doc_exists": {
+      "status": "PASS",
+      "detail": "docs/architecture/PHASE3_AI_GOVERNANCE_AND_MODEL_PROVENANCE_CONTRACT.md exists"
+    },
+    "advisory_only_rules": {
+      "status": "PASS",
+      "detail": "advisory-only and anti-truth-delegation rules declared"
+    },
+    "registry_and_log_schema": {
+      "status": "PASS",
+      "detail": "model registry and inference log schema fields declared"
+    },
+    "mapping_and_phase_routing": {
+      "status": "PASS",
+      "detail": "confidence mapping and phase routing declared"
+    },
+    "runtime_index_registered": {
+      "status": "PASS",
+      "detail": "runtime index contains TSK-P3-GOV-005"
+    },
+    "phase3_registry_registered": {
+      "status": "PASS",
+      "detail": "registry contains TSK-P3-GOV-005"
+    },
+    "meta_proof_state": {
+      "status": "PASS",
+      "detail": "meta status is ready"
+    }
+  },
+  "observed_paths": [
+    "docs/architecture/PHASE3_AI_GOVERNANCE_AND_MODEL_PROVENANCE_CONTRACT.md",
+    "scripts/audit/verify_tsk_p3_gov_005_ai_governance.sh",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md",
+    "docs/PHASE3/phase3_task_registry.yml",
+    "tasks/TSK-P3-GOV-005/meta.yml",
+    "docs/plans/phase3/TSK-P3-GOV-005/PLAN.md",
+    "docs/plans/phase3/TSK-P3-GOV-005/EXEC_LOG.md"
+  ],
+  "observed_hashes": {
+    "docs/architecture/PHASE3_AI_GOVERNANCE_AND_MODEL_PROVENANCE_CONTRACT.md": "a8fc5296b96b4384596d7b8b23cef10efb6c70ab1947787ac4e50fd3a570d4e8",
+    "scripts/audit/verify_tsk_p3_gov_005_ai_governance.sh": "07a582cbcf35988560a24fe2372a26d41ef22ae998e9fa4163e33cd7091e4915",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md": "791ab43edaf18a36f7ef55a4bf1906197b985c046903d6837c1ec6572e0e979c",
+    "docs/PHASE3/phase3_task_registry.yml": "a2c84487d07280ca18d0bffd9acd096267ea02c2f634b1605dbcf5651a6eec68",
+    "tasks/TSK-P3-GOV-005/meta.yml": "baa55e719fb61a7fdb6ad223687799d3d006aca4833dfea07e3932ad6bf4b267",
+    "docs/plans/phase3/TSK-P3-GOV-005/PLAN.md": "cecf4f41f4e388964e65f68e4241a815ab12d74e98a763859e93ce3da363a444",
+    "docs/plans/phase3/TSK-P3-GOV-005/EXEC_LOG.md": "a45368b389e9a6022f51430fda1aa8e432f76ca79df0dcb821b7549411f9f7ea"
+  },
+  "command_outputs": [
+    {
+      "command": "inspect AI governance contract and registrations",
+      "status": "recorded"
+    }
+  ],
+  "execution_trace": [
+    "start verifier for TSK-P3-GOV-005"
+  ]
+}

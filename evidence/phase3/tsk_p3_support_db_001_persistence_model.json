@@ -1,0 +1,105 @@
+{
+  "task_id": "TSK-P3-SUPPORT-DB-001",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-17T11:18:24Z",
+  "status": "PASS",
+  "pass": true,
+  "checks": {
+    "migration_head_forward_only": {
+      "status": "PASS",
+      "detail": "MIGRATION_HEAD=0209 (>=0209)"
+    },
+    "continuity_anchor_table_exists": {
+      "status": "PASS",
+      "detail": "public.p3_lineage_continuity_anchors exists"
+    },
+    "persistence_manifest_exists": {
+      "status": "PASS",
+      "detail": "public.p3_lineage_persistence_manifest exists"
+    },
+    "append_only_function_exists": {
+      "status": "PASS",
+      "detail": "p3_deny_lineage_mutation() exists"
+    },
+    "append_only_triggers_exist": {
+      "status": "PASS",
+      "detail": "five append-only triggers protect lineage persistence tables"
+    },
+    "continuity_anchor_columns": {
+      "status": "PASS",
+      "detail": "continuity anchor table exposes required persistence fields"
+    },
+    "surface_enum": {
+      "status": "PASS",
+      "detail": "p3_lineage_surface_id has 2 wave-1 surface values"
+    },
+    "persistence_manifest": {
+      "status": "PASS",
+      "detail": "shared manifest spans both owning surfaces and continuity anchors"
+    },
+    "append_only_enforced": {
+      "status": "PASS",
+      "detail": "append-only persistence blocks updates and deletes transactionally"
+    },
+    "runtime_index_registered": {
+      "status": "PASS",
+      "detail": "PHASE3 runtime index contains TSK-P3-SUPPORT-DB-001"
+    },
+    "phase3_registry_registered": {
+      "status": "PASS",
+      "detail": "phase3_task_registry.yml contains TSK-P3-SUPPORT-DB-001"
+    },
+    "adr_rebaseline_recorded": {
+      "status": "PASS",
+      "detail": "ADR-0010 references MIGRATION_HEAD 0209"
+    }
+  },
+  "observed_paths": [
+    "schema/migrations/0209_p3_lineage_persistence_model.sql",
+    "scripts/db/verify_p3_lineage_persistence_model.sh",
+    "schema/migrations/MIGRATION_HEAD",
+    "docs/decisions/ADR-0010-baseline-policy.md",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md",
+    "docs/PHASE3/phase3_task_registry.yml",
+    "tasks/TSK-P3-SUPPORT-DB-001/meta.yml",
+    "docs/plans/phase3/TSK-P3-SUPPORT-DB-001/PLAN.md",
+    "docs/plans/phase3/TSK-P3-SUPPORT-DB-001/EXEC_LOG.md"
+  ],
+  "observed_hashes": {
+    "schema/migrations/0209_p3_lineage_persistence_model.sql": "89a1f1bac58a042d3b95ad5080091c953a536b8fb60c21bad73f2cb24bb25976",
+    "scripts/db/verify_p3_lineage_persistence_model.sh": "5ea13a7015693efd4b103a9b3ca4ea021c565585b5794dc65ea83e6a2d1585f1",
+    "schema/migrations/MIGRATION_HEAD": "811f8dc1e62170f55ad1be59cc4f9585f96cd37d95c1a97054e561873a7a91ee",
+    "docs/decisions/ADR-0010-baseline-policy.md": "d6c89bb18cdfefee05d540b6bd5b9974869031ad04c3409f1efd1599b4d049da",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md": "8b26de5d9fd60858d7dfb23f28505828051dfa10a12dee8e50b6c0056642d1ba",
+    "docs/PHASE3/phase3_task_registry.yml": "bd67dabb4556384d5b7765018316d53352067bf4078abfb20e12487b10c761be",
+    "tasks/TSK-P3-SUPPORT-DB-001/meta.yml": "90acdde317e23158cae767c44b3da1cb3f389d45565861bb2ae7808a2f3055c5",
+    "docs/plans/phase3/TSK-P3-SUPPORT-DB-001/PLAN.md": "877594da5028f3827818655e665bdd362806e0ce105157bf00cb0b586db9f43b",
+    "docs/plans/phase3/TSK-P3-SUPPORT-DB-001/EXEC_LOG.md": "4907b8bdabc33900deb2ab99a3cb991acc5c446b412010848e40a47c2287ec73"
+  },
+  "command_outputs": [
+    {
+      "command": "read schema/migrations/MIGRATION_HEAD => 0209",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect shared lineage persistence relations, function, and append-only triggers",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect continuity-anchor columns and surface enum",
+      "status": "recorded"
+    },
+    {
+      "command": "exercise persistence manifest and append-only enforcement in a rollback transaction",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect runtime task index, phase3 task registry, and ADR-0010 record",
+      "status": "recorded"
+    }
+  ],
+  "execution_trace": [
+    "start verifier for TSK-P3-SUPPORT-DB-001",
+    "persistence exercise completed"
+  ]
+}

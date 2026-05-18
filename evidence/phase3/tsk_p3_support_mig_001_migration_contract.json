@@ -1,0 +1,74 @@
+{
+  "task_id": "TSK-P3-SUPPORT-MIG-001",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-18T00:39:24Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "MIG-FILES-EXIST",
+      "result": "PASS",
+      "detail": "contract, verifier, runtime index, registry, meta, plan, and exec log exist"
+    },
+    {
+      "id": "MIG-REQUIRED-TOKENS",
+      "result": "PASS",
+      "detail": "contract covers all six owning surfaces and replay-equality/anti-drift tokens"
+    },
+    {
+      "id": "MIG-HEADINGS",
+      "result": "PASS",
+      "detail": "contract includes required migration/backfill planning sections"
+    },
+    {
+      "id": "MIG-SURFACE-COVERAGE",
+      "result": "PASS",
+      "detail": "contract explicitly binds all six owning surface families"
+    },
+    {
+      "id": "MIG-RUNTIME-INDEX",
+      "result": "PASS",
+      "detail": "runtime task index contains support migration task"
+    },
+    {
+      "id": "MIG-REGISTRY",
+      "result": "PASS",
+      "detail": "phase3 task registry contains support migration task"
+    }
+  ],
+  "observed_paths": [
+    "docs/architecture/PHASE3_REPLAY_MIGRATION_AND_BACKFILL_CONTRACT.md",
+    "scripts/agent/verify_tsk_p3_support_mig_001.sh",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md",
+    "docs/PHASE3/phase3_task_registry.yml",
+    "tasks/TSK-P3-SUPPORT-MIG-001/meta.yml",
+    "docs/plans/phase3/TSK-P3-SUPPORT-MIG-001/PLAN.md",
+    "docs/plans/phase3/TSK-P3-SUPPORT-MIG-001/EXEC_LOG.md"
+  ],
+  "observed_hashes": {
+    "docs/architecture/PHASE3_REPLAY_MIGRATION_AND_BACKFILL_CONTRACT.md": "d4d2ef7f2c4a9d8a6e147a3d0555467f3ebd71f09392ed85734f59e950b62b7c",
+    "scripts/agent/verify_tsk_p3_support_mig_001.sh": "f38c78506dff177e314dc1816ccee9a3968e2bca62fdb8d387babe7f4f836900",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md": "791ab43edaf18a36f7ef55a4bf1906197b985c046903d6837c1ec6572e0e979c",
+    "docs/PHASE3/phase3_task_registry.yml": "b01bd5e63e87064767ac202b3f91634acf0474383a8d87b912455921fff4a4fc",
+    "tasks/TSK-P3-SUPPORT-MIG-001/meta.yml": "6eafb4cd051b206588c510af44ef1c807eef92100752cf590f52c70400ec1811",
+    "docs/plans/phase3/TSK-P3-SUPPORT-MIG-001/PLAN.md": "4017ee99ad3dc1c4a4b855e5d2e4b92eb4f1cfa4bc86a59c132cb224e7bb9b2e",
+    "docs/plans/phase3/TSK-P3-SUPPORT-MIG-001/EXEC_LOG.md": "6452b7267ce346f4bf94b3c799d73f4df5bfdc04ea1e5f7e06fdc0dedeb2032c"
+  },
+  "command_outputs": [
+    "git_sha=582e175ab813f643e3e8b6b8a47c901bc0d53755",
+    "timestamp_utc=2026-05-18T00:39:24Z",
+    "MIG-FILES-EXIST=PASS",
+    "MIG-REQUIRED-TOKENS=PASS",
+    "MIG-HEADINGS=PASS",
+    "MIG-SURFACE-COVERAGE=PASS",
+    "MIG-RUNTIME-INDEX=PASS",
+    "MIG-REGISTRY=PASS"
+  ],
+  "execution_trace": [
+    "MIG-FILES-EXIST:PASS:contract, verifier, runtime index, registry, meta, plan, and exec log exist",
+    "MIG-REQUIRED-TOKENS:PASS:contract covers all six owning surfaces and replay-equality/anti-drift tokens",
+    "MIG-HEADINGS:PASS:contract includes required migration/backfill planning sections",
+    "MIG-SURFACE-COVERAGE:PASS:contract explicitly binds all six owning surface families",
+    "MIG-RUNTIME-INDEX:PASS:runtime task index contains support migration task",
+    "MIG-REGISTRY:PASS:phase3 task registry contains support migration task"
+  ]
+}

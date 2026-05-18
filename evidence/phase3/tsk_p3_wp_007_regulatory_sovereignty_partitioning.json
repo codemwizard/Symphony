@@ -1,0 +1,118 @@
+{
+  "task_id": "TSK-P3-WP-007",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-18T06:05:20Z",
+  "status": "PASS",
+  "pass": true,
+  "checks": {
+    "migration_head_forward_only": {
+      "status": "PASS",
+      "detail": "MIGRATION_HEAD=0218 (>=0215)"
+    },
+    "regime_table_exists": {
+      "status": "PASS",
+      "detail": "public.p3_regulator_regimes exists"
+    },
+    "rule_table_exists": {
+      "status": "PASS",
+      "detail": "public.p3_regulator_precedence_rules exists"
+    },
+    "finding_table_exists": {
+      "status": "PASS",
+      "detail": "public.p3_regulator_partition_findings exists"
+    },
+    "manifest_exists": {
+      "status": "PASS",
+      "detail": "public.p3_regulator_partition_manifest exists"
+    },
+    "applicability_function_exists": {
+      "status": "PASS",
+      "detail": "p3_assert_regulator_rule_applicability exists"
+    },
+    "append_function_exists": {
+      "status": "PASS",
+      "detail": "p3_append_regulator_partition_finding exists"
+    },
+    "resolve_function_exists": {
+      "status": "PASS",
+      "detail": "p3_resolve_regulator_precedence exists"
+    },
+    "partition_state_enum": {
+      "status": "PASS",
+      "detail": "p3_regulator_partition_state has 3 doctrine-declared values"
+    },
+    "regulator_partition_resolution": {
+      "status": "PASS",
+      "detail": "regulator partitioning preserves sovereignty separation and doctrine-declared precedence"
+    },
+    "cross_regime_negative": {
+      "status": "PASS",
+      "detail": "cross-regime rule application fails closed with SQLSTATE P3001"
+    },
+    "runtime_index_registered": {
+      "status": "PASS",
+      "detail": "PHASE3 runtime index contains TSK-P3-WP-007"
+    },
+    "phase3_registry_registered": {
+      "status": "PASS",
+      "detail": "phase3_task_registry.yml contains TSK-P3-WP-007"
+    },
+    "adr_rebaseline_recorded": {
+      "status": "PASS",
+      "detail": "ADR-0010 references MIGRATION_HEAD 0215"
+    },
+    "sqlstate_registered": {
+      "status": "PASS",
+      "detail": "sqlstate map contains P3001 and P3014"
+    },
+    "meta_completed": {
+      "status": "PASS",
+      "detail": "task meta status is completed"
+    }
+  },
+  "observed_paths": [
+    "schema/migrations/0215_p3_regulatory_sovereignty_partitioning.sql",
+    "scripts/audit/verify_p3_regulatory_sovereignty_partitioning.sh",
+    "schema/migrations/MIGRATION_HEAD",
+    "docs/decisions/ADR-0010-baseline-policy.md",
+    "docs/contracts/sqlstate_map.yml",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md",
+    "docs/PHASE3/phase3_task_registry.yml",
+    "tasks/TSK-P3-WP-007/meta.yml",
+    "docs/plans/phase3/TSK-P3-WP-007/PLAN.md",
+    "docs/plans/phase3/TSK-P3-WP-007/EXEC_LOG.md"
+  ],
+  "observed_hashes": {
+    "schema/migrations/0215_p3_regulatory_sovereignty_partitioning.sql": "69912a6ecb8474e95694e265aa86f5d2ded98b47f84d05372a65b5fa8048630a",
+    "scripts/audit/verify_p3_regulatory_sovereignty_partitioning.sh": "1de59eebf432149be7b53dc273acc28c3ada6c08970fcdc340c1e6dfc62f991c",
+    "schema/migrations/MIGRATION_HEAD": "6985309011a966380fbca5bb05fd5171f13f1196fa5420e7482632068d2034b1",
+    "docs/decisions/ADR-0010-baseline-policy.md": "958ad9fad4e090b2480dd4575430170a1e40434c6f8b7263e2d42788e53aafd8",
+    "docs/contracts/sqlstate_map.yml": "ac5eb2d214e5b39a959a544ff8236f417ba1e0c7621ed00e1f28d9cd9242976e",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md": "791ab43edaf18a36f7ef55a4bf1906197b985c046903d6837c1ec6572e0e979c",
+    "docs/PHASE3/phase3_task_registry.yml": "b01bd5e63e87064767ac202b3f91634acf0474383a8d87b912455921fff4a4fc",
+    "tasks/TSK-P3-WP-007/meta.yml": "b5ed4f57f7c42a6a76512634680919015423ced467d98e8c25f10c17b15a1bd6",
+    "docs/plans/phase3/TSK-P3-WP-007/PLAN.md": "c3e5a63100e8ae7a597b2a4b6034cfbae9962fe6765cb85a96043d09b5715c97",
+    "docs/plans/phase3/TSK-P3-WP-007/EXEC_LOG.md": "656510d4f38c6b857e48590a03e8d7707ba435e0e0b79f4ea4f09fa505289582"
+  },
+  "command_outputs": [
+    {
+      "command": "read schema/migrations/MIGRATION_HEAD => 0218",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect regulator partition relations and functions",
+      "status": "recorded"
+    },
+    {
+      "command": "exercise cross-regime rejection, precedence application, and doctrine-gap preservation in a rollback transaction",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect runtime task index, phase3 task registry, ADR-0010, sqlstate map, and task meta",
+      "status": "recorded"
+    }
+  ],
+  "execution_trace": [
+    "start verifier for TSK-P3-WP-007"
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "task_id": "TSK-P3-WP-004",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-18T00:39:26Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "migration_head_forward_only",
+      "result": "PASS",
+      "detail": "MIGRATION_HEAD=0214 (>=0213)"
+    },
+    {
+      "id": "claims_table_exists",
+      "result": "PASS",
+      "detail": "public.p3_contradiction_claims exists"
+    },
+    {
+      "id": "records_table_exists",
+      "result": "PASS",
+      "detail": "public.p3_contradiction_records exists"
+    },
+    {
+      "id": "quarantine_table_exists",
+      "result": "PASS",
+      "detail": "public.p3_quarantine_records exists"
+    },
+    {
+      "id": "supersession_table_exists",
+      "result": "PASS",
+      "detail": "public.p3_contradiction_supersessions exists"
+    },
+    {
+      "id": "escalation_table_exists",
+      "result": "PASS",
+      "detail": "public.p3_contradiction_escalations exists"
+    },
+    {
+      "id": "manifest_exists",
+      "result": "PASS",
+      "detail": "public.p3_contradiction_manifest exists"
+    },
+    {
+      "id": "assert_function_exists",
+      "result": "PASS",
+      "detail": "p3_assert_contradiction_claim exists"
+    },
+    {
+      "id": "append_function_exists",
+      "result": "PASS",
+      "detail": "p3_append_contradiction_finding exists"
+    },
+    {
+      "id": "supersede_function_exists",
+      "result": "PASS",
+      "detail": "p3_append_contradiction_supersession exists"
+    },
+    {
+      "id": "class_enum_count",
+      "result": "PASS",
+      "detail": "p3_contradiction_class has direct, temporal, authority_scope"
+    },
+    {
+      "id": "state_enum_count",
+      "result": "PASS",
+      "detail": "p3_contradiction_resolution_state has 4 values"
+    },
+    {
+      "id": "contradiction_behavior",
+      "result": "PASS",
+      "detail": "direct, temporal, and authority-scope contradictions block with declared SQLSTATEs and append-only contradiction structures expose quarantine, escalation, and supersession artifacts"
+    },
+    {
+      "id": "sqlstate_map_registration",
+      "result": "PASS",
+      "detail": "sqlstate map registers P3003, P3004, and P3005"
+    },
+    {
+      "id": "adr_rebaseline_note",
+      "result": "PASS",
+      "detail": "ADR-0010 records the contradiction rebaseline closure"
+    },
+    {
+      "id": "runtime_index_registration",
+      "result": "PASS",
+      "detail": "runtime task index contains TSK-P3-WP-004"
+    },
+    {
+      "id": "registry_registration",
+      "result": "PASS",
+      "detail": "phase3 task registry marks TSK-P3-WP-004 completed"
+    }
+  ],
+  "observed_hashes": {
+    "schema/migrations/0213_p3_contradiction_detection.sql": "4f27049d9b929326f49556d14c0ddae6907f3b6297010d884941e78ccbc8051b",
+    "scripts/db/verify_p3_contradiction_detection.sh": "5bb946a4413a74c1fa2a452225c259d1bed3627b013f8c3b19078c6a636eed20",
+    "schema/migrations/MIGRATION_HEAD": "ec308fbb4c684b285184f7e44cb1df43d61991652057c01dd725e44fc0c31a5f",
+    "docs/contracts/sqlstate_map.yml": "b2788a8c5ad973596feab7362c240e73cd1252f60b7bc6a3a568357699d99a12",
+    "docs/decisions/ADR-0010-baseline-policy.md": "9ba59718c1c7354df5bde6443c221fa7d1c1a0059c2c2f2969a58d355ec44385",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md": "791ab43edaf18a36f7ef55a4bf1906197b985c046903d6837c1ec6572e0e979c",
+    "docs/PHASE3/phase3_task_registry.yml": "b01bd5e63e87064767ac202b3f91634acf0474383a8d87b912455921fff4a4fc",
+    "tasks/TSK-P3-WP-004/meta.yml": "61133a723daabc338ddfbbf364672c1d5aa8ffb98e240f176ab06535c8fd051d",
+    "docs/plans/phase3/TSK-P3-WP-004/PLAN.md": "c6ef42a761f8087016ad1e3d4db8d445db54fdd71ef4c73e77836ac17ecee463",
+    "docs/plans/phase3/TSK-P3-WP-004/EXEC_LOG.md": "4461889f04647d616956ff3072eaca21d801347b6b1a5e229cd1c7f81a18b065"
+  },
+  "command_outputs": [
+    "read schema/migrations/MIGRATION_HEAD => 0214",
+    "inspect contradiction substrate relations and functions",
+    "inspect contradiction enums and manifest kinds",
+    "exercise contradiction negative/positive paths"
+  ],
+  "execution_trace": [
+    "start verifier for TSK-P3-WP-004"
+  ]
+}

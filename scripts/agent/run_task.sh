@@ -144,6 +144,8 @@ def normalize_checks(x, field):
             cmd = cmd.strip()
             if not cmd:
                 raise SystemExit(f"ERROR: '{field}' contains empty command at index {idx}")
+            if cmd.startswith("#"):
+                raise SystemExit(f"ERROR: '{field}' contains commented/inert command at index {idx}")
             out.append({"name": f"{field}_{idx+1}", "cmd": cmd, "retries": 0})
         elif isinstance(item, dict):
             cmd = str(item.get("cmd", "")).strip()
@@ -151,6 +153,8 @@ def normalize_checks(x, field):
             retries = item.get("retries", 0)
             if not cmd:
                 raise SystemExit(f"ERROR: '{field}' dict item missing 'cmd' at index {idx}")
+            if cmd.startswith("#"):
+                raise SystemExit(f"ERROR: '{field}' dict item contains commented/inert command at index {idx}")
             if not name:
                 raise SystemExit(f"ERROR: '{field}' dict item has empty 'name' at index {idx}")
             try:

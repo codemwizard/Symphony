@@ -1,0 +1,182 @@
+schema_version: 1
+phase: '3'
+wave: 'WP'
+task_id: TSK-P3-WP-008
+title: "Conflict-of-interest and verifier independence enforcement"
+owner_role: DB_FOUNDATION
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DB_SCHEMA
+depends_on: ["TSK-P3-WP-006"]
+invariants: ["INV-308"]
+
+deliverable_files:
+  - schema/migrations/0216_p3_conflict_of_interest_enforcement.sql
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-18/0001_baseline.sql
+  - schema/baselines/2026-05-18/baseline.normalized.sql
+  - schema/baselines/2026-05-18/baseline.cutoff
+  - schema/baselines/2026-05-18/baseline.meta.json
+  - scripts/db/verify_p3_conflict_of_interest_enforcement.sh
+  - evidence/phase3/tsk_p3_wp_008_conflict_of_interest_enforcement.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/contracts/sqlstate_map.yml
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/plans/phase3/TSK-P3-WP-008/PLAN.md
+  - docs/plans/phase3/TSK-P3-WP-008/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - schema/migrations/0216_p3_conflict_of_interest_enforcement.sql
+    - scripts/db/verify_p3_conflict_of_interest_enforcement.sh
+    - evidence/phase3/tsk_p3_wp_008_conflict_of_interest_enforcement.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - 0208: "policy artifact and authority lineage substrate"
+    - 0212: "authority scope engine substrate"
+  table_dependencies:
+    - p3_authority_lineage: "authority lineage anchors verifier independence enforcement scope"
+    - p3_policy_artifacts: "policy artifacts anchor declared verifier-independence doctrine inputs"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+  - "Generic application authorization, product authorization, user-journey permissioning, or external verifier portal behavior."
+  - "Undeclared identity-correlation semantics or broader runtime/verifier trust-boundary implementation owned by P3-SURF-012."
+  - "Policy or authority lineage definition, regulator partition semantics, or host-country workflow runtime."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+  - "If the migration design requires portal workflow, generic auth redesign, or undeclared identity-correlation semantics."
+  - "If the implementation cannot remain inside one forward-only migration, one verifier, and the declared registry/index surfaces."
+  - "If the implementation needs runtime/verifier artifact exchange or privilege-separation logic that belongs to P3-SURF-012."
+proof_guarantees:
+  - "Evidence JSON can prove the conflict-of-interest enforcement substrate exists, is deterministic where inspected, and rejects submitter-verifier overlap under declared relationship records and structural constraints."
+  - "Evidence can prove verifier-independence findings remain replay-visible immutable-lineage facts derived from persisted relationships and do not rely on runtime-only trust state where the verifier inspects them."
+proof_limitations:
+  - "Does not prove generalized application authorization behavior, portal workflow behavior, or runtime/verifier exchange semantics."
+  - "Does not prove the substantive correctness of all recorded role assignments or identity data outside the declared enforcement substrate."
+  - "Does not prove user-facing explanation or future-phase verifier workflow semantics."
+
+touches:
+  - schema/migrations/0216_p3_conflict_of_interest_enforcement.sql
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-18/0001_baseline.sql
+  - schema/baselines/2026-05-18/baseline.normalized.sql
+  - schema/baselines/2026-05-18/baseline.cutoff
+  - schema/baselines/2026-05-18/baseline.meta.json
+  - scripts/db/verify_p3_conflict_of_interest_enforcement.sh
+  - evidence/phase3/tsk_p3_wp_008_conflict_of_interest_enforcement.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/contracts/sqlstate_map.yml
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - tasks/TSK-P3-WP-008/meta.yml
+  - docs/plans/phase3/TSK-P3-WP-008/PLAN.md
+  - docs/plans/phase3/TSK-P3-WP-008/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_wp_008_w01] Define a single forward-only Phase 3 schema mutation that establishes deterministic conflict-of-interest and verifier-independence enforcement structures anchored to declared submitter, verifier, asset, and authority relationships without importing generic application authorization, portal workflow, or runtime/verifier exchange semantics."
+  - "[ID tsk_p3_wp_008_w02] Bind COI findings to immutable-lineage constitutional facts, deterministic canonical ordering and tie-break rules, replay-visible verifier-independence records, and anti-trust-collapse boundaries that never depend on runtime-only state or undeclared identity-correlation semantics."
+  - "[ID tsk_p3_wp_008_w03] Add a deterministic verifier that proves submitter-verifier overlap and related COI cases are mechanically rejectable, and that enforcement remains anchored to persisted relationship records without absorbing P3-SURF-012 runtime/verifier segregation scope."
+  - "[ID tsk_p3_wp_008_w04] Register the task in the active Phase 3 runtime task index and registry without altering unrelated authority-lineage, regulator partition, or future-phase verifier workflow scope."
+
+acceptance_criteria:
+  - "[ID tsk_p3_wp_008_w01] A single forward-only migration path is declared for conflict-of-interest and verifier-independence enforcement structure and is scoped only to the doctrine-declared COI substrate."
+  - "[ID tsk_p3_wp_008_w02] The planned substrate exposes immutable-lineage COI findings, deterministic canonical ordering and tie-break rules, replay-visible verifier-independence records, and anti-trust-collapse boundaries without generic auth redesign or undeclared identity-correlation semantics."
+  - "[ID tsk_p3_wp_008_w03] The task declares a verifier path and evidence path that honestly prove deterministic COI enforcement and verifier-independence structure without claiming portal workflow, generalized auth, or P3-SURF-012 runtime/verifier exchange semantics."
+  - "[ID tsk_p3_wp_008_w04] The active runtime task index and Phase 3 task registry both point to the generated `TSK-P3-WP-008` task pack as the runtime source of truth."
+
+negative_tests:
+  - id: TSK-P3-WP-008-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: A single forward-only migration path is declared for conflict-of-interest and verifier-independence enforcement structure and is scoped only to the doctrine-declared COI substrate."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-WP-008-P1
+    description: "Verify that execution exits 0 on success path for: A single forward-only migration path is declared for conflict-of-interest and verifier-independence enforcement structure and is scoped only to the doctrine-declared COI substrate."
+    required: true
+
+verification:
+  - '[ID tsk_p3_wp_008_w01] [ID tsk_p3_wp_008_w02] [ID tsk_p3_wp_008_w03] [ID tsk_p3_wp_008_w04] test -x scripts/db/verify_p3_conflict_of_interest_enforcement.sh && bash scripts/db/verify_p3_conflict_of_interest_enforcement.sh > evidence/phase3/tsk_p3_wp_008_conflict_of_interest_enforcement.json || exit 1'
+  - 'bash scripts/db/lint_migrations.sh || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-WP-008 --evidence evidence/phase3/tsk_p3_wp_008_conflict_of_interest_enforcement.json || exit 1'
+  - 'bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P3-WP-008 || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_wp_008_conflict_of_interest_enforcement.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+  - "Forward-only migration path missing or malformed => FAIL"
+  - "COI enforcement permits submitter-verifier overlap, detaches from persisted relationship records, or drifts into P3-SURF-012 semantics => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/implementation_plans/TSK-P3-PLAN-004_wave4_regulator_coi_spatial_temporal.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-008_conflict_of_interest.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-006_authority_delegation.md
+  - docs/constitutional/EXTERNAL_VERIFIER_INDEPENDENCE_DOCTRINE.md
+  - docs/constitutional/AUTHORITY_SCOPE_AND_DELEGATION_DOCTRINE.md
+  - docs/constitutional/NON_INFERENCE_AND_INTERPRETATION_LIMITS.md
+  - docs/constitutional/POLICY_ARTIFACT_AND_AUTHORITY_LINEAGE_DOCTRINE.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+implementation_plan: docs/plans/phase3/TSK-P3-WP-008/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-WP-008/EXEC_LOG.md
+notes: 'Generated via Phase 3 task-pack creation workflow and narrowed to the P3-SURF-008 COI-only scope defined by TSK-P3-CAP-008.'
+client: cursor
+assigned_agent: db_foundation
+model: claude-sonnet-4-20250514

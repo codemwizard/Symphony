@@ -1,0 +1,107 @@
+{
+  "task_id": "TSK-P3-WP-001",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-18T13:19:04Z",
+  "status": "PASS",
+  "pass": true,
+  "checks": {
+    "migration_head_forward_only": {
+      "status": "PASS",
+      "detail": "MIGRATION_HEAD=0218 (>=0207)"
+    },
+    "node_table_exists": {
+      "status": "PASS",
+      "detail": "public.p3_dependency_nodes exists"
+    },
+    "edge_table_exists": {
+      "status": "PASS",
+      "detail": "public.p3_dependency_edges exists"
+    },
+    "adjacency_view_exists": {
+      "status": "PASS",
+      "detail": "public.p3_typed_dependency_adjacency exists"
+    },
+    "closure_function_exists": {
+      "status": "PASS",
+      "detail": "p3_collect_upstream_dependencies(uuid) exists"
+    },
+    "node_kind_enum": {
+      "status": "PASS",
+      "detail": "p3_dependency_node_kind has 2 values"
+    },
+    "edge_kind_enum": {
+      "status": "PASS",
+      "detail": "p3_dependency_edge_kind has 5 values"
+    },
+    "provenance_columns_present": {
+      "status": "PASS",
+      "detail": "lineage_provenance_id columns are NOT NULL on nodes and edges"
+    },
+    "deterministic_traversal": {
+      "status": "PASS",
+      "detail": "recursive closure returns ordered upstream lineage"
+    },
+    "incomplete_dependency_rejected": {
+      "status": "PASS",
+      "detail": "NOT NULL and FK failures raised transactionally"
+    },
+    "runtime_index_registered": {
+      "status": "PASS",
+      "detail": "PHASE3 runtime index contains TSK-P3-WP-001"
+    },
+    "phase3_registry_registered": {
+      "status": "PASS",
+      "detail": "phase3_task_registry.yml contains TSK-P3-WP-001"
+    }
+  },
+  "observed_paths": [
+    "schema/migrations/0207_p3_typed_dependency_graph.sql",
+    "scripts/db/verify_p3_typed_dependency_graph.sh",
+    "schema/migrations/MIGRATION_HEAD",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md",
+    "docs/PHASE3/phase3_task_registry.yml",
+    "tasks/TSK-P3-WP-001/meta.yml",
+    "docs/plans/phase3/TSK-P3-WP-001/PLAN.md",
+    "docs/plans/phase3/TSK-P3-WP-001/EXEC_LOG.md"
+  ],
+  "observed_hashes": {
+    "schema/migrations/0207_p3_typed_dependency_graph.sql": "b7851b558f374000adcf30a0565140fe51f09aff6e201938480bee6cdd4d0ebc",
+    "scripts/db/verify_p3_typed_dependency_graph.sh": "d992c93e92f0ae91b7dd7f3b65bce1447ea93c330635e2f61e3cf2a50459564d",
+    "schema/migrations/MIGRATION_HEAD": "6985309011a966380fbca5bb05fd5171f13f1196fa5420e7482632068d2034b1",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md": "a151f2878948b766fac755c46ac897d359fdecf0669562ab5f229ee063526fff",
+    "docs/PHASE3/phase3_task_registry.yml": "4c7a6b49a971356f0978e52934dcc80205371c2e8662cc5d0999e608b274d554",
+    "tasks/TSK-P3-WP-001/meta.yml": "b7628fe2aa2a1f17eb3182e64b821982e00e09127c5a80157d006a065f08b1a6",
+    "docs/plans/phase3/TSK-P3-WP-001/PLAN.md": "5e60dc8f27ba63d84f8f22e275faa504a50f9502f65f87ce4862109f5a1e05ce",
+    "docs/plans/phase3/TSK-P3-WP-001/EXEC_LOG.md": "30b65c6e8d708c4e703fc1a24cd2670c69ba15857d9b4c4e752f695441021767"
+  },
+  "command_outputs": [
+    {
+      "command": "read schema/migrations/MIGRATION_HEAD => 0218",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect typed dependency graph relations and traversal function",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect enum cardinalities for dependency node and edge kinds",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect provenance identifier nullability constraints",
+      "status": "recorded"
+    },
+    {
+      "command": "exercise deterministic traversal and negative insertion constraints in a rollback transaction",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect runtime task index and phase3 task registry entries",
+      "status": "recorded"
+    }
+  ],
+  "execution_trace": [
+    "start verifier for TSK-P3-WP-001",
+    "traversal exercise completed"
+  ]
+}

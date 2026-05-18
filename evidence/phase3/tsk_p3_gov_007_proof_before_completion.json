@@ -1,0 +1,50 @@
+{
+  "task_id": "TSK-P3-GOV-007",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-18T07:24:29Z",
+  "status": "PASS",
+  "checks": {
+    "completed_dependency_removed": {
+      "status": "PASS",
+      "detail": "representative verifiers no longer require completed status before proof"
+    },
+    "proof_compatible_gates_present": {
+      "status": "PASS",
+      "detail": "representative verifiers accept ready/completed proof-compatible states"
+    },
+    "lifecycle_docs_updated": {
+      "status": "PASS",
+      "detail": "canonical lifecycle docs distinguish proof-passed from completed"
+    },
+    "generator_wording_updated": {
+      "status": "PASS",
+      "detail": "task generator now emits proof-before-completion wording"
+    }
+  },
+  "observed_paths": [
+    "scripts/agent/generate_task_pack.py",
+    "docs/operations/TASK_CREATION_PROCESS.md",
+    "docs/operations/AGENT_PROMPT_ROUTER.md",
+    "docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md",
+    "scripts/audit/verify_p3_regulatory_sovereignty_partitioning.sh",
+    "scripts/db/verify_p3_conflict_of_interest_enforcement.sh",
+    "scripts/db/verify_p3_spatial_legality_dnsh_gates.sh",
+    "scripts/audit/verify_p3_dwell_time_forensic_enforcement.sh",
+    "scripts/agent/verify_tsk_p3_support_obs_001.sh",
+    "scripts/agent/verify_tsk_p3_support_perf_001.sh",
+    "scripts/agent/verify_tsk_p3_gov_007_proof_before_completion.sh"
+  ],
+  "observed_hashes": {
+    "scripts/agent/generate_task_pack.py": "f17edf2ddd4784e9acd311f67a9ccd1b1f224281f4659a0fbe4c73cb56778672",
+    "docs/operations/TASK_CREATION_PROCESS.md": "996375a5af06b68247024a72715be62a1293365112d07f9e145af3afb4be5542",
+    "docs/operations/AGENT_PROMPT_ROUTER.md": "8080f26e3349d76bf1a708eb7e841422d3300ac0aec2cad2019fbca61ffb0c4d",
+    "docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md": "9e837d1e99efa817342327de8b4cca8388e61eeee1062e29948e7e337df7a7b9",
+    "scripts/audit/verify_p3_regulatory_sovereignty_partitioning.sh": "5f48cfad61a272b34fac25ae5e249d4ac7e373de593285dc9349b69b74db387c",
+    "scripts/db/verify_p3_conflict_of_interest_enforcement.sh": "6d2aa0f6b08184037c42e5bb9b5622c2283e730820b827a60af77816e08560ef",
+    "scripts/db/verify_p3_spatial_legality_dnsh_gates.sh": "d740e1b393671bdf3d74e5f3fdf11879a5a1a417e4ea0226a7020d545c0e4fad",
+    "scripts/audit/verify_p3_dwell_time_forensic_enforcement.sh": "22a5211b7e2f6cf782b1548d7bdefc4df8dfc7d9fd17a5e23c41ac66e7e6d4a6",
+    "scripts/agent/verify_tsk_p3_support_obs_001.sh": "75b9224d35eacad9f4df4b104dce849717f3e7f7eca5d33dd83d152144483d48",
+    "scripts/agent/verify_tsk_p3_support_perf_001.sh": "814529cbc72cf56040586318baf2f45f79e8bf1f115feac3e0476f5b7f55a704",
+    "scripts/agent/verify_tsk_p3_gov_007_proof_before_completion.sh": "e14de38b62fc0364f0954272f4b27a249e7b028338cf0d1a52ea6a85097d4aff"
+  }
+}

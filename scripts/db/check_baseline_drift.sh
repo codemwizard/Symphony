@@ -27,6 +27,35 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
   exit 1
 fi
 
+compute_privilege_snapshot_json() {
+  psql "$1" -X -A -t -q -c "
+WITH privilege_rows AS (
+  SELECT 'relation'::text AS object_type,
+         table_schema AS schema_name,
+         table_name AS object_name,
+         grantee,
+         privilege_type,
+         (is_grantable = 'YES') AS is_grantable
+  FROM information_schema.role_table_grants
+  WHERE table_schema = 'public'
+  UNION ALL
+  SELECT 'function'::text AS object_type,
+         routine_schema AS schema_name,
+         routine_name AS object_name,
+         grantee,
+         privilege_type,
+         (is_grantable = 'YES') AS is_grantable
+  FROM information_schema.role_routine_grants
+  WHERE routine_schema = 'public'
+)
+SELECT COALESCE(
+  json_agg(privilege_rows ORDER BY object_type, schema_name, object_name, grantee, privilege_type, is_grantable)::text,
+  '[]'
+)
+FROM privilege_rows;
+"
+}
+
 # Normalize baseline (canonicalize for deterministic diff)
 if [[ ! -x "$CANON_SCRIPT" ]]; then
   echo "Missing canonicalizer: $CANON_SCRIPT" >&2
@@ -74,8 +103,29 @@ fi
 "${DUMP_CMD[@]}" > /tmp/symphony_schema_dump_raw.sql
 "$CANON_SCRIPT" "/tmp/symphony_schema_dump_raw.sql" "/tmp/symphony_schema_dump.sql"
 DUMP_HASH="$(sha256sum /tmp/symphony_schema_dump.sql | awk '{print $1}')"
+CURRENT_PRIVILEGE_JSON="$(compute_privilege_snapshot_json "$DATABASE_URL")"
+CURRENT_PRIVILEGE_HASH="$(printf '%s' "$CURRENT_PRIVILEGE_JSON" | sha256sum | awk '{print $1}')"
+BASELINE_PRIVILEGE_HASH="$(python3 - <<'PY' "$ROOT_DIR/schema/baselines/current/baseline.meta.json"
+import json, sys
+from pathlib import Path
+p = Path(sys.argv[1])
+if not p.exists():
+    print("")
+else:
+    print(json.loads(p.read_text()).get("privilege_state_sha256", ""))
+PY
+)"
 
+SCHEMA_DRIFT=0
+PRIVILEGE_DRIFT=0
 if ! diff -q /tmp/symphony_baseline_norm.sql /tmp/symphony_schema_dump.sql >/dev/null; then
+  SCHEMA_DRIFT=1
+fi
+if [[ -z "$BASELINE_PRIVILEGE_HASH" || "$BASELINE_PRIVILEGE_HASH" != "$CURRENT_PRIVILEGE_HASH" ]]; then
+  PRIVILEGE_DRIFT=1
+fi
+
+if [[ "$SCHEMA_DRIFT" -ne 0 || "$PRIVILEGE_DRIFT" -ne 0 ]]; then
   python3 - <<PY
 import json
 from pathlib import Path
@@ -86,9 +136,13 @@ out = {
   "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
   "status":"FAIL",
   "reason":"baseline drift",
+  "schema_drift": bool($SCHEMA_DRIFT),
+  "privilege_drift": bool($PRIVILEGE_DRIFT),
   "baseline_path":"$BASELINE",
   "baseline_hash":"$BASELINE_HASH",
   "current_hash":"$DUMP_HASH",
+  "baseline_privilege_hash":"$BASELINE_PRIVILEGE_HASH",
+  "current_privilege_hash":"$CURRENT_PRIVILEGE_HASH",
   "pg_dump_version":"$PG_DUMP_VERSION",
   "pg_server_version":"$PG_SERVER_VERSION",
   "dump_source":"$DUMP_SOURCE"
@@ -111,6 +165,8 @@ out = {
   "baseline_path":"$BASELINE",
   "baseline_hash":"$BASELINE_HASH",
   "current_hash":"$DUMP_HASH",
+  "baseline_privilege_hash":"$BASELINE_PRIVILEGE_HASH",
+  "current_privilege_hash":"$CURRENT_PRIVILEGE_HASH",
   "pg_dump_version":"$PG_DUMP_VERSION",
   "pg_server_version":"$PG_SERVER_VERSION",
   "dump_source":"$DUMP_SOURCE"

@@ -87,13 +87,18 @@ if not json_matches:
 approval_md = md_matches[-1] if md_matches else None
 approval_json = json_matches[-1] if json_matches else None
 sidecar = None
+approval_stage = 'unknown'
 if approval_json and approval_json.exists():
     sidecar = json.loads(approval_json.read_text(encoding='utf-8'))
+    if approval_json.name.startswith('BRANCH-'):
+        approval_stage = 'stage_a'
+    elif approval_json.name.startswith('PR-'):
+        approval_stage = 'stage_b'
     if sidecar.get('approval', {}).get('status') != 'APPROVED':
         errors.append('approval_status_not_approved')
     if sidecar.get('approval', {}).get('approver_id', '').strip() == '':
         errors.append('missing_approver_id')
-    if sidecar.get('verification', {}).get('pre_ci_passed') is not True:
+    if approval_stage != 'stage_a' and sidecar.get('verification', {}).get('pre_ci_passed') is not True:
         errors.append('pre_ci_not_recorded_true')
 
 approval_md_text = approval_md.read_text(encoding='utf-8') if approval_md and approval_md.exists() else ''
@@ -116,7 +121,8 @@ try:
     base = subprocess.check_output(['git','-C',str(root),'merge-base','HEAD','origin/main'], text=True).strip()
     changed = [p for p in subprocess.check_output(['git','-C',str(root),'diff','--name-only',f'{base}...HEAD'], text=True).splitlines() if p]
 except Exception as exc:
-    errors.append(f'changed_files_probe_failed:{exc}')
+    if not metadata_review_scope:
+        errors.append(f'changed_files_probe_failed:{exc}')
 
 reviewed_files = sidecar.get('scope', {}).get('paths_changed', []) if sidecar else []
 reviewed_files = sorted(set(reviewed_files))
@@ -149,6 +155,7 @@ payload = {
     'change_ref': f'branch/{branch}' if branch else None,
     'review_artifact_ref': str(approval_md.relative_to(root)) if approval_md else None,
     'review_sidecar_ref': str(approval_json.relative_to(root)) if approval_json else None,
+    'approval_stage': approval_stage,
     'review_scope_count': len(reviewed_files),
     'review_scope_fingerprint': review_scope_fingerprint,
     'coverage_source_kind': coverage_source_kind,

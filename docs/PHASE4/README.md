@@ -1,37 +1,53 @@
-# Phase 4 - Production Operations
+# Phase 4 - Financial Integrity and Statutory Enforcement
 
-**Status: NOT OPEN FOR IMPLEMENTATION**
+**Status: PREPARING TO OPEN**
 
-## Overview
+Phase 4 is not open yet. The repository remains on the Phase 3 execution
+envelope, but the structural Phase 4 contract, policy, verifier, and planning
+artifacts are now prepared so the formal opening can be completed once Phase 3
+closeout is admissible and a `PHASE4-OPENING` approval bundle exists.
 
-Phase 4 is a future phase that will address production operations, deployment patterns, and operational excellence. This phase is currently **non-claimable** and not open for task implementation.
+## Current Governance Posture
 
-## Anti-Drift Enforcement
+- **Lifecycle Status**: Not Open
+- **Claimability**: Opening preparation only
+- **Envelope Authority**: Still Phase 3
+- **Gate Flag On Open**: `RUN_PHASE4_GATES=1`
+- **Evidence Namespace On Open**: `evidence/phase4/**`
+- **AI Status**: Phase 4 is constitutionally AI-free
 
-This stub documentation prevents premature Phase-4 work initiation. Any attempts to claim Phase-4 tasks before the official Phase-4 opening will be rejected by governance gates.
+## Phase 4 Capability Boundary
 
-## Future Scope (Placeholder)
+Phase 4 governs the deterministic financial and statutory consequences of
+already-admitted decisions. Its initial execution surfaces are:
 
-When Phase-4 becomes available, it will likely include:
+- settlement finality
+- BoZ FX reference-rate authority
+- asset-to-settlement hard binding
+- currency legality gates
+- statutory deductions and allocations
+- statutory kill criteria
 
-- Production deployment patterns
-- Operational monitoring and alerting
-- Performance optimization
-- Disaster recovery procedures
-- Production security hardening
-- Compliance and audit procedures
+## Opening Blockers
 
-## Current Governance Status
+Phase 4 must not be treated as open until all are true:
 
-- **Phase Status**: Not Open
-- **Claimability**: Non-claimable
-- **Implementation Rows**: 0 (empty)
-- **Governance**: Anti-drift enforcement active
+1. Phase 3 closeout is verifier-backed and admissible.
+2. `docs/PHASE4/PHASE4_CONTRACT.md` and `docs/PHASE4/phase4_contract.yml`
+   are accepted as the canonical contract pair.
+3. `docs/operations/AGENTIC_SDLC_PHASE4_POLICY.md` exists and governs the
+   allowed/prohibited Phase 4 surfaces.
+4. `scripts/audit/verify_phase4_contract.sh` passes.
+5. A formal `approvals/*/PHASE4-OPENING.md` and sidecar JSON exist.
+6. The root execution envelope is revised by separately approved work.
 
-## Contact
+## Forward Governance Requirement
 
-Do not attempt to initiate Phase-4 work. All Phase-4 related inquiries should be directed to the Architecture team for future planning discussions.
+Phase 4 closeout must leave Phase 5 in the same guarded posture Phase 4
+originally inherited:
 
----
+- `docs/PHASE5/README.md` must exist as a non-claimable stub.
+- `docs/PHASE5/phase5_contract.yml` must exist with zero implementation rows.
 
-*This stub is maintained to prevent premature Phase-4 work initiation and ensure proper governance sequencing.*
+No Phase 4 completion claim is valid if the next-phase anti-drift stubs are
+missing.

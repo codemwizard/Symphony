@@ -107,6 +107,11 @@ bash scripts/audit/verify_task_pack_readiness.sh --task <TASK_ID>
 
 If either fails: STOP. Fix the task pack before implementation.
 
+Successful `CREATE-TASK` produces a **task-packed** unit. In existing planning
+truth surfaces this may still be labeled `tasks-created`, but that status means
+only that the task pack exists and passes structural readiness. It does not
+mean implementation is complete or that the task is `resume-ready`.
+
 ## Mode 2 — RESUME-TASK
 
 ### Trigger
@@ -127,18 +132,28 @@ Run in order and stop on first failure.
 4. Pack ready:
    Run `bash scripts/audit/verify_task_pack_readiness.sh --task <TASK_ID>`.
    If it fails, report `STATE: not-ready` and STOP with the readiness output.
-5. Dependencies satisfied:
+5. Verifier contract executable:
+   The primary verifier contract must not be a shell comment, quoted shell
+   comment, inert placeholder, or decorative pass-through entry.
+   If it is structurally present but operationally inert, report
+   `STATE: stub-only` and STOP.
+6. Dependencies satisfied:
    Every task in `depends_on` must be `completed`.
    If not, report `STATE: blocked` and list the blocking tasks.
-6. Active blockers resolved:
+7. Active blockers resolved:
    Every item in `blocked_by`, if present, must be resolved by the task's
    governing plan, evidence, or blocker-clearance rule. `blocked_by` is for
    active impediments and must not duplicate normal `depends_on` predecessors.
    If any blocker remains unresolved, report `STATE: blocked` and list it.
-7. If all pass:
+8. If all pass:
    Report `STATE: resume-ready` and continue to IMPLEMENT-TASK mode.
 
 The agent must not implement from any state other than `resume-ready`.
+
+Missing implementation deliverables before `IMPLEMENT-TASK` are normal.
+Commented or inert verifier contracts are not.
+`completed` is a post-proof recording state, not a prerequisite for verifier
+success.
 
 ## Mode 3 — IMPLEMENT-TASK
 

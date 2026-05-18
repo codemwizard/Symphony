@@ -1,0 +1,106 @@
+{
+  "task_id": "TSK-P3-WP-009",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-18T06:05:22Z",
+  "status": "PASS",
+  "pass": true,
+  "checks": {
+    "migration_head_forward_only": {
+      "status": "PASS",
+      "detail": "MIGRATION_HEAD=0218 (>=0217)"
+    },
+    "declaration_table_exists": {
+      "status": "PASS",
+      "detail": "public.p3_spatial_dataset_declarations exists"
+    },
+    "finding_table_exists": {
+      "status": "PASS",
+      "detail": "public.p3_spatial_legality_findings exists"
+    },
+    "manifest_exists": {
+      "status": "PASS",
+      "detail": "public.p3_spatial_legality_manifest exists"
+    },
+    "assert_function_exists": {
+      "status": "PASS",
+      "detail": "p3_assert_spatial_legality exists"
+    },
+    "gate_state_enum": {
+      "status": "PASS",
+      "detail": "p3_spatial_gate_state has 3 values"
+    },
+    "spatial_gate_enforcement": {
+      "status": "PASS",
+      "detail": "spatial legality substrate preserves admissible findings with declared datasets"
+    },
+    "spatial_negative": {
+      "status": "PASS",
+      "detail": "DNSH overlap and doctrine-gap cases fail closed with GF057 and P3011"
+    },
+    "runtime_index_registered": {
+      "status": "PASS",
+      "detail": "PHASE3 runtime index contains TSK-P3-WP-009"
+    },
+    "phase3_registry_registered": {
+      "status": "PASS",
+      "detail": "phase3_task_registry.yml contains TSK-P3-WP-009"
+    },
+    "adr_rebaseline_recorded": {
+      "status": "PASS",
+      "detail": "ADR-0010 references MIGRATION_HEAD 0217"
+    },
+    "sqlstate_registered": {
+      "status": "PASS",
+      "detail": "sqlstate map contains P3011 and P3016 while DNSH overlap continues to fail closed with legacy GF057"
+    },
+    "meta_completed": {
+      "status": "PASS",
+      "detail": "task meta status is completed"
+    }
+  },
+  "observed_paths": [
+    "schema/migrations/0217_p3_spatial_legality_dnsh_gates.sql",
+    "scripts/db/verify_p3_spatial_legality_dnsh_gates.sh",
+    "schema/migrations/MIGRATION_HEAD",
+    "docs/decisions/ADR-0010-baseline-policy.md",
+    "docs/contracts/sqlstate_map.yml",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md",
+    "docs/PHASE3/phase3_task_registry.yml",
+    "tasks/TSK-P3-WP-009/meta.yml",
+    "docs/plans/phase3/TSK-P3-WP-009/PLAN.md",
+    "docs/plans/phase3/TSK-P3-WP-009/EXEC_LOG.md"
+  ],
+  "observed_hashes": {
+    "schema/migrations/0217_p3_spatial_legality_dnsh_gates.sql": "338157beba3a1ceb319f1a34ff9a76b9373d80316e2f91ced54d30dd77b16ac3",
+    "scripts/db/verify_p3_spatial_legality_dnsh_gates.sh": "12790ed3473990df2177291adf12314e42216aa8e0d1ac3063ff592d33d5be90",
+    "schema/migrations/MIGRATION_HEAD": "6985309011a966380fbca5bb05fd5171f13f1196fa5420e7482632068d2034b1",
+    "docs/decisions/ADR-0010-baseline-policy.md": "958ad9fad4e090b2480dd4575430170a1e40434c6f8b7263e2d42788e53aafd8",
+    "docs/contracts/sqlstate_map.yml": "ac5eb2d214e5b39a959a544ff8236f417ba1e0c7621ed00e1f28d9cd9242976e",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md": "791ab43edaf18a36f7ef55a4bf1906197b985c046903d6837c1ec6572e0e979c",
+    "docs/PHASE3/phase3_task_registry.yml": "b01bd5e63e87064767ac202b3f91634acf0474383a8d87b912455921fff4a4fc",
+    "tasks/TSK-P3-WP-009/meta.yml": "4b21de1b303d2d0ef9f50ed501d15c4cb550f350be3a1576e5e092d8c6c291be",
+    "docs/plans/phase3/TSK-P3-WP-009/PLAN.md": "04217cfbdcb92f8d40bd0019f77b80af12d589eac1686e39e311173695320fa1",
+    "docs/plans/phase3/TSK-P3-WP-009/EXEC_LOG.md": "e2427297b84fd1cdf9358686520c1d75ce4e89846f28dfef1dd2025e7139cd85"
+  },
+  "command_outputs": [
+    {
+      "command": "read schema/migrations/MIGRATION_HEAD => 0218",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect spatial legality relations and function",
+      "status": "recorded"
+    },
+    {
+      "command": "exercise admissible, DNSH-blocked, and doctrine-gap spatial cases in a rollback transaction",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect runtime task index, phase3 task registry, ADR-0010, sqlstate map, and task meta",
+      "status": "recorded"
+    }
+  ],
+  "execution_trace": [
+    "start verifier for TSK-P3-WP-009"
+  ]
+}

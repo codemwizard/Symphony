@@ -16,8 +16,10 @@ import json
 import os
 import re
 import sys
+from datetime import date
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+TODAY_STR = date.today().isoformat()
 PHASE3_ALLOWED_WAVES = {
     "ACT",
     "PRE",
@@ -43,6 +45,8 @@ PHASE3_REQUIRED_MUST_READ = [
     "docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md",
     "docs/PHASE3/PHASE3_INVARIANT_REGISTER.md",
 ]
+
+PHASE3_RUNTIME_WAVES = {"WP", "SUPPORT"}
 
 def die(msg):
     print(f"[FAIL] {msg}", file=sys.stderr)
@@ -73,6 +77,80 @@ def derive_phase3_wave(task_id):
     candidate = parts[2]
     return candidate if candidate in PHASE3_ALLOWED_WAVES else None
 
+def determine_human_task_index(data):
+    phase = str(data.get("phase"))
+    if phase != "3":
+        return None
+    explicit = data.get("human_task_index")
+    if explicit:
+        return explicit
+    runtime_flag = data.get("runtime_task_index")
+    if runtime_flag is None:
+        runtime_flag = data.get("wave") in PHASE3_RUNTIME_WAVES
+    return "docs/tasks/PHASE3_RUNTIME_TASKS.md" if runtime_flag else "docs/tasks/PHASE3_TASKS.md"
+
+def phase3_registry_path(data):
+    return "docs/PHASE3/phase3_task_registry.yml" if str(data.get("phase")) == "3" else None
+
+def baseline_date(data):
+    return str(data.get("baseline_date") or TODAY_STR)
+
+def db_closure_surfaces(data):
+    if data["blast_radius"] not in ["DB_SCHEMA", "DATABASE"]:
+        return []
+    dated = baseline_date(data)
+    surfaces = [
+        "schema/migrations/MIGRATION_HEAD",
+        "schema/baseline.sql",
+        "schema/baselines/current/0001_baseline.sql",
+        "schema/baselines/current/baseline.cutoff",
+        "schema/baselines/current/baseline.meta.json",
+        f"schema/baselines/{dated}/0001_baseline.sql",
+        f"schema/baselines/{dated}/baseline.normalized.sql",
+        f"schema/baselines/{dated}/baseline.cutoff",
+        f"schema/baselines/{dated}/baseline.meta.json",
+        "docs/decisions/ADR-0010-baseline-policy.md",
+        "docs/contracts/sqlstate_map.yml",
+    ]
+    registry = phase3_registry_path(data)
+    human_index = determine_human_task_index(data)
+    if registry:
+        surfaces.append(registry)
+    if human_index:
+        surfaces.append(human_index)
+    return surfaces
+
+def file_table_rows(data, verifier, evidence_path, phase):
+    rows = []
+    if data["blast_radius"] in ["DB_SCHEMA", "DATABASE"]:
+        dated = baseline_date(data)
+        rows.extend([
+            ("schema/migrations/MIGRATION_HEAD", "MODIFY", "Advance canonical migration head when DB task lands"),
+            ("schema/baseline.sql", "MODIFY", "Maintain stable baseline pointer after DB closure work"),
+            ("schema/baselines/current/0001_baseline.sql", "MODIFY", "Refresh current baseline snapshot"),
+            ("schema/baselines/current/baseline.cutoff", "MODIFY", "Refresh current baseline cutoff metadata"),
+            ("schema/baselines/current/baseline.meta.json", "MODIFY", "Refresh current baseline metadata"),
+            (f"schema/baselines/{dated}/0001_baseline.sql", "MODIFY", "Record dated baseline snapshot"),
+            (f"schema/baselines/{dated}/baseline.normalized.sql", "MODIFY", "Record dated normalized baseline snapshot"),
+            (f"schema/baselines/{dated}/baseline.cutoff", "MODIFY", "Record dated baseline cutoff"),
+            (f"schema/baselines/{dated}/baseline.meta.json", "MODIFY", "Record dated baseline metadata"),
+            ("docs/decisions/ADR-0010-baseline-policy.md", "MODIFY", "Document baseline-governance closure"),
+            ("docs/contracts/sqlstate_map.yml", "MODIFY", "Register any new SQLSTATE codes introduced by the DB task"),
+        ])
+    registry = phase3_registry_path(data)
+    human_index = determine_human_task_index(data)
+    if registry:
+        rows.append((registry, "MODIFY", "Register task in Phase 3 registry"))
+    if human_index:
+        rows.append((human_index, "MODIFY", "Register task in the human Phase 3 task index"))
+    rows.extend([
+        (verifier, "CREATE", "Verifier for this task"),
+        (evidence_path, "CREATE", "Output artifact"),
+        (f"tasks/{data['task_id']}/meta.yml", "MODIFY", "Update status upon success"),
+        (f"docs/plans/phase{phase}/{data['task_id']}/EXEC_LOG.md", "MODIFY", "Append completion data"),
+    ])
+    return rows
+
 def normalize_phase3_config(data):
     task_id = data["task_id"]
     if not PHASE3_TASK_ID_RE.match(task_id):
@@ -91,12 +169,38 @@ def normalize_phase3_config(data):
     data["is_regulated"] = True
     return data
 
+def require_db_task_inputs(data):
+    if data["blast_radius"] not in ["DB_SCHEMA", "DATABASE"]:
+        return
+    if "migration_dependencies" not in data:
+        die(
+            "DB tasks must supply explicit 'migration_dependencies' in the JSON config. "
+            "Do not rely on generator placeholders."
+        )
+    deps = data["migration_dependencies"]
+    if not isinstance(deps, dict):
+        die("'migration_dependencies' must be a dict with required_migrations, table_dependencies, and verification_step.")
+    required = deps.get("required_migrations")
+    tables = deps.get("table_dependencies")
+    step = deps.get("verification_step")
+    if not required or not isinstance(required, list):
+        die("DB tasks must provide a non-empty migration_dependencies.required_migrations list.")
+    if not tables or not isinstance(tables, list):
+        die("DB tasks must provide a non-empty migration_dependencies.table_dependencies list.")
+    if not step or not isinstance(step, str):
+        die("DB tasks must provide migration_dependencies.verification_step.")
+
+def yaml_list_block(items, indent_spaces):
+    indent = " " * indent_spaces
+    return "\n".join(f"{indent}- {item}" for item in items)
+
 def generate_plan(data, plan_dir):
     task_id = data["task_id"]
     title = data["title"]
     is_regulated = data.get("is_regulated", True)
     blast_radius = data["blast_radius"]
     is_db_task = blast_radius in ["DB_SCHEMA", "DATABASE"]
+    dated = baseline_date(data)
     
     regulated_section = ""
     if is_regulated:
@@ -117,7 +221,7 @@ def generate_plan(data, plan_dir):
 ## Database Connection Context (CRITICAL)
 
 - **Requirement**: All database interactions in verification scripts MUST use the `DATABASE_URL` environment variable.
-- **Example Export**: `export DATABASE_URL="postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"`
+- **Example Export**: `set -a && source infra/docker/.env && set +a && export DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${HOST_POSTGRES_PORT}/symphony"`
 - **Docker Context**: The container is `symphony-postgres`.
 
 ---
@@ -140,15 +244,18 @@ def generate_plan(data, plan_dir):
     
     rebaseline_step = ""
     if is_db_task:
-        rebaseline_step = """
+        rebaseline_step = f"""
 ### Step 4: Rebaseline (CRITICAL for DB_SCHEMA tasks)
 **What:** Regenerate the physical baseline and satisfy ADR-0010 governance.
 **How:**
-1. Connect to DB: `export DATABASE_URL="postgresql://symphony_admin:symphony_pass@localhost:55432/symphony"`
-2. Regenerate: `bash scripts/db/generate_baseline_snapshot.sh`
-3. Audit Log: Append an entry to `docs/decisions/ADR-0010-baseline-policy.md` citing the new MIGRATION_HEAD and the specific changes made.
+1. Connect to DB: `set -a && source infra/docker/.env && set +a && export DATABASE_URL="postgres://${{POSTGRES_USER}}:${{POSTGRES_PASSWORD}}@localhost:${{HOST_POSTGRES_PORT}}/symphony"`
+2. Regenerate: `bash scripts/db/generate_baseline_snapshot.sh {dated}`
+3. Register any new SQLSTATE codes in `docs/contracts/sqlstate_map.yml`.
+4. Audit Log: Append an entry to `docs/decisions/ADR-0010-baseline-policy.md` citing the new MIGRATION_HEAD and the specific changes made.
 **Done when:** `scripts/db/check_baseline_drift.sh` exits 0.
 """
+
+    file_rows = "\n".join([f"| `{path}` | {action} | {reason} |" for path, action, reason in file_table_rows(data, verifier, evidence_path, data["phase"])])
 
     plan_content = f"""# {task_id} PLAN — {title}
 
@@ -184,10 +291,7 @@ canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 | File | Action | Reason |
 |------|--------|--------|
-| `{verifier}` | CREATE | Verifier for this task |
-| `{evidence_path}` | CREATE | Output artifact |
-| `tasks/{task_id}/meta.yml` | MODIFY | Update status upon success |
-| `docs/plans/phase{data["phase"]}/{task_id}/EXEC_LOG.md` | MODIFY | Append completion data |
+{file_rows}
 
 ---
 
@@ -222,7 +326,7 @@ canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 ```bash
 {runner} {verifier} > {evidence_path}
 ```
-**Done when:** Commands exit 0 and evidence format complies.
+**Done when:** Commands exit 0, evidence format complies, and only then may task status move to `completed`.
 {rebaseline_step}
 
 ---
@@ -233,8 +337,11 @@ canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 # 1. Task-specific verifier
 {runner} {verifier}
 
-# 2. Local parity check
-RUN_PHASE{data["phase"]}_GATES=1 bash scripts/dev/pre_ci.sh
+# 2. Evidence validation
+python3 scripts/audit/validate_evidence.py --task {task_id} --evidence {evidence_path}
+
+# 3. Task-pack readiness
+bash scripts/audit/verify_task_pack_readiness.sh --task {task_id}
 ```
 """
     plan_path = os.path.join(plan_dir, "PLAN.md")
@@ -252,6 +359,8 @@ def generate_exec_log(data, plan_dir):
 
 > **Append-only log.** Do not delete or modify existing entries.
 
+Plan: docs/plans/phase{data["phase"]}/{task_id}/PLAN.md
+
 **failure_signature**: PHASE{data["phase"]}.STRICT.{task_id}.PROOF_FAIL
 **origin_task_id**: {task_id}
 **repro_command**: {runner} {verifier}
@@ -268,6 +377,10 @@ def generate_exec_log(data, plan_dir):
 {runner} {verifier} > {evidence_path}
 ```
 **final_status**: pending
+
+## final summary
+
+Task pack generated. Implementation work has not started. `status: ready` denotes task-packed state, not completed proof.
 """
     log_path = os.path.join(plan_dir, "EXEC_LOG.md")
     with open(log_path, "w") as f:
@@ -283,7 +396,20 @@ def generate_meta(data, task_dir):
     ids = [w.split("]")[0] + "]" for w in data["work"] if "]" in w]
     id_str = " ".join(ids)
     evidence_path = get_evidence_path(data["evidence"])
-    deliverable_files = "\n".join([f"  - {v}" for v in data["verifiers"]] + [f"  - {evidence_path}", f"  - docs/plans/phase{data['phase']}/{task_id}/PLAN.md", f"  - docs/plans/phase{data['phase']}/{task_id}/EXEC_LOG.md"])
+    db_surfaces = db_closure_surfaces(data)
+    registry = phase3_registry_path(data)
+    human_index = determine_human_task_index(data)
+    deliverable_list = list(data.get("deliverable_files", []))
+    for path in db_surfaces:
+        if path not in deliverable_list:
+            deliverable_list.append(path)
+    for verifier_path in data["verifiers"]:
+        if verifier_path not in deliverable_list:
+            deliverable_list.append(verifier_path)
+    for path in [evidence_path, f"docs/plans/phase{data['phase']}/{task_id}/PLAN.md", f"docs/plans/phase{data['phase']}/{task_id}/EXEC_LOG.md"]:
+        if path not in deliverable_list:
+            deliverable_list.append(path)
+    deliverable_files = "\n".join([f"  - {item}" for item in deliverable_list])
     
     blast_radius = data["blast_radius"]
     is_regulated = data.get("is_regulated", True)
@@ -307,22 +433,25 @@ def generate_meta(data, task_dir):
 
     db_section = ""
     if is_db_task:
+        deps = data["migration_dependencies"]
+        required_lines = yaml_list_block(deps["required_migrations"], 4)
+        table_lines = yaml_list_block(deps["table_dependencies"], 4)
         db_section = f"""
 database_connection:
   enabled: true
   connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
-  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:${{HOST_POSTGRES_PORT}}/symphony"
   container_name: symphony-postgres
   database_url_env_var: DATABASE_URL
-  setup_command: "export DATABASE_URL=\\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\\""
+  setup_command: "set -a && source infra/docker/.env && set +a && export DATABASE_URL=\\"postgres://${{POSTGRES_USER}}:${{POSTGRES_PASSWORD}}@localhost:${{HOST_POSTGRES_PORT}}/symphony\\""
 
 migration_dependencies:
   enabled: true
   required_migrations:
-    - 0144: "Wave 5 remediation baseline"
+{required_lines}
   table_dependencies:
-    - schema_migrations: "must track migrations"
-  verification_step: "Confirm all referenced tables exist in earlier migrations"
+{table_lines}
+  verification_step: "{deps['verification_step']}"
 """
 
     must_include_lines = ""
@@ -334,12 +463,37 @@ migration_dependencies:
     verifier = data["verifiers"][0]
     runner = get_runner(verifier)
 
+    touches_list = list(data.get("touches", []))
+    for path in db_surfaces:
+        if path not in touches_list:
+            touches_list.append(path)
+    for path in [verifier, evidence_path, f"tasks/{task_id}/meta.yml", f"docs/plans/phase{data['phase']}/{task_id}/PLAN.md", f"docs/plans/phase{data['phase']}/{task_id}/EXEC_LOG.md"]:
+        if path not in touches_list:
+            touches_list.append(path)
+    touches_block = "\n".join([f"  - {item}" for item in touches_list])
+
+    regulated_paths = list(data.get("regulated_paths", []))
+    if not regulated_paths:
+        regulated_paths = [verifier]
+    regulated_paths_block = "\n".join([f"    - {item}" for item in regulated_paths])
+
+    verification_lines = [
+        f"  - '{id_str} test -x {verifier} && {runner} {verifier} > {evidence_path} || exit 1'"
+    ]
+    if is_db_task:
+        verification_lines.append("  - 'bash scripts/db/lint_migrations.sh || exit 1'")
+    verification_lines.extend([
+        f"  - 'python3 scripts/audit/validate_evidence.py --task {task_id} --evidence {evidence_path} || exit 1'",
+        f"  - 'bash scripts/audit/verify_task_pack_readiness.sh --task {task_id} || exit 1'",
+    ])
+    verification_block = "\n".join(verification_lines)
+
     meta_content = f"""schema_version: 1
 phase: '{data["phase"]}'
 {wave_line}task_id: {task_id}
 title: "{data["title"]}"
 owner_role: {data["owner"]}
-status: planned
+status: ready
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: {blast_radius}
@@ -354,7 +508,7 @@ regulated_surface_compliance:
   approval_workflow: stage_a_stage_b
   stage_a_required_before_edit: true
   regulated_paths:
-    - {verifier}
+{regulated_paths_block}
   must_read:
     - docs/operations/REGULATED_SURFACE_PATHS.yml
     - docs/operations/approval_metadata.schema.json
@@ -383,11 +537,7 @@ proof_limitations:
   - "Does not prove runtime API integration (deferred)."
 
 touches:
-  - {verifier}
-  - {evidence_path}
-  - tasks/{task_id}/meta.yml
-  - docs/plans/phase{data["phase"]}/{task_id}/PLAN.md
-  - docs/plans/phase{data["phase"]}/{task_id}/EXEC_LOG.md
+{touches_block}
 
 work:
 {work_lines}
@@ -406,7 +556,7 @@ positive_tests:
     required: true
 
 verification:
-  - '# {id_str} test -x {verifier} && {runner} {verifier} > {evidence_path} || exit 1'
+{verification_block}
 
 evidence:
   - path: {evidence_path}
@@ -464,6 +614,7 @@ def main():
     require_field(data, "acceptance_criteria")
     require_field(data, "verifiers")
     require_field(data, "evidence")
+    require_db_task_inputs(data)
 
     if len(data["work"]) != len(data["acceptance_criteria"]):
         die("Proof graph error: 'work' items and 'acceptance_criteria' must be mapped 1:1 via IDs.")

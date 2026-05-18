@@ -1,0 +1,44 @@
+{
+  "task_id": "TSK-P3-SUPPORT-DB-003",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-18T07:24:27Z",
+  "status": "PASS",
+  "checks": {
+    "silent_fallbacks_removed": {
+      "status": "PASS",
+      "detail": "representative DB verifiers no longer swallow DB probe failures"
+    },
+    "safe_sql_present": {
+      "status": "PASS",
+      "detail": "representative DB verifiers define fail-closed safe_sql helpers"
+    },
+    "negative_probe_failure": {
+      "status": "PASS",
+      "detail": "representative verifier fails closed with explicit DB_PROBE_FAILED diagnostics"
+    },
+    "positive_probe_success": {
+      "status": "PASS",
+      "detail": "representative verifier still passes against the configured proof database"
+    }
+  },
+  "observed_paths": [
+    "scripts/db/verify_p3_typed_dependency_graph.sh",
+    "scripts/db/verify_p3_recursive_legitimacy_engine.sh",
+    "scripts/db/verify_p3_policy_authority_lineage.sh",
+    "scripts/db/verify_p3_authority_scope_engine.sh",
+    "scripts/db/verify_p3_conflict_of_interest_enforcement.sh",
+    "scripts/db/verify_p3_spatial_legality_dnsh_gates.sh",
+    "scripts/db/verify_p3_contradiction_detection.sh",
+    "scripts/db/verify_tsk_p3_support_db_003_fail_closed_db_probes.sh"
+  ],
+  "observed_hashes": {
+    "scripts/db/verify_p3_typed_dependency_graph.sh": "d992c93e92f0ae91b7dd7f3b65bce1447ea93c330635e2f61e3cf2a50459564d",
+    "scripts/db/verify_p3_recursive_legitimacy_engine.sh": "5844b341114ad61e1afe7758095ff0974d105fb4edc6efc61d180985515f2375",
+    "scripts/db/verify_p3_policy_authority_lineage.sh": "0d73c8c0b90e13e6f173d91533e715d0ab9255a3c554aefcd0fa3d04156e2b03",
+    "scripts/db/verify_p3_authority_scope_engine.sh": "526e49f10c32d33d6f8896f6eeaa047534babdab94676e6350ac2e57270430de",
+    "scripts/db/verify_p3_conflict_of_interest_enforcement.sh": "6d2aa0f6b08184037c42e5bb9b5622c2283e730820b827a60af77816e08560ef",
+    "scripts/db/verify_p3_spatial_legality_dnsh_gates.sh": "d740e1b393671bdf3d74e5f3fdf11879a5a1a417e4ea0226a7020d545c0e4fad",
+    "scripts/db/verify_p3_contradiction_detection.sh": "8a221c68fcbdcb06ab415122fe3db46b861f165f3281aa786cf49dc898f3d06e",
+    "scripts/db/verify_tsk_p3_support_db_003_fail_closed_db_probes.sh": "d45cc987fcb046e4a275c1ac44730c0b78f1377af6c2daf3772a6b8f6e1c0ea1"
+  }
+}

@@ -1,0 +1,134 @@
+schema_version: 1
+phase: '3'
+wave: 'GOV'
+task_id: TSK-P3-GOV-004
+title: "Repair DB task-pack generator and handoff scope for baseline, ADR, migration-head, and runtime-index closure"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: GOVERNANCE
+depends_on: []
+invariants: []
+
+deliverable_files:
+  - scripts/agent/generate_task_pack.py
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/AI_AGENT_PHASE_PLANNING_TO_TASK_HANDOFF_GUIDE.md
+  - docs/tasks/PHASE3_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/phase3_task_dag.yml
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - scripts/agent/verify_tsk_p3_gov_004_db_task_scope_generator.sh
+  - evidence/phase3/tsk_p3_gov_004_db_task_scope_generator.json
+  - docs/plans/phase3/TSK-P3-GOV-004/PLAN.md
+  - docs/plans/phase3/TSK-P3-GOV-004/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/agent/generate_task_pack.py
+    - docs/operations/TASK_CREATION_PROCESS.md
+    - docs/operations/AI_AGENT_PHASE_PLANNING_TO_TASK_HANDOFF_GUIDE.md
+    - scripts/agent/verify_tsk_p3_gov_004_db_task_scope_generator.sh
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON correctly demonstrates enforcement via state evaluation."
+proof_limitations:
+  - "Does not prove runtime API integration (deferred)."
+
+touches:
+  - scripts/agent/generate_task_pack.py
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/AI_AGENT_PHASE_PLANNING_TO_TASK_HANDOFF_GUIDE.md
+  - docs/tasks/PHASE3_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/phase3_task_dag.yml
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - scripts/agent/verify_tsk_p3_gov_004_db_task_scope_generator.sh
+  - evidence/phase3/tsk_p3_gov_004_db_task_scope_generator.json
+  - tasks/TSK-P3-GOV-004/meta.yml
+  - docs/plans/phase3/TSK-P3-GOV-004/PLAN.md
+  - docs/plans/phase3/TSK-P3-GOV-004/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_gov_004_work_01] Update the DB-task generation path so generated task packs include the canonical rebaseline closure surfaces required by the Phase 3 DB implementation plans, including schema migration head, stable baseline pointers, dated baseline outputs, ADR-0010 governance logging, and the correct human runtime task index when applicable."
+  - "[ID tsk_p3_gov_004_work_02] Update the documented planning-to-task handoff rules so DB task packs distinguish between implementation deliverables and mandatory governance/runtime-index closure surfaces without relying on post-generation manual repair."
+  - "[ID tsk_p3_gov_004_work_03] Add a deterministic verifier that generates a representative DB task pack in a temporary sandbox and proves the emitted scope includes the canonical DB baseline, migration-head, ADR, and runtime-index surfaces required for resumed implementation."
+
+acceptance_criteria:
+  - "[ID tsk_p3_gov_004_work_01] A generated Phase 3 DB task pack includes MIGRATION_HEAD, stable baseline files, dated baseline outputs, ADR-0010, and the human runtime task index in its declared scope when the plan requires rebaseline closure."
+  - "[ID tsk_p3_gov_004_work_02] The task-creation and planning-to-task process docs explicitly describe the DB rebaseline/governance closure surfaces as mandatory scope for DB task packs rather than optional manual follow-up."
+  - "[ID tsk_p3_gov_004_work_03] The verifier fails if any canonical DB scope surface is omitted from the generated meta or plan output and emits evidence proving the repaired generation path."
+
+negative_tests:
+  - id: TSK-P3-GOV-004-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: A generated Phase 3 DB task pack includes MIGRATION_HEAD, stable baseline files, dated baseline outputs, ADR-0010, and the human runtime task index in its declared scope when the plan requires rebaseline closure."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-GOV-004-P1
+    description: "Verify that execution exits 0 on success path for: A generated Phase 3 DB task pack includes MIGRATION_HEAD, stable baseline files, dated baseline outputs, ADR-0010, and the human runtime task index in its declared scope when the plan requires rebaseline closure."
+    required: true
+
+verification:
+  - '[ID tsk_p3_gov_004_work_01] [ID tsk_p3_gov_004_work_02] [ID tsk_p3_gov_004_work_03] test -x scripts/agent/verify_tsk_p3_gov_004_db_task_scope_generator.sh && bash scripts/agent/verify_tsk_p3_gov_004_db_task_scope_generator.sh > evidence/phase3/tsk_p3_gov_004_db_task_scope_generator.json || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-GOV-004 --evidence evidence/phase3/tsk_p3_gov_004_db_task_scope_generator.json || exit 1'
+  - 'bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P3-GOV-004 || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_gov_004_db_task_scope_generator.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/AI_AGENT_PHASE_PLANNING_TO_TASK_HANDOFF_GUIDE.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+  - docs/plans/phase3/REM-2026-05-17_phase3_task_pack_stubbed_verification_and_status_drift/PLAN.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+implementation_plan: docs/plans/phase3/TSK-P3-GOV-004/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-GOV-004/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py'
+client: cursor
+assigned_agent: architect
+model: claude-sonnet-4-20250514

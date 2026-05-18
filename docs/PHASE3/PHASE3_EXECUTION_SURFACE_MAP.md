@@ -48,8 +48,8 @@ Doctrine-gap outcomes: `IMPLEMENT`, `DEFER`, `ESCALATE-DOCTRINE`,
 ```yaml
 surface_id: P3-SURF-000
 title: Governance Planning Control Surface
-source_invariants: [INV-301, INV-302, INV-303, INV-304, INV-305, INV-306, INV-307, INV-308, INV-309, INV-310]
-source_contract_rows: [P3-001, P3-002, P3-003, P3-004, P3-005, P3-006, P3-007, P3-008, P3-009]
+source_invariants: [INV-301, INV-302, INV-303, INV-304, INV-305, INV-306, INV-307, INV-308, INV-309, INV-310, INV-311, INV-312, INV-313]
+source_contract_rows: [P3-001, P3-002, P3-003, P3-004, P3-005, P3-006, P3-007, P3-008, P3-009, P3-010, P3-011]
 constitutional_owner: docs/operations/IMPLEMENTATION_PLAN_CREATION_PROCESS.md
 replay_owner: docs/operations/PHASE_EXECUTION_ENVELOPE.md
 verifier_owner: future planning consistency verifier only
@@ -323,8 +323,8 @@ doctrine_gap_status: IMPLEMENT
 ```yaml
 surface_id: P3-SURF-011
 title: Verifier And CI Closure Surface
-source_invariants: [INV-301, INV-302, INV-303, INV-304, INV-305, INV-306, INV-307, INV-308, INV-309, INV-310]
-source_contract_rows: [P3-009]
+source_invariants: [INV-301, INV-302, INV-303, INV-304, INV-305, INV-306, INV-307, INV-308, INV-309, INV-310, INV-311, INV-312, INV-313]
+source_contract_rows: [P3-009, P3-010, P3-011]
 constitutional_owner: docs/constitutional/TASK_GENERATION_CONSTITUTION.md
 replay_owner: docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
 verifier_owner: future Phase 3 verifier suite
@@ -340,6 +340,56 @@ determinism_class: deterministic
 allowed_implementation_surfaces: [verifier, CI, documentation, deterministic interfaces]
 prohibited_semantics: [doctrine creation by verifier, evidence emission before execution legality, invariant promotion without evidence]
 future_phase_routing: none
+doctrine_gap_status: IMPLEMENT
+```
+
+### P3-SURF-012 - Runtime And Verifier Segregation Surface
+
+```yaml
+surface_id: P3-SURF-012
+title: Runtime And Verifier Segregation Surface
+source_invariants: [INV-308]
+source_contract_rows: [P3-009]
+constitutional_owner: docs/constitutional/TASK_GENERATION_CONSTITUTION.md
+replay_owner: docs/constitutional/EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md
+verifier_owner: future Phase 3 runtime/verifier segregation verifier suite
+persistence_owner: future Phase 3 verifier-boundary manifests and exchange contracts
+phase_owner: PHASE-3
+override_authority: docs/operations/PHASE_EXECUTION_ENVELOPE.md
+execution_surface_type: trust-boundary-segregation
+execution_authority_class: verifier-only
+replay_criticality: operational-exhaust
+state_mutability: derived-cache
+ontology_class: projection
+determinism_class: deterministic
+allowed_implementation_surfaces: [verifier, CI, documentation, deterministic interfaces, fixtures]
+prohibited_semantics: [runtime-authored verifier proofs, shared runtime/verifier trust contexts, verifier mutation of runtime lineage truth, future-phase external disclosure packaging]
+future_phase_routing: external replay package productization routes to Phase 5 or Phase 8D
+doctrine_gap_status: IMPLEMENT
+```
+
+### P3-SURF-013 - Uncertainty And Estimation Semantics Surface
+
+```yaml
+surface_id: P3-SURF-013
+title: Uncertainty And Estimation Semantics Surface
+source_invariants: [INV-311, INV-312]
+source_contract_rows: [P3-010]
+constitutional_owner: docs/constitutional/UNCERTAINTY_AND_ESTIMATION_SEMANTICS_DOCTRINE.md
+replay_owner: docs/constitutional/LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md
+verifier_owner: scripts/audit/verify_p3_uncertainty_semantics.sh
+persistence_owner: future Phase 3 uncertainty records
+phase_owner: PHASE-3
+override_authority: docs/constitutional/AUTHORITY_TRANSFER_OWNERSHIP_SEMANTICS_DOCTRINE.md
+execution_surface_type: uncertainty-semantics
+execution_authority_class: authoritative
+replay_criticality: replay-derived
+state_mutability: supersedable-projection
+ontology_class: admissibility-projection
+determinism_class: deterministic
+allowed_implementation_surfaces: [runtime, database, migration, security, deterministic interfaces, evidence/replay, observability, verifier, documentation]
+prohibited_semantics: [methodology-specific propagation execution, industrial emissions ontology, external disclosure packaging, dashboard display semantics]
+future_phase_routing: methodology-specific uncertainty execution routes to Phase 5; external disclosure packaging routes to Phase 8D; finance uncertainty provenance routes to Phase 8E
 doctrine_gap_status: IMPLEMENT
 ```
 

@@ -1,0 +1,114 @@
+{
+  "task_id": "TSK-P3-WP-008",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-18T06:05:21Z",
+  "status": "PASS",
+  "pass": true,
+  "checks": {
+    "migration_head_forward_only": {
+      "status": "PASS",
+      "detail": "MIGRATION_HEAD=0218 (>=0216)"
+    },
+    "relationship_table_exists": {
+      "status": "PASS",
+      "detail": "public.p3_conflict_relationships exists"
+    },
+    "independence_table_exists": {
+      "status": "PASS",
+      "detail": "public.p3_verifier_independence_records exists"
+    },
+    "manifest_exists": {
+      "status": "PASS",
+      "detail": "public.p3_verifier_independence_manifest exists"
+    },
+    "declare_function_exists": {
+      "status": "PASS",
+      "detail": "p3_declare_conflict_relationship exists"
+    },
+    "assert_function_exists": {
+      "status": "PASS",
+      "detail": "p3_assert_verifier_independence exists"
+    },
+    "relationship_kind_enum": {
+      "status": "PASS",
+      "detail": "p3_conflict_relationship_kind has 3 values"
+    },
+    "independence_state_enum": {
+      "status": "PASS",
+      "detail": "p3_verifier_independence_state has 2 values"
+    },
+    "coi_enforcement": {
+      "status": "PASS",
+      "detail": "submitter/verifier separation is anchored to persisted relationship records"
+    },
+    "coi_negative": {
+      "status": "PASS",
+      "detail": "same-actor and declared-conflict verification paths fail closed with GF001"
+    },
+    "runtime_index_registered": {
+      "status": "PASS",
+      "detail": "PHASE3 runtime index contains TSK-P3-WP-008"
+    },
+    "phase3_registry_registered": {
+      "status": "PASS",
+      "detail": "phase3_task_registry.yml contains TSK-P3-WP-008"
+    },
+    "adr_rebaseline_recorded": {
+      "status": "PASS",
+      "detail": "ADR-0010 references MIGRATION_HEAD 0216"
+    },
+    "sqlstate_registered": {
+      "status": "PASS",
+      "detail": "sqlstate map contains P3015 and COI negative tests still fail closed with GF001"
+    },
+    "meta_completed": {
+      "status": "PASS",
+      "detail": "task meta status is completed"
+    }
+  },
+  "observed_paths": [
+    "schema/migrations/0216_p3_conflict_of_interest_enforcement.sql",
+    "scripts/db/verify_p3_conflict_of_interest_enforcement.sh",
+    "schema/migrations/MIGRATION_HEAD",
+    "docs/decisions/ADR-0010-baseline-policy.md",
+    "docs/contracts/sqlstate_map.yml",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md",
+    "docs/PHASE3/phase3_task_registry.yml",
+    "tasks/TSK-P3-WP-008/meta.yml",
+    "docs/plans/phase3/TSK-P3-WP-008/PLAN.md",
+    "docs/plans/phase3/TSK-P3-WP-008/EXEC_LOG.md"
+  ],
+  "observed_hashes": {
+    "schema/migrations/0216_p3_conflict_of_interest_enforcement.sql": "347078c400215ea2a245bd2caa3697a9db496098cf5eafd510cdf8407a733634",
+    "scripts/db/verify_p3_conflict_of_interest_enforcement.sh": "82bb9b72b94d3ca20ba7e0e1cda2a5e0254c92dd411960b0cf0dfc913f034e32",
+    "schema/migrations/MIGRATION_HEAD": "6985309011a966380fbca5bb05fd5171f13f1196fa5420e7482632068d2034b1",
+    "docs/decisions/ADR-0010-baseline-policy.md": "958ad9fad4e090b2480dd4575430170a1e40434c6f8b7263e2d42788e53aafd8",
+    "docs/contracts/sqlstate_map.yml": "ac5eb2d214e5b39a959a544ff8236f417ba1e0c7621ed00e1f28d9cd9242976e",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md": "791ab43edaf18a36f7ef55a4bf1906197b985c046903d6837c1ec6572e0e979c",
+    "docs/PHASE3/phase3_task_registry.yml": "b01bd5e63e87064767ac202b3f91634acf0474383a8d87b912455921fff4a4fc",
+    "tasks/TSK-P3-WP-008/meta.yml": "109095676c3e9a513d82c3931c0e31388614d78ddc629d10137c7e6970744f91",
+    "docs/plans/phase3/TSK-P3-WP-008/PLAN.md": "bfb2b38b8f0668c0e2366665621c46a381df1b8f79b7b6e0295883ead27a0b87",
+    "docs/plans/phase3/TSK-P3-WP-008/EXEC_LOG.md": "fd570b31d18a7396bc0cf7ac89c86cac310de49c13d088d7aaa72c78cb325594"
+  },
+  "command_outputs": [
+    {
+      "command": "read schema/migrations/MIGRATION_HEAD => 0218",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect COI relations and functions",
+      "status": "recorded"
+    },
+    {
+      "command": "exercise positive verifier-independence path and GF001 conflict rejections in a rollback transaction",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect runtime task index, phase3 task registry, ADR-0010, sqlstate map, and task meta",
+      "status": "recorded"
+    }
+  ],
+  "execution_trace": [
+    "start verifier for TSK-P3-WP-008"
+  ]
+}

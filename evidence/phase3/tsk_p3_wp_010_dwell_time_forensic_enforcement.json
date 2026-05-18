@@ -1,0 +1,106 @@
+{
+  "task_id": "TSK-P3-WP-010",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-18T06:05:23Z",
+  "status": "PASS",
+  "pass": true,
+  "checks": {
+    "migration_head_forward_only": {
+      "status": "PASS",
+      "detail": "MIGRATION_HEAD=0218 (>=0218)"
+    },
+    "policy_table_exists": {
+      "status": "PASS",
+      "detail": "public.p3_dwell_time_policy_inputs exists"
+    },
+    "finding_table_exists": {
+      "status": "PASS",
+      "detail": "public.p3_dwell_time_findings exists"
+    },
+    "manifest_exists": {
+      "status": "PASS",
+      "detail": "public.p3_dwell_time_manifest exists"
+    },
+    "record_function_exists": {
+      "status": "PASS",
+      "detail": "p3_record_dwell_time_finding exists"
+    },
+    "finding_state_enum": {
+      "status": "PASS",
+      "detail": "p3_dwell_finding_state has 3 values"
+    },
+    "dwell_time_enforcement": {
+      "status": "PASS",
+      "detail": "dwell-time findings are replay-derived from declared policy inputs"
+    },
+    "dwell_negative": {
+      "status": "PASS",
+      "detail": "invalid temporal inputs fail closed with P3012 and threshold breaches are recorded as blocked"
+    },
+    "runtime_index_registered": {
+      "status": "PASS",
+      "detail": "PHASE3 runtime index contains TSK-P3-WP-010"
+    },
+    "phase3_registry_registered": {
+      "status": "PASS",
+      "detail": "phase3_task_registry.yml contains TSK-P3-WP-010"
+    },
+    "adr_rebaseline_recorded": {
+      "status": "PASS",
+      "detail": "ADR-0010 references MIGRATION_HEAD 0218"
+    },
+    "sqlstate_registered": {
+      "status": "PASS",
+      "detail": "sqlstate map contains P3012 and P3017"
+    },
+    "meta_completed": {
+      "status": "PASS",
+      "detail": "task meta status is completed"
+    }
+  },
+  "observed_paths": [
+    "schema/migrations/0218_p3_dwell_time_forensic_enforcement.sql",
+    "scripts/audit/verify_p3_dwell_time_forensic_enforcement.sh",
+    "schema/migrations/MIGRATION_HEAD",
+    "docs/decisions/ADR-0010-baseline-policy.md",
+    "docs/contracts/sqlstate_map.yml",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md",
+    "docs/PHASE3/phase3_task_registry.yml",
+    "tasks/TSK-P3-WP-010/meta.yml",
+    "docs/plans/phase3/TSK-P3-WP-010/PLAN.md",
+    "docs/plans/phase3/TSK-P3-WP-010/EXEC_LOG.md"
+  ],
+  "observed_hashes": {
+    "schema/migrations/0218_p3_dwell_time_forensic_enforcement.sql": "811e315e7a7e3a75c83a50d3b19b96eec0e1b75f12b19fd0f668bebfbf8e318a",
+    "scripts/audit/verify_p3_dwell_time_forensic_enforcement.sh": "85e2e38ce86913758f76fb65b3d970e80a934a1f1177910b47adc7d221262875",
+    "schema/migrations/MIGRATION_HEAD": "6985309011a966380fbca5bb05fd5171f13f1196fa5420e7482632068d2034b1",
+    "docs/decisions/ADR-0010-baseline-policy.md": "958ad9fad4e090b2480dd4575430170a1e40434c6f8b7263e2d42788e53aafd8",
+    "docs/contracts/sqlstate_map.yml": "ac5eb2d214e5b39a959a544ff8236f417ba1e0c7621ed00e1f28d9cd9242976e",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md": "791ab43edaf18a36f7ef55a4bf1906197b985c046903d6837c1ec6572e0e979c",
+    "docs/PHASE3/phase3_task_registry.yml": "b01bd5e63e87064767ac202b3f91634acf0474383a8d87b912455921fff4a4fc",
+    "tasks/TSK-P3-WP-010/meta.yml": "f62ebc4a9d259b0341291a8f6f898fe7b46d2614bd40da234ec0d23eb0554a2c",
+    "docs/plans/phase3/TSK-P3-WP-010/PLAN.md": "b3e78fd2555889e549a157d85e963cc5f16c1928c521921dd6a4a8f9df34735b",
+    "docs/plans/phase3/TSK-P3-WP-010/EXEC_LOG.md": "13da173ece75d7a3e8c08c809076f1b432f0a2c17f648f2175998886644d4172"
+  },
+  "command_outputs": [
+    {
+      "command": "read schema/migrations/MIGRATION_HEAD => 0218",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect dwell-time relations and function",
+      "status": "recorded"
+    },
+    {
+      "command": "exercise within-window, blocked, and invalid temporal-input dwell cases in a rollback transaction",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect runtime task index, phase3 task registry, ADR-0010, sqlstate map, and task meta",
+      "status": "recorded"
+    }
+  ],
+  "execution_trace": [
+    "start verifier for TSK-P3-WP-010"
+  ]
+}

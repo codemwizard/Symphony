@@ -3,6 +3,8 @@
 # - read-only planning and execution index for Phase 3 task families
 # - task_type vocabulary: IMPL, VERIFY, CERT, GOV, PERSIST, API, DOC, OPS
 # - ci_tier vocabulary: T0, T1, T2, T3, T4
+# - status semantics: `tasks-created` means task-packed only, not implemented,
+#   `resume-ready`, or evidence-complete
 # - schema_examples demonstrate the expected shape; tasks contains the live inventory
 
 version: 1
@@ -63,7 +65,7 @@ schema_examples:
     ci_tier: T4
     ci_tier_status: proposed
     source: tasks/TSK-P3-PRE-009/meta.yml
-task_count: 28
+task_count: 53
 tasks:
   - task_id: TSK-P3-ACT-001
     title: Build the missing Phase 3 lifecycle artifact set
@@ -193,6 +195,14 @@ tasks:
     ci_tier_status: proposed
     status: completed
     source: tasks/TSK-P3-GOV-003/meta.yml
+  - task_id: TSK-P3-GOV-004
+    title: Repair DB task-pack generator and handoff scope for baseline, ADR, migration-head, and runtime-index closure
+    wave: GOV
+    task_type: GOV
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-GOV-004/meta.yml
   - task_id: TSK-P3-PRE-001
     title: Verify wave8_crypto extension operational status for Phase 3 entry
     wave: PRE
@@ -207,7 +217,7 @@ tasks:
     task_type: GOV
     ci_tier: T1
     ci_tier_status: proposed
-    status: planned
+    status: completed
     source: tasks/TSK-P3-PRE-002/meta.yml
   - task_id: TSK-P3-PRE-003
     title: Formalize Task ID Nomenclature Standard
@@ -215,7 +225,7 @@ tasks:
     task_type: GOV
     ci_tier: T1
     ci_tier_status: proposed
-    status: planned
+    status: completed
     source: tasks/TSK-P3-PRE-003/meta.yml
   - task_id: TSK-P3-PRE-004
     title: Adapt meta.yml Template for Phase 3
@@ -223,7 +233,7 @@ tasks:
     task_type: GOV
     ci_tier: T1
     ci_tier_status: proposed
-    status: planned
+    status: completed
     source: tasks/TSK-P3-PRE-004/meta.yml
   - task_id: TSK-P3-PRE-005
     title: Update Task Generator for Phase 3 Mode
@@ -231,7 +241,7 @@ tasks:
     task_type: OPS
     ci_tier: T1
     ci_tier_status: proposed
-    status: planned
+    status: completed
     source: tasks/TSK-P3-PRE-005/meta.yml
   - task_id: TSK-P3-PRE-006
     title: Update Task Schema Validator for Phase 3
@@ -239,7 +249,7 @@ tasks:
     task_type: OPS
     ci_tier: T1
     ci_tier_status: proposed
-    status: planned
+    status: completed
     source: tasks/TSK-P3-PRE-006/meta.yml
   - task_id: TSK-P3-PRE-007
     title: Define Phase 3 Task Registry Schema
@@ -247,7 +257,7 @@ tasks:
     task_type: GOV
     ci_tier: T1
     ci_tier_status: proposed
-    status: planned
+    status: completed
     source: tasks/TSK-P3-PRE-007/meta.yml
   - task_id: TSK-P3-PRE-008
     title: Populate Phase 3 Task Registry
@@ -255,7 +265,7 @@ tasks:
     task_type: GOV
     ci_tier: T1
     ci_tier_status: proposed
-    status: planned
+    status: completed
     source: tasks/TSK-P3-PRE-008/meta.yml
   - task_id: TSK-P3-PRE-009
     title: Phase 3 Readiness Exit Gate
@@ -263,8 +273,240 @@ tasks:
     task_type: CERT
     ci_tier: T4
     ci_tier_status: proposed
-    status: planned
+    status: completed
     source: tasks/TSK-P3-PRE-009/meta.yml
+  - task_id: TSK-P3-WP-001
+    title: Typed dependency graph lineage and traversal substrate
+    wave: WP
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-WP-001/meta.yml
+  - task_id: TSK-P3-WP-002
+    title: Policy artifact and authority lineage foundation
+    wave: WP
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-WP-002/meta.yml
+  - task_id: TSK-P3-WP-003
+    title: Projection universes and recursive legitimacy evaluation
+    wave: WP
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-WP-003/meta.yml
+  - task_id: TSK-P3-WP-004
+    title: Contradiction detection, quarantine, supersession, and escalation mechanics
+    wave: WP
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-WP-004/meta.yml
+  - task_id: TSK-P3-WP-005
+    title: Failure composition and cross-system evidence continuity
+    wave: WP
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-WP-005/meta.yml
+  - task_id: TSK-P3-WP-007
+    title: Regulator-aware partitioning, precedence application, and non-collapse mechanics
+    wave: WP
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-WP-007/meta.yml
+  - task_id: TSK-P3-WP-008
+    title: Conflict-of-interest and verifier independence enforcement
+    wave: WP
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-WP-008/meta.yml
+  - task_id: TSK-P3-WP-009
+    title: Spatial legality and DNSH gates
+    wave: WP
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-WP-009/meta.yml
+  - task_id: TSK-P3-WP-013
+    title: Uncertainty classification, operator-governed propagation, and replay-admissible authority transfer semantics
+    wave: WP
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-WP-013/meta.yml
+  - task_id: TSK-P3-GOV-005
+    title: AI governance doctrine, model registry and inference log schemas, and confidence-to-uncertainty admissibility mappings
+    wave: GOV
+    task_type: GOV
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-GOV-005/meta.yml
+  - task_id: TSK-P3-WP-010
+    title: Dwell-time forensic findings under temporal replay doctrine
+    wave: WP
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-WP-010/meta.yml
+  - task_id: TSK-P3-WP-012
+    title: Runtime/verifier trust-boundary segregation, artifact exchange contracts, and privilege-separated verification surfaces
+    wave: WP
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-WP-012/meta.yml
+  - task_id: TSK-P3-WP-011
+    title: Verifier suite, CI wiring, evidence expectations, negative tests, invariant-to-verifier registry, capability-boundary contamination tests, and invariant promotion protocol
+    wave: WP
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-WP-011/meta.yml
+  - task_id: TSK-P3-SUPPORT-DOC-001
+    title: Implementation references, replay specifications, and operator-neutral documentation
+    wave: SUPPORT
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-SUPPORT-DOC-001/meta.yml
+  - task_id: TSK-P3-SUPPORT-OBS-001
+    title: Internal constitutional observability without UI or dashboard semantics
+    wave: SUPPORT
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-SUPPORT-OBS-001/meta.yml
+  - task_id: TSK-P3-SUPPORT-PERF-001
+    title: Deterministic traversal, spatial, and projection scale bounds
+    wave: SUPPORT
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-SUPPORT-PERF-001/meta.yml
+  - task_id: TSK-P3-SUPPORT-MIG-001
+    title: Replay-addressable migration and backfill planning contract
+    wave: SUPPORT
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-SUPPORT-MIG-001/meta.yml
+  - task_id: TSK-P3-SUPPORT-VERSION-001
+    title: Replay continuity and versioning compatibility contract
+    wave: SUPPORT
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-SUPPORT-VERSION-001/meta.yml
+  - task_id: TSK-P3-WP-006
+    title: Authority scope and delegation enforcement
+    wave: WP
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-WP-006/meta.yml
+  - task_id: TSK-P3-SUPPORT-FIXTURE-001
+    title: Canonical replay fixtures for lineage, authority, and legitimacy
+    wave: SUPPORT
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-SUPPORT-FIXTURE-001/meta.yml
+  - task_id: TSK-P3-SUPPORT-CONTRACT-001
+    title: Deterministic lineage proof and offline replay package contracts
+    wave: SUPPORT
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-SUPPORT-CONTRACT-001/meta.yml
+  - task_id: TSK-P3-SUPPORT-DB-001
+    title: Persistence model for dependency, policy, and authority lineage surfaces
+    wave: SUPPORT
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-SUPPORT-DB-001/meta.yml
+  - task_id: TSK-P3-SUPPORT-SEC-001
+    title: Access-control and privilege model for lineage surfaces
+    wave: SUPPORT
+    task_type: IMPL
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-SUPPORT-SEC-001/meta.yml
+  - task_id: TSK-P3-SUPPORT-DB-002
+    title: Make privilege-only migration effects visible to canonical baseline and drift governance
+    wave: SUPPORT
+    task_type: PERSIST
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-SUPPORT-DB-002/meta.yml
+  - task_id: TSK-P3-SUPPORT-DB-003
+    title: Fail-closed DB verifier bootstrap and connection diagnostics for scripts/db verifiers
+    wave: SUPPORT
+    task_type: PERSIST
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-SUPPORT-DB-003/meta.yml
+  - task_id: TSK-P3-GOV-006
+    title: Fail-closed DB probe contract for audit-side DB-facing verifiers
+    wave: GOV
+    task_type: GOV
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-GOV-006/meta.yml
+  - task_id: TSK-P3-GOV-007
+    title: Normalize proof-before-completion lifecycle semantics for task verifiers
+    wave: GOV
+    task_type: GOV
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-GOV-007/meta.yml
+  - task_id: TSK-P3-SUPPORT-DB-004
+    title: Make baseline_then_migrations safe on fresh databases with default public schema
+    wave: SUPPORT
+    task_type: PERSIST
+    ci_tier: T2
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-SUPPORT-DB-004/meta.yml
+  - task_id: TSK-P3-GOV-008
+    title: Reconcile Stage A approval semantics with wave-end pre_ci execution
+    wave: GOV
+    task_type: GOV
+    ci_tier: T1
+    ci_tier_status: proposed
+    status: completed
+    source: tasks/TSK-P3-GOV-008/meta.yml
   - task_id: TSK-P3-W1-DB-007
     title: Phase 3 data classification and persistence boundary foundation
     wave: W1

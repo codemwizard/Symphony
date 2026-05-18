@@ -1,0 +1,117 @@
+{
+  "task_id": "TSK-P3-WP-002",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-17T08:18:41Z",
+  "status": "PASS",
+  "pass": true,
+  "checks": {
+    "migration_head_forward_only": {
+      "status": "PASS",
+      "detail": "MIGRATION_HEAD=0208 (>=0208)"
+    },
+    "authority_table_exists": {
+      "status": "PASS",
+      "detail": "public.p3_authority_lineage exists"
+    },
+    "policy_table_exists": {
+      "status": "PASS",
+      "detail": "public.p3_policy_artifacts exists"
+    },
+    "projection_view_exists": {
+      "status": "PASS",
+      "detail": "public.p3_policy_authority_lineage_projection exists"
+    },
+    "reconstruction_function_exists": {
+      "status": "PASS",
+      "detail": "p3_collect_policy_authority_lineage(uuid) exists"
+    },
+    "policy_artifact_class_enum": {
+      "status": "PASS",
+      "detail": "p3_policy_artifact_class has 8 doctrine-aligned values"
+    },
+    "authority_source_kind_enum": {
+      "status": "PASS",
+      "detail": "p3_authority_source_kind has 4 substrate values"
+    },
+    "provenance_columns_present": {
+      "status": "PASS",
+      "detail": "lineage_provenance_id columns are NOT NULL on both lineage tables"
+    },
+    "replay_revocation_metadata_present": {
+      "status": "PASS",
+      "detail": "jsonb replay/revocation metadata columns exist on both lineage tables"
+    },
+    "authority_reconstruction": {
+      "status": "PASS",
+      "detail": "policy artifact resolves to deterministic authority lineage chain"
+    },
+    "malformed_lineage_rejected": {
+      "status": "PASS",
+      "detail": "self-delegation and missing source authority fail transactionally"
+    },
+    "runtime_index_registered": {
+      "status": "PASS",
+      "detail": "PHASE3 runtime index contains TSK-P3-WP-002"
+    },
+    "phase3_registry_registered": {
+      "status": "PASS",
+      "detail": "phase3_task_registry.yml contains TSK-P3-WP-002"
+    },
+    "adr_rebaseline_recorded": {
+      "status": "PASS",
+      "detail": "ADR-0010 references MIGRATION_HEAD 0208"
+    }
+  },
+  "observed_paths": [
+    "schema/migrations/0208_p3_policy_authority_lineage.sql",
+    "scripts/db/verify_p3_policy_authority_lineage.sh",
+    "schema/migrations/MIGRATION_HEAD",
+    "docs/decisions/ADR-0010-baseline-policy.md",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md",
+    "docs/PHASE3/phase3_task_registry.yml",
+    "tasks/TSK-P3-WP-002/meta.yml",
+    "docs/plans/phase3/TSK-P3-WP-002/PLAN.md",
+    "docs/plans/phase3/TSK-P3-WP-002/EXEC_LOG.md"
+  ],
+  "observed_hashes": {
+    "schema/migrations/0208_p3_policy_authority_lineage.sql": "08f2db4833ad44ca805b1e8af9c215d3c43335bea619c91e2a9791d9342e322c",
+    "scripts/db/verify_p3_policy_authority_lineage.sh": "02a28b81c7a30a61f2c5347f4e83de1dd62332088ec5d6380fae6644ec33e781",
+    "schema/migrations/MIGRATION_HEAD": "1fe17a6169648a11aba38207d2c85f10f5c125249ca78cae90ea960bb9fcda84",
+    "docs/decisions/ADR-0010-baseline-policy.md": "8add78feab6dd71b432f02fb52583498532ba4372e91d581a47ca486dbab1880",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md": "0e2d2148af3351fbc4d0f5fd9a731c09f870403e9a78f4ca2ba044d0b31e161d",
+    "docs/PHASE3/phase3_task_registry.yml": "bb7478ce9a4b9a31d9d3edc6577b4fc37b43557589421a8d5b0cb71ffe2e3bb2",
+    "tasks/TSK-P3-WP-002/meta.yml": "ad21f1a10dad8a413fcf8cfda61aa0a7ba877cca08ed69bad09f0f2458ea20da",
+    "docs/plans/phase3/TSK-P3-WP-002/PLAN.md": "589d48e7d50d19a20d7d63dbf5705b2c8d10fdad94c47fb61981985ac14211b7",
+    "docs/plans/phase3/TSK-P3-WP-002/EXEC_LOG.md": "e8c724c95370334a5dd6add0c6bb9b6950c721b91eec27f2d0498c3eeca54e3c"
+  },
+  "command_outputs": [
+    {
+      "command": "read schema/migrations/MIGRATION_HEAD => 0208",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect policy/authority lineage relations and reconstruction function",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect enum cardinalities for policy artifact and authority source kinds",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect provenance and replay/revocation metadata columns",
+      "status": "recorded"
+    },
+    {
+      "command": "exercise deterministic authority reconstruction and negative lineage constraints in a rollback transaction",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect runtime task index, phase3 task registry, and ADR-0010 record",
+      "status": "recorded"
+    }
+  ],
+  "execution_trace": [
+    "start verifier for TSK-P3-WP-002",
+    "reconstruction exercise completed"
+  ]
+}

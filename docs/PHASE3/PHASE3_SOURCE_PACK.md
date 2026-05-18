@@ -22,15 +22,15 @@ authority, or supersede the active execution envelope.
 
 | Requirement | Canonical Phase 3 Source |
 |---|---|
-| Phase purpose | `docs/architecture/Symphony-Phase-Specification-Document_v1.md`; `docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md` |
-| Phase build scope | `docs/architecture/Symphony-Phase-Specification-Document_v1.md` sections 3.1 through 3.8; `docs/PHASE3/phase3_contract.yml` rows P3-001 through P3-009 |
-| Phase exit criteria | `docs/architecture/Symphony-Phase-Specification-Document_v1.md`; `docs/PHASE3/phase3_contract.yml` row P3-009; `docs/PHASE3/PHASE3_INVARIANT_REGISTER.md` verifier promotion protocol |
+| Phase purpose | `docs/architecture/Symphony-Phase-Specification-Document_v1.md`; `docs/architecture/PHASE_SPECIFICATION_AI_CAPABILITY_AUGMENTATION.md`; `docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md` |
+| Phase build scope | `docs/architecture/Symphony-Phase-Specification-Document_v1.md` sections 3.1 through 3.8; `docs/architecture/PHASE_SPECIFICATION_AI_CAPABILITY_AUGMENTATION.md` Phase 3 additions (§3.9 and §3.10); `docs/PHASE3/phase3_contract.yml` rows P3-001 through P3-011 |
+| Phase exit criteria | `docs/architecture/Symphony-Phase-Specification-Document_v1.md`; `docs/architecture/PHASE_SPECIFICATION_AI_CAPABILITY_AUGMENTATION.md`; `docs/PHASE3/phase3_contract.yml` rows P3-009 and P3-011; `docs/PHASE3/PHASE3_INVARIANT_REGISTER.md` verifier promotion protocol |
 | Phase legality status | `docs/operations/PHASE_EXECUTION_ENVELOPE.md`; `docs/constitutional/PHASE_CAPABILITY_LEGALITY_MATRIX.md`; `docs/PHASE3/PHASE3_OPENING_ACT.md` |
 | Authorized capability domains | `docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md`; `docs/constitutional/PHASE_CAPABILITY_LEGALITY_MATRIX.md`; `docs/PHASE3/phase3_contract.yml` |
 | Prohibited capability domains | `docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md`; `docs/architecture/Symphony-Phase-Specification-Document_v1.md` cross-phase routing; `docs/constitutional/TASK_GENERATION_CONSTITUTION.md` |
-| Governing doctrines | `docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md` Required Doctrine Inventory; Phase 3 doctrines under `docs/constitutional/` |
-| Phase contract rows | `docs/PHASE3/phase3_contract.yml` |
-| Invariant register | `docs/PHASE3/PHASE3_INVARIANT_REGISTER.md` |
+| Governing doctrines | `docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md` Required Doctrine Inventory; Phase 3 doctrines under `docs/constitutional/`, including uncertainty and AI governance doctrines |
+| Phase contract rows | `docs/PHASE3/phase3_contract.yml` rows P3-001 through P3-011 |
+| Invariant register | `docs/PHASE3/PHASE3_INVARIANT_REGISTER.md` rows INV-301 through INV-313 |
 | Verifier expectations | `docs/PHASE3/PHASE3_INVARIANT_REGISTER.md`; `docs/PHASE3/phase3_contract.yml` row P3-009 |
 | Evidence expectations | `docs/PHASE3/PHASE3_INVARIANT_REGISTER.md`; `docs/architecture/evidence_schema.json`; `docs/constitutional/TASK_GENERATION_CONSTITUTION.md` |
 | Negative-test expectations | `docs/PHASE3/PHASE3_INVARIANT_REGISTER.md`; `docs/constitutional/TASK_GENERATION_CONSTITUTION.md` |

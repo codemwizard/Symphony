@@ -121,6 +121,9 @@ must_read:
   - docs/operations/TASK_CREATION_PROCESS.md
   - docs/operations/IMPLEMENTATION_PLAN_CREATION_PROCESS.md
   - docs/operations/PHASE_EXECUTION_ENVELOPE.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
   - docs/PHASE3/implementation_plans/TSK-P3-CAP-000_governance_cleanup.md
 
 implementation_plan: docs/plans/phase3/TSK-P3-CLEAN-004/PLAN.md

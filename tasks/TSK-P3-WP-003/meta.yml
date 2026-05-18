@@ -1,0 +1,182 @@
+schema_version: 1
+phase: '3'
+wave: 'WP'
+task_id: TSK-P3-WP-003
+title: "Projection universes and recursive legitimacy evaluation"
+owner_role: DB_FOUNDATION
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DB_SCHEMA
+depends_on: ["TSK-P3-WP-001", "TSK-P3-WP-002", "TSK-P3-SUPPORT-CONTRACT-001"]
+invariants: ["INV-303", "INV-310"]
+
+deliverable_files:
+  - schema/migrations/0211_p3_recursive_legitimacy_engine.sql
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.normalized.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-17/0001_baseline.sql
+  - schema/baselines/2026-05-17/baseline.normalized.sql
+  - schema/baselines/2026-05-17/baseline.cutoff
+  - schema/baselines/2026-05-17/baseline.meta.json
+  - scripts/db/verify_p3_recursive_legitimacy_engine.sh
+  - evidence/phase3/tsk_p3_wp_003_recursive_legitimacy_engine.json
+  - docs/contracts/sqlstate_map.yml
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/plans/phase3/TSK-P3-WP-003/PLAN.md
+  - docs/plans/phase3/TSK-P3-WP-003/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - schema/migrations/0211_p3_recursive_legitimacy_engine.sql
+    - schema/migrations/MIGRATION_HEAD
+    - scripts/db/verify_p3_recursive_legitimacy_engine.sh
+    - evidence/phase3/tsk_p3_wp_003_recursive_legitimacy_engine.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - 0144: "Wave 5 remediation baseline"
+  table_dependencies:
+    - schema_migrations: "must track migrations"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+  - "Authority-lineage definition, delegation enforcement, or regulator-partition semantics."
+  - "Contradiction detection, failure composition, settlement finality, or sovereign-mandate meaning."
+  - "Runtime-only legitimacy state, external replay package productization, or future-phase absorption."
+stop_conditions:
+  - "If the migration design requires contradiction, regulator, settlement, or source-truth mutation semantics to express legitimacy projection."
+  - "If the implementation cannot remain inside one forward-only migration, one verifier, and the declared registry/index surfaces."
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON can prove the recursive legitimacy projection substrate exists, is replay-derived where inspected, and rejects descendant decisions with illegitimate ancestors under structural constraints."
+  - "Evidence can prove projection outputs remain supersedable, carry immutable provenance identifiers, and do not rely on runtime-only trust anchors where the verifier inspects them."
+proof_limitations:
+  - "Does not prove contradiction, regulator, or settlement semantics; those remain outside TSK-P3-WP-003."
+  - "Does not prove the substantive legitimacy of the rule corpus itself."
+  - "Does not prove runtime API integration or later forensic finding semantics."
+
+touches:
+  - schema/migrations/0211_p3_recursive_legitimacy_engine.sql
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.normalized.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-17/0001_baseline.sql
+  - schema/baselines/2026-05-17/baseline.normalized.sql
+  - schema/baselines/2026-05-17/baseline.cutoff
+  - schema/baselines/2026-05-17/baseline.meta.json
+  - scripts/db/verify_p3_recursive_legitimacy_engine.sh
+  - evidence/phase3/tsk_p3_wp_003_recursive_legitimacy_engine.json
+  - docs/contracts/sqlstate_map.yml
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - tasks/TSK-P3-WP-003/meta.yml
+  - docs/plans/phase3/TSK-P3-WP-003/PLAN.md
+  - docs/plans/phase3/TSK-P3-WP-003/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_wp_003_w01] Define a single forward-only Phase 3 schema mutation that establishes replay-derived legitimacy projection primitives and recursive evaluation structures without importing contradiction, regulator, settlement, or source-truth mutation semantics."
+  - "[ID tsk_p3_wp_003_w02] Bind projection-state records to deterministic replay inputs, immutable provenance identifiers, explicit mutability classification, and non-runtime trust boundaries so every inspected legitimacy output is reconstructable without ephemeral context."
+  - "[ID tsk_p3_wp_003_w03] Add a deterministic verifier that proves recursive legitimacy evaluation structure exists, illegitimate-ancestor blocking is mechanically testable, and projection outputs remain supersedable rather than canonical truth under declared structural constraints."
+  - "[ID tsk_p3_wp_003_w04] Register the task in the active Phase 3 runtime task index and registry without altering unrelated Wave 2 support-slice or authority-enforcement scope."
+
+acceptance_criteria:
+  - "[ID tsk_p3_wp_003_w01] A single forward-only migration path is declared for replay-derived legitimacy projection and recursive evaluation structure and is scoped only to projection-state and recursive legitimacy substrate."
+  - "[ID tsk_p3_wp_003_w02] The planned substrate exposes deterministic replay inputs, immutable provenance identifiers, explicit projection mutability, and no dependency on runtime-only trust anchors or ephemeral legitimacy context."
+  - "[ID tsk_p3_wp_003_w03] The task declares a verifier path and evidence path that honestly prove recursive legitimacy structure and illegitimate-ancestor blocking without claiming contradiction, regulator, or settlement semantics."
+  - "[ID tsk_p3_wp_003_w04] The active runtime task index and Phase 3 task registry both point to the generated `TSK-P3-WP-003` task pack as the runtime source of truth."
+
+negative_tests:
+  - id: TSK-P3-WP-003-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: A single forward-only migration path is declared for replay-derived legitimacy projection and recursive evaluation structure and is scoped only to projection-state and recursive legitimacy substrate."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-WP-003-P1
+    description: "Verify that execution exits 0 on success path for: A single forward-only migration path is declared for replay-derived legitimacy projection and recursive evaluation structure and is scoped only to projection-state and recursive legitimacy substrate."
+    required: true
+
+verification:
+  - '[ID tsk_p3_wp_003_w01] [ID tsk_p3_wp_003_w02] [ID tsk_p3_wp_003_w03] [ID tsk_p3_wp_003_w04] test -x scripts/db/verify_p3_recursive_legitimacy_engine.sh && bash scripts/db/verify_p3_recursive_legitimacy_engine.sh > evidence/phase3/tsk_p3_wp_003_recursive_legitimacy_engine.json || exit 1'
+  - 'bash scripts/db/lint_migrations.sh || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-WP-003 --evidence evidence/phase3/tsk_p3_wp_003_recursive_legitimacy_engine.json || exit 1'
+  - 'RUN_PHASE3_GATES=1 bash scripts/dev/pre_ci.sh || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_wp_003_recursive_legitimacy_engine.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+  - "Forward-only migration path missing or malformed => FAIL"
+  - "Recursive legitimacy projection is not replay-derived or descendant blocking is not structurally enforceable => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/implementation_plans/TSK-P3-PLAN-002_wave2_projection_authority_enforcement.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-003_projection_legitimacy.md
+  - docs/constitutional/LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md
+  - docs/constitutional/REPLAY_AND_HISTORICAL_TRUTH_PRIMACY.md
+  - docs/constitutional/TEMPORAL_VALIDITY_AND_REPLAY_DOCTRINE.md
+  - docs/constitutional/EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md
+  - docs/constitutional/CONSTITUTIONAL_GRAPH.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+implementation_plan: docs/plans/phase3/TSK-P3-WP-003/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-WP-003/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py and narrowed to the P3-SURF-003 projection-only scope defined by TSK-P3-CAP-003.'
+client: cursor
+assigned_agent: db_foundation
+model: claude-sonnet-4-20250514

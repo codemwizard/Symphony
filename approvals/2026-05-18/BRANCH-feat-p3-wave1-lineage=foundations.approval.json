@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "mwiza",
+    "change_reason": "Authorize Phase 4 preparation artifacts and the mandatory Phase 5 anti-drift stubs while keeping the root execution envelope on Phase 3 until formal Phase 4 opening is separately approved.",
+    "approved_at_utc": "2026-05-18T13:33:55Z",
+    "role_authority": "Human Approver"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "6ff946f7f4835d4abef13d4f4706d243cc4bae01395ca492b3f4f27656c601a6",
+    "model_id": "gpt-5-codex",
+    "client": "codex_cli",
+    "session_id": "phase4-preparation-branch-approval"
+  },
+  "scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "approvals/2026-05-18/BRANCH-feat-p3-wave1-lineage=foundations.md",
+      "approvals/2026-05-18/BRANCH-feat-p3-wave1-lineage=foundations.approval.json",
+      "docs/operations/AGENTIC_SDLC_PHASE4_POLICY.md",
+      "scripts/audit/verify_phase4_contract.sh",
+      "docs/PHASE4/README.md",
+      "docs/PHASE4/PHASE4_CONTRACT.md",
+      "docs/PHASE4/phase4_contract.yml",
+      "docs/PHASE4/PHASE4_SOURCE_PACK.md",
+      "docs/PHASE4/PHASE4_CAPABILITY_BOUNDARY.md",
+      "docs/PHASE4/PHASE4_EXECUTION_SURFACE_MAP.md",
+      "docs/PHASE4/PHASE4_MASTER_IMPLEMENTATION_PLAN.md",
+      "docs/PHASE4/PHASE4_TASK_DAG.md",
+      "docs/PHASE4/phase4_task_dag.yml",
+      "docs/PHASE4/implementation_plans/README.md",
+      "docs/PHASE4/implementation_plans/TSK-P4-CAP-001_settlement_finality_and_rate_authority.md",
+      "docs/PHASE4/implementation_plans/TSK-P4-CAP-002_statutory_allocations_and_kill_criteria.md",
+      "docs/PHASE5/README.md",
+      "docs/PHASE5/phase5_contract.yml"
+    ],
+    "phase_boundary_ok": true
+  },
+  "verification": {
+    "commands": [
+      "bash scripts/audit/verify_phase4_contract.sh",
+      "bash scripts/audit/verify_approval_metadata.sh --mode=stage-a --branch=feat/p3-wave1-lineage=foundations"
+    ],
+    "pre_ci_passed": false,
+    "notes": "This is a preparation-only branch approval. Formal Phase 4 opening and envelope transition remain blocked on separate closeout and opening approvals."
+  }
+}

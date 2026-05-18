@@ -1,0 +1,140 @@
+schema_version: 1
+phase: '3'
+wave: 'WP'
+task_id: TSK-P3-WP-012
+title: "Runtime/verifier trust-boundary segregation, artifact exchange contracts, and privilege-separated verification surfaces"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+depends_on: ["TSK-P3-WP-005", "TSK-P3-WP-006", "TSK-P3-WP-008"]
+invariants: ["INV-308"]
+
+deliverable_files:
+  - docs/architecture/PHASE3_RUNTIME_VERIFIER_SEGREGATION_CONTRACT.md
+  - scripts/agent/verify_tsk_p3_wp_012_runtime_verifier_segregation.sh
+  - evidence/phase3/tsk_p3_wp_012_runtime_verifier_segregation.json
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/plans/phase3/TSK-P3-WP-012/PLAN.md
+  - docs/plans/phase3/TSK-P3-WP-012/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/agent/verify_tsk_p3_wp_012_runtime_verifier_segregation.sh
+    - evidence/phase3/tsk_p3_wp_012_runtime_verifier_segregation.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+  - "Generic application authentication or authorization redesign."
+  - "External verifier portal behavior, user-facing verifier workflow, or disclosure packaging."
+  - "Authority-scope or conflict-of-interest semantic ownership already assigned to other Phase 3 surfaces."
+stop_conditions:
+  - "If the segregation artifact cannot remain a single canonical boundary contract for P3-SURF-012."
+  - "If the task requires shared runtime/verifier trust context, runtime-authored verifier proof, or verifier mutation of runtime lineage truth."
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON can prove that one canonical runtime/verifier segregation artifact exists, is machine-inspectable where inspected, and declares replay-addressable artifact exchange boundaries plus privilege separation rules."
+  - "Evidence can prove that the boundary contract explicitly blocks runtime-authored verifier proof, shared trust collapse, and verifier mutation of runtime lineage truth under the declared scope."
+proof_limitations:
+  - "Does not prove generic authentication or authorization behavior."
+  - "Does not prove user-facing verifier portal workflows or external replay package productization."
+  - "Does not prove the runtime implementation of failure continuity, authority scope, or COI surfaces beyond declared segregation-boundary dependencies."
+
+touches:
+  - docs/architecture/PHASE3_RUNTIME_VERIFIER_SEGREGATION_CONTRACT.md
+  - scripts/agent/verify_tsk_p3_wp_012_runtime_verifier_segregation.sh
+  - evidence/phase3/tsk_p3_wp_012_runtime_verifier_segregation.json
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - tasks/TSK-P3-WP-012/meta.yml
+  - docs/plans/phase3/TSK-P3-WP-012/PLAN.md
+  - docs/plans/phase3/TSK-P3-WP-012/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_wp_012_w01] Define one canonical runtime/verifier segregation artifact for replay-addressable artifact exchange and privilege-separated verification surfaces without importing generic auth redesign, portal workflow, or disclosure-packaging semantics."
+  - "[ID tsk_p3_wp_012_w02] Bind the artifact to deterministic boundary declarations for runtime-emitted artifacts, verifier-consumed artifacts, prohibited mutations, and explicit prohibition on shared trust context or runtime-authored verifier proof."
+  - "[ID tsk_p3_wp_012_w03] Add a deterministic verifier that proves the segregation artifact is mechanically inspectable, remains anchored to Wave 3 and Wave 4 substrate truth, and blocks trust-collapse semantics under the declared structural contract."
+  - "[ID tsk_p3_wp_012_w04] Register the task in the active Phase 3 runtime task index and registry without altering unrelated Wave 5 verifier-closure or documentation-closeout scope."
+
+acceptance_criteria:
+  - "[ID tsk_p3_wp_012_w01] One canonical segregation artifact is declared for replay-addressable runtime/verifier boundary control under P3-SURF-012."
+  - "[ID tsk_p3_wp_012_w02] The artifact declares deterministic runtime-emission and verifier-consumption boundaries, prohibited mutations, and explicit anti-trust-collapse rules."
+  - "[ID tsk_p3_wp_012_w03] The task declares a verifier and evidence path that honestly prove segregation-boundary completeness without claiming generic auth redesign, portal behavior, or runtime implementation of upstream surfaces."
+  - "[ID tsk_p3_wp_012_w04] The active runtime task index and Phase 3 task registry both point to the generated `TSK-P3-WP-012` task pack as the runtime source of truth."
+
+negative_tests:
+  - id: TSK-P3-WP-012-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: One canonical segregation artifact is declared for replay-addressable runtime/verifier boundary control under P3-SURF-012."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-WP-012-P1
+    description: "Verify that execution exits 0 on success path for: One canonical segregation artifact is declared for replay-addressable runtime/verifier boundary control under P3-SURF-012."
+    required: true
+
+verification:
+  - '[ID tsk_p3_wp_012_w01] [ID tsk_p3_wp_012_w02] [ID tsk_p3_wp_012_w03] [ID tsk_p3_wp_012_w04] test -x scripts/agent/verify_tsk_p3_wp_012_runtime_verifier_segregation.sh && bash scripts/agent/verify_tsk_p3_wp_012_runtime_verifier_segregation.sh > evidence/phase3/tsk_p3_wp_012_runtime_verifier_segregation.json || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-WP-012 --evidence evidence/phase3/tsk_p3_wp_012_runtime_verifier_segregation.json || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_wp_012_runtime_verifier_segregation.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+  - "Segregation contract omits deterministic runtime/verifier boundary declarations => FAIL"
+  - "Contract allows shared trust context, runtime-authored verifier proof, or verifier mutation of runtime lineage truth => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/implementation_plans/TSK-P3-PLAN-005_wave5_verifier_segregation_closeout.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-013_runtime_verifier_segregation.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-005_failure_evidence_continuity.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-006_authority_delegation.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-008_conflict_of_interest.md
+  - docs/constitutional/EXTERNAL_VERIFIER_INDEPENDENCE_DOCTRINE.md
+  - docs/constitutional/AUTHORITY_SCOPE_AND_DELEGATION_DOCTRINE.md
+  - docs/constitutional/NON_INFERENCE_AND_INTERPRETATION_LIMITS.md
+  - docs/constitutional/EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+implementation_plan: docs/plans/phase3/TSK-P3-WP-012/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-WP-012/EXEC_LOG.md
+notes: 'Generated via Phase 3 task-pack creation workflow and narrowed to one canonical runtime/verifier segregation contract serving P3-SURF-012 only.'
+client: cursor
+assigned_agent: architect
+model: gpt-5

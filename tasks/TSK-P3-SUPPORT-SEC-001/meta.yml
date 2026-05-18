@@ -1,0 +1,178 @@
+schema_version: 1
+phase: '3'
+wave: 'SUPPORT'
+task_id: TSK-P3-SUPPORT-SEC-001
+title: "Access-control and privilege model for lineage surfaces"
+owner_role: DB_FOUNDATION
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DB_SCHEMA
+depends_on: ["TSK-P3-SUPPORT-DB-001"]
+invariants: ["INV-302", "INV-305"]
+
+deliverable_files:
+  - schema/migrations/0210_p3_lineage_access_control.sql
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-17/0001_baseline.sql
+  - schema/baselines/2026-05-17/baseline.normalized.sql
+  - schema/baselines/2026-05-17/baseline.cutoff
+  - schema/baselines/2026-05-17/baseline.meta.json
+  - scripts/db/verify_p3_lineage_access_control.sh
+  - evidence/phase3/tsk_p3_support_sec_001_access_control.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/plans/phase3/TSK-P3-SUPPORT-SEC-001/PLAN.md
+  - docs/plans/phase3/TSK-P3-SUPPORT-SEC-001/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - schema/migrations/0210_p3_lineage_access_control.sql
+    - schema/migrations/MIGRATION_HEAD
+    - scripts/db/verify_p3_lineage_access_control.sh
+    - evidence/phase3/tsk_p3_support_sec_001_access_control.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - 0144: "Wave 5 remediation baseline"
+  table_dependencies:
+    - schema_migrations: "must track migrations"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+  - "Legitimacy evaluation, contradiction logic, regulator partition semantics, or sovereignty runtime meaning."
+  - "Product authorization, external integration security, or generalized application auth redesign."
+  - "Privilege broadening that collapses runtime lineage writers and verifier observers into one authority plane."
+stop_conditions:
+  - "If the access-control model cannot remain a single forward-only privilege slice serving both owning surfaces."
+  - "If the task requires product-authorization semantics, sovereign authority semantics, or verifier-authored runtime truth to express separation rules."
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON can prove that a single shared access-control task declares lineage-surface privilege structure, verifier separation, and evidence boundaries where inspected."
+  - "Evidence can prove that the task pack preserves no-runtime-verifier trust collapse intent and replay-safe verifier observation requirements at the access-model level."
+proof_limitations:
+  - "Does not prove runtime implementation of grants or role wiring."
+  - "Does not prove legitimacy, regulator, or product-authorization semantics."
+  - "Does not prove complete operational security hardening beyond the declared lineage-surface privilege model."
+
+touches:
+  - schema/migrations/0210_p3_lineage_access_control.sql
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-17/0001_baseline.sql
+  - schema/baselines/2026-05-17/baseline.normalized.sql
+  - schema/baselines/2026-05-17/baseline.cutoff
+  - schema/baselines/2026-05-17/baseline.meta.json
+  - scripts/db/verify_p3_lineage_access_control.sh
+  - evidence/phase3/tsk_p3_support_sec_001_access_control.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - tasks/TSK-P3-SUPPORT-SEC-001/meta.yml
+  - docs/plans/phase3/TSK-P3-SUPPORT-SEC-001/PLAN.md
+  - docs/plans/phase3/TSK-P3-SUPPORT-SEC-001/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_support_sec_001_w01] Define one forward-only access-control task for dependency, policy, and authority lineage surfaces that preserves lineage-write separation and verifier-read separation without importing product-authorization or future-phase sovereignty semantics."
+  - "[ID tsk_p3_support_sec_001_w02] Declare grant boundaries, write-path restrictions, replay-read constraints, and no-runtime-verifier trust-collapse requirements for the shared lineage surfaces."
+  - "[ID tsk_p3_support_sec_001_w03] Bind the access-control task to replay-safe verifier observation requirements and non-destructive privilege posture for historical lineage truth."
+  - "[ID tsk_p3_support_sec_001_w04] Add a deterministic verifier path and evidence contract for the shared access-control model and register the generated task pack in the active Phase 3 runtime task index and registry."
+
+acceptance_criteria:
+  - "[ID tsk_p3_support_sec_001_w01] A single forward-only migration path is declared for the shared lineage-surface access-control model and is scoped to privilege structure only."
+  - "[ID tsk_p3_support_sec_001_w02] The planned access-control model preserves lineage write authority, verifier-read separation, replay-safe observation, and no destructive privilege broadening."
+  - "[ID tsk_p3_support_sec_001_w03] The task declares no runtime/verifier trust collapse and no expansion into product authorization or sovereignty runtime semantics."
+  - "[ID tsk_p3_support_sec_001_w04] The active runtime task index and Phase 3 task registry both point to the generated `TSK-P3-SUPPORT-SEC-001` task pack as the runtime source of truth."
+
+negative_tests:
+  - id: TSK-P3-SUPPORT-SEC-001-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: A single forward-only migration path is declared for the shared lineage-surface access-control model and is scoped to privilege structure only."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-SUPPORT-SEC-001-P1
+    description: "Verify that execution exits 0 on success path for: A single forward-only migration path is declared for the shared lineage-surface access-control model and is scoped to privilege structure only."
+    required: true
+
+verification:
+  - '[ID tsk_p3_support_sec_001_w01] [ID tsk_p3_support_sec_001_w02] [ID tsk_p3_support_sec_001_w03] [ID tsk_p3_support_sec_001_w04] test -x scripts/db/verify_p3_lineage_access_control.sh && bash scripts/db/verify_p3_lineage_access_control.sh > evidence/phase3/tsk_p3_support_sec_001_access_control.json || exit 1'
+  - 'bash scripts/db/lint_migrations.sh || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-SUPPORT-SEC-001 --evidence evidence/phase3/tsk_p3_support_sec_001_access_control.json || exit 1'
+  - 'RUN_PHASE3_GATES=1 bash scripts/dev/pre_ci.sh || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_support_sec_001_access_control.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+  - "Privilege model broadens runtime authority or collapses verifier separation => FAIL"
+  - "Shared access-control shape omits one owning surface or replay-read boundary => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/implementation_plans/TSK-P3-PLAN-001_wave1_lineage_foundations.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-001_dependency_graph.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-002_policy_authority_lineage.md
+  - docs/constitutional/CONSTITUTIONAL_GRAPH.md
+  - docs/constitutional/POLICY_ARTIFACT_AND_AUTHORITY_LINEAGE_DOCTRINE.md
+  - docs/constitutional/EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md
+  - docs/constitutional/TASK_GENERATION_CONSTITUTION.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+implementation_plan: docs/plans/phase3/TSK-P3-SUPPORT-SEC-001/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-SUPPORT-SEC-001/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py and narrowed to one shared lineage-surface privilege slice jointly serving P3-SURF-001 and P3-SURF-002.'
+client: cursor
+assigned_agent: db_foundation
+model: claude-sonnet-4-20250514

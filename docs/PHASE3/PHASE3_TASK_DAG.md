@@ -20,7 +20,8 @@ This is not an atomic task pack and does not authorize implementation.
 - `planned`: valid planning node, not yet converted to atomic task packs.
 - `ready-for-surface-plan`: execution surface exists but surface-specific plan is not created.
 - `ready-for-task-creation`: may enter `CREATE-TASK` after all blockers are closed.
-- `tasks-created`: atomic task packs exist and pass readiness checks.
+- `tasks-created`: atomic task packs exist and pass structural readiness checks.
+  This means `task-packed`, not `resume-ready`, implemented, or completed.
 - `complete`: downstream atomic tasks are complete with verification evidence.
 
 ## Sequencing Fields
@@ -45,63 +46,78 @@ This is not an atomic task pack and does not authorize implementation.
 | TSK-P3-CLEAN-004 | P3-SURF-000 | None | None | complete | Reconcile Phase 3 opening posture with the active execution envelope. |
 | TSK-P3-CLEAN-005 | P3-SURF-000 | None | None | complete | Resolve duplicate/non-canonical MADD/MAIN doctrine copy. |
 | TSK-P3-CLEAN-006 | P3-SURF-000 | None | None | complete | Verify archived Phase 3 files remain non-canonical and excluded. |
-| TSK-P3-CLEAN-007 | P3-SURF-000 | TSK-P3-CLEAN-001, TSK-P3-CLEAN-003 | None | tasks-created | Maintain Phase 3 DAG artifacts. |
-| TSK-P3-CLEAN-008 | P3-SURF-000 | TSK-P3-CLEAN-007 | None | tasks-created | Maintain implementation-plan registry/status index. |
+| TSK-P3-CLEAN-007 | P3-SURF-000 | TSK-P3-CLEAN-001, TSK-P3-CLEAN-003 | None | complete | Maintain Phase 3 DAG artifacts. |
+| TSK-P3-CLEAN-008 | P3-SURF-000 | TSK-P3-CLEAN-007 | None | complete | Maintain implementation-plan registry/status index. |
 
 ## Wave 0A - Phase Activation Governance Alignment
 
 | DAG Node | Surface | Depends On | Blocked By | Status | Purpose |
 |---|---|---|---|---|---|
-| TSK-P3-ACT-001 | P3-SURF-000 | TSK-P3-CLEAN-001, TSK-P3-CLEAN-002, TSK-P3-CLEAN-003, TSK-P3-CLEAN-004, TSK-P3-CLEAN-005, TSK-P3-CLEAN-006, TSK-P3-CLEAN-007, TSK-P3-CLEAN-008 | None | planned | Build the missing Phase 3 lifecycle artifact set. |
-| TSK-P3-ACT-002 | P3-SURF-000 | TSK-P3-ACT-001 | None | planned | Create the formal Phase 3 opening approval artifact set. |
-| TSK-P3-ACT-003 | P3-SURF-000 | TSK-P3-ACT-001, TSK-P3-ACT-002 | None | planned | Rewrite the root execution envelope for active Phase 3 status. |
-| TSK-P3-ACT-004 | P3-SURF-000 | TSK-P3-ACT-003 | None | planned | Reconcile the legality layer and dependent Phase 3 planning posture. |
-| TSK-P3-ACT-005 | P3-SURF-000 | TSK-P3-ACT-004 | None | planned | Normalize existing Phase 3 plans and evidence for opened-phase use. |
+| TSK-P3-ACT-001 | P3-SURF-000 | TSK-P3-CLEAN-001, TSK-P3-CLEAN-002, TSK-P3-CLEAN-003, TSK-P3-CLEAN-004, TSK-P3-CLEAN-005, TSK-P3-CLEAN-006, TSK-P3-CLEAN-007, TSK-P3-CLEAN-008 | None | complete | Build the missing Phase 3 lifecycle artifact set. |
+| TSK-P3-ACT-002 | P3-SURF-000 | TSK-P3-ACT-001 | None | complete | Create the formal Phase 3 opening approval artifact set and constitutional opening attestation outputs. |
+| TSK-P3-ACT-003 | P3-SURF-000 | TSK-P3-ACT-001, TSK-P3-ACT-002 | None | complete | Rewrite the root execution envelope for active Phase 3 status. |
+| TSK-P3-ACT-004 | P3-SURF-000 | TSK-P3-ACT-003 | None | complete | Reconcile the legality layer and dependent Phase 3 planning posture. |
+| TSK-P3-ACT-005 | P3-SURF-000 | TSK-P3-ACT-004 | None | complete | Normalize existing Phase 3 plans and evidence for opened-phase use, including activation-close attestation outputs. |
 
 ## Wave 1 - Lineage Foundations
 
 | DAG Node | Surface | Depends On | Status | Purpose |
 |---|---|---|---|---|
-| TSK-P3-WP-001 | P3-SURF-001 | TSK-P3-ACT-005 | planned | Typed dependency graph lineage and traversal substrate. |
-| TSK-P3-WP-002 | P3-SURF-002 | TSK-P3-WP-001 | planned | Policy artifact and authority lineage foundation. |
-| TSK-P3-SUPPORT-DB-001 | P3-SURF-001, P3-SURF-002 | TSK-P3-WP-001, TSK-P3-WP-002 | planned | Persistence model for dependency, policy, and authority lineage surfaces. |
-| TSK-P3-SUPPORT-SEC-001 | P3-SURF-001, P3-SURF-002 | TSK-P3-SUPPORT-DB-001 | planned | Access-control and privilege model for lineage surfaces. |
-| TSK-P3-SUPPORT-CONTRACT-001 | P3-SURF-001, P3-SURF-002 | TSK-P3-WP-001, TSK-P3-WP-002 | planned | Deterministic internal serialization and proof contracts for lineage records. |
+| TSK-P3-WP-001 | P3-SURF-001 | TSK-P3-ACT-005 | completed | Typed dependency graph lineage and traversal substrate. |
+| TSK-P3-WP-002 | P3-SURF-002 | TSK-P3-WP-001 | completed | Policy artifact and authority lineage foundation. |
+| TSK-P3-SUPPORT-DB-001 | P3-SURF-001, P3-SURF-002 | TSK-P3-WP-001, TSK-P3-WP-002 | completed | Persistence model for dependency, policy, and authority lineage surfaces. |
+| TSK-P3-SUPPORT-SEC-001 | P3-SURF-001, P3-SURF-002 | TSK-P3-SUPPORT-DB-001 | completed | Access-control and privilege model for lineage surfaces. |
+| TSK-P3-SUPPORT-CONTRACT-001 | P3-SURF-001, P3-SURF-002 | TSK-P3-WP-001, TSK-P3-WP-002 | completed | Deterministic internal serialization, proof contracts, and offline replay package schema contracts for lineage records. |
 
 ## Wave 2 - Projection And Authority Enforcement
 
 | DAG Node | Surface | Depends On | Status | Purpose |
 |---|---|---|---|---|
-| TSK-P3-WP-003 | P3-SURF-003 | TSK-P3-WP-001, TSK-P3-WP-002, TSK-P3-SUPPORT-CONTRACT-001 | planned | Projection universes and recursive legitimacy evaluation. |
-| TSK-P3-WP-006 | P3-SURF-006 | TSK-P3-WP-002, TSK-P3-SUPPORT-SEC-001 | planned | Authority scope and delegation enforcement. |
-| TSK-P3-SUPPORT-FIXTURE-001 | P3-SURF-001, P3-SURF-002, P3-SURF-003, P3-SURF-006 | TSK-P3-WP-003, TSK-P3-WP-006 | planned | Canonical valid/invalid lineage, authority, and legitimacy fixtures. |
-| TSK-P3-SUPPORT-VERSION-001 | P3-SURF-001, P3-SURF-002, P3-SURF-003 | TSK-P3-WP-003 | planned | Schema, projection, proof, and policy format compatibility planning. |
+| TSK-P3-WP-003 | P3-SURF-003 | TSK-P3-WP-001, TSK-P3-WP-002, TSK-P3-SUPPORT-CONTRACT-001 | completed | Projection universes and recursive legitimacy evaluation. |
+| TSK-P3-WP-006 | P3-SURF-006 | TSK-P3-WP-002, TSK-P3-SUPPORT-SEC-001 | completed | Authority scope and delegation enforcement. |
+| TSK-P3-SUPPORT-FIXTURE-001 | P3-SURF-001, P3-SURF-002, P3-SURF-003, P3-SURF-006 | TSK-P3-WP-003, TSK-P3-WP-006 | completed | Canonical valid/invalid lineage, authority, and legitimacy fixtures. |
+| TSK-P3-SUPPORT-VERSION-001 | P3-SURF-001, P3-SURF-002, P3-SURF-003 | TSK-P3-WP-003 | completed | Schema, projection, proof, policy format compatibility, and replay hash regression planning. |
 
 ## Wave 3 - Contradiction And Failure Composition
 
 | DAG Node | Surface | Depends On | Status | Purpose |
 |---|---|---|---|---|
-| TSK-P3-WP-004 | P3-SURF-004 | TSK-P3-WP-003, TSK-P3-WP-006 | planned | Contradiction detection, quarantine, supersession, and escalation mechanics. |
-| TSK-P3-WP-005 | P3-SURF-005 | TSK-P3-WP-003, TSK-P3-WP-004 | planned | Failure composition and internal evidence continuity. |
-| TSK-P3-SUPPORT-MIG-001 | P3-SURF-001, P3-SURF-002, P3-SURF-003, P3-SURF-004, P3-SURF-005, P3-SURF-006 | TSK-P3-SUPPORT-DB-001, TSK-P3-WP-005 | planned | Migration and backfill planning for replay-addressable lineage and findings. |
+| TSK-P3-WP-004 | P3-SURF-004 | TSK-P3-WP-003, TSK-P3-WP-006 | completed | Contradiction detection, quarantine, supersession, and escalation mechanics. |
+| TSK-P3-WP-005 | P3-SURF-005 | TSK-P3-WP-003, TSK-P3-WP-004 | completed | Failure composition and cross-system evidence continuity. |
+| TSK-P3-SUPPORT-MIG-001 | P3-SURF-001, P3-SURF-002, P3-SURF-003, P3-SURF-004, P3-SURF-005, P3-SURF-006 | TSK-P3-SUPPORT-DB-001, TSK-P3-WP-005 | completed | Migration and backfill planning for replay-addressable lineage, findings, and pre-/post-Phase-3 fixture equality preservation. |
 
 ## Wave 4 - Regulator, COI, Spatial, And Temporal Gates
 
 | DAG Node | Surface | Depends On | Status | Purpose |
 |---|---|---|---|---|
-| TSK-P3-WP-007 | P3-SURF-007 | TSK-P3-WP-002, TSK-P3-WP-004 | planned | Regulator-aware partitioning, precedence application, and non-collapse mechanics. |
-| TSK-P3-WP-008 | P3-SURF-008 | TSK-P3-WP-006 | planned | Conflict-of-interest and verifier independence enforcement. |
-| TSK-P3-WP-009 | P3-SURF-009 | TSK-P3-WP-002, TSK-P3-WP-005 | planned | Spatial constraint and DNSH gates. |
-| TSK-P3-WP-010 | P3-SURF-010 | TSK-P3-WP-003, TSK-P3-WP-004, TSK-P3-WP-005 | planned | Dwell-time forensic findings under temporal replay doctrine. |
-| TSK-P3-SUPPORT-PERF-001 | P3-SURF-001, P3-SURF-003, P3-SURF-009 | TSK-P3-WP-009, TSK-P3-WP-010 | planned | Deterministic traversal, spatial, and projection scale bounds. |
-| TSK-P3-SUPPORT-OBS-001 | P3-SURF-003, P3-SURF-004, P3-SURF-005, P3-SURF-007, P3-SURF-009 | TSK-P3-WP-007, TSK-P3-WP-009, TSK-P3-WP-010 | planned | Internal constitutional observability without UI/dashboard semantics. |
+| TSK-P3-WP-007 | P3-SURF-007 | TSK-P3-WP-002, TSK-P3-WP-004 | completed | Regulator-aware partitioning, precedence application, and non-collapse mechanics. |
+| TSK-P3-WP-008 | P3-SURF-008 | TSK-P3-WP-006 | completed | Conflict-of-interest and verifier independence enforcement. |
+| TSK-P3-WP-009 | P3-SURF-009 | TSK-P3-WP-002, TSK-P3-WP-005 | completed | Spatial constraint and DNSH gates. |
+| TSK-P3-WP-010 | P3-SURF-010 | TSK-P3-WP-003, TSK-P3-WP-004, TSK-P3-WP-005 | completed | Dwell-time forensic findings under temporal replay doctrine. |
+| TSK-P3-SUPPORT-PERF-001 | P3-SURF-001, P3-SURF-003, P3-SURF-009 | TSK-P3-WP-009, TSK-P3-WP-010 | completed | Deterministic traversal, spatial, and projection scale bounds. |
+| TSK-P3-SUPPORT-OBS-001 | P3-SURF-003, P3-SURF-004, P3-SURF-005, P3-SURF-007, P3-SURF-009 | TSK-P3-WP-007, TSK-P3-WP-009, TSK-P3-WP-010 | completed | Internal constitutional observability without UI/dashboard semantics. |
 
-## Wave 5 - Verifier, CI, And Closeout Planning
+## Wave 5 - Verifier, Segregation, Uncertainty, AI, CI, And Closeout Planning
 
 | DAG Node | Surface | Depends On | Status | Purpose |
 |---|---|---|---|---|
-| TSK-P3-WP-011 | P3-SURF-011 | TSK-P3-WP-001 through TSK-P3-WP-010 | planned | Verifier suite, CI wiring, evidence expectations, negative tests, and invariant promotion protocol. |
-| TSK-P3-SUPPORT-DOC-001 | P3-SURF-000 through P3-SURF-011 | TSK-P3-WP-011 | planned | Implementation references, replay specifications, and operator-neutral documentation. |
+| TSK-P3-WP-012 | P3-SURF-012 | TSK-P3-WP-005, TSK-P3-WP-006, TSK-P3-WP-008 | completed | Runtime/verifier trust-boundary segregation, artifact exchange contracts, and privilege-separated verification surfaces. |
+| TSK-P3-WP-011 | P3-SURF-011 | TSK-P3-WP-001 through TSK-P3-WP-010, TSK-P3-WP-012 | completed | Verifier suite, CI wiring, evidence expectations, negative tests, invariant-to-verifier registry, capability-boundary contamination tests, and invariant promotion protocol. |
+| TSK-P3-WP-013 | P3-SURF-013 | TSK-P3-WP-011, TSK-P3-WP-012 | completed | Uncertainty classification, operator-governed propagation, and replay-admissible authority transfer semantics. |
+| TSK-P3-GOV-005 | P3-SURF-000 | TSK-P3-WP-013 | completed | AI governance doctrine, model registry and inference log schemas, and confidence-to-uncertainty admissibility mappings. |
+| TSK-P3-SUPPORT-DOC-001 | P3-SURF-000 through P3-SURF-013 | TSK-P3-WP-011, TSK-P3-WP-012, TSK-P3-WP-013, TSK-P3-GOV-005 | completed | Implementation references, replay specifications, and operator-neutral documentation. |
+
+## Post-Wave Follow-Up Governance And Baseline Repairs
+
+| DAG Node | Surface | Depends On | Status | Purpose |
+|---|---|---|---|---|
+| TSK-P3-GOV-004 | P3-SURF-000 | None | completed | Repair DB task-pack generator and planning-to-task handoff scope so canonical DB baseline, migration-head, ADR, and human task-index closure surfaces are emitted without manual patching. |
+| TSK-P3-SUPPORT-DB-002 | P3-SURF-000 | TSK-P3-SUPPORT-SEC-001 | completed | Make privilege-only migration effects visible to canonical baseline and drift governance. |
+| TSK-P3-SUPPORT-DB-003 | P3-SURF-000 | None | completed | Fail-closed DB verifier bootstrap and connection diagnostics for `scripts/db` verifiers so DB/bootstrap failure cannot be silently misreported as schema absence. |
+| TSK-P3-GOV-006 | P3-SURF-000 | None | completed | Fail-closed DB probe contract for audit-side DB-facing verifiers and implementation-process guidance. |
+| TSK-P3-GOV-007 | P3-SURF-000 | TSK-P3-GOV-004 | completed | Normalize proof-before-completion lifecycle semantics so task proof no longer depends on pre-set completed status. |
+| TSK-P3-SUPPORT-DB-004 | P3-SURF-000 | TSK-P3-SUPPORT-DB-002 | completed | Make `baseline_then_migrations` safe on fresh databases with the default `public` schema while preserving baseline-cutoff governance. |
+| TSK-P3-GOV-008 | P3-SURF-000 | None | completed | Reconcile Stage A approval semantics with wave-end `pre_ci` and final governance signoff timing. |
 
 ## Explicit Future-Phase Routing
 
@@ -125,10 +141,12 @@ This is not an atomic task pack and does not authorize implementation.
 | Phase spec 3.4 | P3-SURF-005; TSK-P3-WP-005 |
 | Phase spec 3.5 | P3-SURF-002; TSK-P3-WP-002; P3-SURF-006; TSK-P3-WP-006 |
 | Phase spec 3.6 | P3-SURF-007; TSK-P3-WP-007 |
-| Phase spec 3.7 | P3-SURF-008; TSK-P3-WP-008 |
+| Phase spec 3.7 | P3-SURF-008; TSK-P3-WP-008; P3-SURF-012; TSK-P3-WP-012 |
 | Phase spec 3.8 | P3-SURF-009; TSK-P3-WP-009 |
-| Contract rows P3-001 through P3-009 | P3-SURF-001 through P3-SURF-011 |
-| Invariants INV-301 through INV-310 | P3-SURF-001 through P3-SURF-011 |
+| Phase spec 3.9 | P3-SURF-013; TSK-P3-WP-013 |
+| Phase spec 3.10 | P3-SURF-000; TSK-P3-GOV-005 |
+| Contract rows P3-001 through P3-011 | P3-SURF-000 through P3-SURF-013 |
+| Invariants INV-301 through INV-313 | P3-SURF-000 through P3-SURF-013 |
 
 ## Atomic Task Creation Gate
 

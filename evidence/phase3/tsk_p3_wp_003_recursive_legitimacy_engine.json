@@ -1,0 +1,119 @@
+{
+  "task_id": "TSK-P3-WP-003",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-17T19:33:17Z",
+  "status": "PASS",
+  "pass": true,
+  "checks": {
+    "migration_head_forward_only": {
+      "status": "PASS",
+      "detail": "MIGRATION_HEAD=0212 (>=0211)"
+    },
+    "projection_universe_table_exists": {
+      "status": "PASS",
+      "detail": "public.p3_projection_universes exists"
+    },
+    "projection_record_table_exists": {
+      "status": "PASS",
+      "detail": "public.p3_legitimacy_projection_records exists"
+    },
+    "projection_manifest_exists": {
+      "status": "PASS",
+      "detail": "public.p3_legitimacy_projection_manifest exists"
+    },
+    "evaluate_function_exists": {
+      "status": "PASS",
+      "detail": "p3_evaluate_legitimacy_projection(text, uuid) exists"
+    },
+    "assert_function_exists": {
+      "status": "PASS",
+      "detail": "p3_assert_legitimacy_projection(text, uuid) exists"
+    },
+    "projection_purpose_enum": {
+      "status": "PASS",
+      "detail": "p3_projection_purpose has 2 values"
+    },
+    "projection_state_enum": {
+      "status": "PASS",
+      "detail": "p3_legitimacy_projection_state has 4 values"
+    },
+    "projection_mutability_default": {
+      "status": "PASS",
+      "detail": "projection records default to supersedable_projection"
+    },
+    "recursive_legitimacy_projection": {
+      "status": "PASS",
+      "detail": "recursive legitimacy evaluation identifies illegitimate ancestors deterministically"
+    },
+    "illegitimate_ancestor_blocking": {
+      "status": "PASS",
+      "detail": "illegitimate-ancestor assertion fails closed with SQLSTATE P3002"
+    },
+    "runtime_index_registered": {
+      "status": "PASS",
+      "detail": "PHASE3 runtime index contains TSK-P3-WP-003"
+    },
+    "phase3_registry_registered": {
+      "status": "PASS",
+      "detail": "phase3_task_registry.yml contains TSK-P3-WP-003"
+    },
+    "adr_rebaseline_recorded": {
+      "status": "PASS",
+      "detail": "ADR-0010 references MIGRATION_HEAD 0211"
+    },
+    "sqlstate_registered": {
+      "status": "PASS",
+      "detail": "sqlstate map contains P3002 for recursive legitimacy blocking"
+    }
+  },
+  "observed_paths": [
+    "schema/migrations/0211_p3_recursive_legitimacy_engine.sql",
+    "scripts/db/verify_p3_recursive_legitimacy_engine.sh",
+    "schema/migrations/MIGRATION_HEAD",
+    "docs/decisions/ADR-0010-baseline-policy.md",
+    "docs/contracts/sqlstate_map.yml",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md",
+    "docs/PHASE3/phase3_task_registry.yml",
+    "tasks/TSK-P3-WP-003/meta.yml",
+    "docs/plans/phase3/TSK-P3-WP-003/PLAN.md",
+    "docs/plans/phase3/TSK-P3-WP-003/EXEC_LOG.md"
+  ],
+  "observed_hashes": {
+    "schema/migrations/0211_p3_recursive_legitimacy_engine.sql": "a2708ceb972b4e2985d5aea70074e92dc05d9b44ba97fb41d197a9bc7a87072c",
+    "scripts/db/verify_p3_recursive_legitimacy_engine.sh": "2e01f0dba8120fc826f19241e98487f01471e12f6be58300d88743c1dd15b6ff",
+    "schema/migrations/MIGRATION_HEAD": "c20c5cd3497683ad739a4616b8b56c068d9da355b45ed9d9a7f98d632a70b56b",
+    "docs/decisions/ADR-0010-baseline-policy.md": "e4e19ff237c6e567a97fbfe78cadee92a0e5effe00894e52277a0c18add68b1e",
+    "docs/contracts/sqlstate_map.yml": "c70db210a2afabe581f1f99d0ef1a44f3010a7089f38b60b080d522d27a56b61",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md": "924789f772f1d7783fd711b92ed15ab19e42fda12b11ae8ce1094f54b7f0afe1",
+    "docs/PHASE3/phase3_task_registry.yml": "caedcc9f14853376ade5bfbe6a17010055d52b70313beab0364f0c8fb37a1faa",
+    "tasks/TSK-P3-WP-003/meta.yml": "910caef62370b05e0e83245e1114a8a925dc6bdf11ac2410c11460178f9cbaee",
+    "docs/plans/phase3/TSK-P3-WP-003/PLAN.md": "d27c701402741ec270f8fa32251bd6aa40ae28941a1acabe0fb668052d433c58",
+    "docs/plans/phase3/TSK-P3-WP-003/EXEC_LOG.md": "8e60146249ddfd6b62ab3639671675a1fef65b8547983abc49f6e95885a95755"
+  },
+  "command_outputs": [
+    {
+      "command": "read schema/migrations/MIGRATION_HEAD => 0212",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect legitimacy projection relations and functions",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect legitimacy projection enums and mutability defaults",
+      "status": "recorded"
+    },
+    {
+      "command": "exercise recursive legitimacy evaluation and illegitimate-ancestor blocking in a rollback transaction",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect runtime task index, phase3 task registry, ADR-0010, and sqlstate map",
+      "status": "recorded"
+    }
+  ],
+  "execution_trace": [
+    "start verifier for TSK-P3-WP-003",
+    "legitimacy exercise completed"
+  ]
+}

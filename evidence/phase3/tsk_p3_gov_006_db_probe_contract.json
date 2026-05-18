@@ -1,0 +1,42 @@
+{
+  "task_id": "TSK-P3-GOV-006",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-18T07:24:29Z",
+  "status": "PASS",
+  "checks": {
+    "process_doc_updated": {
+      "status": "PASS",
+      "detail": "implementation process doc distinguishes DB/bootstrap failure from schema-state failure"
+    },
+    "silent_fallbacks_removed": {
+      "status": "PASS",
+      "detail": "representative audit-side DB verifiers no longer swallow DB probe failures"
+    },
+    "safe_sql_present": {
+      "status": "PASS",
+      "detail": "representative audit-side verifiers define fail-closed safe_sql helpers"
+    },
+    "negative_probe_failure": {
+      "status": "PASS",
+      "detail": "audit-side representative verifier fails closed with explicit DB_PROBE_FAILED diagnostics"
+    },
+    "positive_probe_success": {
+      "status": "PASS",
+      "detail": "audit-side representative verifier still passes against the configured proof database"
+    }
+  },
+  "observed_paths": [
+    "docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md",
+    "scripts/audit/verify_p3_regulatory_sovereignty_partitioning.sh",
+    "scripts/audit/verify_p3_failure_composition_engine.sh",
+    "scripts/audit/verify_p3_dwell_time_forensic_enforcement.sh",
+    "scripts/audit/verify_tsk_p3_gov_006_db_probe_contract.sh"
+  ],
+  "observed_hashes": {
+    "docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md": "9e837d1e99efa817342327de8b4cca8388e61eeee1062e29948e7e337df7a7b9",
+    "scripts/audit/verify_p3_regulatory_sovereignty_partitioning.sh": "5f48cfad61a272b34fac25ae5e249d4ac7e373de593285dc9349b69b74db387c",
+    "scripts/audit/verify_p3_failure_composition_engine.sh": "f7be9af60fd81cf5bd4f17e5a21b9f59fff3414015019e4c6901022972093c13",
+    "scripts/audit/verify_p3_dwell_time_forensic_enforcement.sh": "22a5211b7e2f6cf782b1548d7bdefc4df8dfc7d9fd17a5e23c41ac66e7e6d4a6",
+    "scripts/audit/verify_tsk_p3_gov_006_db_probe_contract.sh": "a50ffb37b29d01486a86f013058a7c33ffb938b75d57717c9ef612c2d32c8045"
+  }
+}

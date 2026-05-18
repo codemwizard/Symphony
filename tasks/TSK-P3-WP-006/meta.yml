@@ -1,0 +1,182 @@
+schema_version: 1
+phase: '3'
+wave: 'WP'
+task_id: TSK-P3-WP-006
+title: "Authority scope and delegation enforcement"
+owner_role: DB_FOUNDATION
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DB_SCHEMA
+depends_on: ["TSK-P3-WP-002", "TSK-P3-SUPPORT-SEC-001"]
+invariants: ["INV-307"]
+
+deliverable_files:
+  - schema/migrations/0212_p3_authority_scope_engine.sql
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.normalized.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-17/0001_baseline.sql
+  - schema/baselines/2026-05-17/baseline.normalized.sql
+  - schema/baselines/2026-05-17/baseline.cutoff
+  - schema/baselines/2026-05-17/baseline.meta.json
+  - scripts/db/verify_p3_authority_scope_engine.sh
+  - evidence/phase3/tsk_p3_wp_006_authority_scope_engine.json
+  - docs/contracts/sqlstate_map.yml
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/plans/phase3/TSK-P3-WP-006/PLAN.md
+  - docs/plans/phase3/TSK-P3-WP-006/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - schema/migrations/0212_p3_authority_scope_engine.sql
+    - schema/migrations/MIGRATION_HEAD
+    - scripts/db/verify_p3_authority_scope_engine.sh
+    - evidence/phase3/tsk_p3_wp_006_authority_scope_engine.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - 0144: "Wave 5 remediation baseline"
+  table_dependencies:
+    - schema_migrations: "must track migrations"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+  - "Policy or authority lineage definition, projection semantics, or contradiction mechanics."
+  - "Regulator partition semantics, product authorization, host-country workflow runtime, or sovereign-mandate meaning."
+  - "Runtime access as constitutional authority or future-phase absorption."
+stop_conditions:
+  - "If the migration design requires regulator, host-country, or product-authorization semantics to express authority enforcement."
+  - "If the implementation cannot remain inside one forward-only migration, one verifier, and the declared registry/index surfaces."
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON can prove the authority-scope and delegation enforcement substrate exists, is replay-authoritative where inspected, and rejects delegation overflow or revoked-authority cases under structural constraints."
+  - "Evidence can prove enforcement remains anchored to canonical policy and authority lineage, with immutable provenance identifiers and declared revocation-lineage metadata where the verifier inspects them."
+proof_limitations:
+  - "Does not prove regulator partition, host-country workflow, or product-authorization semantics."
+  - "Does not prove the substantive correctness of the underlying authority policy corpus itself."
+  - "Does not prove runtime API integration or generalized application authorization behavior."
+
+touches:
+  - schema/migrations/0212_p3_authority_scope_engine.sql
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.normalized.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-17/0001_baseline.sql
+  - schema/baselines/2026-05-17/baseline.normalized.sql
+  - schema/baselines/2026-05-17/baseline.cutoff
+  - schema/baselines/2026-05-17/baseline.meta.json
+  - scripts/db/verify_p3_authority_scope_engine.sh
+  - evidence/phase3/tsk_p3_wp_006_authority_scope_engine.json
+  - docs/contracts/sqlstate_map.yml
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - tasks/TSK-P3-WP-006/meta.yml
+  - docs/plans/phase3/TSK-P3-WP-006/PLAN.md
+  - docs/plans/phase3/TSK-P3-WP-006/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_wp_006_w01] Define a single forward-only Phase 3 schema mutation that establishes replay-authoritative authority-scope and delegation enforcement structures anchored to canonical policy and authority lineage without importing regulator, product-authorization, host-country workflow, or sovereignty runtime semantics."
+  - "[ID tsk_p3_wp_006_w02] Bind authority enforcement to deterministic delegation reconstruction, revocation-lineage metadata, immutable provenance identifiers, and scope-overflow boundaries that never exceed declarative lineage-backed authority."
+  - "[ID tsk_p3_wp_006_w03] Add a deterministic verifier that proves authority-scope enforcement structure exists, delegation overflow and revoked-authority cases are mechanically rejectable, and enforcement semantics remain anchored to Wave 1 lineage truth under declared structural constraints."
+  - "[ID tsk_p3_wp_006_w04] Register the task in the active Phase 3 runtime task index and registry without altering unrelated Wave 2 projection, fixture, or future-phase authority workflow scope."
+
+acceptance_criteria:
+  - "[ID tsk_p3_wp_006_w01] A single forward-only migration path is declared for authority-scope and delegation enforcement structure and is scoped only to replay-authoritative enforcement substrate."
+  - "[ID tsk_p3_wp_006_w02] The planned substrate exposes deterministic delegation reconstruction, revocation-lineage metadata, immutable provenance identifiers, and declarative scope-overflow boundaries anchored to canonical authority lineage."
+  - "[ID tsk_p3_wp_006_w03] The task declares a verifier path and evidence path that honestly prove authority-scope and delegation enforcement structure without claiming regulator partition, host-country workflow, or product-authorization semantics."
+  - "[ID tsk_p3_wp_006_w04] The active runtime task index and Phase 3 task registry both point to the generated `TSK-P3-WP-006` task pack as the runtime source of truth."
+
+negative_tests:
+  - id: TSK-P3-WP-006-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: A single forward-only migration path is declared for authority-scope and delegation enforcement structure and is scoped only to replay-authoritative enforcement substrate."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-WP-006-P1
+    description: "Verify that execution exits 0 on success path for: A single forward-only migration path is declared for authority-scope and delegation enforcement structure and is scoped only to replay-authoritative enforcement substrate."
+    required: true
+
+verification:
+  - '[ID tsk_p3_wp_006_w01] [ID tsk_p3_wp_006_w02] [ID tsk_p3_wp_006_w03] [ID tsk_p3_wp_006_w04] test -x scripts/db/verify_p3_authority_scope_engine.sh && bash scripts/db/verify_p3_authority_scope_engine.sh > evidence/phase3/tsk_p3_wp_006_authority_scope_engine.json || exit 1'
+  - 'bash scripts/db/lint_migrations.sh || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-WP-006 --evidence evidence/phase3/tsk_p3_wp_006_authority_scope_engine.json || exit 1'
+  - 'RUN_PHASE3_GATES=1 bash scripts/dev/pre_ci.sh || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_wp_006_authority_scope_engine.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+  - "Forward-only migration path missing or malformed => FAIL"
+  - "Authority enforcement detaches from Wave 1 lineage truth or fails to reject overflow/revoked cases => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/implementation_plans/TSK-P3-PLAN-002_wave2_projection_authority_enforcement.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-002_policy_authority_lineage.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-006_authority_delegation.md
+  - docs/constitutional/AUTHORITY_SCOPE_AND_DELEGATION_DOCTRINE.md
+  - docs/constitutional/POLICY_ARTIFACT_AND_AUTHORITY_LINEAGE_DOCTRINE.md
+  - docs/constitutional/TEMPORAL_VALIDITY_AND_REPLAY_DOCTRINE.md
+  - docs/constitutional/CONSTITUTIONAL_GRAPH.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+implementation_plan: docs/plans/phase3/TSK-P3-WP-006/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-WP-006/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py and narrowed to the P3-SURF-006 authority-enforcement-only scope defined by TSK-P3-CAP-006.'
+client: cursor
+assigned_agent: db_foundation
+model: claude-sonnet-4-20250514

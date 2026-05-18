@@ -1,0 +1,140 @@
+schema_version: 1
+phase: '3'
+wave: 'SUPPORT'
+task_id: TSK-P3-SUPPORT-OBS-001
+title: "Internal constitutional observability without UI or dashboard semantics"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+depends_on: ["TSK-P3-WP-007", "TSK-P3-WP-009", "TSK-P3-WP-010"]
+invariants: ["INV-301", "INV-305", "INV-309", "INV-310"]
+
+deliverable_files:
+  - docs/architecture/PHASE3_INTERNAL_CONSTITUTIONAL_OBSERVABILITY_CONTRACT.md
+  - scripts/agent/verify_tsk_p3_support_obs_001.sh
+  - evidence/phase3/tsk_p3_support_obs_001_observability_contract.json
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/plans/phase3/TSK-P3-SUPPORT-OBS-001/PLAN.md
+  - docs/plans/phase3/TSK-P3-SUPPORT-OBS-001/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/agent/verify_tsk_p3_support_obs_001.sh
+    - evidence/phase3/tsk_p3_support_obs_001_observability_contract.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+  - "Dashboards, operator consoles, user-facing explanations, disclosure UX, or regulator portal behavior."
+  - "Runtime implementation of regulator partition, contradiction, failure, spatial, or temporal surfaces."
+  - "Unilateral freezing of observability semantics for only one owning surface."
+stop_conditions:
+  - "If the shared observability artifact cannot remain additive-only across all five owning surfaces."
+  - "If the task requires UI, dashboard, portal, or disclosure semantics to express observability obligations."
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON can prove that one shared internal observability artifact exists and covers replay-safe machine-readable constitutional traceability across P3-SURF-003, P3-SURF-004, P3-SURF-005, P3-SURF-007, and P3-SURF-009 where inspected."
+  - "Evidence can prove additive-only reconciliation, internal-only observability posture, and explicit prohibition on UI/dashboard/disclosure drift without redefining owning-surface semantics."
+proof_limitations:
+  - "Does not prove runtime implementation of any owning surface."
+  - "Does not prove human-readable explanation UX, dashboard behavior, or external disclosure workflows because those are outside task scope."
+  - "Does not prove substantive doctrine correctness beyond declared observability contract coverage."
+
+touches:
+  - docs/architecture/PHASE3_INTERNAL_CONSTITUTIONAL_OBSERVABILITY_CONTRACT.md
+  - scripts/agent/verify_tsk_p3_support_obs_001.sh
+  - evidence/phase3/tsk_p3_support_obs_001_observability_contract.json
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - tasks/TSK-P3-SUPPORT-OBS-001/meta.yml
+  - docs/plans/phase3/TSK-P3-SUPPORT-OBS-001/PLAN.md
+  - docs/plans/phase3/TSK-P3-SUPPORT-OBS-001/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_support_obs_001_w01] Define one canonical shared observability artifact for replay-safe internal constitutional traceability across P3-SURF-003, P3-SURF-004, P3-SURF-005, P3-SURF-007, and P3-SURF-009 without importing dashboards, user-facing explanations, disclosure UX, or regulator portal semantics."
+  - "[ID tsk_p3_support_obs_001_w02] Bind the artifact to additive-only reconciliation, machine-readable internal signal requirements, replay-safe visibility rules, and explicit prohibition on silently redefining earlier projection, contradiction, failure, regulator, or spatial meanings."
+  - "[ID tsk_p3_support_obs_001_w03] Add a deterministic verifier that proves the shared observability artifact covers all five owning surfaces, remains internal-only, and blocks UI/dashboard/disclosure drift under the declared structural contract."
+  - "[ID tsk_p3_support_obs_001_w04] Register the task in the active Phase 3 runtime task index and registry without altering unrelated Wave 4 runtime-node scope or future-phase user-facing observability semantics."
+
+acceptance_criteria:
+  - "[ID tsk_p3_support_obs_001_w01] One canonical shared observability artifact is declared for replay-safe internal constitutional traceability across all five owning surfaces."
+  - "[ID tsk_p3_support_obs_001_w02] The artifact declares additive-only reconciliation, machine-readable internal signal requirements, replay-safe visibility rules, and explicit prohibition on UI/dashboard/disclosure drift or silent redefinition of owning-surface meanings."
+  - "[ID tsk_p3_support_obs_001_w03] The task declares a verifier and evidence path that honestly prove shared internal observability coverage without claiming runtime implementation of the owning surfaces or any user-facing explanation surface."
+  - "[ID tsk_p3_support_obs_001_w04] The active runtime task index and Phase 3 task registry both point to the generated `TSK-P3-SUPPORT-OBS-001` task pack as the runtime source of truth."
+
+negative_tests:
+  - id: TSK-P3-SUPPORT-OBS-001-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: One canonical shared observability artifact is declared for replay-safe internal constitutional traceability across all five owning surfaces."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-SUPPORT-OBS-001-P1
+    description: "Verify that execution exits 0 on success path for: One canonical shared observability artifact is declared for replay-safe internal constitutional traceability across all five owning surfaces."
+    required: true
+
+verification:
+  - '[ID tsk_p3_support_obs_001_w01] [ID tsk_p3_support_obs_001_w02] [ID tsk_p3_support_obs_001_w03] [ID tsk_p3_support_obs_001_w04] test -x scripts/agent/verify_tsk_p3_support_obs_001.sh && bash scripts/agent/verify_tsk_p3_support_obs_001.sh > evidence/phase3/tsk_p3_support_obs_001_observability_contract.json || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-SUPPORT-OBS-001 --evidence evidence/phase3/tsk_p3_support_obs_001_observability_contract.json || exit 1'
+  - 'bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P3-SUPPORT-OBS-001 || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_support_obs_001_observability_contract.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+  - "Shared observability artifact omits one owning surface => FAIL"
+  - "Observability scope drifts into dashboards, explanations, disclosure UX, or regulator portal semantics => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/implementation_plans/TSK-P3-PLAN-004_wave4_regulator_coi_spatial_temporal.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-003_projection_legitimacy.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-004_contradiction_detection.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-005_failure_evidence_continuity.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-007_regulator_partition.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-009_spatial_dnsh.md
+  - docs/constitutional/EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md
+  - docs/constitutional/TASK_GENERATION_CONSTITUTION.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+implementation_plan: docs/plans/phase3/TSK-P3-SUPPORT-OBS-001/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-SUPPORT-OBS-001/EXEC_LOG.md
+notes: 'Generated via Phase 3 task-pack creation workflow and narrowed to one additive-only shared internal observability contract jointly serving P3-SURF-003, P3-SURF-004, P3-SURF-005, P3-SURF-007, and P3-SURF-009.'
+client: cursor
+assigned_agent: architect
+model: claude-sonnet-4-20250514

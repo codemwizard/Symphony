@@ -82,6 +82,11 @@ def normalize_verification_commands(commands):
     return normalized
 
 
+def command_is_stubbed(cmd):
+    stripped = cmd.strip()
+    return not stripped or stripped.startswith("#")
+
+
 def verification_is_thin(commands, blast_radius):
     normalized_commands = normalize_verification_commands(commands)
     min_count = 2 if blast_radius == "DOCS_ONLY" else 3
@@ -100,6 +105,19 @@ def verification_is_thin(commands, blast_radius):
         if not has_task_verifier:
             return True
     return False
+
+
+def primary_verifier_is_inert(commands):
+    if isinstance(commands, str):
+        commands = [commands]
+    if not isinstance(commands, list) or not commands:
+        return True
+    first = commands[0]
+    if isinstance(first, str):
+        return command_is_stubbed(first)
+    if isinstance(first, dict):
+        return command_is_stubbed(str(first.get("cmd", "")))
+    return True
 
 
 def inspect_meta(path_label, data, existing_paths=None):
@@ -146,6 +164,8 @@ def inspect_meta(path_label, data, existing_paths=None):
 
     if verification_is_thin(verification, blast_radius):
         issues.append("verification_too_shallow")
+    if primary_verifier_is_inert(verification):
+        issues.append("primary_verifier_inert")
 
     return {"task_id": tid, "path": path_label, "issues": issues}
 

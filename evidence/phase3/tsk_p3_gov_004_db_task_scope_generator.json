@@ -1,0 +1,139 @@
+{
+  "task_id": "TSK-P3-GOV-004",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-17T15:08:46Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "meta_contains::schema/migrations/MIGRATION_HEAD",
+      "pass": true
+    },
+    {
+      "check": "meta_contains::schema/baseline.sql",
+      "pass": true
+    },
+    {
+      "check": "meta_contains::schema/baselines/current/0001_baseline.sql",
+      "pass": true
+    },
+    {
+      "check": "meta_contains::schema/baselines/current/baseline.cutoff",
+      "pass": true
+    },
+    {
+      "check": "meta_contains::schema/baselines/current/baseline.meta.json",
+      "pass": true
+    },
+    {
+      "check": "meta_contains::schema/baselines/2026-05-17/0001_baseline.sql",
+      "pass": true
+    },
+    {
+      "check": "meta_contains::schema/baselines/2026-05-17/baseline.normalized.sql",
+      "pass": true
+    },
+    {
+      "check": "meta_contains::schema/baselines/2026-05-17/baseline.cutoff",
+      "pass": true
+    },
+    {
+      "check": "meta_contains::schema/baselines/2026-05-17/baseline.meta.json",
+      "pass": true
+    },
+    {
+      "check": "meta_contains::docs/decisions/ADR-0010-baseline-policy.md",
+      "pass": true
+    },
+    {
+      "check": "meta_contains::docs/PHASE3/phase3_task_registry.yml",
+      "pass": true
+    },
+    {
+      "check": "meta_contains::docs/tasks/PHASE3_RUNTIME_TASKS.md",
+      "pass": true
+    },
+    {
+      "check": "plan_contains::schema/migrations/MIGRATION_HEAD",
+      "pass": true
+    },
+    {
+      "check": "plan_contains::schema/baseline.sql",
+      "pass": true
+    },
+    {
+      "check": "plan_contains::schema/baselines/current/0001_baseline.sql",
+      "pass": true
+    },
+    {
+      "check": "plan_contains::schema/baselines/2026-05-17/0001_baseline.sql",
+      "pass": true
+    },
+    {
+      "check": "plan_contains::schema/baselines/2026-05-17/baseline.normalized.sql",
+      "pass": true
+    },
+    {
+      "check": "plan_contains::docs/decisions/ADR-0010-baseline-policy.md",
+      "pass": true
+    },
+    {
+      "check": "plan_contains::docs/PHASE3/phase3_task_registry.yml",
+      "pass": true
+    },
+    {
+      "check": "plan_contains::docs/tasks/PHASE3_RUNTIME_TASKS.md",
+      "pass": true
+    },
+    {
+      "check": "meta_omits_pre_ci",
+      "pass": true
+    },
+    {
+      "check": "plan_omits_pre_ci",
+      "pass": true
+    },
+    {
+      "check": "meta_contains_task_pack_readiness",
+      "pass": true
+    },
+    {
+      "check": "plan_contains_task_pack_readiness",
+      "pass": true
+    },
+    {
+      "check": "exec_log_has_plan_reference",
+      "pass": true
+    },
+    {
+      "check": "exec_log_has_final_summary",
+      "pass": true
+    }
+  ],
+  "observed_paths": [
+    "/tmp/tmp.pL1bC4Yzfv/tasks/TSK-P3-WP-901/meta.yml",
+    "/tmp/tmp.pL1bC4Yzfv/docs/plans/phase3/TSK-P3-WP-901/PLAN.md",
+    "/tmp/tmp.pL1bC4Yzfv/docs/plans/phase3/TSK-P3-WP-901/EXEC_LOG.md",
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/scripts/agent/generate_task_pack.py",
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/docs/operations/TASK_CREATION_PROCESS.md",
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/docs/operations/AI_AGENT_PHASE_PLANNING_TO_TASK_HANDOFF_GUIDE.md"
+  ],
+  "observed_hashes": {
+    "/tmp/tmp.pL1bC4Yzfv/tasks/TSK-P3-WP-901/meta.yml": "aa915697cfdd33c364390fc624a17019e7cf839c5e83ddddee6c7a5677f411bd",
+    "/tmp/tmp.pL1bC4Yzfv/docs/plans/phase3/TSK-P3-WP-901/PLAN.md": "b3108856e41229e1fd490bbfde82b6a2eaa792d31a14c910375f71a83480f772",
+    "/tmp/tmp.pL1bC4Yzfv/docs/plans/phase3/TSK-P3-WP-901/EXEC_LOG.md": "5b67f41b16b0b071b683edc910a53dfdf37e3af3b6157c1103c72f0b15e59977",
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/scripts/agent/generate_task_pack.py": "a1e2f097b33247e8896debc3478b3303c92db79bbe75be600769eb59ad87d300",
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/docs/operations/TASK_CREATION_PROCESS.md": "7d9a72e4e812e196a865041cb5449c69c91b3dbe7ee5bdd0e5402e8f25a4e723",
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/docs/operations/AI_AGENT_PHASE_PLANNING_TO_TASK_HANDOFF_GUIDE.md": "ec8c3a9f738647b415be465319d37e8e14864d41cfcdd19af85ed0f3484a5b73"
+  },
+  "command_outputs": [
+    {
+      "command": "python3 scripts/agent/generate_task_pack.py --config <temp> --base-dir <temp> --phase3",
+      "status": "PASS"
+    }
+  ],
+  "execution_trace": [
+    "Generated a representative Phase 3 DB task pack in a temporary sandbox.",
+    "Verified canonical DB governance closure surfaces in meta and plan outputs.",
+    "Verified readiness-based verification wiring and exec-log structural markers."
+  ]
+}

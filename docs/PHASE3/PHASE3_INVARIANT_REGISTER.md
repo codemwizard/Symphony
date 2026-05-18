@@ -22,7 +22,7 @@ Registers constitutional invariants introduced in Phase 3 — the Constraint and
 Legitimacy Engine phase. All invariants are scoped to the Phase 3 capability
 boundary defined in PHASE3_CAPABILITY_BOUNDARY.md.
 
-Invariants INV-301 through INV-310 are filed at `status: roadmap`. They are
+Invariants INV-301 through INV-313 are filed at `status: roadmap`. They are
 constitutional promises, not yet enforcement obligations. Each will be promoted
 to `status: implemented` when its verifier script exists, passes against the
 codebase, and is wired into CI with evidence emission. This distinction is
@@ -84,7 +84,7 @@ phase is constitutionally opened.
 | Owners | team-db, team-platform |
 | SLA Days | 14 |
 | Verifier | `scripts/db/verify_p3_typed_dependency_graph.sh` |
-| Evidence Path | `evidence/phase3/inv_302_typed_dependency_graph.json` |
+| Evidence Path | `evidence/phase3/tsk_p3_wp_001_typed_dependency_graph.json` |
 | Negative Test | Insert a decision record without dependency declarations; must fail NOT NULL / FK constraint |
 | Proof Limitations | Does not verify semantic correctness of dependency relationships — only structural completeness |
 
@@ -238,9 +238,66 @@ phase is constitutionally opened.
 
 ---
 
+### INV-311 — Uncertainty Class Completeness And Non-Default
+
+| Field | Value |
+|---|---|
+| Constitutional Requirement | Every evidence artifact carrying a measured, estimated, or inferred value declares an explicit uncertainty class; missing declarations produce `U-UNKNOWN-UNCERTAINTY` and are held in draft; `U-UNKNOWN-UNCERTAINTY` is never treated as equivalent to `U-EXACT` |
+| Phase Spec Reference | §3.9 Uncertainty And Estimation Semantics; `UNCERTAINTY_AND_ESTIMATION_SEMANTICS_DOCTRINE.md` §2 |
+| Governing Doctrine | [docs/constitutional/UNCERTAINTY_AND_ESTIMATION_SEMANTICS_DOCTRINE.md](docs/constitutional/UNCERTAINTY_AND_ESTIMATION_SEMANTICS_DOCTRINE.md) |
+| Status | roadmap |
+| Severity | P0 |
+| Owners | team-db, team-platform |
+| SLA Days | 14 |
+| Verifier | `scripts/audit/verify_p3_uncertainty_semantics.sh` |
+| Evidence Path | `evidence/phase3/inv_311_uncertainty_class_completeness.json` |
+| Negative Test (unknown-as-exact) | Accept an evidence artifact without an uncertainty class declaration; verify it receives `U-UNKNOWN-UNCERTAINTY`, is held in draft status, and is rejected by any downstream finality gate |
+| Negative Test (undeclared class) | Attempt to file an uncertainty record with a class not in the seven declared classes; must fail with SQLSTATE P3011 |
+| Proof Limitations | Does not verify substantive correctness of uncertainty values — only that the class is declared and that the non-default rule is enforced at the DB layer |
+
+---
+
+### INV-312 — Authority Transfer Record Completeness
+
+| Field | Value |
+|---|---|
+| Constitutional Requirement | Every authority transfer involving an uncertainty finding that moves decision rights between Phase 3 surfaces produces a complete `authority_transfer_records` entry citing the declared transfer mode from `AUTHORITY_TRANSFER_OWNERSHIP_SEMANTICS_DOCTRINE.md` |
+| Phase Spec Reference | §3.9 Uncertainty And Estimation Semantics; `AUTHORITY_TRANSFER_OWNERSHIP_SEMANTICS_DOCTRINE.md` §2 |
+| Governing Doctrine | [docs/constitutional/AUTHORITY_TRANSFER_OWNERSHIP_SEMANTICS_DOCTRINE.md](docs/constitutional/AUTHORITY_TRANSFER_OWNERSHIP_SEMANTICS_DOCTRINE.md) |
+| Status | roadmap |
+| Severity | P0 |
+| Owners | team-db, team-platform |
+| SLA Days | 14 |
+| Verifier | `scripts/audit/verify_p3_uncertainty_semantics.sh` |
+| Evidence Path | `evidence/phase3/inv_312_authority_transfer_record_completeness.json` |
+| Negative Test (missing transfer record) | Trigger an uncertainty finding that routes to `P3-SURF-003`; verify an `authority_transfer_records` entry is produced with mode `AT-EXCLUSIVE` before the legitimacy surface acts |
+| Negative Test (undeclared mode) | Attempt to insert an `authority_transfer_records` entry with a mode value not in the four declared modes; must fail with SQLSTATE P3012 |
+| Proof Limitations | Verifies structural completeness of transfer records and mode validity; does not independently verify that the correct mode was selected for the question class — that requires a human constitutional review |
+
+---
+
+### INV-313 — AI Output Admissibility Gate
+
+| Field | Value |
+|---|---|
+| Constitutional Requirement | Any AI-generated evidence proposal must cite a registered model/version, a replay-addressable inference log record, and a valid confidence-to-uncertainty mapping before it may be admitted above `DRAFT_ONLY`; unregistered, unlogged, or unmapped AI outputs are constitutionally inadmissible |
+| Phase Spec Reference | §3.10 AI Governance and Model Provenance; `AI_ASSISTED_ESTIMATION_AND_DECISION_SUPPORT_DOCTRINE.md` §2, §4, §5, §8 |
+| Governing Doctrine | [docs/constitutional/AI_ASSISTED_ESTIMATION_AND_DECISION_SUPPORT_DOCTRINE.md](docs/constitutional/AI_ASSISTED_ESTIMATION_AND_DECISION_SUPPORT_DOCTRINE.md) |
+| Status | roadmap |
+| Severity | P0 |
+| Owners | team-db, team-platform |
+| SLA Days | 14 |
+| Verifier | `scripts/audit/verify_p3_ai_output_admissibility.sh` |
+| Evidence Path | `evidence/phase3/inv_313_ai_output_admissibility_gate.json` |
+| Negative Test (unregistered model) | Attempt to admit an AI output whose `model_id` / `model_version` is not present in the Model Registry; admission must fail with a Phase 3 AI admissibility error |
+| Negative Test (missing inference log) | Attempt to admit an AI output without a corresponding inference log record and confidence-to-uncertainty mapping; it must remain inadmissible and fail constitutional gating |
+| Proof Limitations | Verifies provenance, mapping, and admissibility gating only. It does not verify substantive correctness of model output or downstream Phase 5 execution behavior |
+
+---
+
 ## Allocation Range Reservation
 
-The identifier range INV-311 through INV-399 is reserved for additional Phase 3
+The identifier range INV-314 through INV-399 is reserved for additional Phase 3
 invariants. No identifiers in this range may be claimed by Phase 4 or later phases.
 
 ---

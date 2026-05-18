@@ -1,0 +1,111 @@
+{
+  "task_id": "TSK-P3-WP-006",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-17T19:34:11Z",
+  "status": "PASS",
+  "pass": true,
+  "checks": {
+    "migration_head_forward_only": {
+      "status": "PASS",
+      "detail": "MIGRATION_HEAD=0212 (>=0212)"
+    },
+    "authority_scope_table_exists": {
+      "status": "PASS",
+      "detail": "public.p3_authority_scope_records exists"
+    },
+    "authority_scope_manifest_exists": {
+      "status": "PASS",
+      "detail": "public.p3_authority_scope_manifest exists"
+    },
+    "evaluate_function_exists": {
+      "status": "PASS",
+      "detail": "p3_evaluate_authority_scope(uuid, text, text, timestamptz) exists"
+    },
+    "assert_function_exists": {
+      "status": "PASS",
+      "detail": "p3_assert_authority_scope(uuid, text, text, timestamptz) exists"
+    },
+    "authority_state_enum": {
+      "status": "PASS",
+      "detail": "p3_authority_enforcement_state has 4 values"
+    },
+    "authority_traceability_columns": {
+      "status": "PASS",
+      "detail": "authority scope records preserve policy/dependency traceability and revocation metadata"
+    },
+    "authority_scope_evaluation": {
+      "status": "PASS",
+      "detail": "authority scope evaluation authorizes in-scope delegated authority and preserves root lineage traceability"
+    },
+    "out_of_scope_and_revoked_blocking": {
+      "status": "PASS",
+      "detail": "out-of-scope and revoked authority claims fail closed with SQLSTATE P3006"
+    },
+    "runtime_index_registered": {
+      "status": "PASS",
+      "detail": "PHASE3 runtime index contains TSK-P3-WP-006"
+    },
+    "phase3_registry_registered": {
+      "status": "PASS",
+      "detail": "phase3_task_registry.yml contains TSK-P3-WP-006"
+    },
+    "adr_rebaseline_recorded": {
+      "status": "PASS",
+      "detail": "ADR-0010 references MIGRATION_HEAD 0212"
+    },
+    "sqlstate_registered": {
+      "status": "PASS",
+      "detail": "sqlstate map contains P3006 for authority scope blocking"
+    }
+  },
+  "observed_paths": [
+    "schema/migrations/0212_p3_authority_scope_engine.sql",
+    "scripts/db/verify_p3_authority_scope_engine.sh",
+    "schema/migrations/MIGRATION_HEAD",
+    "docs/decisions/ADR-0010-baseline-policy.md",
+    "docs/contracts/sqlstate_map.yml",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md",
+    "docs/PHASE3/phase3_task_registry.yml",
+    "tasks/TSK-P3-WP-006/meta.yml",
+    "docs/plans/phase3/TSK-P3-WP-006/PLAN.md",
+    "docs/plans/phase3/TSK-P3-WP-006/EXEC_LOG.md"
+  ],
+  "observed_hashes": {
+    "schema/migrations/0212_p3_authority_scope_engine.sql": "5f69f0b94f4e4802739ffb04954a7f86d34deecd63589bac0d450d62435ab293",
+    "scripts/db/verify_p3_authority_scope_engine.sh": "f2c42f557311245472e41ebd48760b26250b4a833a697360b4578bc1ed0cbfcb",
+    "schema/migrations/MIGRATION_HEAD": "c20c5cd3497683ad739a4616b8b56c068d9da355b45ed9d9a7f98d632a70b56b",
+    "docs/decisions/ADR-0010-baseline-policy.md": "e4e19ff237c6e567a97fbfe78cadee92a0e5effe00894e52277a0c18add68b1e",
+    "docs/contracts/sqlstate_map.yml": "c70db210a2afabe581f1f99d0ef1a44f3010a7089f38b60b080d522d27a56b61",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md": "924789f772f1d7783fd711b92ed15ab19e42fda12b11ae8ce1094f54b7f0afe1",
+    "docs/PHASE3/phase3_task_registry.yml": "caedcc9f14853376ade5bfbe6a17010055d52b70313beab0364f0c8fb37a1faa",
+    "tasks/TSK-P3-WP-006/meta.yml": "94193900ee39ca9bdc032fe8139b631d1f25b84c5d4c49103fc863f7f1bb9f70",
+    "docs/plans/phase3/TSK-P3-WP-006/PLAN.md": "237bf8879b188ee951327e9c66019a967a89f3743bd9e31608666c11531ebf59",
+    "docs/plans/phase3/TSK-P3-WP-006/EXEC_LOG.md": "257e26b1f15362522588d9d0db073cd130c373d18f66e022a545b51bcfea546c"
+  },
+  "command_outputs": [
+    {
+      "command": "read schema/migrations/MIGRATION_HEAD => 0212",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect authority scope relations and functions",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect authority enforcement enum and traceability columns",
+      "status": "recorded"
+    },
+    {
+      "command": "exercise authority scope evaluation, revocation blocking, and out-of-scope blocking in a rollback transaction",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect runtime task index, phase3 task registry, ADR-0010, and sqlstate map",
+      "status": "recorded"
+    }
+  ],
+  "execution_trace": [
+    "start verifier for TSK-P3-WP-006",
+    "authority exercise completed"
+  ]
+}
