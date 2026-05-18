@@ -54,4 +54,7 @@
     and the preserved fail-closed security posture for the full branch.
   verification_commands_run:
   - BASE_REF=refs/remotes/origin/main HEAD_REF=HEAD bash scripts/audit/enforce_change_rule.sh
-  final_status: IN_PROGRESS
+  verification_results:
+  - First rerun before commit still failed because enforce_change_rule.sh reads committed HEAD, not the staged index
+  - After commit 371853c0, BASE_REF=refs/remotes/origin/main HEAD_REF=HEAD bash scripts/audit/enforce_change_rule.sh returned `✅ Change rule OK: no structural changes detected.`
+  final_status: PASS
