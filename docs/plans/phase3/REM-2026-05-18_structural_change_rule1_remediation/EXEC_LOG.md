@@ -36,3 +36,22 @@
   - Fast invariants checks PASSED
   - No structural change detected for the staged remediation diff, so no exception-path Rule 1 closure remains in this follow-up commit
   final_status: PASS
+
+- timestamp_utc: 2026-05-18T14:20:00Z
+  failure_signature: PRECI.STRUCTURAL.CHANGE_RULE
+  origin_gate_id: pre_ci.enforce_change_rule
+  severity: L1
+  repro_command: BASE_REF=refs/remotes/origin/main HEAD_REF=HEAD bash scripts/audit/enforce_change_rule.sh
+  observation: >
+    CI-parity branch-range enforcement still failed after the staged Rule 1
+    remediation because the full origin/main...HEAD structural batch did not
+    include docs/architecture/THREAT_MODEL.md or
+    docs/architecture/COMPLIANCE_MAP.md in the committed diff.
+  fix_applied: >
+    Appended dated Phase-3 branch-range structural governance entries to
+    docs/architecture/THREAT_MODEL.md and docs/architecture/COMPLIANCE_MAP.md
+    covering migrations 0207..0218, verifier-backed INV-301..INV-310 closure,
+    and the preserved fail-closed security posture for the full branch.
+  verification_commands_run:
+  - BASE_REF=refs/remotes/origin/main HEAD_REF=HEAD bash scripts/audit/enforce_change_rule.sh
+  final_status: IN_PROGRESS
