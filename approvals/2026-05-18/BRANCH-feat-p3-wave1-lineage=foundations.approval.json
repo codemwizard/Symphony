@@ -3,22 +3,26 @@
   "approval": {
     "status": "APPROVED",
     "approver_id": "mwiza",
-    "change_reason": "Authorize Phase 4 preparation artifacts and the mandatory Phase 5 anti-drift stubs while keeping the root execution envelope on Phase 3 until formal Phase 4 opening is separately approved.",
+    "change_reason": "Authorize Phase 4 preparation artifacts, the mandatory Phase 5 anti-drift stubs, approval-parity repair, and Rule 1 invariants-linkage remediation while keeping the root execution envelope on Phase 3 until formal Phase 4 opening is separately approved.",
     "approved_at_utc": "2026-05-18T13:33:55Z",
     "role_authority": "Human Approver"
   },
   "ai": {
     "ai_used": true,
-    "ai_prompt_hash": "6ff946f7f4835d4abef13d4f4706d243cc4bae01395ca492b3f4f27656c601a6",
+    "ai_prompt_hash": "a7a203eb1d236f56898d562dbedb48e8fb58e73a02bbd439040128103eacbabc",
     "model_id": "gpt-5-codex",
     "client": "codex_cli",
-    "session_id": "phase4-preparation-branch-approval"
+    "session_id": "phase4-preparation-rule1-remediation"
   },
   "scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
       "approvals/2026-05-18/BRANCH-feat-p3-wave1-lineage=foundations.md",
       "approvals/2026-05-18/BRANCH-feat-p3-wave1-lineage=foundations.approval.json",
+      "evidence/phase1/approval_metadata.json",
+      "docs/invariants/INVARIANTS_ROADMAP.md",
+      "docs/plans/phase3/REM-2026-05-18_structural_change_rule1_remediation/PLAN.md",
+      "docs/plans/phase3/REM-2026-05-18_structural_change_rule1_remediation/EXEC_LOG.md",
       "docs/operations/AGENTIC_SDLC_PHASE4_POLICY.md",
       "scripts/audit/verify_phase4_contract.sh",
       "docs/PHASE4/README.md",
@@ -41,9 +45,12 @@
   "verification": {
     "commands": [
       "bash scripts/audit/verify_phase4_contract.sh",
-      "bash scripts/audit/verify_approval_metadata.sh --mode=stage-a --branch=feat/p3-wave1-lineage=foundations"
+      "bash scripts/audit/verify_approval_metadata.sh --mode=stage-a --branch=feat/p3-wave1-lineage=foundations",
+      "PRE_CI_CONTEXT=1 bash scripts/audit/verify_agent_conformance.sh --mode=stage-a --branch=feat/p3-wave1-lineage=foundations",
+      "bash scripts/audit/run_invariants_fast_checks.sh",
+      "bash scripts/audit/preflight_structural_staged.sh"
     ],
     "pre_ci_passed": false,
-    "notes": "This is a preparation-only branch approval. Formal Phase 4 opening and envelope transition remain blocked on separate closeout and opening approvals."
+    "notes": "This is a preparation-only branch approval. Formal Phase 4 opening and envelope transition remain blocked on separate closeout and opening approvals. The same bundle also authorizes the narrow branch-governance repair needed to restore approval parity and replace the prior structural exception-path closeout with real Rule 1 invariants linkage."
   }
 }
