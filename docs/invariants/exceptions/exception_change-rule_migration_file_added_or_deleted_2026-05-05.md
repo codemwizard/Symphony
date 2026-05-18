@@ -6,6 +6,7 @@ follow_up_ticket: WAVE8-CLOSURE
 reason: Modifying migration 0203 and regenerating the baseline schema snapshot triggers the structural change detector.
 author: mwiza
 created_at: 2026-05-05
+closed_at: 2026-05=18
 ---
 
 # Exception: Structural Fixes for Append-Only Contract

@@ -1,0 +1,185 @@
+schema_version: 1
+phase: '3'
+wave: 'WP'
+task_id: TSK-P3-WP-004
+title: "Contradiction detection, quarantine, supersession, and escalation mechanics"
+owner_role: DB_FOUNDATION
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DB_SCHEMA
+depends_on: ["TSK-P3-WP-003", "TSK-P3-WP-006"]
+invariants: ["INV-304"]
+
+deliverable_files:
+  - schema/migrations/0213_p3_contradiction_detection.sql
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.normalized.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-18/0001_baseline.sql
+  - schema/baselines/2026-05-18/baseline.normalized.sql
+  - schema/baselines/2026-05-18/baseline.cutoff
+  - schema/baselines/2026-05-18/baseline.meta.json
+  - scripts/db/verify_p3_contradiction_detection.sh
+  - evidence/phase3/tsk_p3_wp_004_contradiction_detection.json
+  - docs/contracts/sqlstate_map.yml
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/plans/phase3/TSK-P3-WP-004/PLAN.md
+  - docs/plans/phase3/TSK-P3-WP-004/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - schema/migrations/0213_p3_contradiction_detection.sql
+    - schema/migrations/MIGRATION_HEAD
+    - scripts/db/verify_p3_contradiction_detection.sh
+    - evidence/phase3/tsk_p3_wp_004_contradiction_detection.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - 0144: "Wave 5 remediation baseline"
+  table_dependencies:
+    - schema_migrations: "must track migrations"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+  - "Projection semantics, policy or authority lineage definition, or failure-composition taxonomy."
+  - "Regulator workflow execution, product authorization, sovereign adjudication, or future-phase integration semantics."
+  - "Local contradiction class invention, contradiction resolution outside doctrine, or source-truth mutation."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+  - "If the migration design requires new contradiction classes, local resolution doctrine, or source-record deletion semantics."
+  - "If the implementation cannot remain inside one forward-only migration, one verifier, and the declared registry/index surfaces."
+  - "If an authority-transfer ownership model must be assumed without governing doctrine citation."
+proof_guarantees:
+  - "Evidence JSON can prove the contradiction detection substrate exists, is replay-aware where inspected, and emits deterministic append-only contradiction findings covering direct, temporal, and authority-scope classes under structural constraints."
+  - "Evidence can prove quarantine, supersession, and escalation structures remain replay-visible and do not rely on undeclared ordering or tie-break behavior where the verifier inspects them."
+proof_limitations:
+  - "Does not prove substantive contradiction doctrine correctness, regulator workflow meaning, or sovereign adjudication semantics."
+  - "Does not prove failure composition, authority enforcement, or product-authorization semantics."
+  - "Does not prove runtime API integration or downstream escalation-resolution behavior beyond declared structural constraints."
+
+touches:
+  - schema/migrations/0213_p3_contradiction_detection.sql
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.normalized.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-18/0001_baseline.sql
+  - schema/baselines/2026-05-18/baseline.normalized.sql
+  - schema/baselines/2026-05-18/baseline.cutoff
+  - schema/baselines/2026-05-18/baseline.meta.json
+  - scripts/db/verify_p3_contradiction_detection.sh
+  - evidence/phase3/tsk_p3_wp_004_contradiction_detection.json
+  - docs/contracts/sqlstate_map.yml
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - tasks/TSK-P3-WP-004/meta.yml
+  - docs/plans/phase3/TSK-P3-WP-004/PLAN.md
+  - docs/plans/phase3/TSK-P3-WP-004/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_wp_004_w01] Define a single forward-only Phase 3 schema mutation that establishes deterministic contradiction detection, quarantine, supersession, and escalation structures using only doctrine-declared contradiction classes and without importing failure taxonomy, regulator workflow, sovereign adjudication, or source-truth mutation semantics."
+  - "[ID tsk_p3_wp_004_w02] Bind contradiction findings to explicit artifact-level mutability classes, replay-visible authority transfer records, deterministic canonical ordering and tie-break rules, and append-only quarantine or supersession lineage without collapsing unresolved contradictions into local resolution logic."
+  - "[ID tsk_p3_wp_004_w03] Add a deterministic verifier that proves direct, temporal, and authority-scope contradiction coverage is mechanically inspectable, ordering assumptions are declared, and contradiction outputs remain replay-visible and append-only under declared structural constraints."
+  - "[ID tsk_p3_wp_004_w04] Register the task in the active Phase 3 runtime task index and registry without altering unrelated Wave 3 failure-composition, migration-share, or future-phase contradiction workflow scope."
+
+acceptance_criteria:
+  - "[ID tsk_p3_wp_004_w01] A single forward-only migration path is declared for contradiction detection, quarantine, supersession, and escalation structure and is scoped only to doctrine-declared contradiction substrate."
+  - "[ID tsk_p3_wp_004_w02] The planned substrate exposes artifact-level mutability classification, replay-visible authority transfer records, deterministic canonical ordering and tie-break rules, and append-only contradiction lineage without local contradiction-resolution invention."
+  - "[ID tsk_p3_wp_004_w03] The task declares a verifier path and evidence path that honestly prove deterministic contradiction detection structure and coverage of direct, temporal, and authority-scope contradiction classes without claiming regulator workflow or sovereign adjudication semantics."
+  - "[ID tsk_p3_wp_004_w04] The active runtime task index and Phase 3 task registry both point to the generated `TSK-P3-WP-004` task pack as the runtime source of truth."
+
+negative_tests:
+  - id: TSK-P3-WP-004-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: A single forward-only migration path is declared for contradiction detection, quarantine, supersession, and escalation structure and is scoped only to doctrine-declared contradiction substrate."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-WP-004-P1
+    description: "Verify that execution exits 0 on success path for: A single forward-only migration path is declared for contradiction detection, quarantine, supersession, and escalation structure and is scoped only to doctrine-declared contradiction substrate."
+    required: true
+
+verification:
+  - '[ID tsk_p3_wp_004_w01] [ID tsk_p3_wp_004_w02] [ID tsk_p3_wp_004_w03] [ID tsk_p3_wp_004_w04] test -x scripts/db/verify_p3_contradiction_detection.sh && bash scripts/db/verify_p3_contradiction_detection.sh > evidence/phase3/tsk_p3_wp_004_contradiction_detection.json || exit 1'
+  - 'bash scripts/db/lint_migrations.sh || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-WP-004 --evidence evidence/phase3/tsk_p3_wp_004_contradiction_detection.json || exit 1'
+  - 'RUN_PHASE3_GATES=1 bash scripts/dev/pre_ci.sh || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_wp_004_contradiction_detection.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+  - "Forward-only migration path missing or malformed => FAIL"
+  - "Contradiction coverage misses direct, temporal, or authority-scope classes, or ordering/tie-break assumptions remain undeclared => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/implementation_plans/TSK-P3-PLAN-003_wave3_contradiction_failure_composition.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-004_contradiction_detection.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-003_projection_legitimacy.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-006_authority_delegation.md
+  - docs/constitutional/CONTRADICTION_CLASSIFICATION_DOCTRINE.md
+  - docs/constitutional/LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md
+  - docs/constitutional/TEMPORAL_VALIDITY_AND_REPLAY_DOCTRINE.md
+  - docs/constitutional/AUTHORITY_SCOPE_AND_DELEGATION_DOCTRINE.md
+  - docs/constitutional/CONSTITUTIONAL_GRAPH.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+implementation_plan: docs/plans/phase3/TSK-P3-WP-004/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-WP-004/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py and narrowed to the P3-SURF-004 contradiction-only scope defined by TSK-P3-CAP-004.'
+client: cursor
+assigned_agent: db_foundation
+model: claude-sonnet-4-20250514

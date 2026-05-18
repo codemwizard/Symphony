@@ -8,6 +8,7 @@ Phase-Scope: PHASE-3
 Supersedes: PHASE3_CAPABILITY_BOUNDARY.md (defective self-contained doctrine posture)
 Depends-On:
   - docs/architecture/Symphony-Phase-Specification-Document_v1.md
+  - docs/architecture/PHASE_SPECIFICATION_AI_CAPABILITY_AUGMENTATION.md
   - docs/constitutional/CONSTITUTIONAL_AUTHORITY_HIERARCHY.md
   - docs/constitutional/CONSTITUTIONAL_GLOSSARY.md
   - docs/constitutional/TASK_GENERATION_CONSTITUTION.md
@@ -23,6 +24,10 @@ Depends-On:
   - docs/constitutional/EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md
   - docs/constitutional/REGULATOR_SOVEREIGNTY_NON_COLLAPSE_DOCTRINE.md
   - docs/constitutional/EXTERNAL_VERIFIER_INDEPENDENCE_DOCTRINE.md
+  - docs/constitutional/UNCERTAINTY_AND_ESTIMATION_SEMANTICS_DOCTRINE.md
+  - docs/constitutional/UNCERTAINTY_OPERATOR_REGISTRY.md
+  - docs/constitutional/AUTHORITY_TRANSFER_OWNERSHIP_SEMANTICS_DOCTRINE.md
+  - docs/constitutional/AI_ASSISTED_ESTIMATION_AND_DECISION_SUPPORT_DOCTRINE.md
 Effective-Date: 2026-05-14
 
 ---
@@ -53,9 +58,10 @@ to ensure that decisions are not only cryptographically or operationally valid,
 but formally legitimate under declared rule sets, authority scopes, replay
 requirements, contradiction rules, and failure-composition rules.
 
-Phase 3 is internal legitimacy and constraint enforcement. It is not external
-regulatory integration, methodology execution, tax deduction enforcement,
-tokenization, registry export, UI workflow, or sovereign authorization runtime.
+Phase 3 is internal legitimacy, uncertainty-governance, and constraint
+enforcement. It is not external regulatory integration, methodology execution,
+tax deduction enforcement, tokenization, registry export, UI workflow,
+sovereign authorization runtime, or operational AI execution.
 
 ---
 
@@ -74,6 +80,8 @@ Phase 3 task plans may be created only for these capability domains:
 9. Cross-System Evidence Continuity
 10. Dwell-Time Forensic Enforcement
 11. Phase 3 Verifier and CI Enforcement
+12. Uncertainty And Estimation Semantics
+13. AI Governance And Model Provenance
 
 Authorization means the capability may be scoped for task planning when all
 governing doctrine exists and the task surface stays within the limits below.
@@ -95,6 +103,8 @@ governing doctrine exists and the task surface stays within the limits below.
 | Cross-System Evidence Continuity | Authorized with limits | `EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md`; `REPLAY_AND_HISTORICAL_TRUTH_PRIMACY.md`; `POLICY_ARTIFACT_AND_AUTHORITY_LINEAGE_DOCTRINE.md` | evidence lineage references, continuity checks, replay-visible exchange records | external registry integration, Verra/Gold Standard exports, regulator submission packages | Unblocked if no external integration is implemented |
 | Dwell-Time Forensic Enforcement | Authorized | `TEMPORAL_VALIDITY_AND_REPLAY_DOCTRINE.md`; `CONTRADICTION_CLASSIFICATION_DOCTRINE.md`; `FAILURE_COMPOSITION_TAXONOMY.md` | temporal anomaly checks, dwell-time failures, replay-visible forensic findings | statutory time-limit meaning unless doctrine-defined, retroactive record mutation | Unblocked |
 | Phase 3 Verifier and CI Enforcement | Authorized | `TASK_GENERATION_CONSTITUTION.md`; `PHASE_CAPABILITY_LEGALITY_MATRIX.md`; all capability-specific doctrines above | verifier scripts, consistency checks, evidence expectations, anti-drift gates | doctrine creation by verifier, delivery claims unsupported by evidence | Unblocked after referenced doctrine exists |
+| Uncertainty And Estimation Semantics | Authorized with limits | `UNCERTAINTY_AND_ESTIMATION_SEMANTICS_DOCTRINE.md`; `UNCERTAINTY_OPERATOR_REGISTRY.md`; `AUTHORITY_TRANSFER_OWNERSHIP_SEMANTICS_DOCTRINE.md` | uncertainty class schemas, operator registry references, admissibility gates, authority transfer records, replay structures | methodology execution formulas, industrial emissions ontology, new uncertainty classes beyond the seven declared classes, new operators beyond the registered set | Unblocked when all three governing doctrine documents are canonical |
+| AI Governance And Model Provenance | Authorized with limits | `AI_ASSISTED_ESTIMATION_AND_DECISION_SUPPORT_DOCTRINE.md`; `UNCERTAINTY_AND_ESTIMATION_SEMANTICS_DOCTRINE.md`; `AUTHORITY_TRANSFER_OWNERSHIP_SEMANTICS_DOCTRINE.md`; `EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md` | AI governance doctrine, model-registry schema contracts, inference-log schema contracts, confidence-to-uncertainty mapping rules, admissibility ceilings, phase routing tables | AI model execution, ML training infrastructure, inference runtime, autonomous decisioning beyond declared policy, later-phase disclosure or finance AI behavior | Unblocked when all four governing doctrine documents are canonical |
 
 ---
 
@@ -113,6 +123,7 @@ any of these must be rejected or routed to the correct phase.
 | Tokenization or on-chain export | Phase 8C |
 | EU CBAM or corporate disclosure evidence packages | Phase 8D |
 | External reporting/portfolio workflows not required for internal legitimacy enforcement | Later phase assigned by phase specification |
+| Operational AI model execution or inference runtime | Later phase per AI routing, minimum Phase 5 |
 
 Phase 3 may reference doctrines from these later domains only to preserve
 authority boundaries. It must not implement their integration or runtime surface.
@@ -136,6 +147,10 @@ Phase 3 task-plan creation requires these documents to exist and govern:
 | `EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md` | Existing | evidence admissibility and provenance lineage |
 | `REGULATOR_SOVEREIGNTY_NON_COLLAPSE_DOCTRINE.md` | Existing | regulator non-collapse and orthogonality |
 | `EXTERNAL_VERIFIER_INDEPENDENCE_DOCTRINE.md` | Existing | verifier independence and conflict-of-interest constraints |
+| `UNCERTAINTY_AND_ESTIMATION_SEMANTICS_DOCTRINE.md` | Required | uncertainty class definitions, admissibility rules, replay obligations |
+| `UNCERTAINTY_OPERATOR_REGISTRY.md` | Required | operator definitions and version governance |
+| `AUTHORITY_TRANSFER_OWNERSHIP_SEMANTICS_DOCTRINE.md` | Required | authority transfer mode declarations for uncertainty and AI handoffs |
+| `AI_ASSISTED_ESTIMATION_AND_DECISION_SUPPORT_DOCTRINE.md` | Required | AI output admissibility, model provenance, inference logging, and confidence-to-uncertainty governance |
 | `TASK_GENERATION_CONSTITUTION.md` | Existing | task-plan legality and anti-hallucination controls |
 | `PHASE_CAPABILITY_LEGALITY_MATRIX.md` | Existing | phase legality state and routing |
 

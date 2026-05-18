@@ -1,0 +1,184 @@
+schema_version: 1
+phase: '3'
+wave: 'WP'
+task_id: TSK-P3-WP-007
+title: "Regulator-aware partitioning, precedence application, and non-collapse mechanics"
+owner_role: DB_FOUNDATION
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DB_SCHEMA
+depends_on: ["TSK-P3-WP-002", "TSK-P3-WP-004"]
+invariants: ["INV-301"]
+
+deliverable_files:
+  - schema/migrations/0215_p3_regulatory_sovereignty_partitioning.sql
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-18/0001_baseline.sql
+  - schema/baselines/2026-05-18/baseline.normalized.sql
+  - schema/baselines/2026-05-18/baseline.cutoff
+  - schema/baselines/2026-05-18/baseline.meta.json
+  - scripts/audit/verify_p3_regulatory_sovereignty_partitioning.sh
+  - evidence/phase3/tsk_p3_wp_007_regulatory_sovereignty_partitioning.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/contracts/sqlstate_map.yml
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/plans/phase3/TSK-P3-WP-007/PLAN.md
+  - docs/plans/phase3/TSK-P3-WP-007/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - schema/migrations/0215_p3_regulatory_sovereignty_partitioning.sql
+    - scripts/audit/verify_p3_regulatory_sovereignty_partitioning.sh
+    - evidence/phase3/tsk_p3_wp_007_regulatory_sovereignty_partitioning.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - 0208: "policy artifact and authority lineage substrate"
+    - 0213: "contradiction substrate used for replay-aware routing context"
+  table_dependencies:
+    - p3_authority_lineage: "authority lineage governs regime findings and precedence scope"
+    - p3_policy_artifacts: "policy artifact lineage anchors doctrine-declared precedence inputs"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+  - "Real-world regulator mandate invention, sovereign balancing logic, or undeclared precedence semantics."
+  - "External regulator notification or submission workflows, host-country authorization runtime, or future-phase integrations."
+  - "New contradiction classes, regulator-specific contradiction taxonomies, or cross-regime equivalence claims."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+  - "If the migration design requires regulator-domain merger, undeclared precedence rules, or sovereign balancing heuristics."
+  - "If the implementation cannot remain inside one forward-only migration, one verifier, and the declared registry/index surfaces."
+  - "If doctrine does not declare precedence between regulator regimes and the task cannot preserve independent findings plus doctrine-gap emission."
+proof_guarantees:
+  - "Evidence JSON can prove the regulator partitioning substrate exists, is deterministic where inspected, and preserves replay-visible sovereignty separation across declared regulator regimes under structural constraints."
+  - "Evidence can prove precedence application is limited to declared constitutional inputs and that undeclared-precedence cases remain independently representable rather than collapsed into local arbitration where the verifier inspects them."
+proof_limitations:
+  - "Does not prove the substantive correctness of any regulator's rule set or statutory mandate."
+  - "Does not prove external regulator workflow behavior, host-country authorization runtime, or sovereign adjudication semantics."
+  - "Does not prove user-facing explanations, downstream submission behavior, or later observability surfaces beyond declared structural constraints."
+
+touches:
+  - schema/migrations/0215_p3_regulatory_sovereignty_partitioning.sql
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-18/0001_baseline.sql
+  - schema/baselines/2026-05-18/baseline.normalized.sql
+  - schema/baselines/2026-05-18/baseline.cutoff
+  - schema/baselines/2026-05-18/baseline.meta.json
+  - scripts/audit/verify_p3_regulatory_sovereignty_partitioning.sh
+  - evidence/phase3/tsk_p3_wp_007_regulatory_sovereignty_partitioning.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/contracts/sqlstate_map.yml
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - tasks/TSK-P3-WP-007/meta.yml
+  - docs/plans/phase3/TSK-P3-WP-007/PLAN.md
+  - docs/plans/phase3/TSK-P3-WP-007/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_wp_007_w01] Define a single forward-only Phase 3 schema mutation that establishes deterministic regulator-aware partitioning and sovereignty non-collapse structures using only doctrine-declared regulator regimes, precedence rules, and contradiction-aware replay substrates without importing external workflow, host-country authorization, or sovereign balancing semantics."
+  - "[ID tsk_p3_wp_007_w02] Bind regulator findings to explicit replay-derived and quarantine-compatible structures, declared canonical ordering and tie-break rules, and doctrine-gap emission for undeclared precedence cases without merging regulator domains or inventing local arbitration logic."
+  - "[ID tsk_p3_wp_007_w03] Add a deterministic verifier that proves regulator partitioning, non-collapse posture, and doctrine-declared precedence behavior are mechanically inspectable, and that undeclared-precedence cases preserve independent findings under declared structural constraints."
+  - "[ID tsk_p3_wp_007_w04] Register the task in the active Phase 3 runtime task index and registry without altering unrelated contradiction taxonomy, authority lineage, observability-share, or future-phase regulator workflow scope."
+
+acceptance_criteria:
+  - "[ID tsk_p3_wp_007_w01] A single forward-only migration path is declared for regulator-aware partitioning and sovereignty non-collapse structure and is scoped only to doctrine-declared regulator substrate."
+  - "[ID tsk_p3_wp_007_w02] The planned substrate exposes deterministic regulator partition structures, declared canonical ordering and tie-break rules, and doctrine-gap emission for undeclared precedence cases without regulator-domain merger or local arbitration invention."
+  - "[ID tsk_p3_wp_007_w03] The task declares a verifier path and evidence path that honestly prove replay-visible regulator partitioning and doctrine-declared precedence constraints without claiming statutory correctness, sovereign adjudication, or external workflow semantics."
+  - "[ID tsk_p3_wp_007_w04] The active runtime task index and Phase 3 task registry both point to the generated `TSK-P3-WP-007` task pack as the runtime source of truth."
+
+negative_tests:
+  - id: TSK-P3-WP-007-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: A single forward-only migration path is declared for regulator-aware partitioning and sovereignty non-collapse structure and is scoped only to doctrine-declared regulator substrate."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-WP-007-P1
+    description: "Verify that execution exits 0 on success path for: A single forward-only migration path is declared for regulator-aware partitioning and sovereignty non-collapse structure and is scoped only to doctrine-declared regulator substrate."
+    required: true
+
+verification:
+  - '[ID tsk_p3_wp_007_w01] [ID tsk_p3_wp_007_w02] [ID tsk_p3_wp_007_w03] [ID tsk_p3_wp_007_w04] test -x scripts/audit/verify_p3_regulatory_sovereignty_partitioning.sh && bash scripts/audit/verify_p3_regulatory_sovereignty_partitioning.sh > evidence/phase3/tsk_p3_wp_007_regulatory_sovereignty_partitioning.json || exit 1'
+  - 'bash scripts/db/lint_migrations.sh || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-WP-007 --evidence evidence/phase3/tsk_p3_wp_007_regulatory_sovereignty_partitioning.json || exit 1'
+  - 'bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P3-WP-007 || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_wp_007_regulatory_sovereignty_partitioning.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+  - "Forward-only migration path missing or malformed => FAIL"
+  - "Regulator-domain merger, undeclared precedence, or local arbitration logic remains structurally possible => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/implementation_plans/TSK-P3-PLAN-004_wave4_regulator_coi_spatial_temporal.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-007_regulator_partition.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-002_policy_authority_lineage.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-004_contradiction_detection.md
+  - docs/constitutional/REGULATOR_SOVEREIGNTY_NON_COLLAPSE_DOCTRINE.md
+  - docs/constitutional/CONSTITUTIONAL_PRIORITY_AND_CONFLICT_ARBITRATION.md
+  - docs/constitutional/CONTRADICTION_CLASSIFICATION_DOCTRINE.md
+  - docs/constitutional/REGULATORY_ALIGNMENT_CONSTITUTION.md
+  - docs/constitutional/TASK_GENERATION_CONSTITUTION.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+implementation_plan: docs/plans/phase3/TSK-P3-WP-007/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-WP-007/EXEC_LOG.md
+notes: 'Generated via Phase 3 task-pack creation workflow and narrowed to the P3-SURF-007 regulator-partition-only scope defined by TSK-P3-CAP-007.'
+client: cursor
+assigned_agent: db_foundation
+model: claude-sonnet-4-20250514

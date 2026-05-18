@@ -120,10 +120,12 @@ Approval artifacts must follow this structure:
   - Sidecar JSON: `approvals/YYYY-MM-DD/BRANCH-<branch-key>.approval.json`
   - `branch-key` is branch name normalized with `/` replaced by `-`
   - `change_ref` must be `branch/<branch-name>`
+  - Stage A attests reviewed scope, approver identity, and regulated-surface authorization before edits. It does not require wave-end `pre_ci.sh` truth to have already occurred.
 - Stage B (post-push, PR-linked):
   - Markdown record: `approvals/YYYY-MM-DD/PR-<number>.md`
   - Sidecar JSON: `approvals/YYYY-MM-DD/PR-<number>.approval.json`
   - `change_ref` must be `pr/<number>`
+  - Stage B or final governance signoff is the point that may require completed proof, including wave-end `pre_ci.sh` when that proof is part of the declared closeout path.
 
 Both stages must pass `docs/operations/approval_sidecar.schema.json`.
 Evidence metadata (`evidence/phase1/approval_metadata.json`) must link AI + human approvals and regulated-surface scope.

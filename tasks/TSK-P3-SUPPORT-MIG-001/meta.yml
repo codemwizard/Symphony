@@ -1,0 +1,146 @@
+schema_version: 1
+phase: '3'
+wave: 'SUPPORT'
+task_id: TSK-P3-SUPPORT-MIG-001
+title: "Replay-addressable migration and backfill planning contract"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+depends_on: ["TSK-P3-SUPPORT-DB-001", "TSK-P3-WP-005"]
+invariants: ["INV-302", "INV-303", "INV-304", "INV-305", "INV-307"]
+
+deliverable_files:
+  - docs/architecture/PHASE3_REPLAY_MIGRATION_AND_BACKFILL_CONTRACT.md
+  - scripts/agent/verify_tsk_p3_support_mig_001.sh
+  - evidence/phase3/tsk_p3_support_mig_001_migration_contract.json
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/plans/phase3/TSK-P3-SUPPORT-MIG-001/PLAN.md
+  - docs/plans/phase3/TSK-P3-SUPPORT-MIG-001/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/agent/verify_tsk_p3_support_mig_001.sh
+    - evidence/phase3/tsk_p3_support_mig_001_migration_contract.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+  - "Applied migration execution, schema edits, backfill runtime, or destructive historical rewrites."
+  - "Unilateral freezing of migration semantics for only one owning surface."
+  - "Local invention of contradiction, failure, authority, or projection doctrine beyond what the owning CAP plans already route."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+  - "If the shared migration artifact cannot remain one additive-only contract across all six owning surfaces."
+  - "If the task requires applied migration edits, runtime backfill execution, or destructive historical rewrites to express planning obligations."
+  - "If any owning surface requires undeclared ordering, tie-break, or authority-transfer ownership assumptions."
+proof_guarantees:
+  - "Evidence JSON can prove that one canonical shared migration/backfill planning artifact exists and covers replay-addressable lineage, contradiction, failure, and authority preservation obligations across all six owning surfaces where inspected."
+  - "Evidence can prove additive-only reconciliation, pre-/post-Phase-3 fixture equality expectations, cross-surface ontology transition constraints, and explicit prohibition on unapproved runtime migration work."
+proof_limitations:
+  - "Does not prove applied migration correctness or runtime backfill execution, because this task is planning-only."
+  - "Does not prove substantive doctrine correctness for the owning surfaces beyond declared migration/backfill obligations."
+  - "Does not prove future-phase workflow semantics or authority-transfer resolution outcomes beyond declared citation gates."
+
+touches:
+  - docs/architecture/PHASE3_REPLAY_MIGRATION_AND_BACKFILL_CONTRACT.md
+  - scripts/agent/verify_tsk_p3_support_mig_001.sh
+  - evidence/phase3/tsk_p3_support_mig_001_migration_contract.json
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - tasks/TSK-P3-SUPPORT-MIG-001/meta.yml
+  - docs/plans/phase3/TSK-P3-SUPPORT-MIG-001/PLAN.md
+  - docs/plans/phase3/TSK-P3-SUPPORT-MIG-001/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_support_mig_001_w01] Define one canonical shared migration and backfill planning artifact for replay-addressable lineage, authority, projection, contradiction, and failure records across P3-SURF-001, P3-SURF-002, P3-SURF-003, P3-SURF-004, P3-SURF-005, and P3-SURF-006 without importing applied migration execution, runtime backfill, or destructive historical rewrite semantics."
+  - "[ID tsk_p3_support_mig_001_w02] Bind the artifact to additive-only reconciliation, deterministic replay-equality declaration rules, cross-surface ontology transition constraints, and explicit fixture-equality preservation requirements so later migration work cannot silently alter Wave 1 or Wave 2 meaning."
+  - "[ID tsk_p3_support_mig_001_w03] Add a deterministic verifier that proves the shared migration artifact covers all six owning surfaces, preserves replay-addressable historical truth, and blocks unilateral scope freezing, undeclared ordering assumptions, and unapproved runtime migration drift under the declared structural contract."
+  - "[ID tsk_p3_support_mig_001_w04] Register the task in the active Phase 3 runtime task index and registry without altering unrelated Wave 3 runtime-node scope or future-phase migration semantics."
+
+acceptance_criteria:
+  - "[ID tsk_p3_support_mig_001_w01] One canonical shared migration and backfill planning artifact is declared for all six owning surfaces and is limited to replay-addressable planning obligations rather than applied migration execution."
+  - "[ID tsk_p3_support_mig_001_w02] The artifact declares additive-only reconciliation, pre-/post-Phase-3 fixture equality expectations, ontology-transition guards, and explicit replay-equality declaration rules without silently rewriting prior-wave meaning."
+  - "[ID tsk_p3_support_mig_001_w03] The task declares a verifier and evidence path that honestly prove shared migration/backfill planning coverage and anti-drift constraints without claiming runtime migration execution or backfill completion."
+  - "[ID tsk_p3_support_mig_001_w04] The active runtime task index and Phase 3 task registry both point to the generated `TSK-P3-SUPPORT-MIG-001` task pack as the runtime source of truth."
+
+negative_tests:
+  - id: TSK-P3-SUPPORT-MIG-001-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: One canonical shared migration and backfill planning artifact is declared for all six owning surfaces and is limited to replay-addressable planning obligations rather than applied migration execution."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-SUPPORT-MIG-001-P1
+    description: "Verify that execution exits 0 on success path for: One canonical shared migration and backfill planning artifact is declared for all six owning surfaces and is limited to replay-addressable planning obligations rather than applied migration execution."
+    required: true
+
+verification:
+  - '[ID tsk_p3_support_mig_001_w01] [ID tsk_p3_support_mig_001_w02] [ID tsk_p3_support_mig_001_w03] [ID tsk_p3_support_mig_001_w04] test -x scripts/agent/verify_tsk_p3_support_mig_001.sh && bash scripts/agent/verify_tsk_p3_support_mig_001.sh > evidence/phase3/tsk_p3_support_mig_001_migration_contract.json || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-SUPPORT-MIG-001 --evidence evidence/phase3/tsk_p3_support_mig_001_migration_contract.json || exit 1'
+  - 'RUN_PHASE3_GATES=1 bash scripts/dev/pre_ci.sh || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_support_mig_001_migration_contract.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+  - "Shared migration artifact omits one owning surface => FAIL"
+  - "Migration planning scope drifts into applied runtime migration or destructive rewrite semantics => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/implementation_plans/TSK-P3-PLAN-003_wave3_contradiction_failure_composition.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-001_dependency_graph.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-002_policy_authority_lineage.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-003_projection_legitimacy.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-004_contradiction_detection.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-005_failure_evidence_continuity.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-006_authority_delegation.md
+  - docs/constitutional/REPLAY_AND_HISTORICAL_TRUTH_PRIMACY.md
+  - docs/constitutional/TEMPORAL_VALIDITY_AND_REPLAY_DOCTRINE.md
+  - docs/constitutional/EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md
+  - docs/constitutional/CONTRADICTION_CLASSIFICATION_DOCTRINE.md
+  - docs/constitutional/FAILURE_COMPOSITION_TAXONOMY.md
+  - docs/constitutional/AUTHORITY_SCOPE_AND_DELEGATION_DOCTRINE.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+implementation_plan: docs/plans/phase3/TSK-P3-SUPPORT-MIG-001/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-SUPPORT-MIG-001/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py and narrowed to one additive-only shared replay migration/backfill contract jointly serving P3-SURF-001 through P3-SURF-006.'
+client: cursor
+assigned_agent: architect
+model: claude-sonnet-4-20250514

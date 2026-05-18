@@ -1,0 +1,71 @@
+{
+  "task_id": "TSK-P3-SUPPORT-DB-002",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-17T15:09:41Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "baseline_meta_contains_privilege_hash",
+      "pass": true
+    },
+    {
+      "check": "baseline_meta_contains_privilege_state",
+      "pass": true
+    },
+    {
+      "check": "baseline_meta_contains_privilege_entry_count",
+      "pass": true
+    },
+    {
+      "check": "privilege_only_drift_fails",
+      "pass": true
+    },
+    {
+      "check": "drift_evidence_reports_privilege_drift",
+      "pass": true
+    },
+    {
+      "check": "drift_evidence_preserves_schema_drift_false",
+      "pass": true
+    }
+  ],
+  "observed_paths": [
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/scripts/db/generate_baseline_snapshot.sh",
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/scripts/db/check_baseline_drift.sh",
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/scripts/db/verify_tsk_p3_support_db_002_privilege_baseline_visibility.sh",
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/baselines/current/baseline.meta.json",
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/evidence/phase0/baseline_drift.json",
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/docs/decisions/ADR-0010-baseline-policy.md"
+  ],
+  "observed_hashes": {
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/scripts/db/generate_baseline_snapshot.sh": "ad101e440c12b769ec7a5f179d8966bd9bbc2536d711cdb645491cf42f46dd78",
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/scripts/db/check_baseline_drift.sh": "15dc03389ca31cc61201ab76ce51b39dfcaf9a22fe02c4bbe26afe8fbfdc6a67",
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/scripts/db/verify_tsk_p3_support_db_002_privilege_baseline_visibility.sh": "defa74b615dac33107f4a8223932ab4b9210f58ac8b240da8119ca581f88d3d4",
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/baselines/current/baseline.meta.json": "714ab6d5fae5c6af8e59fce67a4b6ec5d43b9a2450446c112b1a9ef87acb1e27",
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/evidence/phase0/baseline_drift.json": "d47b92b05dfdad313c2b0a755bea35015943b8a4410ce3d89852f8ae636a7251",
+    "/home/mwiza/workspaces/Symphony-Demo/Symphony/docs/decisions/ADR-0010-baseline-policy.md": "fc7485dcd9e96eeb77b84203cf7ae062264983efecca0703b03238ea33f40d35"
+  },
+  "command_outputs": [
+    {
+      "command": "scripts/db/migrate.sh",
+      "status": "PASS"
+    },
+    {
+      "command": "scripts/db/generate_baseline_snapshot.sh 2026-05-17",
+      "status": "PASS"
+    },
+    {
+      "command": "REVOKE SELECT ON TABLE public.p3_dependency_nodes FROM symphony_readonly;",
+      "status": "PASS"
+    },
+    {
+      "command": "scripts/db/check_baseline_drift.sh",
+      "status": "PASS"
+    }
+  ],
+  "execution_trace": [
+    "Created an isolated verification database and applied all migrations.",
+    "Generated a fresh baseline snapshot and confirmed privilege fingerprint fields exist in baseline metadata.",
+    "Applied a privilege-only REVOKE and confirmed baseline drift now fails on privilege divergence without schema drift."
+  ]
+}

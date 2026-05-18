@@ -6,6 +6,8 @@ follow_up_ticket: TSK-P2-PREAUTH-003
 reason: Wave 3 Phase 2 implementation requires new execution_records table for execution tracking with FK to interpretation packs.
 author: system
 created_at: 2026-04-17
+closed_at: 2026-04-17
+
 ---
 
 # Exception: ddl structural change without invariants linkage

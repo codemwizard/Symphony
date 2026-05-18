@@ -1,0 +1,177 @@
+schema_version: 1
+phase: '3'
+wave: 'SUPPORT'
+task_id: TSK-P3-SUPPORT-DB-003
+title: "Fail-closed DB verifier bootstrap and connection diagnostics for scripts/db verifiers"
+owner_role: DB_FOUNDATION
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DATABASE
+depends_on: []
+invariants: []
+
+deliverable_files:
+  - scripts/db/verify_p3_typed_dependency_graph.sh
+  - scripts/db/verify_p3_recursive_legitimacy_engine.sh
+  - scripts/db/verify_p3_policy_authority_lineage.sh
+  - scripts/db/verify_p3_authority_scope_engine.sh
+  - scripts/db/verify_p3_conflict_of_interest_enforcement.sh
+  - scripts/db/verify_p3_spatial_legality_dnsh_gates.sh
+  - scripts/db/verify_p3_contradiction_detection.sh
+  - scripts/db/verify_tsk_p3_support_db_003_fail_closed_db_probes.sh
+  - evidence/phase3/tsk_p3_support_db_003_fail_closed_db_probes.json
+  - docs/tasks/PHASE3_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/phase3_task_dag.yml
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-18/0001_baseline.sql
+  - schema/baselines/2026-05-18/baseline.normalized.sql
+  - schema/baselines/2026-05-18/baseline.cutoff
+  - schema/baselines/2026-05-18/baseline.meta.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/contracts/sqlstate_map.yml
+  - docs/plans/phase3/TSK-P3-SUPPORT-DB-003/PLAN.md
+  - docs/plans/phase3/TSK-P3-SUPPORT-DB-003/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/db/verify_tsk_p3_support_db_003_fail_closed_db_probes.sh
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:${HOST_POSTGRES_PORT}/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "set -a && source infra/docker/.env && set +a && export DATABASE_URL=\"postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${HOST_POSTGRES_PORT}/symphony\""
+
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - 0207: "Phase 3 DB verifier substrate exists"
+  table_dependencies:
+    - schema_migrations: "probe path must distinguish DB bootstrap failure from missing object state"
+  verification_step: "Confirm representative scripts/db verifiers fail closed with explicit DB/bootstrap diagnostics when DATABASE_URL is invalid or unreachable."
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON correctly demonstrates enforcement via state evaluation."
+proof_limitations:
+  - "Does not prove runtime API integration (deferred)."
+
+touches:
+  - scripts/db/verify_p3_typed_dependency_graph.sh
+  - scripts/db/verify_p3_recursive_legitimacy_engine.sh
+  - scripts/db/verify_p3_policy_authority_lineage.sh
+  - scripts/db/verify_p3_authority_scope_engine.sh
+  - scripts/db/verify_p3_conflict_of_interest_enforcement.sh
+  - scripts/db/verify_p3_spatial_legality_dnsh_gates.sh
+  - scripts/db/verify_p3_contradiction_detection.sh
+  - scripts/db/verify_tsk_p3_support_db_003_fail_closed_db_probes.sh
+  - docs/tasks/PHASE3_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/phase3_task_dag.yml
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-18/0001_baseline.sql
+  - schema/baselines/2026-05-18/baseline.normalized.sql
+  - schema/baselines/2026-05-18/baseline.cutoff
+  - schema/baselines/2026-05-18/baseline.meta.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/contracts/sqlstate_map.yml
+  - evidence/phase3/tsk_p3_support_db_003_fail_closed_db_probes.json
+  - tasks/TSK-P3-SUPPORT-DB-003/meta.yml
+  - docs/plans/phase3/TSK-P3-SUPPORT-DB-003/PLAN.md
+  - docs/plans/phase3/TSK-P3-SUPPORT-DB-003/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_support_db_003_w01] Replace DB probe patterns in representative Phase 3 scripts/db verifiers so connection/bootstrap failures and invalid DATABASE_URL states are surfaced as explicit FAIL conditions instead of being swallowed and reinterpreted as missing schema objects."
+  - "[ID tsk_p3_support_db_003_w02] Add a shared fail-closed probe discipline for scripts/db verifier authoring so DB-facing checks distinguish environment/bootstrap failure, object absence, and semantic mismatch without using silent fallback patterns."
+  - "[ID tsk_p3_support_db_003_w03] Add a deterministic verifier that proves a representative scripts/db verifier now fails closed with explicit DB/bootstrap diagnostics under broken DATABASE_URL conditions and still passes under valid proof-DB conditions."
+
+acceptance_criteria:
+  - "[ID tsk_p3_support_db_003_w01] Representative Phase 3 scripts/db verifiers no longer convert DB probe failures into false missing-table or missing-function reports."
+  - "[ID tsk_p3_support_db_003_w02] The scripts/db verifier authoring path defines a reusable fail-closed probe discipline that cleanly separates bootstrap failure from schema-state failure."
+  - "[ID tsk_p3_support_db_003_w03] The task declares a verifier and evidence artifact that prove the repaired scripts/db probe behavior under both broken and valid database contexts."
+
+negative_tests:
+  - id: TSK-P3-SUPPORT-DB-003-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: Representative Phase 3 scripts/db verifiers no longer convert DB probe failures into false missing-table or missing-function reports."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-SUPPORT-DB-003-P1
+    description: "Verify that execution exits 0 on success path for: Representative Phase 3 scripts/db verifiers no longer convert DB probe failures into false missing-table or missing-function reports."
+    required: true
+
+verification:
+  - '[ID tsk_p3_support_db_003_w01] [ID tsk_p3_support_db_003_w02] [ID tsk_p3_support_db_003_w03] test -x scripts/db/verify_tsk_p3_support_db_003_fail_closed_db_probes.sh && bash scripts/db/verify_tsk_p3_support_db_003_fail_closed_db_probes.sh > evidence/phase3/tsk_p3_support_db_003_fail_closed_db_probes.json || exit 1'
+  - 'bash scripts/db/lint_migrations.sh || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-SUPPORT-DB-003 --evidence evidence/phase3/tsk_p3_support_db_003_fail_closed_db_probes.json || exit 1'
+  - 'bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P3-SUPPORT-DB-003 || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_support_db_003_fail_closed_db_probes.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+implementation_plan: docs/plans/phase3/TSK-P3-SUPPORT-DB-003/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-SUPPORT-DB-003/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py'
+client: cursor
+assigned_agent: db_foundation
+model: claude-sonnet-4-20250514

@@ -102,6 +102,9 @@ must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
   - docs/operations/TASK_CREATION_PROCESS.md
   - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
 implementation_plan: docs/plans/phase3/TSK-P3-W8-ARCH-001/PLAN.md
 implementation_log: docs/plans/phase3/TSK-P3-W8-ARCH-001/EXEC_LOG.md
 notes: 'Generated via scripts/agent/generate_task_pack.py'

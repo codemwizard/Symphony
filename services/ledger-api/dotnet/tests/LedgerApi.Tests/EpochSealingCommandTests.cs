@@ -251,7 +251,7 @@ public class EpochSealingCommandTests
             var entries = new[]
             {
                 new { instruction_id = "rt-001", chain_record = new { current_hash = "h1", previous_hash = (string?)null, payload_hash = "p1", domain = "ledger", generated_at_utc = "2026-01-01T00:00:00Z", commit_boundary = "single_write_envelope" } },
-                new { instruction_id = "rt-002", chain_record = new { current_hash = "h2", previous_hash = "h1", payload_hash = "p2", domain = "ledger", generated_at_utc = "2026-01-01T00:01:00Z", commit_boundary = "single_write_envelope" } },
+                new { instruction_id = "rt-002", chain_record = new { current_hash = "h2", previous_hash = (string?)"h1", payload_hash = "p2", domain = "ledger", generated_at_utc = "2026-01-01T00:01:00Z", commit_boundary = "single_write_envelope" } },
             };
             File.WriteAllLines(tempPath, entries.Select(e => JsonSerializer.Serialize(e)));
 

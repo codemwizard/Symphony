@@ -67,14 +67,31 @@ The agent must run this ordered inspection algorithm before IMPLEMENT-TASK is pe
    - Run: `bash scripts/audit/verify_task_pack_readiness.sh --task <TASK_ID>`
    - If it fails: report `STATE: not-ready` and STOP with the readiness output
 
-5. **Dependencies satisfied**
+5. **Verifier contract executable**
+   - The primary verifier contract must not be a shell comment, quoted shell
+     comment, inert placeholder, or decorative pass-through entry.
+   - If the verifier contract is structurally present but operationally inert:
+     report `STATE: stub-only` and STOP.
+
+6. **Dependencies satisfied**
    - Every task in `depends_on` must be `completed`
    - If not: report `STATE: blocked` and list the blocking tasks
 
-6. **If all pass**
+7. **If all pass**
    - Report `STATE: resume-ready` and continue to Mode 3 (IMPLEMENT-TASK)
 
 **The agent must not implement from any state other than `resume-ready`.**
+
+**Important state distinction**:
+- A task with meta, plan, and log files plus a real verifier contract is
+  `task-packed`.
+- A task becomes `resume-ready` only after the inspection above passes.
+- A task becomes `proof-passed` only after its declared verifiers and evidence
+  succeed.
+- A task becomes `completed` only after `proof-passed` has been recorded into
+  task truth surfaces.
+- Missing implementation deliverables before `IMPLEMENT-TASK` are normal; inert
+  verifier contracts are not.
 
 ## Pre-Flight Requirements
 
@@ -191,6 +208,13 @@ For each verification command in meta.yml, ensure it:
 **Evidence freshness**: Evidence must include `run_id` matching the current execution. Stale evidence (from previous runs) will be rejected.
 
 **Verification execution is mandatory**: A task is NOT complete until verification scripts have been executed and evidence artifacts have been produced. Merely creating verification scripts without executing them does NOT constitute a complete implementation.
+
+**DB-facing verifier contract**:
+- A database probe/bootstrap failure must be reported as an environment/bootstrap
+  failure, not reinterpreted as a missing table, missing function, or empty
+  schema-state result.
+- Audit-side and DB-side verifiers must fail closed on invalid `DATABASE_URL`,
+  unreachable database, or bootstrap probe errors.
 
 ### Step 8: Update EXEC_LOG.md (Append-Only)
 
@@ -670,9 +694,10 @@ A task is complete when:
 4. EXEC_LOG.md has been updated with execution history
 5. For regulated surfaces: approval metadata is present and valid
 6. `scripts/dev/pre_ci.sh` passes
-7. Task status in meta.yml is set to `completed`
-8. Task is registered in the phase-appropriate human task index
-9. Evidence paths are wired into CI (`check_evidence_required.sh` or phase contract)
+7. The task has reached `proof-passed` (verification/evidence succeeded)
+8. Task status in meta.yml is set to `completed`
+9. Task is registered in the phase-appropriate human task index
+10. Evidence paths are wired into CI (`check_evidence_required.sh` or phase contract)
 
 ## Task Registration in Human Task Index
 

@@ -1,0 +1,74 @@
+{
+  "task_id": "TSK-P3-SUPPORT-FIXTURE-001",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-17T19:33:17Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "FIXTURE-FILES-EXIST",
+      "result": "PASS",
+      "detail": "contract, verifier, runtime index, registry, meta, plan, and exec log exist"
+    },
+    {
+      "id": "FIXTURE-REQUIRED-TOKENS",
+      "result": "PASS",
+      "detail": "contract covers all owning surfaces, fixture families, and additive reconciliation rules"
+    },
+    {
+      "id": "FIXTURE-HEADINGS",
+      "result": "PASS",
+      "detail": "contract includes required fixture sections"
+    },
+    {
+      "id": "FIXTURE-COVERAGE",
+      "result": "PASS",
+      "detail": "contract declares required cross-surface fixture coverage"
+    },
+    {
+      "id": "FIXTURE-RUNTIME-INDEX",
+      "result": "PASS",
+      "detail": "runtime task index contains support fixture task"
+    },
+    {
+      "id": "FIXTURE-REGISTRY",
+      "result": "PASS",
+      "detail": "phase3 task registry contains support fixture task"
+    }
+  ],
+  "observed_paths": [
+    "docs/architecture/PHASE3_CANONICAL_REPLAY_FIXTURE_CONTRACT.md",
+    "scripts/agent/verify_tsk_p3_support_fixture_001.sh",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md",
+    "docs/PHASE3/phase3_task_registry.yml",
+    "tasks/TSK-P3-SUPPORT-FIXTURE-001/meta.yml",
+    "docs/plans/phase3/TSK-P3-SUPPORT-FIXTURE-001/PLAN.md",
+    "docs/plans/phase3/TSK-P3-SUPPORT-FIXTURE-001/EXEC_LOG.md"
+  ],
+  "observed_hashes": {
+    "docs/architecture/PHASE3_CANONICAL_REPLAY_FIXTURE_CONTRACT.md": "66b174f5d932f6df0cae78971679f8b6d7109c625a795f510f567a110ee24028",
+    "scripts/agent/verify_tsk_p3_support_fixture_001.sh": "3992f9e121fada2d9f7451c08cc3d1b0f3aa89427a8edb49a199e78a64ded457",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md": "924789f772f1d7783fd711b92ed15ab19e42fda12b11ae8ce1094f54b7f0afe1",
+    "docs/PHASE3/phase3_task_registry.yml": "caedcc9f14853376ade5bfbe6a17010055d52b70313beab0364f0c8fb37a1faa",
+    "tasks/TSK-P3-SUPPORT-FIXTURE-001/meta.yml": "330f2f659fb9a97911a572a9e42906332926543adde56faca8a6da052f5270cf",
+    "docs/plans/phase3/TSK-P3-SUPPORT-FIXTURE-001/PLAN.md": "95377480ae74615aafb2542da78cd1a7ac6ac751fd0e477eb643b3da57218bc9",
+    "docs/plans/phase3/TSK-P3-SUPPORT-FIXTURE-001/EXEC_LOG.md": "1507dfd346b8e512bf03eeb88e18bf512d2d6dfc4cfd35f605f373f1fbe992bd"
+  },
+  "command_outputs": [
+    "git_sha=582e175ab813f643e3e8b6b8a47c901bc0d53755",
+    "timestamp_utc=2026-05-17T19:33:17Z",
+    "FIXTURE-FILES-EXIST=PASS",
+    "FIXTURE-REQUIRED-TOKENS=PASS",
+    "FIXTURE-HEADINGS=PASS",
+    "FIXTURE-COVERAGE=PASS",
+    "FIXTURE-RUNTIME-INDEX=PASS",
+    "FIXTURE-REGISTRY=PASS"
+  ],
+  "execution_trace": [
+    "FIXTURE-FILES-EXIST:PASS:contract, verifier, runtime index, registry, meta, plan, and exec log exist",
+    "FIXTURE-REQUIRED-TOKENS:PASS:contract covers all owning surfaces, fixture families, and additive reconciliation rules",
+    "FIXTURE-HEADINGS:PASS:contract includes required fixture sections",
+    "FIXTURE-COVERAGE:PASS:contract declares required cross-surface fixture coverage",
+    "FIXTURE-RUNTIME-INDEX:PASS:runtime task index contains support fixture task",
+    "FIXTURE-REGISTRY:PASS:phase3 task registry contains support fixture task"
+  ]
+}

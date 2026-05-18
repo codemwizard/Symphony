@@ -1,0 +1,78 @@
+phase: "4"
+status: "prepared_not_open"
+tasks:
+  - task_id: TSK-P4-CLEAN-001
+    type: cleanup
+    title: Phase 4 entry admissibility and Phase 3 carry-forward audit
+    depends_on: []
+    blocked_by:
+      - active_phase3_envelope
+  - task_id: TSK-P4-ACT-001
+    type: activation
+    title: Canonical Phase 4 contract pair
+    depends_on: [TSK-P4-CLEAN-001]
+    blocked_by:
+      - unresolved_phase3_closeout
+  - task_id: TSK-P4-ACT-002
+    type: activation
+    title: Phase 4 policy guard
+    depends_on: [TSK-P4-ACT-001]
+    blocked_by: []
+  - task_id: TSK-P4-ACT-003
+    type: activation
+    title: Phase 4 contract verifier
+    depends_on: [TSK-P4-ACT-002]
+    blocked_by: []
+  - task_id: TSK-P4-ACT-004
+    type: activation
+    title: Formal PHASE4-OPENING approval bundle
+    depends_on: [TSK-P4-ACT-003]
+    blocked_by:
+      - human_opening_approval_missing
+  - task_id: TSK-P4-ACT-005
+    type: activation
+    title: Root envelope switch to Phase 4
+    depends_on: [TSK-P4-ACT-004]
+    blocked_by:
+      - root_execution_envelope_phase3
+  - task_id: TSK-P4-CAP-001
+    type: cap
+    title: Settlement finality and rate authority
+    depends_on: [TSK-P4-ACT-005]
+    blocked_by: []
+  - task_id: TSK-P4-CAP-002
+    type: cap
+    title: Statutory allocations and kill criteria
+    depends_on: [TSK-P4-ACT-005]
+    blocked_by: []
+  - task_id: TSK-P4-WP-001
+    type: runtime
+    title: Settlement Finality Engine
+    depends_on: [TSK-P4-CAP-001]
+    blocked_by:
+      - phase4_not_open
+  - task_id: TSK-P4-WP-002
+    type: runtime
+    title: BoZ FX Reference Rate Authority
+    depends_on: [TSK-P4-WP-001]
+    blocked_by: []
+  - task_id: TSK-P4-WP-003
+    type: runtime
+    title: Asset Hard Binding and Currency Legality
+    depends_on: [TSK-P4-WP-002]
+    blocked_by: []
+  - task_id: TSK-P4-WP-004
+    type: runtime
+    title: Statutory Deductions and Allocations
+    depends_on: [TSK-P4-CAP-002]
+    blocked_by: []
+  - task_id: TSK-P4-WP-005
+    type: runtime
+    title: Statutory Kill Criteria
+    depends_on: [TSK-P4-WP-004]
+    blocked_by: []
+  - task_id: TSK-P4-GOV-001
+    type: governance
+    title: Phase 5 non-claimable stubs
+    depends_on: [TSK-P4-WP-005]
+    blocked_by: []

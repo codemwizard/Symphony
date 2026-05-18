@@ -1,0 +1,34 @@
+{
+  "task_id": "TSK-P3-SUPPORT-DB-004",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-18T07:26:43Z",
+  "status": "PASS",
+  "checks": {
+    "baseline_then_migrations_fresh_db": {
+      "status": "PASS",
+      "detail": "baseline_then_migrations succeeds on a fresh database with default public schema"
+    },
+    "baseline_marker_recorded": {
+      "status": "PASS",
+      "detail": "baseline marker recorded exactly once in schema_migrations"
+    },
+    "baseline_then_migrations_reentry": {
+      "status": "PASS",
+      "detail": "baseline_then_migrations can re-enter cleanly when non-empty baseline reuse is explicitly authorized"
+    },
+    "migrate_strategy_hardened": {
+      "status": "PASS",
+      "detail": "migrate.sh now separates baseline entry from schema_migrations bootstrap"
+    }
+  },
+  "observed_paths": [
+    "scripts/db/migrate.sh",
+    "docs/decisions/ADR-0010-baseline-policy.md",
+    "scripts/db/verify_tsk_p3_support_db_004_baseline_entrypoint.sh"
+  ],
+  "observed_hashes": {
+    "scripts/db/migrate.sh": "e8c89003e798478f254c8b1d0846de43540826a6696cdaa05a93c948be5771f6",
+    "docs/decisions/ADR-0010-baseline-policy.md": "ce3f56655e03249e3a33af808a1e45ae6ea4d673cb3f7c3c5a75a951d3730cfc",
+    "scripts/db/verify_tsk_p3_support_db_004_baseline_entrypoint.sh": "b70e18b2e7d09d4badc046dfdbca1be8668529b06a3524fd53ff33192a035313"
+  }
+}

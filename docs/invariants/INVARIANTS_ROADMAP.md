@@ -4,6 +4,16 @@ These invariants are `roadmap`. They may have partial evidence (e.g., migrations
 
 _Generated mechanically from `docs/invariants/INVARIANTS_MANIFEST.yml`._
 
+## Structural Linkage Notes
+
+- 2026-05-18 Rule 1 remediation: the Phase 3 structural batch on
+  `feat/p3-wave1-lineage=foundations` must carry explicit invariants linkage in
+  `docs/invariants/**` rather than relying on exception-file closeout alone.
+  The governing linkage set for this batch is `INV-301`, `INV-302`, `INV-303`,
+  `INV-304`, `INV-305`, `INV-306`, `INV-307`, `INV-308`, `INV-309`, and
+  `INV-310`, which already exist in `docs/invariants/INVARIANTS_MANIFEST.yml`
+  with their Phase 3 verifier entrypoints.
+
 | ID | Aliases | Severity | Title | Owners | Verification (manifest) | Evidence links |
 |---|---|---|---|---|---|---|
 | INV-009 | I-SEC-05 | P1 | SECURITY DEFINER functions must avoid dynamic SQL and user-controlled identifiers | team-platform | TODO: add linter or allowlist-based review; no mechanical check found | [`scripts/db/ci_invariant_gate.sql L87-L91`](../../scripts/db/ci_invariant_gate.sql#L87-L91)<br>[`scripts/db/lint_search_path.sh L2-L6`](../../scripts/db/lint_search_path.sh#L2-L6)<br>[`scripts/db/verify_invariants.sh L32-L36`](../../scripts/db/verify_invariants.sh#L32-L36) |

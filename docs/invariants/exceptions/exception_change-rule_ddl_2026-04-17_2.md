@@ -6,6 +6,7 @@ follow_up_ticket: TSK-P2-PREAUTH-002-01
 reason: Migration 0117 creates factor_registry table with UNIQUE constraint for emission factor tracking. This is Phase 2 Wave 2 pre-auth schema work, not a production-affecting change.
 author: cascade
 created_at: 2026-04-17
+closed_at: 2026-04-17
 ---
 
 # Exception: ddl structural change without invariants linkage

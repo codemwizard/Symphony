@@ -6,6 +6,7 @@ follow_up_ticket: WAVE8-BASELINE
 reason: Baseline snapshot file added after Wave 8 migration execution. This is a generated baseline file, not a new migration file. The structural change detector incorrectly flags it as migration_file_added_or_deleted.
 author: mwiza
 created_at: 2026-04-19
+closed_at: 2026-05=18
 ---
 
 # Exception: baseline file addition flagged as migration change

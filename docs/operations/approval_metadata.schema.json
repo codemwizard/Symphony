@@ -46,6 +46,7 @@
       "required": ["approver_id", "approval_artifact_ref", "change_reason"],
       "properties": {
         "approver_id": { "type": "string", "minLength": 1 },
+        "approval_stage": { "type": "string", "enum": ["stage_a", "stage_b"] },
         "approval_artifact_ref": { "type": "string", "minLength": 1 },
         "change_reason": { "type": "string", "minLength": 1 },
         "approved_at_utc": { "type": "string", "format": "date-time" }

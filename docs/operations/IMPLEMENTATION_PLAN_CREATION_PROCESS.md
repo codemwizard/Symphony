@@ -524,3 +524,17 @@ actual task pack becomes real only when:
 - `docs/plans/phase<N>/<TASK_ID>/PLAN.md` exists;
 - `docs/plans/phase<N>/<TASK_ID>/EXEC_LOG.md` exists;
 - the task pack passes readiness verification.
+
+At that point the node is **task-packed**. In Phase planning truth surfaces this
+may continue to be labeled `tasks-created`, but that label means only:
+
+- the atomic task pack exists;
+- the verifier contract is structurally executable;
+- the node may later enter `RESUME-TASK`.
+
+It does **not** mean:
+
+- implementation deliverables already exist;
+- the task is `resume-ready`;
+- the task has entered `IMPLEMENT-TASK`;
+- evidence has already been emitted.

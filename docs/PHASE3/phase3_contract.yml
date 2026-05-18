@@ -12,7 +12,8 @@ notes: >
   Phase 3 is the Constraint and Legitimacy Engine phase. It implements
   typed dependency graphs, recursive legitimacy chains, contradiction
   detection, failure composition, authority scope enforcement,
-  conflict-of-interest enforcement, and spatial/DNSH gates.
+  conflict-of-interest enforcement, spatial/DNSH gates, uncertainty and
+  estimation semantics, and AI governance and model provenance controls.
   This contract was opened by PHASE3_OPENING_ACT.md on 2026-05-10
   under ROOT constitutional authority.
   Capability boundary: docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md.
@@ -89,9 +90,27 @@ rows:
 
   - id: "P3-009"
     title: "Phase 3 Verifier and CI Enforcement"
-    objective: "Create verifier scripts and CI gates for all Phase 3 invariants (INV-301 through INV-310)."
-    invariants: ["INV-301", "INV-302", "INV-303", "INV-304", "INV-305", "INV-306", "INV-307", "INV-308", "INV-309", "INV-310"]
+    objective: "Create verifier scripts and CI gates for all Phase 3 invariants (INV-301 through INV-313)."
+    invariants: ["INV-301", "INV-302", "INV-303", "INV-304", "INV-305", "INV-306", "INV-307", "INV-308", "INV-309", "INV-310", "INV-311", "INV-312", "INV-313"]
     phase_scope: "PHASE-3"
     status: "planned"
     phase_spec_ref: "§Exit Criteria"
     notes: "All verifiers must be blocking CI jobs. All must emit evidence artifacts. All negative tests must pass."
+
+  - id: "P3-010"
+    title: "Uncertainty And Estimation Semantics"
+    objective: "Implement deterministic uncertainty representation, operator-registry governance, admissibility classification, and replay-visible authority-transfer records for uncertainty-bearing evidence."
+    invariants: ["INV-311", "INV-312"]
+    phase_scope: "PHASE-3"
+    status: "planned"
+    phase_spec_ref: "§3.9"
+    notes: "Phase 3 builds the uncertainty substrate only. Methodology-specific propagation execution is Phase 5 scope."
+
+  - id: "P3-011"
+    title: "AI Governance And Model Provenance"
+    objective: "Establish AI output admissibility doctrine, model-registry and inference-log schema contracts, and confidence-to-uncertainty mapping governance before any operational AI capability is introduced."
+    invariants: ["INV-313"]
+    phase_scope: "PHASE-3"
+    status: "planned"
+    phase_spec_ref: "§3.10"
+    notes: "Phase 3 AI scope is governance only. No AI model execution, ML training, or inference runtime is permitted in Phase 3."

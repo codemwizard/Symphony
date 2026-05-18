@@ -293,3 +293,12 @@ Mitigations:
 - Mitigation: `EpochSealingCommand.cs` implements Bitcoin-standard Merkle tree construction (SHA-256 leaf hashing, node duplication for odd counts) with per-leaf proof generation and verification. `TamperEvidentChain.ExtractLeafHashes()` bridges NDJSON hash chains to Merkle tree input. `IsConstitutionalClass()` filters to evidentiary/provenance/replay nodes only.
 - Verifier: `scripts/db/verify_p3_epoch_sealing.sh` (methods present, 15 unit tests pass).
 - Evidence pointer: `evidence/phase3/tsk_p3_w8_seal_001_epoch_sealing.json`.
+
+### phase-3 branch-range structural governance drift (2026-05-18)
+- Threat name: `phase-3 branch-range structural governance drift`.
+- Assets: Phase-3 lineage, legitimacy, contradiction, authority, regulatory, COI, spatial, dwell-time, verifier-closure, uncertainty, baseline, and supporting governance surfaces introduced across migrations `0207` through `0218`, related verifier scripts, and their canonical Phase-3 contracts and task packs.
+- Actors: branch author or reviewer relying on staged-only structural checks while CI parity evaluates the full `origin/main...HEAD` range.
+- Attack vectors: (a) large structural branch lands with local staged Rule 1 linkage but no branch-range `THREAT_MODEL.md` or `COMPLIANCE_MAP.md` entry; (b) governance review cannot quickly determine whether the full Phase-3 batch changed security posture or weakened fail-closed guarantees.
+- Mitigation: this entry plus the paired 2026-05-18 `COMPLIANCE_MAP.md` row document that the full Phase-3 structural batch preserves forward-only migrations, append-only proof posture, hardened `SECURITY DEFINER` semantics, and verifier-backed control closure for `INV-301` through `INV-310`; branch-range CI parity remains enforced by `scripts/audit/enforce_change_rule.sh`.
+- Verifier: `scripts/audit/enforce_change_rule.sh`, with supporting structural linkage checks from `scripts/audit/preflight_structural_staged.sh`.
+- Evidence pointer: `evidence/phase0/structural_doc_linkage.json`, plus the Phase-3 verifier evidence set under `evidence/phase3/`.

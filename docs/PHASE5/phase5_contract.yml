@@ -1,0 +1,10 @@
+phase: "5"
+phase_name: "Adapter Refactor and Methodology Runtime"
+status: "planned"
+claimability: "non-claimable"
+anti_drift_enforcement: true
+rows: []
+notes: >
+  Phase 5 is intentionally stubbed only. This file exists to preserve future
+  phase isolation at the end of Phase 4 and must not be treated as an opening
+  artifact or runtime authorization.

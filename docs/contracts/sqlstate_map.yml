@@ -16,7 +16,10 @@
     "docs/contracts/"
   ],
   "ranges": {
+    "P30xx": "phase3_projection_and_authority_enforcement",
     "P31xx": "phase3_evidence_invariants",
+    "P32xx": "phase3_lineage_foundations",
+    "P39xx": "phase3_lineage_persistence_and_access",
     "P71xx": "outbox_invariants",
     "P72xx": "ingress_invariants",
     "P73xx": "policy_invariants",
@@ -48,6 +51,126 @@
       "class": "C",
       "subsystem": "evidence",
       "meaning": "evidence-node data-class downgrade attempted (monotonicity violation)",
+      "retryable": false
+    },
+    "P3002": {
+      "class": "B",
+      "subsystem": "phase3_projection",
+      "meaning": "recursive legitimacy assertion blocked because the subject node or one of its ancestors is illegitimate within the declared projection universe",
+      "retryable": false
+    },
+    "P3006": {
+      "class": "B",
+      "subsystem": "phase3_authority_scope",
+      "meaning": "authority scope assertion blocked because the authority claim is out of scope, revoked, or expands beyond the delegator's declared authority",
+      "retryable": false
+    },
+    "P3003": {
+      "class": "B",
+      "subsystem": "phase3_contradiction",
+      "meaning": "direct contradiction blocked because two claims assert incompatible facts for the same resource and temporal context",
+      "retryable": false
+    },
+    "P3004": {
+      "class": "B",
+      "subsystem": "phase3_contradiction",
+      "meaning": "temporal contradiction blocked because overlapping effective windows assert incompatible facts for the same resource",
+      "retryable": false
+    },
+    "P3005": {
+      "class": "B",
+      "subsystem": "phase3_contradiction",
+      "meaning": "authority-scope contradiction blocked because the asserted authority lineage does not govern the claimed act or resource context",
+      "retryable": false
+    },
+    "P3007": {
+      "class": "B",
+      "subsystem": "phase3_failure_continuity",
+      "meaning": "internal provenance continuity assertion failed because the replay-addressable chain is broken or incomplete",
+      "retryable": false
+    },
+    "P3008": {
+      "class": "C",
+      "subsystem": "phase3_failure_continuity",
+      "meaning": "append-only mutation attempted against failure composition or provenance continuity records",
+      "retryable": false
+    },
+    "P3009": {
+      "class": "C",
+      "subsystem": "phase3_contradiction",
+      "meaning": "append-only mutation attempted against contradiction, quarantine, supersession, or escalation records",
+      "retryable": false
+    },
+    "P3001": {
+      "class": "B",
+      "subsystem": "phase3_regulator_partition",
+      "meaning": "regulator precedence application blocked because the rule references a different sovereign regime than the active constitutional context",
+      "retryable": false
+    },
+    "P3011": {
+      "class": "B",
+      "subsystem": "phase3_spatial_legality",
+      "meaning": "spatial legality assertion blocked because the declared dataset version is missing, doctrine-gap blocked, or otherwise not replay-admissible",
+      "retryable": false
+    },
+    "P3012": {
+      "class": "B",
+      "subsystem": "phase3_dwell_time",
+      "meaning": "dwell-time forensic recording blocked because temporal inputs are invalid or the declared policy input is missing",
+      "retryable": false
+    },
+    "P3014": {
+      "class": "C",
+      "subsystem": "phase3_regulator_partition",
+      "meaning": "append-only mutation attempted against regulator partition or precedence findings",
+      "retryable": false
+    },
+    "P3015": {
+      "class": "C",
+      "subsystem": "phase3_conflict_of_interest",
+      "meaning": "append-only mutation attempted against conflict-of-interest relationship or verifier-independence records",
+      "retryable": false
+    },
+    "P3016": {
+      "class": "C",
+      "subsystem": "phase3_spatial_legality",
+      "meaning": "append-only mutation attempted against spatial legality or DNSH gate findings",
+      "retryable": false
+    },
+    "P3017": {
+      "class": "C",
+      "subsystem": "phase3_dwell_time",
+      "meaning": "append-only mutation attempted against dwell-time policy inputs or forensic findings",
+      "retryable": false
+    },
+    "P3207": {
+      "class": "B",
+      "subsystem": "phase3_lineage",
+      "meaning": "typed dependency graph verifier detected traversal mismatch or missing negative constraint enforcement",
+      "retryable": false
+    },
+    "P3208": {
+      "class": "B",
+      "subsystem": "phase3_authority",
+      "meaning": "policy or authority lineage verifier detected reconstruction mismatch or missing negative lineage enforcement",
+      "retryable": false
+    },
+    "P3901": {
+      "class": "C",
+      "subsystem": "phase3_persistence",
+      "meaning": "append-only lineage persistence mutation attempt blocked by fail-closed trigger",
+      "retryable": false
+    },
+    "P3902": {
+      "class": "B",
+      "subsystem": "phase3_persistence",
+      "meaning": "lineage persistence verifier detected manifest mismatch or missing append-only enforcement",
+      "retryable": false
+    },
+    "P3910": {
+      "class": "B",
+      "subsystem": "phase3_access_control",
+      "meaning": "lineage access-control verifier detected missing readonly insert denial",
       "retryable": false
     },
     "P7002": {

@@ -1,0 +1,141 @@
+schema_version: 1
+phase: '3'
+wave: 'SUPPORT'
+task_id: TSK-P3-SUPPORT-FIXTURE-001
+title: "Canonical replay fixtures for lineage, authority, and legitimacy"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+depends_on: ["TSK-P3-WP-003", "TSK-P3-WP-006"]
+invariants: ["INV-303", "INV-307"]
+
+deliverable_files:
+  - docs/architecture/PHASE3_CANONICAL_REPLAY_FIXTURE_CONTRACT.md
+  - scripts/agent/verify_tsk_p3_support_fixture_001.sh
+  - evidence/phase3/tsk_p3_support_fixture_001_replay_fixtures.json
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/plans/phase3/TSK-P3-SUPPORT-FIXTURE-001/PLAN.md
+  - docs/plans/phase3/TSK-P3-SUPPORT-FIXTURE-001/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/agent/verify_tsk_p3_support_fixture_001.sh
+    - evidence/phase3/tsk_p3_support_fixture_001_replay_fixtures.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+  - "Regulator partition, settlement, product-authorization, or future-phase workflow semantics."
+  - "Runtime implementation of lineage, authority, projection, or delegation surfaces."
+  - "Scenario prose or illustrative examples that are not mechanically tied to verifier closure."
+stop_conditions:
+  - "If the shared fixture artifact cannot remain additive-only across all four owning surfaces."
+  - "If the task requires rewriting Wave 1 lineage or authority semantics to express fixture coverage."
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON can prove that one shared replay-fixture artifact exists and covers lineage, authority, delegation, revocation, and legitimacy-projection cases across all four owning surfaces where inspected."
+  - "Evidence can prove additive-only reconciliation rules, deterministic positive and negative replay cases, and explicit prohibition on silently redefining Wave 1 lineage or authority semantics."
+proof_limitations:
+  - "Does not prove runtime implementation of any owning surface."
+  - "Does not prove substantive correctness of legitimacy or authority doctrines beyond declared fixture coverage."
+  - "Does not prove regulator, settlement, or future-phase workflow semantics because those are outside task scope."
+
+touches:
+  - docs/architecture/PHASE3_CANONICAL_REPLAY_FIXTURE_CONTRACT.md
+  - scripts/agent/verify_tsk_p3_support_fixture_001.sh
+  - evidence/phase3/tsk_p3_support_fixture_001_replay_fixtures.json
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - tasks/TSK-P3-SUPPORT-FIXTURE-001/meta.yml
+  - docs/plans/phase3/TSK-P3-SUPPORT-FIXTURE-001/PLAN.md
+  - docs/plans/phase3/TSK-P3-SUPPORT-FIXTURE-001/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_support_fixture_001_w01] Define one canonical shared fixture artifact for valid and invalid lineage, authority, delegation, revocation, and legitimacy-projection cases across P3-SURF-001, P3-SURF-002, P3-SURF-003, and P3-SURF-006 without importing regulator, settlement, or future-phase workflow semantics."
+  - "[ID tsk_p3_support_fixture_001_w02] Bind fixture definitions to additive-only reconciliation rules, immutable provenance expectations, deterministic positive and negative replay cases, and explicit prohibitions on rewriting Wave 1 lineage or authority meaning."
+  - "[ID tsk_p3_support_fixture_001_w03] Add a deterministic verifier that proves the shared fixture artifact covers all four owning surfaces, preserves additive-only reconciliation, and supports replay-safe verifier closure without inventing projection or authority doctrine locally."
+  - "[ID tsk_p3_support_fixture_001_w04] Register the task in the active Phase 3 runtime task index and registry without altering unrelated Wave 2 runtime-node scope."
+
+acceptance_criteria:
+  - "[ID tsk_p3_support_fixture_001_w01] One canonical shared fixture artifact is declared for lineage, authority, delegation, revocation, and legitimacy-projection cases across all four owning surfaces."
+  - "[ID tsk_p3_support_fixture_001_w02] The artifact declares additive-only reconciliation, deterministic valid and invalid replay cases, immutable provenance expectations, and explicit prohibition on silently redefining Wave 1 lineage or authority semantics."
+  - "[ID tsk_p3_support_fixture_001_w03] The task declares a verifier and evidence path that honestly prove shared fixture coverage and additive reconciliation without claiming runtime implementation of the owning surfaces themselves."
+  - "[ID tsk_p3_support_fixture_001_w04] The active runtime task index and Phase 3 task registry both point to the generated `TSK-P3-SUPPORT-FIXTURE-001` task pack as the runtime source of truth."
+
+negative_tests:
+  - id: TSK-P3-SUPPORT-FIXTURE-001-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: One canonical shared fixture artifact is declared for lineage, authority, delegation, revocation, and legitimacy-projection cases across all four owning surfaces."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-SUPPORT-FIXTURE-001-P1
+    description: "Verify that execution exits 0 on success path for: One canonical shared fixture artifact is declared for lineage, authority, delegation, revocation, and legitimacy-projection cases across all four owning surfaces."
+    required: true
+
+verification:
+  - '[ID tsk_p3_support_fixture_001_w01] [ID tsk_p3_support_fixture_001_w02] [ID tsk_p3_support_fixture_001_w03] [ID tsk_p3_support_fixture_001_w04] test -x scripts/agent/verify_tsk_p3_support_fixture_001.sh && bash scripts/agent/verify_tsk_p3_support_fixture_001.sh > evidence/phase3/tsk_p3_support_fixture_001_replay_fixtures.json || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-SUPPORT-FIXTURE-001 --evidence evidence/phase3/tsk_p3_support_fixture_001_replay_fixtures.json || exit 1'
+  - 'RUN_PHASE3_GATES=1 bash scripts/dev/pre_ci.sh || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_support_fixture_001_replay_fixtures.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+  - "Shared fixture artifact omits one owning surface => FAIL"
+  - "Fixture reconciliation silently rewrites Wave 1 lineage or authority semantics => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/implementation_plans/TSK-P3-PLAN-002_wave2_projection_authority_enforcement.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-001_dependency_graph.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-002_policy_authority_lineage.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-003_projection_legitimacy.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-006_authority_delegation.md
+  - docs/constitutional/CONSTITUTIONAL_GRAPH.md
+  - docs/constitutional/LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md
+  - docs/constitutional/AUTHORITY_SCOPE_AND_DELEGATION_DOCTRINE.md
+  - docs/constitutional/TASK_GENERATION_CONSTITUTION.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+implementation_plan: docs/plans/phase3/TSK-P3-SUPPORT-FIXTURE-001/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-SUPPORT-FIXTURE-001/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py and narrowed to one additive-only shared replay-fixture artifact jointly serving P3-SURF-001, P3-SURF-002, P3-SURF-003, and P3-SURF-006.'
+client: cursor
+assigned_agent: architect
+model: claude-sonnet-4-20250514

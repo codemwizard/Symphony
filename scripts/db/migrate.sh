@@ -6,7 +6,7 @@
 # Requires: DATABASE_URL environment variable
 #
 # Behavior:
-# - Ensures public.schema_migrations exists
+# - Ensures public.schema_migrations exists when required by the selected strategy
 # - Applies new migrations in order (schema/migrations/*.sql)
 # - Wraps each migration in its own transaction
 # - Supports no-tx migrations via marker: -- symphony:no_tx
@@ -38,7 +38,8 @@ if [[ "$STRATEGY" != "migrations" ]]; then
   fi
 fi
 
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X <<'SQL'
+ensure_schema_migrations_table() {
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X <<'SQL'
 CREATE TABLE IF NOT EXISTS public.schema_migrations (
   version TEXT PRIMARY KEY,
   checksum TEXT NOT NULL,
@@ -46,6 +47,48 @@ CREATE TABLE IF NOT EXISTS public.schema_migrations (
 );
 REVOKE ALL ON TABLE public.schema_migrations FROM PUBLIC;
 SQL
+}
+
+schema_migrations_exists() {
+  psql "$DATABASE_URL" -X -t -A -v ON_ERROR_STOP=1 \
+    -c "SELECT CASE WHEN to_regclass('public.schema_migrations') IS NULL THEN 0 ELSE 1 END;"
+}
+
+schema_migrations_count() {
+  if [[ "$(schema_migrations_exists)" == "1" ]]; then
+    psql "$DATABASE_URL" -X -t -A -v ON_ERROR_STOP=1 \
+      -c "SELECT COUNT(*) FROM public.schema_migrations"
+  else
+    echo "0"
+  fi
+}
+
+schema_migration_checksum() {
+  local version="$1"
+  if [[ "$(schema_migrations_exists)" == "1" ]]; then
+    psql "$DATABASE_URL" -X -t -A -v ON_ERROR_STOP=1 \
+      -c "SELECT COALESCE((SELECT checksum FROM public.schema_migrations WHERE version = '$version'), '')"
+  else
+    printf ''
+  fi
+}
+
+apply_baseline_file() {
+  sed '/^CREATE SCHEMA public;$/d' "$BASELINE_PATH" | \
+    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X
+}
+
+ensure_baseline_extensions() {
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X <<'SQL'
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+CREATE EXTENSION IF NOT EXISTS postgis SCHEMA public;
+SQL
+}
+
+if [[ "$STRATEGY" == "migrations" ]]; then
+  ensure_schema_migrations_table
+fi
 
 echo "🧭 Running migrations from: $MIG_DIR"
 
@@ -62,14 +105,13 @@ if [[ "$STRATEGY" == "baseline" || "$STRATEGY" == "baseline_then_migrations" ]];
   baseline_version="baseline@$(basename "$(dirname "$BASELINE_PATH")")"
   baseline_checksum="$(sha256sum "$BASELINE_PATH" | awk '{print $1}')"
 
-  existing_count="$(psql "$DATABASE_URL" -X -t -A -v ON_ERROR_STOP=1 -c "SELECT COUNT(*) FROM public.schema_migrations")"
+  existing_count="$(schema_migrations_count)"
   if [[ "$existing_count" != "0" && "${ALLOW_BASELINE_ON_NONEMPTY:-0}" != "1" ]]; then
     echo "❌ Baseline strategy requires an empty schema_migrations table (set ALLOW_BASELINE_ON_NONEMPTY=1 to override)" >&2
     exit 1
   fi
 
-  existing_checksum="$(psql "$DATABASE_URL" -X -t -A -v ON_ERROR_STOP=1 \
-    -c "SELECT checksum FROM public.schema_migrations WHERE version = '$baseline_version'")"
+  existing_checksum="$(schema_migration_checksum "$baseline_version")"
 
   if [[ -n "$existing_checksum" ]]; then
     if [[ "$existing_checksum" != "$baseline_checksum" ]]; then
@@ -81,7 +123,9 @@ if [[ "$STRATEGY" == "baseline" || "$STRATEGY" == "baseline_then_migrations" ]];
     echo "✅ Baseline already applied: $baseline_version"
   else
     echo "➡️  Applying baseline: $baseline_version"
-    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X -f "$BASELINE_PATH"
+    ensure_baseline_extensions
+    apply_baseline_file
+    ensure_schema_migrations_table
     psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X \
       -c "INSERT INTO public.schema_migrations(version, checksum) VALUES ('$baseline_version', '$baseline_checksum');"
     echo "✅ Baseline applied: $baseline_version"
@@ -106,8 +150,7 @@ for file in "${files[@]}"; do
   # sha256 checksum
   checksum="$(sha256sum "$file" | awk '{print $1}')"
 
-  existing_checksum="$(psql "$DATABASE_URL" -X -t -A -v ON_ERROR_STOP=1 \
-    -c "SELECT checksum FROM public.schema_migrations WHERE version = '$version'")"
+  existing_checksum="$(schema_migration_checksum "$version")"
 
   if [[ -n "$existing_checksum" ]]; then
     if [[ "$existing_checksum" != "$checksum" ]]; then
@@ -147,8 +190,7 @@ for file in "${files[@]}"; do
     psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X \
       -c "INSERT INTO public.schema_migrations(version, checksum) VALUES ('$version', '$checksum') ON CONFLICT (version) DO NOTHING;"
 
-    existing_checksum="$(psql "$DATABASE_URL" -X -t -A -v ON_ERROR_STOP=1 \
-      -c "SELECT checksum FROM public.schema_migrations WHERE version = '$version'")"
+    existing_checksum="$(schema_migration_checksum "$version")"
     if [[ -n "$existing_checksum" && "$existing_checksum" != "$checksum" ]]; then
       echo "❌ Checksum mismatch for $version after no-tx apply" >&2
       echo "   applied: $existing_checksum" >&2

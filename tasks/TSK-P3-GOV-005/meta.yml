@@ -1,0 +1,136 @@
+schema_version: 1
+phase: '3'
+wave: 'GOV'
+task_id: TSK-P3-GOV-005
+title: "AI governance doctrine, model registry and inference log schemas, and confidence-to-uncertainty admissibility mappings"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+depends_on: ["TSK-P3-WP-013"]
+invariants: ["INV-313"]
+
+deliverable_files:
+  - docs/architecture/PHASE3_AI_GOVERNANCE_AND_MODEL_PROVENANCE_CONTRACT.md
+  - scripts/audit/verify_tsk_p3_gov_005_ai_governance.sh
+  - evidence/phase3/tsk_p3_gov_005_ai_governance.json
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/plans/phase3/TSK-P3-GOV-005/PLAN.md
+  - docs/plans/phase3/TSK-P3-GOV-005/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/audit/verify_tsk_p3_gov_005_ai_governance.sh
+    - evidence/phase3/tsk_p3_gov_005_ai_governance.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+  - "AI model execution runtime, model training, or inference pipelines."
+  - "Document intelligence, anomaly detection, disclosure intelligence, or climate-finance intelligence execution."
+  - "Constitutional truth delegation to AI outputs."
+stop_conditions:
+  - "If the AI artifact cannot remain one canonical advisory-only governance contract for P3-SURF-000."
+  - "If the task introduces AI execution capability, model serving, or inference processing."
+  - "If confidence-to-uncertainty mapping cannot remain explicitly subordinate to the uncertainty doctrine."
+proof_guarantees:
+  - "Evidence JSON can prove that one canonical AI governance artifact exists, is machine-inspectable where inspected, and declares advisory-only admissibility rules, model provenance, inference-log schema, and confidence-to-uncertainty mapping requirements."
+  - "Evidence can prove that AI outputs are prohibited from becoming constitutional truth and that runtime AI execution remains explicitly out of Phase 3 scope."
+proof_limitations:
+  - "Does not prove any AI model runtime, training, or inference behavior."
+  - "Does not prove downstream Phase 5, Phase 6, Phase 8D, or Phase 8E AI capability execution."
+  - "Does not prove uncertainty computation beyond consuming the declared uncertainty substrate."
+
+touches:
+  - docs/architecture/PHASE3_AI_GOVERNANCE_AND_MODEL_PROVENANCE_CONTRACT.md
+  - scripts/audit/verify_tsk_p3_gov_005_ai_governance.sh
+  - evidence/phase3/tsk_p3_gov_005_ai_governance.json
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - tasks/TSK-P3-GOV-005/meta.yml
+  - docs/plans/phase3/TSK-P3-GOV-005/PLAN.md
+  - docs/plans/phase3/TSK-P3-GOV-005/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_gov_005_w01] Define one canonical AI governance artifact for advisory-only admissibility, model provenance, inference-log schema, and confidence-to-uncertainty mapping without importing AI runtime execution or model-training semantics."
+  - "[ID tsk_p3_gov_005_w02] Bind the artifact to explicit anti-truth-delegation rules, registry-bound model identity, replay-addressable inference logging, and confidence-to-uncertainty mapping subordinate to the uncertainty substrate."
+  - "[ID tsk_p3_gov_005_w03] Add a deterministic verifier that proves the artifact is mechanically inspectable, advisory-only, and explicit about AI-free Phase 3 runtime boundaries under the declared structural contract."
+  - "[ID tsk_p3_gov_005_w04] Register the task in the active Phase 3 runtime task index and registry without altering unrelated Wave 5 uncertainty or documentation-closeout scope."
+
+acceptance_criteria:
+  - "[ID tsk_p3_gov_005_w01] One canonical AI governance artifact is declared for advisory-only admissibility, model provenance, inference logging, and confidence-to-uncertainty mappings under P3-SURF-000."
+  - "[ID tsk_p3_gov_005_w02] The artifact declares anti-truth-delegation rules, registry-bound model identity, replay-addressable inference logging, and subordinate confidence-to-uncertainty mapping requirements."
+  - "[ID tsk_p3_gov_005_w03] The task declares a verifier and evidence path that honestly prove governance completeness without claiming AI execution runtime, model training, or downstream AI capability behavior."
+  - "[ID tsk_p3_gov_005_w04] The active runtime task index and Phase 3 task registry both point to the generated `TSK-P3-GOV-005` task pack as the runtime source of truth."
+
+negative_tests:
+  - id: TSK-P3-GOV-005-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: One canonical AI governance artifact is declared for advisory-only admissibility, model provenance, inference logging, and confidence-to-uncertainty mappings under P3-SURF-000."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-GOV-005-P1
+    description: "Verify that execution exits 0 on success path for: One canonical AI governance artifact is declared for advisory-only admissibility, model provenance, inference logging, and confidence-to-uncertainty mappings under P3-SURF-000."
+    required: true
+
+verification:
+  - '[ID tsk_p3_gov_005_w01] [ID tsk_p3_gov_005_w02] [ID tsk_p3_gov_005_w03] [ID tsk_p3_gov_005_w04] test -x scripts/audit/verify_tsk_p3_gov_005_ai_governance.sh && bash scripts/audit/verify_tsk_p3_gov_005_ai_governance.sh > evidence/phase3/tsk_p3_gov_005_ai_governance.json || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-GOV-005 --evidence evidence/phase3/tsk_p3_gov_005_ai_governance.json || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_gov_005_ai_governance.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+  - "AI artifact omits advisory-only or anti-truth-delegation rules => FAIL"
+  - "Artifact permits AI execution runtime or detached confidence-to-uncertainty semantics => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+  - docs/PHASE3/implementation_plans/TSK-P3-PLAN-005_wave5_verifier_segregation_closeout.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-015_ai_governance_doctrine.md
+  - docs/constitutional/AI_ASSISTED_ESTIMATION_AND_DECISION_SUPPORT_DOCTRINE.md
+  - docs/constitutional/UNCERTAINTY_AND_ESTIMATION_SEMANTICS_DOCTRINE.md
+  - docs/constitutional/EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md
+  - docs/constitutional/AUTHORITY_TRANSFER_OWNERSHIP_SEMANTICS_DOCTRINE.md
+implementation_plan: docs/plans/phase3/TSK-P3-GOV-005/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-GOV-005/EXEC_LOG.md
+notes: 'Generated via Phase 3 task-pack creation workflow and narrowed to one canonical AI governance contract serving advisory-only Phase 3 governance scope.'
+client: cursor
+assigned_agent: architect
+model: gpt-5

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict vv77v7OrE3cGKQDoOgK4rjcC5NFA8MmrbmPQgpoafMXnLftgNxdpzvVdUr66aMe
+\restrict uejCgsYlNQH0g556E9cduzTqkEftj53aNbiJl3AxJ4IIGg5g92c4q1GkNsLmzZv
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
@@ -152,6 +152,220 @@ CREATE TYPE public.outbox_attempt_state AS ENUM (
     'RETRYABLE',
     'FAILED',
     'ZOMBIE_REQUEUE'
+);
+
+
+--
+-- Name: p3_authority_enforcement_state; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_authority_enforcement_state AS ENUM (
+    'authorized',
+    'out_of_scope',
+    'revoked',
+    'delegation_overflow'
+);
+
+
+--
+-- Name: p3_authority_source_kind; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_authority_source_kind AS ENUM (
+    'constitutional_document',
+    'regulator_instrument',
+    'delegated_authority',
+    'policy_bound_authority'
+);
+
+
+--
+-- Name: p3_conflict_relationship_kind; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_conflict_relationship_kind AS ENUM (
+    'same_actor',
+    'declared_relationship_conflict',
+    'authority_overlap'
+);
+
+
+--
+-- Name: p3_contradiction_class; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_contradiction_class AS ENUM (
+    'direct',
+    'temporal',
+    'authority_scope'
+);
+
+
+--
+-- Name: p3_contradiction_resolution_state; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_contradiction_resolution_state AS ENUM (
+    'contradiction_detected',
+    'quarantined',
+    'superseded',
+    'escalation_required'
+);
+
+
+--
+-- Name: p3_dependency_edge_kind; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_dependency_edge_kind AS ENUM (
+    'decision_input',
+    'fact_input',
+    'supporting_evidence',
+    'calculation_basis',
+    'temporal_predecessor'
+);
+
+
+--
+-- Name: p3_dependency_node_kind; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_dependency_node_kind AS ENUM (
+    'decision_record',
+    'fact_record'
+);
+
+
+--
+-- Name: p3_dwell_finding_state; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_dwell_finding_state AS ENUM (
+    'within_window',
+    'flagged',
+    'blocked'
+);
+
+
+--
+-- Name: p3_failure_category; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_failure_category AS ENUM (
+    'dependency_missing',
+    'dependency_illegitimate',
+    'authority_scope_violation',
+    'delegation_invalid',
+    'contradiction_detected',
+    'policy_artifact_invalid',
+    'projection_context_invalid',
+    'replay_reconstruction_failed',
+    'evidence_lineage_break',
+    'doctrine_gap_blocker'
+);
+
+
+--
+-- Name: p3_failure_severity; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_failure_severity AS ENUM (
+    'blocking',
+    'quarantine',
+    'escalation_required',
+    'warning_non_blocking'
+);
+
+
+--
+-- Name: p3_internal_boundary_kind; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_internal_boundary_kind AS ENUM (
+    'lineage_to_failure',
+    'projection_to_failure',
+    'authority_to_failure',
+    'contradiction_to_failure'
+);
+
+
+--
+-- Name: p3_legitimacy_projection_state; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_legitimacy_projection_state AS ENUM (
+    'legitimate',
+    'illegitimate',
+    'blocked',
+    'requires_escalation'
+);
+
+
+--
+-- Name: p3_lineage_surface_id; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_lineage_surface_id AS ENUM (
+    'P3-SURF-001',
+    'P3-SURF-002'
+);
+
+
+--
+-- Name: p3_policy_artifact_class; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_policy_artifact_class AS ENUM (
+    'constraint_policy',
+    'authority_policy',
+    'precedence_policy',
+    'contradiction_policy',
+    'replay_policy',
+    'projection_policy',
+    'spatial_policy',
+    'failure_policy'
+);
+
+
+--
+-- Name: p3_projection_purpose; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_projection_purpose AS ENUM (
+    'legitimacy_view',
+    'admissibility_view'
+);
+
+
+--
+-- Name: p3_regulator_partition_state; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_regulator_partition_state AS ENUM (
+    'independent_finding',
+    'precedence_applied',
+    'doctrine_gap'
+);
+
+
+--
+-- Name: p3_spatial_gate_state; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_spatial_gate_state AS ENUM (
+    'admissible',
+    'dns_harm_blocked',
+    'doctrine_gap_blocked'
+);
+
+
+--
+-- Name: p3_verifier_independence_state; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.p3_verifier_independence_state AS ENUM (
+    'independent',
+    'rejected_conflict'
 );
 
 
@@ -4133,6 +4347,1408 @@ $$;
 
 
 --
+-- Name: p3_append_continuity_compensation(uuid, uuid, text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_append_continuity_compensation(p_prior_continuity_record_id uuid, p_replacement_continuity_record_id uuid, p_compensation_reason text, p_lineage_provenance_id uuid) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_id uuid;
+BEGIN
+    INSERT INTO public.p3_failure_continuity_compensations (
+        prior_continuity_record_id,
+        replacement_continuity_record_id,
+        compensation_reason,
+        lineage_provenance_id
+    ) VALUES (
+        p_prior_continuity_record_id,
+        p_replacement_continuity_record_id,
+        p_compensation_reason,
+        p_lineage_provenance_id
+    )
+    RETURNING continuity_compensation_id INTO v_id;
+
+    RETURN v_id;
+END;
+$$;
+
+
+--
+-- Name: p3_append_contradiction_finding(public.p3_contradiction_class, uuid, uuid, public.p3_contradiction_resolution_state, text, text, uuid, text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_append_contradiction_finding(p_contradiction_class public.p3_contradiction_class, p_primary_claim_id uuid, p_conflicting_claim_id uuid, p_resolution_state public.p3_contradiction_resolution_state, p_contradiction_reason text, p_replay_context_hash text, p_lineage_provenance_id uuid, p_authority_transfer_mode text DEFAULT 'AT-SHARED'::text, p_authority_transfer_purpose text DEFAULT 'contradiction_adjudication'::text, p_receiving_surface_id text DEFAULT NULL::text) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_primary public.p3_contradiction_claims%ROWTYPE;
+    v_conflicting public.p3_contradiction_claims%ROWTYPE;
+    v_contradiction_record_id uuid;
+    v_canonical_order_at timestamptz;
+    v_tie_break_key text;
+BEGIN
+    SELECT * INTO v_primary
+    FROM public.p3_contradiction_claims
+    WHERE contradiction_claim_id = p_primary_claim_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'primary contradiction claim not found: %', p_primary_claim_id
+            USING ERRCODE = 'P3003';
+    END IF;
+
+    IF p_conflicting_claim_id IS NOT NULL THEN
+        SELECT * INTO v_conflicting
+        FROM public.p3_contradiction_claims
+        WHERE contradiction_claim_id = p_conflicting_claim_id;
+
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'conflicting contradiction claim not found: %', p_conflicting_claim_id
+                USING ERRCODE = 'P3003';
+        END IF;
+        v_canonical_order_at := LEAST(v_primary.declared_order_at, v_conflicting.declared_order_at);
+        v_tie_break_key := LEAST(v_primary.declared_tie_break_key, v_conflicting.declared_tie_break_key)
+            || '::'
+            || GREATEST(v_primary.declared_tie_break_key, v_conflicting.declared_tie_break_key);
+    ELSE
+        v_canonical_order_at := v_primary.declared_order_at;
+        v_tie_break_key := v_primary.declared_tie_break_key;
+    END IF;
+
+    INSERT INTO public.p3_contradiction_records (
+        contradiction_class,
+        primary_claim_id,
+        conflicting_claim_id,
+        resolution_state,
+        authority_transfer_mode,
+        authority_transfer_purpose,
+        canonical_order_at,
+        tie_break_key,
+        contradiction_reason,
+        replay_context_hash,
+        quarantine_required,
+        lineage_provenance_id
+    ) VALUES (
+        p_contradiction_class,
+        p_primary_claim_id,
+        p_conflicting_claim_id,
+        p_resolution_state,
+        p_authority_transfer_mode,
+        p_authority_transfer_purpose,
+        v_canonical_order_at,
+        v_tie_break_key,
+        p_contradiction_reason,
+        p_replay_context_hash,
+        p_resolution_state = 'quarantined',
+        p_lineage_provenance_id
+    )
+    RETURNING contradiction_record_id INTO v_contradiction_record_id;
+
+    IF p_resolution_state = 'quarantined' THEN
+        INSERT INTO public.p3_quarantine_records (
+            contradiction_record_id,
+            subject_claim_id,
+            quarantine_reason,
+            lineage_provenance_id
+        ) VALUES (
+            v_contradiction_record_id,
+            p_primary_claim_id,
+            p_contradiction_reason,
+            p_lineage_provenance_id
+        );
+    END IF;
+
+    IF p_resolution_state = 'escalation_required' THEN
+        INSERT INTO public.p3_contradiction_escalations (
+            contradiction_record_id,
+            receiving_surface_id,
+            authority_transfer_mode,
+            authority_transfer_purpose,
+            lineage_provenance_id
+        ) VALUES (
+            v_contradiction_record_id,
+            COALESCE(p_receiving_surface_id, 'P3-SURF-005'),
+            p_authority_transfer_mode,
+            p_authority_transfer_purpose,
+            p_lineage_provenance_id
+        );
+    END IF;
+
+    RETURN v_contradiction_record_id;
+END;
+$$;
+
+
+--
+-- Name: p3_append_contradiction_supersession(uuid, uuid, text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_append_contradiction_supersession(p_prior_contradiction_record_id uuid, p_superseding_contradiction_record_id uuid, p_supersession_reason text, p_lineage_provenance_id uuid) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_supersession_id uuid;
+BEGIN
+    INSERT INTO public.p3_contradiction_supersessions (
+        prior_contradiction_record_id,
+        superseding_contradiction_record_id,
+        supersession_reason,
+        lineage_provenance_id
+    ) VALUES (
+        p_prior_contradiction_record_id,
+        p_superseding_contradiction_record_id,
+        p_supersession_reason,
+        p_lineage_provenance_id
+    )
+    RETURNING contradiction_supersession_id INTO v_supersession_id;
+
+    RETURN v_supersession_id;
+END;
+$$;
+
+
+--
+-- Name: p3_append_failure_record(public.p3_failure_category, public.p3_failure_severity, uuid, uuid, uuid, uuid, uuid, uuid, uuid, jsonb, text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_append_failure_record(p_failure_category public.p3_failure_category, p_failure_severity public.p3_failure_severity, p_parent_failure_record_id uuid, p_source_contradiction_record_id uuid, p_source_dependency_node_id uuid, p_source_authority_lineage_id uuid, p_source_policy_artifact_id uuid, p_source_projection_universe_id uuid, p_source_continuity_record_id uuid, p_failure_payload jsonb, p_tie_break_key text, p_lineage_provenance_id uuid) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_root_failure_record_id uuid;
+    v_failure_record_id uuid;
+BEGIN
+    IF p_source_continuity_record_id IS NOT NULL THEN
+        PERFORM public.p3_assert_provenance_continuity(p_source_continuity_record_id);
+    END IF;
+
+    IF p_parent_failure_record_id IS NOT NULL THEN
+        SELECT COALESCE(root_failure_record_id, failure_record_id)
+        INTO v_root_failure_record_id
+        FROM public.p3_failure_records
+        WHERE failure_record_id = p_parent_failure_record_id;
+    END IF;
+
+    v_failure_record_id := gen_random_uuid();
+
+    INSERT INTO public.p3_failure_records (
+        failure_record_id,
+        root_failure_record_id,
+        parent_failure_record_id,
+        failure_category,
+        failure_severity,
+        source_contradiction_record_id,
+        source_dependency_node_id,
+        source_authority_lineage_id,
+        source_policy_artifact_id,
+        source_projection_universe_id,
+        source_continuity_record_id,
+        failure_payload,
+        tie_break_key,
+        lineage_provenance_id
+    ) VALUES (
+        v_failure_record_id,
+        COALESCE(v_root_failure_record_id, v_failure_record_id),
+        p_parent_failure_record_id,
+        p_failure_category,
+        p_failure_severity,
+        p_source_contradiction_record_id,
+        p_source_dependency_node_id,
+        p_source_authority_lineage_id,
+        p_source_policy_artifact_id,
+        p_source_projection_universe_id,
+        p_source_continuity_record_id,
+        COALESCE(p_failure_payload, '{}'::jsonb),
+        p_tie_break_key,
+        p_lineage_provenance_id
+    );
+
+    RETURN v_failure_record_id;
+END;
+$$;
+
+
+--
+-- Name: p3_append_provenance_continuity_record(public.p3_internal_boundary_kind, text, text, text, uuid, text, text, jsonb, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_append_provenance_continuity_record(p_boundary_kind public.p3_internal_boundary_kind, p_source_surface_id text, p_destination_surface_id text, p_source_record_locator text, p_parent_continuity_record_id uuid, p_continuity_status text, p_continuity_hash text, p_provenance_payload jsonb, p_lineage_provenance_id uuid) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_id uuid;
+BEGIN
+    INSERT INTO public.p3_provenance_continuity_records (
+        boundary_kind,
+        source_surface_id,
+        destination_surface_id,
+        source_record_locator,
+        parent_continuity_record_id,
+        continuity_status,
+        continuity_hash,
+        provenance_payload,
+        lineage_provenance_id
+    ) VALUES (
+        p_boundary_kind,
+        p_source_surface_id,
+        p_destination_surface_id,
+        p_source_record_locator,
+        p_parent_continuity_record_id,
+        p_continuity_status,
+        p_continuity_hash,
+        p_provenance_payload,
+        p_lineage_provenance_id
+    )
+    RETURNING continuity_record_id INTO v_id;
+
+    RETURN v_id;
+END;
+$$;
+
+
+--
+-- Name: p3_append_regulator_partition_finding(text, text, text, timestamp with time zone, text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_append_regulator_partition_finding(p_subject_key text, p_context_regime_key text, p_rule_regime_key text, p_canonical_order_at timestamp with time zone, p_tie_break_key text, p_lineage_provenance_id uuid) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_subject_regime_id uuid;
+    v_id uuid;
+BEGIN
+    PERFORM public.p3_assert_regulator_rule_applicability(
+        p_context_regime_key,
+        p_rule_regime_key
+    );
+
+    SELECT regulator_regime_id
+    INTO v_subject_regime_id
+    FROM public.p3_regulator_regimes
+    WHERE regime_key = p_context_regime_key;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'unknown regulator regime: %', p_context_regime_key
+            USING ERRCODE = 'P3001';
+    END IF;
+
+    INSERT INTO public.p3_regulator_partition_findings (
+        subject_key,
+        subject_regime_id,
+        partition_state,
+        canonical_order_at,
+        tie_break_key,
+        lineage_provenance_id
+    ) VALUES (
+        p_subject_key,
+        v_subject_regime_id,
+        'independent_finding',
+        p_canonical_order_at,
+        p_tie_break_key,
+        p_lineage_provenance_id
+    )
+    RETURNING regulator_partition_finding_id INTO v_id;
+
+    RETURN v_id;
+END;
+$$;
+
+
+--
+-- Name: p3_assert_authority_scope(uuid, text, text, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_assert_authority_scope(p_authority_lineage_id uuid, p_claimed_resource_scope text, p_claimed_act_scope text, p_evaluated_effective_at timestamp with time zone) RETURNS void
+    LANGUAGE plpgsql STABLE
+    AS $$
+DECLARE
+    v_evaluation record;
+BEGIN
+    SELECT *
+    INTO v_evaluation
+    FROM public.p3_evaluate_authority_scope(
+        p_authority_lineage_id,
+        p_claimed_resource_scope,
+        p_claimed_act_scope,
+        p_evaluated_effective_at
+    );
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION
+            'Authority lineage % not found',
+            p_authority_lineage_id
+            USING ERRCODE = 'P3006';
+    END IF;
+
+    IF v_evaluation.enforcement_state <> 'authorized' THEN
+        RAISE EXCEPTION
+            'Authority scope blocked for lineage % at resource % / act % with state %',
+            p_authority_lineage_id,
+            p_claimed_resource_scope,
+            p_claimed_act_scope,
+            v_evaluation.enforcement_state
+            USING ERRCODE = 'P3006';
+    END IF;
+END;
+$$;
+
+
+--
+-- Name: p3_assert_contradiction_claim(uuid, uuid, uuid, uuid, text, text, text, timestamp with time zone, timestamp with time zone, text, text, timestamp with time zone, text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_assert_contradiction_claim(p_source_dependency_node_id uuid, p_source_authority_lineage_id uuid, p_source_policy_artifact_id uuid, p_projection_universe_id uuid, p_resource_key text, p_fact_key text, p_asserted_value text, p_effective_from timestamp with time zone, p_effective_to timestamp with time zone, p_claimed_resource_scope text, p_claimed_act_scope text, p_declared_order_at timestamp with time zone, p_declared_tie_break_key text, p_lineage_provenance_id uuid) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_claim_id uuid;
+    v_authority_state public.p3_authority_enforcement_state;
+BEGIN
+    IF p_source_authority_lineage_id IS NOT NULL
+       AND p_claimed_resource_scope IS NOT NULL
+       AND p_claimed_act_scope IS NOT NULL THEN
+        SELECT enforcement_state
+        INTO v_authority_state
+        FROM public.p3_evaluate_authority_scope(
+            p_source_authority_lineage_id,
+            p_claimed_resource_scope,
+            p_claimed_act_scope,
+            p_effective_from
+        );
+
+        IF v_authority_state <> 'authorized' THEN
+            RAISE EXCEPTION 'authority-scope contradiction for %, %', p_resource_key, p_fact_key
+                USING ERRCODE = 'P3005';
+        END IF;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM public.p3_contradiction_claims c
+        WHERE c.resource_key = p_resource_key
+          AND c.fact_key = p_fact_key
+          AND c.effective_from = p_effective_from
+          AND COALESCE(c.effective_to, 'infinity'::timestamptz) = COALESCE(p_effective_to, 'infinity'::timestamptz)
+          AND c.asserted_value <> p_asserted_value
+    ) THEN
+        RAISE EXCEPTION 'direct contradiction for %, %', p_resource_key, p_fact_key
+            USING ERRCODE = 'P3003';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM public.p3_contradiction_claims c
+        WHERE c.resource_key = p_resource_key
+          AND c.fact_key = p_fact_key
+          AND c.asserted_value <> p_asserted_value
+          AND tstzrange(c.effective_from, COALESCE(c.effective_to, 'infinity'::timestamptz), '[)')
+              && tstzrange(p_effective_from, COALESCE(p_effective_to, 'infinity'::timestamptz), '[)')
+    ) THEN
+        RAISE EXCEPTION 'temporal contradiction for %, %', p_resource_key, p_fact_key
+            USING ERRCODE = 'P3004';
+    END IF;
+
+    INSERT INTO public.p3_contradiction_claims (
+        source_dependency_node_id,
+        source_authority_lineage_id,
+        source_policy_artifact_id,
+        projection_universe_id,
+        resource_key,
+        fact_key,
+        asserted_value,
+        effective_from,
+        effective_to,
+        claimed_resource_scope,
+        claimed_act_scope,
+        declared_order_at,
+        declared_tie_break_key,
+        lineage_provenance_id
+    ) VALUES (
+        p_source_dependency_node_id,
+        p_source_authority_lineage_id,
+        p_source_policy_artifact_id,
+        p_projection_universe_id,
+        p_resource_key,
+        p_fact_key,
+        p_asserted_value,
+        p_effective_from,
+        p_effective_to,
+        p_claimed_resource_scope,
+        p_claimed_act_scope,
+        p_declared_order_at,
+        p_declared_tie_break_key,
+        p_lineage_provenance_id
+    )
+    RETURNING contradiction_claim_id INTO v_claim_id;
+
+    RETURN v_claim_id;
+END;
+$$;
+
+
+--
+-- Name: p3_assert_legitimacy_projection(text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_assert_legitimacy_projection(p_projection_universe_key text, p_subject_node_id uuid) RETURNS void
+    LANGUAGE plpgsql STABLE
+    AS $$
+DECLARE
+    v_evaluation record;
+BEGIN
+    SELECT *
+    INTO v_evaluation
+    FROM public.p3_evaluate_legitimacy_projection(
+        p_projection_universe_key,
+        p_subject_node_id
+    );
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION
+            'Projection universe % or subject node % not found',
+            p_projection_universe_key,
+            p_subject_node_id
+            USING ERRCODE = 'P3002';
+    END IF;
+
+    IF v_evaluation.derived_state <> 'legitimate' THEN
+        RAISE EXCEPTION
+            'Recursive legitimacy blocked for node % in projection universe % by ancestor %',
+            p_subject_node_id,
+            p_projection_universe_key,
+            v_evaluation.blocking_ancestor_node_id
+            USING ERRCODE = 'P3002';
+    END IF;
+END;
+$$;
+
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: p3_provenance_continuity_records; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_provenance_continuity_records (
+    continuity_record_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    boundary_kind public.p3_internal_boundary_kind NOT NULL,
+    source_surface_id text NOT NULL,
+    destination_surface_id text CONSTRAINT p3_provenance_continuity_record_destination_surface_id_not_null NOT NULL,
+    source_record_locator text NOT NULL,
+    parent_continuity_record_id uuid,
+    continuity_status text DEFAULT 'complete'::text NOT NULL,
+    continuity_hash text NOT NULL,
+    provenance_payload jsonb DEFAULT '{}'::jsonb NOT NULL,
+    mutability_class text DEFAULT 'immutable_lineage'::text NOT NULL,
+    lineage_provenance_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_provenance_continuity_records_continuity_hash_check CHECK ((btrim(continuity_hash) <> ''::text)),
+    CONSTRAINT p3_provenance_continuity_records_continuity_status_check CHECK ((continuity_status = ANY (ARRAY['complete'::text, 'broken'::text]))),
+    CONSTRAINT p3_provenance_continuity_records_destination_surface_id_check CHECK ((btrim(destination_surface_id) <> ''::text)),
+    CONSTRAINT p3_provenance_continuity_records_mutability_class_check CHECK ((mutability_class = 'immutable_lineage'::text)),
+    CONSTRAINT p3_provenance_continuity_records_provenance_payload_check CHECK ((jsonb_typeof(provenance_payload) = 'object'::text)),
+    CONSTRAINT p3_provenance_continuity_records_source_record_locator_check CHECK ((btrim(source_record_locator) <> ''::text)),
+    CONSTRAINT p3_provenance_continuity_records_source_surface_id_check CHECK ((btrim(source_surface_id) <> ''::text))
+);
+
+
+--
+-- Name: p3_assert_provenance_continuity(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_assert_provenance_continuity(p_continuity_record_id uuid) RETURNS public.p3_provenance_continuity_records
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_record public.p3_provenance_continuity_records%ROWTYPE;
+    v_broken_count integer;
+BEGIN
+    WITH RECURSIVE chain AS (
+        SELECT
+            r.continuity_record_id,
+            r.parent_continuity_record_id,
+            r.continuity_status,
+            r.source_surface_id,
+            r.destination_surface_id,
+            r.continuity_hash
+        FROM public.p3_provenance_continuity_records r
+        WHERE r.continuity_record_id = p_continuity_record_id
+
+        UNION ALL
+
+        SELECT
+            parent.continuity_record_id,
+            parent.parent_continuity_record_id,
+            parent.continuity_status,
+            parent.source_surface_id,
+            parent.destination_surface_id,
+            parent.continuity_hash
+        FROM public.p3_provenance_continuity_records parent
+        JOIN chain c
+          ON parent.continuity_record_id = c.parent_continuity_record_id
+    )
+    SELECT COUNT(*)
+    INTO v_broken_count
+    FROM chain
+    WHERE continuity_status <> 'complete'
+       OR btrim(source_surface_id) = ''
+       OR btrim(destination_surface_id) = ''
+       OR btrim(continuity_hash) = '';
+
+    IF v_broken_count > 0 THEN
+        RAISE EXCEPTION 'broken provenance continuity chain for %', p_continuity_record_id
+            USING ERRCODE = 'P3007';
+    END IF;
+
+    SELECT *
+    INTO v_record
+    FROM public.p3_provenance_continuity_records
+    WHERE continuity_record_id = p_continuity_record_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'continuity record not found: %', p_continuity_record_id
+            USING ERRCODE = 'P3007';
+    END IF;
+
+    RETURN v_record;
+END;
+$$;
+
+
+--
+-- Name: p3_assert_regulator_rule_applicability(text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_assert_regulator_rule_applicability(p_context_regime_key text, p_rule_regime_key text) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    IF p_context_regime_key IS NULL
+       OR p_rule_regime_key IS NULL
+       OR btrim(p_context_regime_key) = ''
+       OR btrim(p_rule_regime_key) = '' THEN
+        RAISE EXCEPTION 'context and rule regime keys are required'
+            USING ERRCODE = 'P3001';
+    END IF;
+
+    IF p_context_regime_key <> p_rule_regime_key THEN
+        RAISE EXCEPTION 'cross-regime rule application blocked: context=% rule=%',
+            p_context_regime_key,
+            p_rule_regime_key
+            USING ERRCODE = 'P3001';
+    END IF;
+END;
+$$;
+
+
+--
+-- Name: p3_assert_spatial_legality(text, public.geometry, text, text, text, text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_assert_spatial_legality(p_subject_key text, p_subject_geometry public.geometry, p_dataset_key text, p_dataset_version text, p_policy_reference text, p_tie_break_key text, p_lineage_provenance_id uuid) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_declaration public.p3_spatial_dataset_declarations%ROWTYPE;
+    v_id uuid;
+BEGIN
+    SELECT *
+    INTO v_declaration
+    FROM public.p3_spatial_dataset_declarations
+    WHERE dataset_key = p_dataset_key
+      AND dataset_version = p_dataset_version;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'spatial dataset declaration missing for %@%', p_dataset_key, p_dataset_version
+            USING ERRCODE = 'P3011';
+    END IF;
+
+    IF v_declaration.doctrine_gap_blocking THEN
+        RAISE EXCEPTION 'spatial doctrine gap blocks admissibility for %@%', p_dataset_key, p_dataset_version
+            USING ERRCODE = 'P3011';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM public.protected_areas pa
+        WHERE ST_Intersects(pa.geom, p_subject_geometry)
+    ) THEN
+        RAISE EXCEPTION 'GF057: DNSH violation: subject geometry intersects protected area'
+            USING ERRCODE = 'GF057';
+    END IF;
+
+    INSERT INTO public.p3_spatial_legality_findings (
+        subject_key,
+        spatial_dataset_declaration_id,
+        subject_geometry,
+        gate_state,
+        policy_reference,
+        tie_break_key,
+        lineage_provenance_id
+    ) VALUES (
+        p_subject_key,
+        v_declaration.spatial_dataset_declaration_id,
+        p_subject_geometry,
+        'admissible',
+        p_policy_reference,
+        p_tie_break_key,
+        p_lineage_provenance_id
+    )
+    RETURNING spatial_legality_finding_id INTO v_id;
+
+    RETURN v_id;
+END;
+$$;
+
+
+--
+-- Name: p3_assert_verifier_independence(text, text, uuid, uuid, uuid, uuid, text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_assert_verifier_independence(p_decision_key text, p_asset_key text, p_submitter_actor_id uuid, p_verifier_actor_id uuid, p_source_authority_lineage_id uuid, p_source_policy_artifact_id uuid, p_tie_break_key text, p_lineage_provenance_id uuid) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_left uuid;
+    v_right uuid;
+    v_conflict_id uuid;
+    v_id uuid;
+BEGIN
+    IF p_submitter_actor_id = p_verifier_actor_id THEN
+        RAISE EXCEPTION 'submitter and verifier must differ for asset %', p_asset_key
+            USING ERRCODE = 'GF001';
+    END IF;
+
+    IF p_submitter_actor_id::text < p_verifier_actor_id::text THEN
+        v_left := p_submitter_actor_id;
+        v_right := p_verifier_actor_id;
+    ELSE
+        v_left := p_verifier_actor_id;
+        v_right := p_submitter_actor_id;
+    END IF;
+
+    SELECT conflict_relationship_id
+    INTO v_conflict_id
+    FROM public.p3_conflict_relationships
+    WHERE left_actor_id = v_left
+      AND right_actor_id = v_right
+      AND (asset_key IS NULL OR asset_key = p_asset_key)
+    ORDER BY declared_at DESC, conflict_relationship_id
+    LIMIT 1;
+
+    IF v_conflict_id IS NOT NULL THEN
+        RAISE EXCEPTION 'declared conflict of interest prevents verification for asset %', p_asset_key
+            USING ERRCODE = 'GF001';
+    END IF;
+
+    INSERT INTO public.p3_verifier_independence_records (
+        decision_key,
+        asset_key,
+        submitter_actor_id,
+        verifier_actor_id,
+        independence_state,
+        source_authority_lineage_id,
+        source_policy_artifact_id,
+        tie_break_key,
+        lineage_provenance_id
+    ) VALUES (
+        p_decision_key,
+        p_asset_key,
+        p_submitter_actor_id,
+        p_verifier_actor_id,
+        'independent',
+        p_source_authority_lineage_id,
+        p_source_policy_artifact_id,
+        p_tie_break_key,
+        p_lineage_provenance_id
+    )
+    RETURNING verifier_independence_record_id INTO v_id;
+
+    RETURN v_id;
+END;
+$$;
+
+
+--
+-- Name: p3_collect_policy_authority_lineage(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_collect_policy_authority_lineage(p_policy_artifact_id uuid) RETURNS TABLE(policy_artifact_id uuid, artifact_key text, artifact_class public.p3_policy_artifact_class, artifact_version text, depth integer, authority_lineage_id uuid, authority_key text, authority_source_kind public.p3_authority_source_kind, delegated_from_authority_lineage_id uuid, authority_resource_scope text, authority_act_scope text, authority_effective_from timestamp with time zone, authority_effective_to timestamp with time zone, authority_provenance_id uuid, policy_provenance_id uuid, traversal_path uuid[])
+    LANGUAGE sql STABLE
+    AS $$
+WITH RECURSIVE authority_chain AS (
+    SELECT
+        p.policy_artifact_id,
+        p.artifact_key,
+        p.artifact_class,
+        p.artifact_version,
+        1 AS depth,
+        a.authority_lineage_id,
+        a.authority_key,
+        a.authority_source_kind,
+        a.delegated_from_authority_lineage_id,
+        a.resource_scope AS authority_resource_scope,
+        a.act_scope AS authority_act_scope,
+        a.effective_from AS authority_effective_from,
+        a.effective_to AS authority_effective_to,
+        a.lineage_provenance_id AS authority_provenance_id,
+        p.lineage_provenance_id AS policy_provenance_id,
+        ARRAY[a.authority_lineage_id]::uuid[] AS traversal_path
+    FROM public.p3_policy_artifacts p
+    JOIN public.p3_authority_lineage a
+      ON a.authority_lineage_id = p.source_authority_lineage_id
+    WHERE p.policy_artifact_id = p_policy_artifact_id
+
+    UNION ALL
+
+    SELECT
+        c.policy_artifact_id,
+        c.artifact_key,
+        c.artifact_class,
+        c.artifact_version,
+        c.depth + 1,
+        a.authority_lineage_id,
+        a.authority_key,
+        a.authority_source_kind,
+        a.delegated_from_authority_lineage_id,
+        a.resource_scope AS authority_resource_scope,
+        a.act_scope AS authority_act_scope,
+        a.effective_from AS authority_effective_from,
+        a.effective_to AS authority_effective_to,
+        a.lineage_provenance_id AS authority_provenance_id,
+        c.policy_provenance_id,
+        c.traversal_path || a.authority_lineage_id
+    FROM authority_chain c
+    JOIN public.p3_authority_lineage a
+      ON a.authority_lineage_id = c.delegated_from_authority_lineage_id
+    WHERE NOT a.authority_lineage_id = ANY (c.traversal_path)
+)
+SELECT
+    c.policy_artifact_id,
+    c.artifact_key,
+    c.artifact_class,
+    c.artifact_version,
+    c.depth,
+    c.authority_lineage_id,
+    c.authority_key,
+    c.authority_source_kind,
+    c.delegated_from_authority_lineage_id,
+    c.authority_resource_scope,
+    c.authority_act_scope,
+    c.authority_effective_from,
+    c.authority_effective_to,
+    c.authority_provenance_id,
+    c.policy_provenance_id,
+    c.traversal_path
+FROM authority_chain c
+ORDER BY
+    c.depth,
+    c.authority_key,
+    c.authority_lineage_id;
+$$;
+
+
+--
+-- Name: p3_collect_upstream_dependencies(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_collect_upstream_dependencies(p_root_node_id uuid) RETURNS TABLE(root_node_id uuid, depth integer, downstream_node_id uuid, upstream_node_id uuid, dependency_kind public.p3_dependency_edge_kind, upstream_node_key text, upstream_node_kind public.p3_dependency_node_kind, edge_provenance_id uuid, upstream_node_provenance_id uuid, traversal_path uuid[])
+    LANGUAGE sql STABLE
+    AS $$
+WITH RECURSIVE closure AS (
+    SELECT
+        p_root_node_id AS root_node_id,
+        1 AS depth,
+        e.downstream_node_id,
+        e.upstream_node_id,
+        e.dependency_kind,
+        e.lineage_provenance_id AS edge_provenance_id,
+        ARRAY[e.downstream_node_id, e.upstream_node_id]::uuid[] AS traversal_path
+    FROM public.p3_dependency_edges e
+    WHERE e.downstream_node_id = p_root_node_id
+
+    UNION ALL
+
+    SELECT
+        c.root_node_id,
+        c.depth + 1,
+        e.downstream_node_id,
+        e.upstream_node_id,
+        e.dependency_kind,
+        e.lineage_provenance_id AS edge_provenance_id,
+        c.traversal_path || e.upstream_node_id
+    FROM closure c
+    JOIN public.p3_dependency_edges e
+      ON e.downstream_node_id = c.upstream_node_id
+    WHERE NOT e.upstream_node_id = ANY (c.traversal_path)
+)
+SELECT
+    c.root_node_id,
+    c.depth,
+    c.downstream_node_id,
+    c.upstream_node_id,
+    c.dependency_kind,
+    n.node_key AS upstream_node_key,
+    n.node_kind AS upstream_node_kind,
+    c.edge_provenance_id,
+    n.lineage_provenance_id AS upstream_node_provenance_id,
+    c.traversal_path
+FROM closure c
+JOIN public.p3_dependency_nodes n
+  ON n.node_id = c.upstream_node_id
+ORDER BY
+    c.depth,
+    c.dependency_kind::text,
+    n.node_key,
+    c.upstream_node_id;
+$$;
+
+
+--
+-- Name: p3_declare_conflict_relationship(uuid, uuid, public.p3_conflict_relationship_kind, text, uuid, uuid, jsonb, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_declare_conflict_relationship(p_left_actor_id uuid, p_right_actor_id uuid, p_conflict_relationship_kind public.p3_conflict_relationship_kind, p_asset_key text, p_source_authority_lineage_id uuid, p_source_policy_artifact_id uuid, p_conflict_metadata jsonb, p_lineage_provenance_id uuid) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_left uuid;
+    v_right uuid;
+    v_id uuid;
+BEGIN
+    IF p_left_actor_id::text < p_right_actor_id::text THEN
+        v_left := p_left_actor_id;
+        v_right := p_right_actor_id;
+    ELSE
+        v_left := p_right_actor_id;
+        v_right := p_left_actor_id;
+    END IF;
+
+    INSERT INTO public.p3_conflict_relationships (
+        left_actor_id,
+        right_actor_id,
+        conflict_relationship_kind,
+        asset_key,
+        source_authority_lineage_id,
+        source_policy_artifact_id,
+        conflict_metadata,
+        lineage_provenance_id
+    ) VALUES (
+        v_left,
+        v_right,
+        p_conflict_relationship_kind,
+        p_asset_key,
+        p_source_authority_lineage_id,
+        p_source_policy_artifact_id,
+        COALESCE(p_conflict_metadata, '{}'::jsonb),
+        p_lineage_provenance_id
+    )
+    RETURNING conflict_relationship_id INTO v_id;
+
+    RETURN v_id;
+END;
+$$;
+
+
+--
+-- Name: p3_deny_coi_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_deny_coi_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RAISE EXCEPTION 'Phase 3 conflict-of-interest substrate is append-only for %', TG_TABLE_NAME
+        USING ERRCODE = 'P3015';
+END;
+$$;
+
+
+--
+-- Name: p3_deny_contradiction_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_deny_contradiction_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RAISE EXCEPTION 'Phase 3 contradiction substrate is append-only for %', TG_TABLE_NAME
+        USING ERRCODE = 'P3009';
+END;
+$$;
+
+
+--
+-- Name: p3_deny_dwell_time_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_deny_dwell_time_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RAISE EXCEPTION 'Phase 3 dwell-time findings are append-only for %', TG_TABLE_NAME
+        USING ERRCODE = 'P3017';
+END;
+$$;
+
+
+--
+-- Name: p3_deny_failure_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_deny_failure_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RAISE EXCEPTION 'Phase 3 failure composition is append-only for %', TG_TABLE_NAME
+        USING ERRCODE = 'P3008';
+END;
+$$;
+
+
+--
+-- Name: p3_deny_lineage_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_deny_lineage_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RAISE EXCEPTION 'Phase 3 lineage persistence is append-only for %', TG_TABLE_NAME
+        USING ERRCODE = 'P3901';
+END;
+$$;
+
+
+--
+-- Name: p3_deny_regulator_partition_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_deny_regulator_partition_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RAISE EXCEPTION 'Phase 3 regulator partition substrate is append-only for %', TG_TABLE_NAME
+        USING ERRCODE = 'P3014';
+END;
+$$;
+
+
+--
+-- Name: p3_deny_spatial_legality_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_deny_spatial_legality_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RAISE EXCEPTION 'Phase 3 spatial legality substrate is append-only for %', TG_TABLE_NAME
+        USING ERRCODE = 'P3016';
+END;
+$$;
+
+
+--
+-- Name: p3_evaluate_authority_scope(uuid, text, text, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_evaluate_authority_scope(p_authority_lineage_id uuid, p_claimed_resource_scope text, p_claimed_act_scope text, p_evaluated_effective_at timestamp with time zone) RETURNS TABLE(authority_lineage_id uuid, enforcement_state public.p3_authority_enforcement_state, resolved_root_authority_lineage_id uuid, blocking_authority_lineage_id uuid, delegation_depth integer, authority_lineage_provenance_id uuid, revocation_lineage_snapshot jsonb, traversal_path uuid[])
+    LANGUAGE sql STABLE
+    AS $$
+WITH RECURSIVE authority_chain AS (
+    SELECT
+        1 AS depth,
+        a.authority_lineage_id,
+        a.delegated_from_authority_lineage_id,
+        a.revoked_by_authority_lineage_id,
+        a.resource_scope,
+        a.act_scope,
+        a.effective_from,
+        a.effective_to,
+        a.lineage_provenance_id,
+        ARRAY[a.authority_lineage_id]::uuid[] AS traversal_path
+    FROM public.p3_authority_lineage a
+    WHERE a.authority_lineage_id = p_authority_lineage_id
+
+    UNION ALL
+
+    SELECT
+        c.depth + 1,
+        a.authority_lineage_id,
+        a.delegated_from_authority_lineage_id,
+        a.revoked_by_authority_lineage_id,
+        a.resource_scope,
+        a.act_scope,
+        a.effective_from,
+        a.effective_to,
+        a.lineage_provenance_id,
+        c.traversal_path || a.authority_lineage_id
+    FROM authority_chain c
+    JOIN public.p3_authority_lineage a
+      ON a.authority_lineage_id = c.delegated_from_authority_lineage_id
+    WHERE NOT a.authority_lineage_id = ANY (c.traversal_path)
+),
+summary AS (
+    SELECT
+        c.authority_lineage_id AS root_authority_lineage_id,
+        c.lineage_provenance_id AS root_authority_lineage_provenance_id,
+        c.traversal_path AS root_traversal_path
+    FROM authority_chain c
+    WHERE c.delegated_from_authority_lineage_id IS NULL
+    ORDER BY c.depth DESC, c.authority_lineage_id
+    LIMIT 1
+),
+violations AS (
+    SELECT
+        CASE
+            WHEN c.revoked_by_authority_lineage_id IS NOT NULL THEN 'revoked'::public.p3_authority_enforcement_state
+            WHEN c.resource_scope <> p_claimed_resource_scope
+              OR c.act_scope <> p_claimed_act_scope THEN
+                CASE
+                    WHEN c.depth = 1 THEN 'out_of_scope'::public.p3_authority_enforcement_state
+                    ELSE 'delegation_overflow'::public.p3_authority_enforcement_state
+                END
+            WHEN p_evaluated_effective_at < c.effective_from
+              OR (c.effective_to IS NOT NULL AND p_evaluated_effective_at >= c.effective_to) THEN 'out_of_scope'::public.p3_authority_enforcement_state
+            ELSE NULL::public.p3_authority_enforcement_state
+        END AS violation_state,
+        c.authority_lineage_id AS blocking_authority_lineage_id,
+        c.depth,
+        c.traversal_path,
+        c.revoked_by_authority_lineage_id
+    FROM authority_chain c
+),
+first_violation AS (
+    SELECT
+        v.violation_state,
+        v.blocking_authority_lineage_id,
+        v.depth,
+        v.traversal_path,
+        v.revoked_by_authority_lineage_id
+    FROM violations v
+    WHERE v.violation_state IS NOT NULL
+    ORDER BY
+        CASE v.violation_state
+            WHEN 'revoked' THEN 1
+            WHEN 'delegation_overflow' THEN 2
+            WHEN 'out_of_scope' THEN 3
+            ELSE 4
+        END,
+        v.depth,
+        v.blocking_authority_lineage_id
+    LIMIT 1
+)
+SELECT
+    p_authority_lineage_id AS authority_lineage_id,
+    COALESCE(v.violation_state, 'authorized'::public.p3_authority_enforcement_state) AS enforcement_state,
+    s.root_authority_lineage_id AS resolved_root_authority_lineage_id,
+    v.blocking_authority_lineage_id,
+    COALESCE((SELECT max(depth) FROM authority_chain), 0)::integer AS delegation_depth,
+    COALESCE(s.root_authority_lineage_provenance_id, a.lineage_provenance_id) AS authority_lineage_provenance_id,
+    CASE
+        WHEN v.violation_state = 'revoked' THEN jsonb_build_object(
+            'revoked_by_authority_lineage_id',
+            v.revoked_by_authority_lineage_id
+        )
+        ELSE '{}'::jsonb
+    END AS revocation_lineage_snapshot,
+    COALESCE(v.traversal_path, s.root_traversal_path, ARRAY[p_authority_lineage_id]::uuid[]) AS traversal_path
+FROM public.p3_authority_lineage a
+LEFT JOIN summary s
+  ON TRUE
+LEFT JOIN first_violation v
+  ON TRUE
+WHERE a.authority_lineage_id = p_authority_lineage_id;
+$$;
+
+
+--
+-- Name: p3_evaluate_legitimacy_projection(text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_evaluate_legitimacy_projection(p_projection_universe_key text, p_subject_node_id uuid) RETURNS TABLE(projection_universe_id uuid, projection_universe_key text, subject_node_id uuid, subject_node_key text, derived_state public.p3_legitimacy_projection_state, blocking_ancestor_node_id uuid, blocking_ancestor_node_key text, traversed_node_count integer, projection_universe_provenance_id uuid, subject_node_provenance_id uuid, traversal_path uuid[])
+    LANGUAGE sql STABLE
+    AS $$
+WITH RECURSIVE universe AS (
+    SELECT
+        u.projection_universe_id,
+        u.projection_universe_key,
+        u.lineage_provenance_id AS projection_universe_provenance_id
+    FROM public.p3_projection_universes u
+    WHERE u.projection_universe_key = p_projection_universe_key
+),
+subject_node AS (
+    SELECT
+        n.node_id AS subject_node_id,
+        n.node_key AS subject_node_key,
+        n.lineage_provenance_id AS subject_node_provenance_id
+    FROM public.p3_dependency_nodes n
+    WHERE n.node_id = p_subject_node_id
+),
+closure AS (
+    SELECT
+        0 AS depth,
+        s.subject_node_id AS node_id,
+        ARRAY[s.subject_node_id]::uuid[] AS traversal_path
+    FROM subject_node s
+
+    UNION ALL
+
+    SELECT
+        c.depth + 1,
+        e.upstream_node_id AS node_id,
+        c.traversal_path || e.upstream_node_id
+    FROM closure c
+    JOIN public.p3_dependency_edges e
+      ON e.downstream_node_id = c.node_id
+    WHERE NOT e.upstream_node_id = ANY (c.traversal_path)
+),
+ranked_projection_state AS (
+    SELECT
+        c.depth,
+        c.node_id,
+        c.traversal_path,
+        n.node_key,
+        r.derived_state,
+        row_number() OVER (
+            PARTITION BY c.node_id
+            ORDER BY r.evaluated_at DESC, r.lineage_provenance_id
+        ) AS projection_rank
+    FROM closure c
+    JOIN public.p3_dependency_nodes n
+      ON n.node_id = c.node_id
+    JOIN universe u
+      ON TRUE
+    LEFT JOIN public.p3_legitimacy_projection_records r
+      ON r.projection_universe_id = u.projection_universe_id
+     AND r.subject_node_id = c.node_id
+),
+latest_projection_state AS (
+    SELECT
+        depth,
+        node_id,
+        traversal_path,
+        node_key,
+        derived_state
+    FROM ranked_projection_state
+    WHERE projection_rank = 1
+       OR projection_rank IS NULL
+),
+blocking AS (
+    SELECT
+        l.node_id AS blocking_ancestor_node_id,
+        l.node_key AS blocking_ancestor_node_key,
+        l.depth,
+        l.traversal_path
+    FROM latest_projection_state l
+    WHERE l.derived_state = 'illegitimate'
+    ORDER BY l.depth, l.node_key, l.node_id
+    LIMIT 1
+)
+SELECT
+    u.projection_universe_id,
+    u.projection_universe_key,
+    s.subject_node_id,
+    s.subject_node_key,
+    CASE
+        WHEN b.blocking_ancestor_node_id IS NULL THEN 'legitimate'::public.p3_legitimacy_projection_state
+        WHEN b.blocking_ancestor_node_id = s.subject_node_id THEN 'illegitimate'::public.p3_legitimacy_projection_state
+        ELSE 'blocked'::public.p3_legitimacy_projection_state
+    END AS derived_state,
+    b.blocking_ancestor_node_id,
+    b.blocking_ancestor_node_key,
+    (SELECT COUNT(*) FROM closure)::integer AS traversed_node_count,
+    u.projection_universe_provenance_id,
+    s.subject_node_provenance_id,
+    COALESCE(b.traversal_path, ARRAY[s.subject_node_id]::uuid[]) AS traversal_path
+FROM universe u
+JOIN subject_node s
+  ON TRUE
+LEFT JOIN blocking b
+  ON TRUE;
+$$;
+
+
+--
+-- Name: p3_record_dwell_time_finding(text, text, text, timestamp with time zone, timestamp with time zone, text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_record_dwell_time_finding(p_policy_key text, p_subject_key text, p_current_state text, p_started_at timestamp with time zone, p_evaluated_at timestamp with time zone, p_tie_break_key text, p_lineage_provenance_id uuid) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_policy public.p3_dwell_time_policy_inputs%ROWTYPE;
+    v_elapsed interval;
+    v_state public.p3_dwell_finding_state;
+    v_id uuid;
+BEGIN
+    SELECT *
+    INTO v_policy
+    FROM public.p3_dwell_time_policy_inputs
+    WHERE policy_key = p_policy_key;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'dwell-time policy input missing: %', p_policy_key
+            USING ERRCODE = 'P3012';
+    END IF;
+
+    IF p_evaluated_at < p_started_at THEN
+        RAISE EXCEPTION 'evaluated_at precedes started_at for %', p_subject_key
+            USING ERRCODE = 'P3012';
+    END IF;
+
+    v_elapsed := p_evaluated_at - p_started_at;
+    v_state := CASE
+        WHEN v_elapsed > v_policy.max_dwell THEN v_policy.breach_state
+        ELSE 'within_window'::public.p3_dwell_finding_state
+    END;
+
+    INSERT INTO public.p3_dwell_time_findings (
+        subject_key,
+        dwell_time_policy_input_id,
+        current_state,
+        started_at,
+        evaluated_at,
+        elapsed_duration,
+        threshold_duration,
+        finding_state,
+        tie_break_key,
+        lineage_provenance_id
+    ) VALUES (
+        p_subject_key,
+        v_policy.dwell_time_policy_input_id,
+        p_current_state,
+        p_started_at,
+        p_evaluated_at,
+        v_elapsed,
+        v_policy.max_dwell,
+        v_state,
+        p_tie_break_key,
+        p_lineage_provenance_id
+    )
+    RETURNING dwell_time_finding_id INTO v_id;
+
+    RETURN v_id;
+END;
+$$;
+
+
+--
+-- Name: p3_resolve_regulator_precedence(text, text, text, timestamp with time zone, text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.p3_resolve_regulator_precedence(p_subject_key text, p_primary_regime_key text, p_secondary_regime_key text, p_canonical_order_at timestamp with time zone, p_tie_break_key text, p_lineage_provenance_id uuid) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_primary_id uuid;
+    v_secondary_id uuid;
+    v_rule_id uuid;
+    v_id uuid;
+BEGIN
+    SELECT regulator_regime_id
+    INTO v_primary_id
+    FROM public.p3_regulator_regimes
+    WHERE regime_key = p_primary_regime_key;
+
+    SELECT regulator_regime_id
+    INTO v_secondary_id
+    FROM public.p3_regulator_regimes
+    WHERE regime_key = p_secondary_regime_key;
+
+    IF v_primary_id IS NULL OR v_secondary_id IS NULL THEN
+        RAISE EXCEPTION 'unknown regulator regime pair: %, %', p_primary_regime_key, p_secondary_regime_key
+            USING ERRCODE = 'P3001';
+    END IF;
+
+    SELECT precedence_rule_id
+    INTO v_rule_id
+    FROM public.p3_regulator_precedence_rules
+    WHERE higher_regime_id = v_primary_id
+      AND lower_regime_id = v_secondary_id;
+
+    IF v_rule_id IS NULL THEN
+        INSERT INTO public.p3_regulator_partition_findings (
+            subject_key,
+            subject_regime_id,
+            counterpart_regime_id,
+            partition_state,
+            canonical_order_at,
+            tie_break_key,
+            lineage_provenance_id
+        ) VALUES
+        (
+            p_subject_key,
+            v_primary_id,
+            v_secondary_id,
+            'independent_finding',
+            p_canonical_order_at,
+            p_tie_break_key || ':primary',
+            p_lineage_provenance_id
+        ),
+        (
+            p_subject_key,
+            v_secondary_id,
+            v_primary_id,
+            'independent_finding',
+            p_canonical_order_at,
+            p_tie_break_key || ':secondary',
+            p_lineage_provenance_id
+        );
+
+        INSERT INTO public.p3_regulator_partition_findings (
+            subject_key,
+            subject_regime_id,
+            counterpart_regime_id,
+            partition_state,
+            doctrine_gap_reason,
+            canonical_order_at,
+            tie_break_key,
+            lineage_provenance_id
+        ) VALUES (
+            p_subject_key,
+            v_primary_id,
+            v_secondary_id,
+            'doctrine_gap',
+            'undeclared_precedence',
+            p_canonical_order_at,
+            p_tie_break_key || ':gap',
+            p_lineage_provenance_id
+        )
+        RETURNING regulator_partition_finding_id INTO v_id;
+
+        RETURN v_id;
+    END IF;
+
+    INSERT INTO public.p3_regulator_partition_findings (
+        subject_key,
+        subject_regime_id,
+        counterpart_regime_id,
+        partition_state,
+        precedence_rule_id,
+        canonical_order_at,
+        tie_break_key,
+        lineage_provenance_id
+    ) VALUES (
+        p_subject_key,
+        v_primary_id,
+        v_secondary_id,
+        'precedence_applied',
+        v_rule_id,
+        p_canonical_order_at,
+        p_tie_break_key,
+        p_lineage_provenance_id
+    )
+    RETURNING regulator_partition_finding_id INTO v_id;
+
+    RETURN v_id;
+END;
+$$;
+
+
+--
 -- Name: project_boundaries_append_only(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -6543,10 +8159,6 @@ END;
 $$;
 
 
-SET default_tablespace = '';
-
-SET default_table_access_method = heap;
-
 --
 -- Name: _migration_fingerprints; Type: TABLE; Schema: public; Owner: -
 --
@@ -8014,6 +9626,932 @@ CREATE TABLE public.orphaned_attestation_landing_zone (
     classification public.orphan_classification_enum NOT NULL,
     event_fingerprint text NOT NULL
 );
+
+
+--
+-- Name: p3_authority_lineage; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_authority_lineage (
+    authority_lineage_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    authority_key text NOT NULL,
+    authority_source_kind public.p3_authority_source_kind NOT NULL,
+    source_reference text NOT NULL,
+    delegated_from_authority_lineage_id uuid,
+    revoked_by_authority_lineage_id uuid,
+    revocation_lineage_metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    resource_scope text NOT NULL,
+    act_scope text NOT NULL,
+    jurisdiction_scope text,
+    effective_from timestamp with time zone NOT NULL,
+    effective_to timestamp with time zone,
+    lineage_provenance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    declared_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_authority_lineage_act_scope_check CHECK ((btrim(act_scope) <> ''::text)),
+    CONSTRAINT p3_authority_lineage_authority_key_check CHECK ((btrim(authority_key) <> ''::text)),
+    CONSTRAINT p3_authority_lineage_check CHECK (((effective_to IS NULL) OR (effective_to > effective_from))),
+    CONSTRAINT p3_authority_lineage_check1 CHECK (((delegated_from_authority_lineage_id IS NULL) OR (delegated_from_authority_lineage_id <> authority_lineage_id))),
+    CONSTRAINT p3_authority_lineage_check2 CHECK (((revoked_by_authority_lineage_id IS NULL) OR (revoked_by_authority_lineage_id <> authority_lineage_id))),
+    CONSTRAINT p3_authority_lineage_resource_scope_check CHECK ((btrim(resource_scope) <> ''::text)),
+    CONSTRAINT p3_authority_lineage_revocation_lineage_metadata_check CHECK ((jsonb_typeof(revocation_lineage_metadata) = 'object'::text)),
+    CONSTRAINT p3_authority_lineage_source_reference_check CHECK ((btrim(source_reference) <> ''::text))
+);
+
+
+--
+-- Name: p3_authority_scope_records; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_authority_scope_records (
+    authority_scope_record_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    authority_lineage_id uuid NOT NULL,
+    supporting_policy_artifact_id uuid,
+    supporting_dependency_node_id uuid,
+    claimed_resource_scope text NOT NULL,
+    claimed_act_scope text NOT NULL,
+    evaluated_effective_at timestamp with time zone NOT NULL,
+    enforcement_state public.p3_authority_enforcement_state NOT NULL,
+    resolved_root_authority_lineage_id uuid,
+    blocking_authority_lineage_id uuid,
+    delegation_depth integer DEFAULT 0 NOT NULL,
+    revocation_lineage_snapshot jsonb DEFAULT '{}'::jsonb NOT NULL,
+    lineage_provenance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_authority_scope_records_claimed_act_scope_check CHECK ((btrim(claimed_act_scope) <> ''::text)),
+    CONSTRAINT p3_authority_scope_records_claimed_resource_scope_check CHECK ((btrim(claimed_resource_scope) <> ''::text)),
+    CONSTRAINT p3_authority_scope_records_delegation_depth_check CHECK ((delegation_depth >= 0)),
+    CONSTRAINT p3_authority_scope_records_revocation_lineage_snapshot_check CHECK ((jsonb_typeof(revocation_lineage_snapshot) = 'object'::text))
+);
+
+
+--
+-- Name: p3_dependency_nodes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_dependency_nodes (
+    node_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    node_key text NOT NULL,
+    node_kind public.p3_dependency_node_kind NOT NULL,
+    lineage_provenance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    declared_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_dependency_nodes_node_key_check CHECK ((btrim(node_key) <> ''::text))
+);
+
+
+--
+-- Name: p3_policy_artifacts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_policy_artifacts (
+    policy_artifact_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    artifact_key text NOT NULL,
+    artifact_class public.p3_policy_artifact_class NOT NULL,
+    source_authority_lineage_id uuid NOT NULL,
+    artifact_version text NOT NULL,
+    effective_from timestamp with time zone NOT NULL,
+    effective_to timestamp with time zone,
+    supersedes_policy_artifact_id uuid,
+    revoked_by_policy_artifact_id uuid,
+    jurisdiction_scope text,
+    resource_scope text NOT NULL,
+    act_scope text NOT NULL,
+    replay_reconstruction_hints jsonb DEFAULT '{}'::jsonb NOT NULL,
+    lineage_provenance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    declared_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_policy_artifacts_act_scope_check CHECK ((btrim(act_scope) <> ''::text)),
+    CONSTRAINT p3_policy_artifacts_artifact_key_check CHECK ((btrim(artifact_key) <> ''::text)),
+    CONSTRAINT p3_policy_artifacts_artifact_version_check CHECK ((btrim(artifact_version) <> ''::text)),
+    CONSTRAINT p3_policy_artifacts_check CHECK (((effective_to IS NULL) OR (effective_to > effective_from))),
+    CONSTRAINT p3_policy_artifacts_check1 CHECK (((supersedes_policy_artifact_id IS NULL) OR (supersedes_policy_artifact_id <> policy_artifact_id))),
+    CONSTRAINT p3_policy_artifacts_check2 CHECK (((revoked_by_policy_artifact_id IS NULL) OR (revoked_by_policy_artifact_id <> policy_artifact_id))),
+    CONSTRAINT p3_policy_artifacts_replay_reconstruction_hints_check CHECK ((jsonb_typeof(replay_reconstruction_hints) = 'object'::text)),
+    CONSTRAINT p3_policy_artifacts_resource_scope_check CHECK ((btrim(resource_scope) <> ''::text))
+);
+
+
+--
+-- Name: p3_authority_scope_manifest; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.p3_authority_scope_manifest AS
+ SELECT r.authority_scope_record_id,
+    r.authority_lineage_id,
+    a.authority_key,
+    a.authority_source_kind,
+    a.resource_scope AS declared_resource_scope,
+    a.act_scope AS declared_act_scope,
+    a.delegated_from_authority_lineage_id,
+    a.revoked_by_authority_lineage_id,
+    r.supporting_policy_artifact_id,
+    p.artifact_key AS supporting_policy_artifact_key,
+    r.supporting_dependency_node_id,
+    n.node_key AS supporting_dependency_node_key,
+    r.claimed_resource_scope,
+    r.claimed_act_scope,
+    r.evaluated_effective_at,
+    r.enforcement_state,
+    r.resolved_root_authority_lineage_id,
+    root_authority.authority_key AS resolved_root_authority_key,
+    r.blocking_authority_lineage_id,
+    blocking_authority.authority_key AS blocking_authority_key,
+    r.delegation_depth,
+    r.revocation_lineage_snapshot,
+    r.lineage_provenance_id,
+    r.created_at
+   FROM (((((public.p3_authority_scope_records r
+     JOIN public.p3_authority_lineage a ON ((a.authority_lineage_id = r.authority_lineage_id)))
+     LEFT JOIN public.p3_policy_artifacts p ON ((p.policy_artifact_id = r.supporting_policy_artifact_id)))
+     LEFT JOIN public.p3_dependency_nodes n ON ((n.node_id = r.supporting_dependency_node_id)))
+     LEFT JOIN public.p3_authority_lineage root_authority ON ((root_authority.authority_lineage_id = r.resolved_root_authority_lineage_id)))
+     LEFT JOIN public.p3_authority_lineage blocking_authority ON ((blocking_authority.authority_lineage_id = r.blocking_authority_lineage_id)));
+
+
+--
+-- Name: p3_conflict_relationships; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_conflict_relationships (
+    conflict_relationship_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    left_actor_id uuid NOT NULL,
+    right_actor_id uuid NOT NULL,
+    conflict_relationship_kind public.p3_conflict_relationship_kind NOT NULL,
+    asset_key text,
+    source_authority_lineage_id uuid,
+    source_policy_artifact_id uuid,
+    conflict_metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    lineage_provenance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    declared_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_conflict_relationships_asset_key_check CHECK (((asset_key IS NULL) OR (btrim(asset_key) <> ''::text))),
+    CONSTRAINT p3_conflict_relationships_check CHECK ((left_actor_id <> right_actor_id)),
+    CONSTRAINT p3_conflict_relationships_conflict_metadata_check CHECK ((jsonb_typeof(conflict_metadata) = 'object'::text))
+);
+
+
+--
+-- Name: p3_contradiction_claims; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_contradiction_claims (
+    contradiction_claim_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    source_dependency_node_id uuid NOT NULL,
+    source_authority_lineage_id uuid,
+    source_policy_artifact_id uuid,
+    projection_universe_id uuid,
+    resource_key text NOT NULL,
+    fact_key text NOT NULL,
+    asserted_value text NOT NULL,
+    effective_from timestamp with time zone NOT NULL,
+    effective_to timestamp with time zone,
+    claimed_resource_scope text,
+    claimed_act_scope text,
+    declared_order_at timestamp with time zone DEFAULT now() NOT NULL,
+    declared_tie_break_key text NOT NULL,
+    lineage_provenance_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_contradiction_claims_asserted_value_check CHECK ((btrim(asserted_value) <> ''::text)),
+    CONSTRAINT p3_contradiction_claims_check CHECK (((effective_to IS NULL) OR (effective_to > effective_from))),
+    CONSTRAINT p3_contradiction_claims_declared_tie_break_key_check CHECK ((btrim(declared_tie_break_key) <> ''::text)),
+    CONSTRAINT p3_contradiction_claims_fact_key_check CHECK ((btrim(fact_key) <> ''::text)),
+    CONSTRAINT p3_contradiction_claims_resource_key_check CHECK ((btrim(resource_key) <> ''::text))
+);
+
+
+--
+-- Name: p3_contradiction_escalations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_contradiction_escalations (
+    contradiction_escalation_id uuid DEFAULT gen_random_uuid() CONSTRAINT p3_contradiction_escalation_contradiction_escalation_i_not_null NOT NULL,
+    contradiction_record_id uuid NOT NULL,
+    receiving_surface_id text NOT NULL,
+    authority_transfer_mode text NOT NULL,
+    authority_transfer_purpose text CONSTRAINT p3_contradiction_escalation_authority_transfer_purpose_not_null NOT NULL,
+    mutability_class text DEFAULT 'supersedable_projection'::text NOT NULL,
+    lineage_provenance_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_contradiction_escalations_authority_transfer_mode_check CHECK ((authority_transfer_mode = ANY (ARRAY['AT-EXCLUSIVE'::text, 'AT-SHARED'::text, 'AT-DELEGATED'::text, 'AT-ADVISORY'::text]))),
+    CONSTRAINT p3_contradiction_escalations_authority_transfer_purpose_check CHECK ((btrim(authority_transfer_purpose) <> ''::text)),
+    CONSTRAINT p3_contradiction_escalations_mutability_class_check CHECK ((mutability_class = 'supersedable_projection'::text)),
+    CONSTRAINT p3_contradiction_escalations_receiving_surface_id_check CHECK ((btrim(receiving_surface_id) <> ''::text))
+);
+
+
+--
+-- Name: p3_contradiction_records; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_contradiction_records (
+    contradiction_record_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    contradiction_class public.p3_contradiction_class NOT NULL,
+    primary_claim_id uuid NOT NULL,
+    conflicting_claim_id uuid,
+    resolution_state public.p3_contradiction_resolution_state NOT NULL,
+    mutability_class text DEFAULT 'immutable_lineage'::text NOT NULL,
+    authority_transfer_mode text DEFAULT 'AT-SHARED'::text NOT NULL,
+    authority_transfer_purpose text DEFAULT 'contradiction_adjudication'::text NOT NULL,
+    canonical_order_at timestamp with time zone NOT NULL,
+    tie_break_key text NOT NULL,
+    contradiction_reason text NOT NULL,
+    replay_context_hash text NOT NULL,
+    quarantine_required boolean DEFAULT false NOT NULL,
+    lineage_provenance_id uuid NOT NULL,
+    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_contradiction_records_authority_transfer_mode_check CHECK ((authority_transfer_mode = ANY (ARRAY['AT-EXCLUSIVE'::text, 'AT-SHARED'::text, 'AT-DELEGATED'::text, 'AT-ADVISORY'::text]))),
+    CONSTRAINT p3_contradiction_records_authority_transfer_purpose_check CHECK ((btrim(authority_transfer_purpose) <> ''::text)),
+    CONSTRAINT p3_contradiction_records_check CHECK (((conflicting_claim_id IS NULL) OR (primary_claim_id <> conflicting_claim_id))),
+    CONSTRAINT p3_contradiction_records_contradiction_reason_check CHECK ((btrim(contradiction_reason) <> ''::text)),
+    CONSTRAINT p3_contradiction_records_mutability_class_check CHECK ((mutability_class = ANY (ARRAY['immutable_lineage'::text, 'compensating_lineage'::text]))),
+    CONSTRAINT p3_contradiction_records_replay_context_hash_check CHECK ((btrim(replay_context_hash) <> ''::text)),
+    CONSTRAINT p3_contradiction_records_tie_break_key_check CHECK ((btrim(tie_break_key) <> ''::text))
+);
+
+
+--
+-- Name: p3_contradiction_supersessions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_contradiction_supersessions (
+    contradiction_supersession_id uuid DEFAULT gen_random_uuid() CONSTRAINT p3_contradiction_supersessi_contradiction_supersession_not_null NOT NULL,
+    prior_contradiction_record_id uuid CONSTRAINT p3_contradiction_supersessi_prior_contradiction_record_not_null NOT NULL,
+    superseding_contradiction_record_id uuid CONSTRAINT p3_contradiction_supersessi_superseding_contradiction__not_null NOT NULL,
+    mutability_class text DEFAULT 'compensating_lineage'::text NOT NULL,
+    supersession_reason text NOT NULL,
+    lineage_provenance_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_contradiction_supersessions_check CHECK ((prior_contradiction_record_id <> superseding_contradiction_record_id)),
+    CONSTRAINT p3_contradiction_supersessions_mutability_class_check CHECK ((mutability_class = 'compensating_lineage'::text)),
+    CONSTRAINT p3_contradiction_supersessions_supersession_reason_check CHECK ((btrim(supersession_reason) <> ''::text))
+);
+
+
+--
+-- Name: p3_quarantine_records; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_quarantine_records (
+    quarantine_record_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    contradiction_record_id uuid NOT NULL,
+    subject_claim_id uuid NOT NULL,
+    mutability_class text DEFAULT 'quarantined_state'::text NOT NULL,
+    quarantine_reason text NOT NULL,
+    lineage_provenance_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_quarantine_records_mutability_class_check CHECK ((mutability_class = 'quarantined_state'::text)),
+    CONSTRAINT p3_quarantine_records_quarantine_reason_check CHECK ((btrim(quarantine_reason) <> ''::text))
+);
+
+
+--
+-- Name: p3_contradiction_manifest; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.p3_contradiction_manifest AS
+ SELECT 'contradiction_record'::text AS artifact_kind,
+    c.contradiction_record_id AS artifact_id,
+    (c.contradiction_class)::text AS classification,
+    (c.resolution_state)::text AS state,
+    c.mutability_class,
+    c.authority_transfer_mode,
+    c.authority_transfer_purpose,
+    c.canonical_order_at,
+    c.tie_break_key,
+    c.lineage_provenance_id,
+    c.recorded_at AS created_at
+   FROM public.p3_contradiction_records c
+UNION ALL
+ SELECT 'quarantine_record'::text AS artifact_kind,
+    q.quarantine_record_id AS artifact_id,
+    'quarantine'::text AS classification,
+    'quarantined'::text AS state,
+    q.mutability_class,
+    'AT-SHARED'::text AS authority_transfer_mode,
+    'contradiction_quarantine'::text AS authority_transfer_purpose,
+    c.canonical_order_at,
+    c.tie_break_key,
+    q.lineage_provenance_id,
+    q.created_at
+   FROM (public.p3_quarantine_records q
+     JOIN public.p3_contradiction_records c ON ((c.contradiction_record_id = q.contradiction_record_id)))
+UNION ALL
+ SELECT 'supersession_record'::text AS artifact_kind,
+    s.contradiction_supersession_id AS artifact_id,
+    'supersession'::text AS classification,
+    'superseded'::text AS state,
+    s.mutability_class,
+    'AT-DELEGATED'::text AS authority_transfer_mode,
+    'contradiction_supersession'::text AS authority_transfer_purpose,
+    c.canonical_order_at,
+    c.tie_break_key,
+    s.lineage_provenance_id,
+    s.created_at
+   FROM (public.p3_contradiction_supersessions s
+     JOIN public.p3_contradiction_records c ON ((c.contradiction_record_id = s.superseding_contradiction_record_id)))
+UNION ALL
+ SELECT 'escalation_record'::text AS artifact_kind,
+    e.contradiction_escalation_id AS artifact_id,
+    'escalation'::text AS classification,
+    'escalation_required'::text AS state,
+    e.mutability_class,
+    e.authority_transfer_mode,
+    e.authority_transfer_purpose,
+    c.canonical_order_at,
+    c.tie_break_key,
+    e.lineage_provenance_id,
+    e.created_at
+   FROM (public.p3_contradiction_escalations e
+     JOIN public.p3_contradiction_records c ON ((c.contradiction_record_id = e.contradiction_record_id)));
+
+
+--
+-- Name: p3_dependency_edges; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_dependency_edges (
+    edge_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    downstream_node_id uuid NOT NULL,
+    upstream_node_id uuid NOT NULL,
+    dependency_kind public.p3_dependency_edge_kind NOT NULL,
+    lineage_provenance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    declared_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_dependency_edges_check CHECK ((downstream_node_id <> upstream_node_id))
+);
+
+
+--
+-- Name: p3_dwell_time_findings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_dwell_time_findings (
+    dwell_time_finding_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    subject_key text NOT NULL,
+    dwell_time_policy_input_id uuid NOT NULL,
+    current_state text NOT NULL,
+    started_at timestamp with time zone NOT NULL,
+    evaluated_at timestamp with time zone NOT NULL,
+    elapsed_duration interval NOT NULL,
+    threshold_duration interval NOT NULL,
+    finding_state public.p3_dwell_finding_state NOT NULL,
+    tie_break_key text NOT NULL,
+    supersedes_dwell_time_finding_id uuid,
+    lineage_provenance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_dwell_time_findings_check CHECK ((evaluated_at >= started_at)),
+    CONSTRAINT p3_dwell_time_findings_current_state_check CHECK ((btrim(current_state) <> ''::text)),
+    CONSTRAINT p3_dwell_time_findings_elapsed_duration_check CHECK ((elapsed_duration >= '00:00:00'::interval)),
+    CONSTRAINT p3_dwell_time_findings_subject_key_check CHECK ((btrim(subject_key) <> ''::text)),
+    CONSTRAINT p3_dwell_time_findings_threshold_duration_check CHECK ((threshold_duration > '00:00:00'::interval)),
+    CONSTRAINT p3_dwell_time_findings_tie_break_key_check CHECK ((btrim(tie_break_key) <> ''::text))
+);
+
+
+--
+-- Name: p3_dwell_time_policy_inputs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_dwell_time_policy_inputs (
+    dwell_time_policy_input_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    policy_key text NOT NULL,
+    max_dwell interval NOT NULL,
+    breach_state public.p3_dwell_finding_state NOT NULL,
+    source_authority_lineage_id uuid CONSTRAINT p3_dwell_time_policy_inputs_source_authority_lineage_i_not_null NOT NULL,
+    source_policy_artifact_id uuid NOT NULL,
+    lineage_provenance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    declared_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_dwell_time_policy_inputs_breach_state_check CHECK ((breach_state = ANY (ARRAY['flagged'::public.p3_dwell_finding_state, 'blocked'::public.p3_dwell_finding_state]))),
+    CONSTRAINT p3_dwell_time_policy_inputs_max_dwell_check CHECK ((max_dwell > '00:00:00'::interval)),
+    CONSTRAINT p3_dwell_time_policy_inputs_policy_key_check CHECK ((btrim(policy_key) <> ''::text))
+);
+
+
+--
+-- Name: p3_dwell_time_manifest; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.p3_dwell_time_manifest AS
+ SELECT f.dwell_time_finding_id,
+    f.subject_key,
+    f.current_state,
+    f.started_at,
+    f.evaluated_at,
+    f.elapsed_duration,
+    f.threshold_duration,
+    f.finding_state,
+    f.tie_break_key,
+    f.lineage_provenance_id,
+    f.recorded_at,
+    p.policy_key,
+    p.max_dwell,
+    p.breach_state,
+    a.authority_key,
+    policy_artifact.artifact_key
+   FROM (((public.p3_dwell_time_findings f
+     JOIN public.p3_dwell_time_policy_inputs p ON ((p.dwell_time_policy_input_id = f.dwell_time_policy_input_id)))
+     JOIN public.p3_authority_lineage a ON ((a.authority_lineage_id = p.source_authority_lineage_id)))
+     JOIN public.p3_policy_artifacts policy_artifact ON ((policy_artifact.policy_artifact_id = p.source_policy_artifact_id)));
+
+
+--
+-- Name: p3_failure_continuity_compensations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_failure_continuity_compensations (
+    continuity_compensation_id uuid DEFAULT gen_random_uuid() CONSTRAINT p3_failure_continuity_compe_continuity_compensation_id_not_null NOT NULL,
+    prior_continuity_record_id uuid CONSTRAINT p3_failure_continuity_compe_prior_continuity_record_id_not_null NOT NULL,
+    replacement_continuity_record_id uuid CONSTRAINT p3_failure_continuity_compe_replacement_continuity_rec_not_null NOT NULL,
+    compensation_reason text CONSTRAINT p3_failure_continuity_compensation_compensation_reason_not_null NOT NULL,
+    mutability_class text DEFAULT 'compensating_lineage'::text NOT NULL,
+    lineage_provenance_id uuid CONSTRAINT p3_failure_continuity_compensati_lineage_provenance_id_not_null NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_failure_continuity_compensations_check CHECK ((prior_continuity_record_id <> replacement_continuity_record_id)),
+    CONSTRAINT p3_failure_continuity_compensations_compensation_reason_check CHECK ((btrim(compensation_reason) <> ''::text)),
+    CONSTRAINT p3_failure_continuity_compensations_mutability_class_check CHECK ((mutability_class = 'compensating_lineage'::text))
+);
+
+
+--
+-- Name: p3_failure_records; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_failure_records (
+    failure_record_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    root_failure_record_id uuid,
+    parent_failure_record_id uuid,
+    failure_category public.p3_failure_category NOT NULL,
+    failure_severity public.p3_failure_severity NOT NULL,
+    source_contradiction_record_id uuid,
+    source_dependency_node_id uuid,
+    source_authority_lineage_id uuid,
+    source_policy_artifact_id uuid,
+    source_projection_universe_id uuid,
+    source_continuity_record_id uuid,
+    failure_payload jsonb DEFAULT '{}'::jsonb NOT NULL,
+    ordering_key timestamp with time zone DEFAULT now() NOT NULL,
+    tie_break_key text NOT NULL,
+    mutability_class text DEFAULT 'compensating_lineage'::text NOT NULL,
+    lineage_provenance_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_failure_records_check CHECK (((parent_failure_record_id IS NULL) OR (parent_failure_record_id <> failure_record_id))),
+    CONSTRAINT p3_failure_records_failure_payload_check CHECK ((jsonb_typeof(failure_payload) = 'object'::text)),
+    CONSTRAINT p3_failure_records_mutability_class_check CHECK ((mutability_class = ANY (ARRAY['compensating_lineage'::text, 'immutable_lineage'::text]))),
+    CONSTRAINT p3_failure_records_tie_break_key_check CHECK ((btrim(tie_break_key) <> ''::text))
+);
+
+
+--
+-- Name: p3_failure_composition_manifest; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.p3_failure_composition_manifest AS
+ SELECT 'failure_record'::text AS artifact_kind,
+    f.failure_record_id AS artifact_id,
+    (f.failure_category)::text AS classification,
+    (f.failure_severity)::text AS state,
+    f.mutability_class,
+    f.tie_break_key,
+    f.lineage_provenance_id,
+    f.created_at
+   FROM public.p3_failure_records f
+UNION ALL
+ SELECT 'continuity_record'::text AS artifact_kind,
+    c.continuity_record_id AS artifact_id,
+    (c.boundary_kind)::text AS classification,
+    c.continuity_status AS state,
+    c.mutability_class,
+    c.continuity_hash AS tie_break_key,
+    c.lineage_provenance_id,
+    c.created_at
+   FROM public.p3_provenance_continuity_records c
+UNION ALL
+ SELECT 'continuity_compensation'::text AS artifact_kind,
+    cc.continuity_compensation_id AS artifact_id,
+    'continuity_compensation'::text AS classification,
+    'compensated'::text AS state,
+    cc.mutability_class,
+    (cc.replacement_continuity_record_id)::text AS tie_break_key,
+    cc.lineage_provenance_id,
+    cc.created_at
+   FROM public.p3_failure_continuity_compensations cc;
+
+
+--
+-- Name: p3_legitimacy_projection_records; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_legitimacy_projection_records (
+    legitimacy_projection_record_id uuid DEFAULT gen_random_uuid() CONSTRAINT p3_legitimacy_projection_re_legitimacy_projection_reco_not_null NOT NULL,
+    projection_universe_id uuid CONSTRAINT p3_legitimacy_projection_record_projection_universe_id_not_null NOT NULL,
+    subject_node_id uuid NOT NULL,
+    source_policy_artifact_id uuid,
+    source_authority_lineage_id uuid,
+    derived_state public.p3_legitimacy_projection_state NOT NULL,
+    blocking_ancestor_node_id uuid,
+    projection_context_hash text CONSTRAINT p3_legitimacy_projection_recor_projection_context_hash_not_null NOT NULL,
+    mutability_class text DEFAULT 'supersedable_projection'::text NOT NULL,
+    replay_reconstruction_inputs jsonb DEFAULT '{}'::jsonb CONSTRAINT p3_legitimacy_projection_re_replay_reconstruction_inpu_not_null NOT NULL,
+    projection_metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    lineage_provenance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    evaluated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_legitimacy_projection_rec_replay_reconstruction_inputs_check CHECK ((jsonb_typeof(replay_reconstruction_inputs) = 'object'::text)),
+    CONSTRAINT p3_legitimacy_projection_records_check CHECK (((blocking_ancestor_node_id IS NULL) OR (blocking_ancestor_node_id <> subject_node_id) OR (derived_state = 'illegitimate'::public.p3_legitimacy_projection_state))),
+    CONSTRAINT p3_legitimacy_projection_records_mutability_class_check CHECK ((mutability_class = 'supersedable_projection'::text)),
+    CONSTRAINT p3_legitimacy_projection_records_projection_context_hash_check CHECK ((btrim(projection_context_hash) <> ''::text)),
+    CONSTRAINT p3_legitimacy_projection_records_projection_metadata_check CHECK ((jsonb_typeof(projection_metadata) = 'object'::text))
+);
+
+
+--
+-- Name: p3_projection_universes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_projection_universes (
+    projection_universe_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    projection_universe_key text NOT NULL,
+    projection_purpose public.p3_projection_purpose NOT NULL,
+    replay_algorithm_version text NOT NULL,
+    temporal_evaluation_point timestamp with time zone NOT NULL,
+    source_record_set jsonb DEFAULT '{}'::jsonb NOT NULL,
+    replay_reconstruction_inputs jsonb DEFAULT '{}'::jsonb NOT NULL,
+    lineage_provenance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_projection_universes_projection_universe_key_check CHECK ((btrim(projection_universe_key) <> ''::text)),
+    CONSTRAINT p3_projection_universes_replay_algorithm_version_check CHECK ((btrim(replay_algorithm_version) <> ''::text)),
+    CONSTRAINT p3_projection_universes_replay_reconstruction_inputs_check CHECK ((jsonb_typeof(replay_reconstruction_inputs) = 'object'::text)),
+    CONSTRAINT p3_projection_universes_source_record_set_check CHECK ((jsonb_typeof(source_record_set) = 'object'::text))
+);
+
+
+--
+-- Name: p3_legitimacy_projection_manifest; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.p3_legitimacy_projection_manifest AS
+ SELECT u.projection_universe_id,
+    u.projection_universe_key,
+    u.projection_purpose,
+    u.replay_algorithm_version,
+    u.temporal_evaluation_point,
+    u.lineage_provenance_id AS projection_universe_provenance_id,
+    r.legitimacy_projection_record_id,
+    r.subject_node_id,
+    n.node_key AS subject_node_key,
+    n.node_kind AS subject_node_kind,
+    r.source_policy_artifact_id,
+    p.artifact_key AS source_policy_artifact_key,
+    r.source_authority_lineage_id,
+    a.authority_key AS source_authority_key,
+    r.derived_state,
+    r.blocking_ancestor_node_id,
+    b.node_key AS blocking_ancestor_node_key,
+    r.projection_context_hash,
+    r.mutability_class,
+    r.lineage_provenance_id AS projection_record_provenance_id,
+    r.evaluated_at
+   FROM (((((public.p3_legitimacy_projection_records r
+     JOIN public.p3_projection_universes u ON ((u.projection_universe_id = r.projection_universe_id)))
+     JOIN public.p3_dependency_nodes n ON ((n.node_id = r.subject_node_id)))
+     LEFT JOIN public.p3_policy_artifacts p ON ((p.policy_artifact_id = r.source_policy_artifact_id)))
+     LEFT JOIN public.p3_authority_lineage a ON ((a.authority_lineage_id = r.source_authority_lineage_id)))
+     LEFT JOIN public.p3_dependency_nodes b ON ((b.node_id = r.blocking_ancestor_node_id)));
+
+
+--
+-- Name: p3_lineage_continuity_anchors; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_lineage_continuity_anchors (
+    continuity_anchor_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    surface_id public.p3_lineage_surface_id NOT NULL,
+    artifact_kind text NOT NULL,
+    artifact_locator text NOT NULL,
+    lineage_provenance_id uuid NOT NULL,
+    continuity_scope text NOT NULL,
+    replay_reconstruction_inputs jsonb DEFAULT '{}'::jsonb CONSTRAINT p3_lineage_continuity_ancho_replay_reconstruction_inpu_not_null NOT NULL,
+    phase2_compatibility_intent text CONSTRAINT p3_lineage_continuity_ancho_phase2_compatibility_inten_not_null NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_lineage_continuity_anchor_replay_reconstruction_inputs_check CHECK ((jsonb_typeof(replay_reconstruction_inputs) = 'object'::text)),
+    CONSTRAINT p3_lineage_continuity_anchors_artifact_kind_check CHECK ((btrim(artifact_kind) <> ''::text)),
+    CONSTRAINT p3_lineage_continuity_anchors_artifact_locator_check CHECK ((btrim(artifact_locator) <> ''::text)),
+    CONSTRAINT p3_lineage_continuity_anchors_continuity_scope_check CHECK ((btrim(continuity_scope) <> ''::text)),
+    CONSTRAINT p3_lineage_continuity_anchors_phase2_compatibility_intent_check CHECK ((btrim(phase2_compatibility_intent) <> ''::text))
+);
+
+
+--
+-- Name: p3_lineage_persistence_manifest; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.p3_lineage_persistence_manifest AS
+ SELECT 'P3-SURF-001'::public.p3_lineage_surface_id AS surface_id,
+    'dependency_node'::text AS artifact_kind,
+    n.node_id AS primary_record_id,
+    n.lineage_provenance_id,
+    n.declared_at AS effective_from,
+    NULL::timestamp with time zone AS effective_to,
+    NULL::text AS resource_scope,
+    NULL::text AS act_scope
+   FROM public.p3_dependency_nodes n
+UNION ALL
+ SELECT 'P3-SURF-001'::public.p3_lineage_surface_id AS surface_id,
+    'dependency_edge'::text AS artifact_kind,
+    e.edge_id AS primary_record_id,
+    e.lineage_provenance_id,
+    e.declared_at AS effective_from,
+    NULL::timestamp with time zone AS effective_to,
+    NULL::text AS resource_scope,
+    NULL::text AS act_scope
+   FROM public.p3_dependency_edges e
+UNION ALL
+ SELECT 'P3-SURF-002'::public.p3_lineage_surface_id AS surface_id,
+    'authority_lineage'::text AS artifact_kind,
+    a.authority_lineage_id AS primary_record_id,
+    a.lineage_provenance_id,
+    a.effective_from,
+    a.effective_to,
+    a.resource_scope,
+    a.act_scope
+   FROM public.p3_authority_lineage a
+UNION ALL
+ SELECT 'P3-SURF-002'::public.p3_lineage_surface_id AS surface_id,
+    'policy_artifact'::text AS artifact_kind,
+    p.policy_artifact_id AS primary_record_id,
+    p.lineage_provenance_id,
+    p.effective_from,
+    p.effective_to,
+    p.resource_scope,
+    p.act_scope
+   FROM public.p3_policy_artifacts p
+UNION ALL
+ SELECT c.surface_id,
+    'continuity_anchor'::text AS artifact_kind,
+    c.continuity_anchor_id AS primary_record_id,
+    c.lineage_provenance_id,
+    c.created_at AS effective_from,
+    NULL::timestamp with time zone AS effective_to,
+    c.continuity_scope AS resource_scope,
+    NULL::text AS act_scope
+   FROM public.p3_lineage_continuity_anchors c;
+
+
+--
+-- Name: p3_policy_authority_lineage_projection; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.p3_policy_authority_lineage_projection AS
+ SELECT p.policy_artifact_id,
+    p.artifact_key,
+    p.artifact_class,
+    p.artifact_version,
+    p.effective_from AS policy_effective_from,
+    p.effective_to AS policy_effective_to,
+    p.resource_scope AS policy_resource_scope,
+    p.act_scope AS policy_act_scope,
+    p.jurisdiction_scope AS policy_jurisdiction_scope,
+    p.lineage_provenance_id AS policy_provenance_id,
+    a.authority_lineage_id,
+    a.authority_key,
+    a.authority_source_kind,
+    a.source_reference,
+    a.delegated_from_authority_lineage_id,
+    a.revoked_by_authority_lineage_id,
+    a.revocation_lineage_metadata,
+    a.resource_scope AS authority_resource_scope,
+    a.act_scope AS authority_act_scope,
+    a.jurisdiction_scope AS authority_jurisdiction_scope,
+    a.effective_from AS authority_effective_from,
+    a.effective_to AS authority_effective_to,
+    a.lineage_provenance_id AS authority_provenance_id
+   FROM (public.p3_policy_artifacts p
+     JOIN public.p3_authority_lineage a ON ((a.authority_lineage_id = p.source_authority_lineage_id)));
+
+
+--
+-- Name: p3_regulator_partition_findings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_regulator_partition_findings (
+    regulator_partition_finding_id uuid DEFAULT gen_random_uuid() CONSTRAINT p3_regulator_partition_find_regulator_partition_findin_not_null NOT NULL,
+    subject_key text NOT NULL,
+    subject_regime_id uuid NOT NULL,
+    counterpart_regime_id uuid,
+    partition_state public.p3_regulator_partition_state NOT NULL,
+    precedence_rule_id uuid,
+    doctrine_gap_reason text,
+    quarantine_compatible boolean DEFAULT true NOT NULL,
+    canonical_order_at timestamp with time zone NOT NULL,
+    tie_break_key text NOT NULL,
+    lineage_provenance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_regulator_partition_findings_check CHECK (((partition_state <> 'doctrine_gap'::public.p3_regulator_partition_state) OR (btrim(COALESCE(doctrine_gap_reason, ''::text)) <> ''::text))),
+    CONSTRAINT p3_regulator_partition_findings_check1 CHECK (((counterpart_regime_id IS NULL) OR (counterpart_regime_id <> subject_regime_id))),
+    CONSTRAINT p3_regulator_partition_findings_subject_key_check CHECK ((btrim(subject_key) <> ''::text)),
+    CONSTRAINT p3_regulator_partition_findings_tie_break_key_check CHECK ((btrim(tie_break_key) <> ''::text))
+);
+
+
+--
+-- Name: p3_regulator_precedence_rules; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_regulator_precedence_rules (
+    precedence_rule_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    higher_regime_id uuid NOT NULL,
+    lower_regime_id uuid NOT NULL,
+    source_authority_lineage_id uuid CONSTRAINT p3_regulator_precedence_rul_source_authority_lineage_i_not_null NOT NULL,
+    source_policy_artifact_id uuid CONSTRAINT p3_regulator_precedence_rule_source_policy_artifact_id_not_null NOT NULL,
+    canonical_order_at timestamp with time zone NOT NULL,
+    tie_break_key text NOT NULL,
+    lineage_provenance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_regulator_precedence_rules_check CHECK ((higher_regime_id <> lower_regime_id)),
+    CONSTRAINT p3_regulator_precedence_rules_tie_break_key_check CHECK ((btrim(tie_break_key) <> ''::text))
+);
+
+
+--
+-- Name: p3_regulator_regimes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_regulator_regimes (
+    regulator_regime_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    regime_key text NOT NULL,
+    sovereign_domain text NOT NULL,
+    source_authority_lineage_id uuid,
+    source_policy_artifact_id uuid,
+    lineage_provenance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    declared_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_regulator_regimes_regime_key_check CHECK ((btrim(regime_key) <> ''::text)),
+    CONSTRAINT p3_regulator_regimes_sovereign_domain_check CHECK ((btrim(sovereign_domain) <> ''::text))
+);
+
+
+--
+-- Name: p3_regulator_partition_manifest; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.p3_regulator_partition_manifest AS
+ SELECT f.regulator_partition_finding_id,
+    f.subject_key,
+    f.partition_state,
+    f.doctrine_gap_reason,
+    f.quarantine_compatible,
+    f.canonical_order_at,
+    f.tie_break_key,
+    subject_regime.regime_key AS subject_regime_key,
+    subject_regime.sovereign_domain AS subject_sovereign_domain,
+    counterpart_regime.regime_key AS counterpart_regime_key,
+    counterpart_regime.sovereign_domain AS counterpart_sovereign_domain,
+    r.precedence_rule_id,
+    higher_regime.regime_key AS higher_regime_key,
+    lower_regime.regime_key AS lower_regime_key,
+    f.lineage_provenance_id,
+    f.recorded_at
+   FROM (((((public.p3_regulator_partition_findings f
+     JOIN public.p3_regulator_regimes subject_regime ON ((subject_regime.regulator_regime_id = f.subject_regime_id)))
+     LEFT JOIN public.p3_regulator_regimes counterpart_regime ON ((counterpart_regime.regulator_regime_id = f.counterpart_regime_id)))
+     LEFT JOIN public.p3_regulator_precedence_rules r ON ((r.precedence_rule_id = f.precedence_rule_id)))
+     LEFT JOIN public.p3_regulator_regimes higher_regime ON ((higher_regime.regulator_regime_id = r.higher_regime_id)))
+     LEFT JOIN public.p3_regulator_regimes lower_regime ON ((lower_regime.regulator_regime_id = r.lower_regime_id)));
+
+
+--
+-- Name: p3_spatial_dataset_declarations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_spatial_dataset_declarations (
+    spatial_dataset_declaration_id uuid DEFAULT gen_random_uuid() CONSTRAINT p3_spatial_dataset_declarat_spatial_dataset_declaratio_not_null NOT NULL,
+    dataset_key text NOT NULL,
+    dataset_version text NOT NULL,
+    source_table_name text DEFAULT 'public.protected_areas'::text NOT NULL,
+    comparison_rule text NOT NULL,
+    doctrine_gap_blocking boolean DEFAULT false NOT NULL,
+    source_authority_lineage_id uuid CONSTRAINT p3_spatial_dataset_declarat_source_authority_lineage_i_not_null NOT NULL,
+    source_policy_artifact_id uuid CONSTRAINT p3_spatial_dataset_declarati_source_policy_artifact_id_not_null NOT NULL,
+    replay_metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    lineage_provenance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    declared_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_spatial_dataset_declarations_comparison_rule_check CHECK ((btrim(comparison_rule) <> ''::text)),
+    CONSTRAINT p3_spatial_dataset_declarations_dataset_key_check CHECK ((btrim(dataset_key) <> ''::text)),
+    CONSTRAINT p3_spatial_dataset_declarations_dataset_version_check CHECK ((btrim(dataset_version) <> ''::text)),
+    CONSTRAINT p3_spatial_dataset_declarations_replay_metadata_check CHECK ((jsonb_typeof(replay_metadata) = 'object'::text)),
+    CONSTRAINT p3_spatial_dataset_declarations_source_table_name_check CHECK ((btrim(source_table_name) <> ''::text))
+);
+
+
+--
+-- Name: p3_spatial_legality_findings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_spatial_legality_findings (
+    spatial_legality_finding_id uuid DEFAULT gen_random_uuid() CONSTRAINT p3_spatial_legality_finding_spatial_legality_finding_i_not_null NOT NULL,
+    subject_key text NOT NULL,
+    spatial_dataset_declaration_id uuid CONSTRAINT p3_spatial_legality_finding_spatial_dataset_declaratio_not_null NOT NULL,
+    subject_geometry public.geometry(Polygon,4326) NOT NULL,
+    gate_state public.p3_spatial_gate_state NOT NULL,
+    policy_reference text NOT NULL,
+    tie_break_key text NOT NULL,
+    lineage_provenance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_spatial_legality_findings_policy_reference_check CHECK ((btrim(policy_reference) <> ''::text)),
+    CONSTRAINT p3_spatial_legality_findings_subject_key_check CHECK ((btrim(subject_key) <> ''::text)),
+    CONSTRAINT p3_spatial_legality_findings_tie_break_key_check CHECK ((btrim(tie_break_key) <> ''::text))
+);
+
+
+--
+-- Name: p3_spatial_legality_manifest; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.p3_spatial_legality_manifest AS
+ SELECT f.spatial_legality_finding_id,
+    f.subject_key,
+    f.gate_state,
+    f.policy_reference,
+    f.tie_break_key,
+    f.lineage_provenance_id,
+    f.recorded_at,
+    d.dataset_key,
+    d.dataset_version,
+    d.source_table_name,
+    d.comparison_rule,
+    d.doctrine_gap_blocking,
+    d.replay_metadata,
+    a.authority_key,
+    p.artifact_key
+   FROM (((public.p3_spatial_legality_findings f
+     JOIN public.p3_spatial_dataset_declarations d ON ((d.spatial_dataset_declaration_id = f.spatial_dataset_declaration_id)))
+     JOIN public.p3_authority_lineage a ON ((a.authority_lineage_id = d.source_authority_lineage_id)))
+     JOIN public.p3_policy_artifacts p ON ((p.policy_artifact_id = d.source_policy_artifact_id)));
+
+
+--
+-- Name: p3_typed_dependency_adjacency; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.p3_typed_dependency_adjacency AS
+ SELECT e.edge_id,
+    e.downstream_node_id,
+    d.node_key AS downstream_node_key,
+    d.node_kind AS downstream_node_kind,
+    e.upstream_node_id,
+    u.node_key AS upstream_node_key,
+    u.node_kind AS upstream_node_kind,
+    e.dependency_kind,
+    e.lineage_provenance_id AS edge_provenance_id,
+    u.lineage_provenance_id AS upstream_node_provenance_id,
+    e.declared_at
+   FROM ((public.p3_dependency_edges e
+     JOIN public.p3_dependency_nodes d ON ((d.node_id = e.downstream_node_id)))
+     JOIN public.p3_dependency_nodes u ON ((u.node_id = e.upstream_node_id)));
+
+
+--
+-- Name: p3_verifier_independence_records; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.p3_verifier_independence_records (
+    verifier_independence_record_id uuid DEFAULT gen_random_uuid() CONSTRAINT p3_verifier_independence_re_verifier_independence_reco_not_null NOT NULL,
+    decision_key text NOT NULL,
+    asset_key text NOT NULL,
+    submitter_actor_id uuid NOT NULL,
+    verifier_actor_id uuid NOT NULL,
+    independence_state public.p3_verifier_independence_state NOT NULL,
+    source_conflict_relationship_id uuid,
+    source_authority_lineage_id uuid,
+    source_policy_artifact_id uuid,
+    tie_break_key text NOT NULL,
+    lineage_provenance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT p3_verifier_independence_records_asset_key_check CHECK ((btrim(asset_key) <> ''::text)),
+    CONSTRAINT p3_verifier_independence_records_decision_key_check CHECK ((btrim(decision_key) <> ''::text)),
+    CONSTRAINT p3_verifier_independence_records_tie_break_key_check CHECK ((btrim(tie_break_key) <> ''::text))
+);
+
+
+--
+-- Name: p3_verifier_independence_manifest; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.p3_verifier_independence_manifest AS
+ SELECT r.verifier_independence_record_id,
+    r.decision_key,
+    r.asset_key,
+    r.submitter_actor_id,
+    r.verifier_actor_id,
+    r.independence_state,
+    r.source_conflict_relationship_id,
+    c.conflict_relationship_kind,
+    c.asset_key AS conflict_asset_key,
+    r.source_authority_lineage_id,
+    a.authority_key,
+    r.source_policy_artifact_id,
+    p.artifact_key,
+    r.tie_break_key,
+    r.lineage_provenance_id,
+    r.recorded_at
+   FROM (((public.p3_verifier_independence_records r
+     LEFT JOIN public.p3_conflict_relationships c ON ((c.conflict_relationship_id = r.source_conflict_relationship_id)))
+     LEFT JOIN public.p3_authority_lineage a ON ((a.authority_lineage_id = r.source_authority_lineage_id)))
+     LEFT JOIN public.p3_policy_artifacts p ON ((p.policy_artifact_id = r.source_policy_artifact_id)));
 
 
 --
@@ -10005,6 +12543,382 @@ ALTER TABLE ONLY public.orphaned_attestation_landing_zone
 
 
 --
+-- Name: p3_authority_lineage p3_authority_lineage_authority_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_authority_lineage
+    ADD CONSTRAINT p3_authority_lineage_authority_key_key UNIQUE (authority_key);
+
+
+--
+-- Name: p3_authority_lineage p3_authority_lineage_lineage_provenance_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_authority_lineage
+    ADD CONSTRAINT p3_authority_lineage_lineage_provenance_id_key UNIQUE (lineage_provenance_id);
+
+
+--
+-- Name: p3_authority_lineage p3_authority_lineage_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_authority_lineage
+    ADD CONSTRAINT p3_authority_lineage_pkey PRIMARY KEY (authority_lineage_id);
+
+
+--
+-- Name: p3_authority_scope_records p3_authority_scope_records_lineage_provenance_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_authority_scope_records
+    ADD CONSTRAINT p3_authority_scope_records_lineage_provenance_id_key UNIQUE (lineage_provenance_id);
+
+
+--
+-- Name: p3_authority_scope_records p3_authority_scope_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_authority_scope_records
+    ADD CONSTRAINT p3_authority_scope_records_pkey PRIMARY KEY (authority_scope_record_id);
+
+
+--
+-- Name: p3_conflict_relationships p3_conflict_relationships_lineage_provenance_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_conflict_relationships
+    ADD CONSTRAINT p3_conflict_relationships_lineage_provenance_id_key UNIQUE (lineage_provenance_id);
+
+
+--
+-- Name: p3_conflict_relationships p3_conflict_relationships_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_conflict_relationships
+    ADD CONSTRAINT p3_conflict_relationships_pkey PRIMARY KEY (conflict_relationship_id);
+
+
+--
+-- Name: p3_contradiction_claims p3_contradiction_claims_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_contradiction_claims
+    ADD CONSTRAINT p3_contradiction_claims_pkey PRIMARY KEY (contradiction_claim_id);
+
+
+--
+-- Name: p3_contradiction_escalations p3_contradiction_escalations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_contradiction_escalations
+    ADD CONSTRAINT p3_contradiction_escalations_pkey PRIMARY KEY (contradiction_escalation_id);
+
+
+--
+-- Name: p3_contradiction_records p3_contradiction_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_contradiction_records
+    ADD CONSTRAINT p3_contradiction_records_pkey PRIMARY KEY (contradiction_record_id);
+
+
+--
+-- Name: p3_contradiction_supersessions p3_contradiction_supersessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_contradiction_supersessions
+    ADD CONSTRAINT p3_contradiction_supersessions_pkey PRIMARY KEY (contradiction_supersession_id);
+
+
+--
+-- Name: p3_dependency_edges p3_dependency_edges_downstream_node_id_upstream_node_id_dep_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_dependency_edges
+    ADD CONSTRAINT p3_dependency_edges_downstream_node_id_upstream_node_id_dep_key UNIQUE (downstream_node_id, upstream_node_id, dependency_kind);
+
+
+--
+-- Name: p3_dependency_edges p3_dependency_edges_lineage_provenance_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_dependency_edges
+    ADD CONSTRAINT p3_dependency_edges_lineage_provenance_id_key UNIQUE (lineage_provenance_id);
+
+
+--
+-- Name: p3_dependency_edges p3_dependency_edges_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_dependency_edges
+    ADD CONSTRAINT p3_dependency_edges_pkey PRIMARY KEY (edge_id);
+
+
+--
+-- Name: p3_dependency_nodes p3_dependency_nodes_lineage_provenance_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_dependency_nodes
+    ADD CONSTRAINT p3_dependency_nodes_lineage_provenance_id_key UNIQUE (lineage_provenance_id);
+
+
+--
+-- Name: p3_dependency_nodes p3_dependency_nodes_node_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_dependency_nodes
+    ADD CONSTRAINT p3_dependency_nodes_node_key_key UNIQUE (node_key);
+
+
+--
+-- Name: p3_dependency_nodes p3_dependency_nodes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_dependency_nodes
+    ADD CONSTRAINT p3_dependency_nodes_pkey PRIMARY KEY (node_id);
+
+
+--
+-- Name: p3_dwell_time_findings p3_dwell_time_findings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_dwell_time_findings
+    ADD CONSTRAINT p3_dwell_time_findings_pkey PRIMARY KEY (dwell_time_finding_id);
+
+
+--
+-- Name: p3_dwell_time_policy_inputs p3_dwell_time_policy_inputs_lineage_provenance_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_dwell_time_policy_inputs
+    ADD CONSTRAINT p3_dwell_time_policy_inputs_lineage_provenance_id_key UNIQUE (lineage_provenance_id);
+
+
+--
+-- Name: p3_dwell_time_policy_inputs p3_dwell_time_policy_inputs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_dwell_time_policy_inputs
+    ADD CONSTRAINT p3_dwell_time_policy_inputs_pkey PRIMARY KEY (dwell_time_policy_input_id);
+
+
+--
+-- Name: p3_dwell_time_policy_inputs p3_dwell_time_policy_inputs_policy_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_dwell_time_policy_inputs
+    ADD CONSTRAINT p3_dwell_time_policy_inputs_policy_key_key UNIQUE (policy_key);
+
+
+--
+-- Name: p3_failure_continuity_compensations p3_failure_continuity_compensations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_failure_continuity_compensations
+    ADD CONSTRAINT p3_failure_continuity_compensations_pkey PRIMARY KEY (continuity_compensation_id);
+
+
+--
+-- Name: p3_failure_records p3_failure_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_failure_records
+    ADD CONSTRAINT p3_failure_records_pkey PRIMARY KEY (failure_record_id);
+
+
+--
+-- Name: p3_legitimacy_projection_records p3_legitimacy_projection_records_lineage_provenance_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_legitimacy_projection_records
+    ADD CONSTRAINT p3_legitimacy_projection_records_lineage_provenance_id_key UNIQUE (lineage_provenance_id);
+
+
+--
+-- Name: p3_legitimacy_projection_records p3_legitimacy_projection_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_legitimacy_projection_records
+    ADD CONSTRAINT p3_legitimacy_projection_records_pkey PRIMARY KEY (legitimacy_projection_record_id);
+
+
+--
+-- Name: p3_lineage_continuity_anchors p3_lineage_continuity_anchors_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_lineage_continuity_anchors
+    ADD CONSTRAINT p3_lineage_continuity_anchors_pkey PRIMARY KEY (continuity_anchor_id);
+
+
+--
+-- Name: p3_lineage_continuity_anchors p3_lineage_continuity_anchors_surface_id_lineage_provenance_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_lineage_continuity_anchors
+    ADD CONSTRAINT p3_lineage_continuity_anchors_surface_id_lineage_provenance_key UNIQUE (surface_id, lineage_provenance_id, artifact_kind);
+
+
+--
+-- Name: p3_policy_artifacts p3_policy_artifacts_artifact_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_policy_artifacts
+    ADD CONSTRAINT p3_policy_artifacts_artifact_key_key UNIQUE (artifact_key);
+
+
+--
+-- Name: p3_policy_artifacts p3_policy_artifacts_lineage_provenance_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_policy_artifacts
+    ADD CONSTRAINT p3_policy_artifacts_lineage_provenance_id_key UNIQUE (lineage_provenance_id);
+
+
+--
+-- Name: p3_policy_artifacts p3_policy_artifacts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_policy_artifacts
+    ADD CONSTRAINT p3_policy_artifacts_pkey PRIMARY KEY (policy_artifact_id);
+
+
+--
+-- Name: p3_projection_universes p3_projection_universes_lineage_provenance_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_projection_universes
+    ADD CONSTRAINT p3_projection_universes_lineage_provenance_id_key UNIQUE (lineage_provenance_id);
+
+
+--
+-- Name: p3_projection_universes p3_projection_universes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_projection_universes
+    ADD CONSTRAINT p3_projection_universes_pkey PRIMARY KEY (projection_universe_id);
+
+
+--
+-- Name: p3_projection_universes p3_projection_universes_projection_universe_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_projection_universes
+    ADD CONSTRAINT p3_projection_universes_projection_universe_key_key UNIQUE (projection_universe_key);
+
+
+--
+-- Name: p3_provenance_continuity_records p3_provenance_continuity_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_provenance_continuity_records
+    ADD CONSTRAINT p3_provenance_continuity_records_pkey PRIMARY KEY (continuity_record_id);
+
+
+--
+-- Name: p3_quarantine_records p3_quarantine_records_contradiction_record_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_quarantine_records
+    ADD CONSTRAINT p3_quarantine_records_contradiction_record_id_key UNIQUE (contradiction_record_id);
+
+
+--
+-- Name: p3_quarantine_records p3_quarantine_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_quarantine_records
+    ADD CONSTRAINT p3_quarantine_records_pkey PRIMARY KEY (quarantine_record_id);
+
+
+--
+-- Name: p3_regulator_partition_findings p3_regulator_partition_findings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_regulator_partition_findings
+    ADD CONSTRAINT p3_regulator_partition_findings_pkey PRIMARY KEY (regulator_partition_finding_id);
+
+
+--
+-- Name: p3_regulator_precedence_rules p3_regulator_precedence_rules_lineage_provenance_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_regulator_precedence_rules
+    ADD CONSTRAINT p3_regulator_precedence_rules_lineage_provenance_id_key UNIQUE (lineage_provenance_id);
+
+
+--
+-- Name: p3_regulator_precedence_rules p3_regulator_precedence_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_regulator_precedence_rules
+    ADD CONSTRAINT p3_regulator_precedence_rules_pkey PRIMARY KEY (precedence_rule_id);
+
+
+--
+-- Name: p3_regulator_regimes p3_regulator_regimes_lineage_provenance_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_regulator_regimes
+    ADD CONSTRAINT p3_regulator_regimes_lineage_provenance_id_key UNIQUE (lineage_provenance_id);
+
+
+--
+-- Name: p3_regulator_regimes p3_regulator_regimes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_regulator_regimes
+    ADD CONSTRAINT p3_regulator_regimes_pkey PRIMARY KEY (regulator_regime_id);
+
+
+--
+-- Name: p3_regulator_regimes p3_regulator_regimes_regime_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_regulator_regimes
+    ADD CONSTRAINT p3_regulator_regimes_regime_key_key UNIQUE (regime_key);
+
+
+--
+-- Name: p3_spatial_dataset_declarations p3_spatial_dataset_declarations_dataset_key_dataset_version_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_spatial_dataset_declarations
+    ADD CONSTRAINT p3_spatial_dataset_declarations_dataset_key_dataset_version_key UNIQUE (dataset_key, dataset_version);
+
+
+--
+-- Name: p3_spatial_dataset_declarations p3_spatial_dataset_declarations_lineage_provenance_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_spatial_dataset_declarations
+    ADD CONSTRAINT p3_spatial_dataset_declarations_lineage_provenance_id_key UNIQUE (lineage_provenance_id);
+
+
+--
+-- Name: p3_spatial_dataset_declarations p3_spatial_dataset_declarations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_spatial_dataset_declarations
+    ADD CONSTRAINT p3_spatial_dataset_declarations_pkey PRIMARY KEY (spatial_dataset_declaration_id);
+
+
+--
+-- Name: p3_spatial_legality_findings p3_spatial_legality_findings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_spatial_legality_findings
+    ADD CONSTRAINT p3_spatial_legality_findings_pkey PRIMARY KEY (spatial_legality_finding_id);
+
+
+--
+-- Name: p3_verifier_independence_records p3_verifier_independence_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_verifier_independence_records
+    ADD CONSTRAINT p3_verifier_independence_records_pkey PRIMARY KEY (verifier_independence_record_id);
+
+
+--
 -- Name: participant_outbox_sequences participant_outbox_sequences_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -11378,6 +14292,167 @@ CREATE INDEX idx_orphan_lz_instruction_arrival ON public.orphaned_attestation_la
 
 
 --
+-- Name: idx_p3_authority_lineage_delegated_from; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_authority_lineage_delegated_from ON public.p3_authority_lineage USING btree (delegated_from_authority_lineage_id);
+
+
+--
+-- Name: idx_p3_authority_lineage_scope_time; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_authority_lineage_scope_time ON public.p3_authority_lineage USING btree (resource_scope, act_scope, effective_from, authority_key);
+
+
+--
+-- Name: idx_p3_authority_scope_records_authority; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_authority_scope_records_authority ON public.p3_authority_scope_records USING btree (authority_lineage_id, evaluated_effective_at DESC, lineage_provenance_id);
+
+
+--
+-- Name: idx_p3_authority_scope_records_dependency; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_authority_scope_records_dependency ON public.p3_authority_scope_records USING btree (supporting_dependency_node_id) WHERE (supporting_dependency_node_id IS NOT NULL);
+
+
+--
+-- Name: idx_p3_conflict_relationships_actor_pair; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_conflict_relationships_actor_pair ON public.p3_conflict_relationships USING btree (left_actor_id, right_actor_id, conflict_relationship_kind);
+
+
+--
+-- Name: idx_p3_contradiction_claims_resource_fact; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_contradiction_claims_resource_fact ON public.p3_contradiction_claims USING btree (resource_key, fact_key, effective_from, declared_order_at);
+
+
+--
+-- Name: idx_p3_contradiction_records_class_state; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_contradiction_records_class_state ON public.p3_contradiction_records USING btree (contradiction_class, resolution_state, canonical_order_at);
+
+
+--
+-- Name: idx_p3_dependency_edges_downstream; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_dependency_edges_downstream ON public.p3_dependency_edges USING btree (downstream_node_id, dependency_kind, upstream_node_id);
+
+
+--
+-- Name: idx_p3_dependency_edges_upstream; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_dependency_edges_upstream ON public.p3_dependency_edges USING btree (upstream_node_id);
+
+
+--
+-- Name: idx_p3_dwell_time_findings_subject; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_dwell_time_findings_subject ON public.p3_dwell_time_findings USING btree (subject_key, evaluated_at DESC, tie_break_key);
+
+
+--
+-- Name: idx_p3_failure_records_category; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_failure_records_category ON public.p3_failure_records USING btree (failure_category, failure_severity, ordering_key);
+
+
+--
+-- Name: idx_p3_legitimacy_projection_blocking; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_legitimacy_projection_blocking ON public.p3_legitimacy_projection_records USING btree (blocking_ancestor_node_id) WHERE (blocking_ancestor_node_id IS NOT NULL);
+
+
+--
+-- Name: idx_p3_legitimacy_projection_subject; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_legitimacy_projection_subject ON public.p3_legitimacy_projection_records USING btree (projection_universe_id, subject_node_id, evaluated_at DESC, lineage_provenance_id);
+
+
+--
+-- Name: idx_p3_lineage_continuity_surface; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_lineage_continuity_surface ON public.p3_lineage_continuity_anchors USING btree (surface_id, artifact_kind, created_at);
+
+
+--
+-- Name: idx_p3_policy_artifacts_scope_time; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_policy_artifacts_scope_time ON public.p3_policy_artifacts USING btree (resource_scope, act_scope, effective_from, artifact_key);
+
+
+--
+-- Name: idx_p3_policy_artifacts_source_authority; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_policy_artifacts_source_authority ON public.p3_policy_artifacts USING btree (source_authority_lineage_id, effective_from, artifact_key);
+
+
+--
+-- Name: idx_p3_projection_universes_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_projection_universes_key ON public.p3_projection_universes USING btree (projection_universe_key, temporal_evaluation_point, projection_universe_id);
+
+
+--
+-- Name: idx_p3_provenance_continuity_boundary; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_provenance_continuity_boundary ON public.p3_provenance_continuity_records USING btree (boundary_kind, continuity_status, created_at);
+
+
+--
+-- Name: idx_p3_regulator_partition_findings_subject; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_regulator_partition_findings_subject ON public.p3_regulator_partition_findings USING btree (subject_key, canonical_order_at, tie_break_key);
+
+
+--
+-- Name: idx_p3_regulator_precedence_pair; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_p3_regulator_precedence_pair ON public.p3_regulator_precedence_rules USING btree (higher_regime_id, lower_regime_id);
+
+
+--
+-- Name: idx_p3_spatial_legality_findings_geom; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_spatial_legality_findings_geom ON public.p3_spatial_legality_findings USING gist (subject_geometry);
+
+
+--
+-- Name: idx_p3_spatial_legality_findings_subject; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_spatial_legality_findings_subject ON public.p3_spatial_legality_findings USING btree (subject_key, recorded_at DESC, tie_break_key);
+
+
+--
+-- Name: idx_p3_verifier_independence_records_decision; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_p3_verifier_independence_records_decision ON public.p3_verifier_independence_records USING btree (decision_key, asset_key, recorded_at DESC);
+
+
+--
 -- Name: idx_payment_outbox_attempts_correlation_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -12140,6 +15215,160 @@ CREATE TRIGGER trg_deny_member_device_events_mutation BEFORE DELETE OR UPDATE ON
 --
 
 CREATE TRIGGER trg_deny_outbox_attempts_mutation BEFORE DELETE OR UPDATE ON public.payment_outbox_attempts FOR EACH ROW EXECUTE FUNCTION public.deny_outbox_attempts_mutation();
+
+
+--
+-- Name: p3_authority_lineage trg_deny_p3_authority_lineage_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_authority_lineage_mutation BEFORE DELETE OR UPDATE ON public.p3_authority_lineage FOR EACH ROW EXECUTE FUNCTION public.p3_deny_lineage_mutation();
+
+
+--
+-- Name: p3_conflict_relationships trg_deny_p3_conflict_relationships_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_conflict_relationships_mutation BEFORE DELETE OR UPDATE ON public.p3_conflict_relationships FOR EACH ROW EXECUTE FUNCTION public.p3_deny_coi_mutation();
+
+
+--
+-- Name: p3_contradiction_claims trg_deny_p3_contradiction_claims_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_contradiction_claims_mutation BEFORE DELETE OR UPDATE ON public.p3_contradiction_claims FOR EACH ROW EXECUTE FUNCTION public.p3_deny_contradiction_mutation();
+
+
+--
+-- Name: p3_contradiction_escalations trg_deny_p3_contradiction_escalations_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_contradiction_escalations_mutation BEFORE DELETE OR UPDATE ON public.p3_contradiction_escalations FOR EACH ROW EXECUTE FUNCTION public.p3_deny_contradiction_mutation();
+
+
+--
+-- Name: p3_contradiction_records trg_deny_p3_contradiction_records_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_contradiction_records_mutation BEFORE DELETE OR UPDATE ON public.p3_contradiction_records FOR EACH ROW EXECUTE FUNCTION public.p3_deny_contradiction_mutation();
+
+
+--
+-- Name: p3_contradiction_supersessions trg_deny_p3_contradiction_supersessions_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_contradiction_supersessions_mutation BEFORE DELETE OR UPDATE ON public.p3_contradiction_supersessions FOR EACH ROW EXECUTE FUNCTION public.p3_deny_contradiction_mutation();
+
+
+--
+-- Name: p3_dependency_edges trg_deny_p3_dependency_edges_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_dependency_edges_mutation BEFORE DELETE OR UPDATE ON public.p3_dependency_edges FOR EACH ROW EXECUTE FUNCTION public.p3_deny_lineage_mutation();
+
+
+--
+-- Name: p3_dependency_nodes trg_deny_p3_dependency_nodes_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_dependency_nodes_mutation BEFORE DELETE OR UPDATE ON public.p3_dependency_nodes FOR EACH ROW EXECUTE FUNCTION public.p3_deny_lineage_mutation();
+
+
+--
+-- Name: p3_dwell_time_findings trg_deny_p3_dwell_time_findings_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_dwell_time_findings_mutation BEFORE DELETE OR UPDATE ON public.p3_dwell_time_findings FOR EACH ROW EXECUTE FUNCTION public.p3_deny_dwell_time_mutation();
+
+
+--
+-- Name: p3_dwell_time_policy_inputs trg_deny_p3_dwell_time_policy_inputs_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_dwell_time_policy_inputs_mutation BEFORE DELETE OR UPDATE ON public.p3_dwell_time_policy_inputs FOR EACH ROW EXECUTE FUNCTION public.p3_deny_dwell_time_mutation();
+
+
+--
+-- Name: p3_failure_continuity_compensations trg_deny_p3_failure_continuity_compensations_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_failure_continuity_compensations_mutation BEFORE DELETE OR UPDATE ON public.p3_failure_continuity_compensations FOR EACH ROW EXECUTE FUNCTION public.p3_deny_failure_mutation();
+
+
+--
+-- Name: p3_failure_records trg_deny_p3_failure_records_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_failure_records_mutation BEFORE DELETE OR UPDATE ON public.p3_failure_records FOR EACH ROW EXECUTE FUNCTION public.p3_deny_failure_mutation();
+
+
+--
+-- Name: p3_lineage_continuity_anchors trg_deny_p3_lineage_continuity_anchors_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_lineage_continuity_anchors_mutation BEFORE DELETE OR UPDATE ON public.p3_lineage_continuity_anchors FOR EACH ROW EXECUTE FUNCTION public.p3_deny_lineage_mutation();
+
+
+--
+-- Name: p3_policy_artifacts trg_deny_p3_policy_artifacts_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_policy_artifacts_mutation BEFORE DELETE OR UPDATE ON public.p3_policy_artifacts FOR EACH ROW EXECUTE FUNCTION public.p3_deny_lineage_mutation();
+
+
+--
+-- Name: p3_provenance_continuity_records trg_deny_p3_provenance_continuity_records_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_provenance_continuity_records_mutation BEFORE DELETE OR UPDATE ON public.p3_provenance_continuity_records FOR EACH ROW EXECUTE FUNCTION public.p3_deny_failure_mutation();
+
+
+--
+-- Name: p3_quarantine_records trg_deny_p3_quarantine_records_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_quarantine_records_mutation BEFORE DELETE OR UPDATE ON public.p3_quarantine_records FOR EACH ROW EXECUTE FUNCTION public.p3_deny_contradiction_mutation();
+
+
+--
+-- Name: p3_regulator_partition_findings trg_deny_p3_regulator_partition_findings_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_regulator_partition_findings_mutation BEFORE DELETE OR UPDATE ON public.p3_regulator_partition_findings FOR EACH ROW EXECUTE FUNCTION public.p3_deny_regulator_partition_mutation();
+
+
+--
+-- Name: p3_regulator_precedence_rules trg_deny_p3_regulator_precedence_rules_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_regulator_precedence_rules_mutation BEFORE DELETE OR UPDATE ON public.p3_regulator_precedence_rules FOR EACH ROW EXECUTE FUNCTION public.p3_deny_regulator_partition_mutation();
+
+
+--
+-- Name: p3_regulator_regimes trg_deny_p3_regulator_regimes_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_regulator_regimes_mutation BEFORE DELETE OR UPDATE ON public.p3_regulator_regimes FOR EACH ROW EXECUTE FUNCTION public.p3_deny_regulator_partition_mutation();
+
+
+--
+-- Name: p3_spatial_dataset_declarations trg_deny_p3_spatial_dataset_declarations_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_spatial_dataset_declarations_mutation BEFORE DELETE OR UPDATE ON public.p3_spatial_dataset_declarations FOR EACH ROW EXECUTE FUNCTION public.p3_deny_spatial_legality_mutation();
+
+
+--
+-- Name: p3_spatial_legality_findings trg_deny_p3_spatial_legality_findings_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_spatial_legality_findings_mutation BEFORE DELETE OR UPDATE ON public.p3_spatial_legality_findings FOR EACH ROW EXECUTE FUNCTION public.p3_deny_spatial_legality_mutation();
+
+
+--
+-- Name: p3_verifier_independence_records trg_deny_p3_verifier_independence_records_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_p3_verifier_independence_records_mutation BEFORE DELETE OR UPDATE ON public.p3_verifier_independence_records FOR EACH ROW EXECUTE FUNCTION public.p3_deny_coi_mutation();
 
 
 --
@@ -13012,6 +16241,486 @@ ALTER TABLE ONLY public.monitoring_records
 
 ALTER TABLE ONLY public.monitoring_records
     ADD CONSTRAINT monitoring_records_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_authority_lineage p3_authority_lineage_delegated_from_authority_lineage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_authority_lineage
+    ADD CONSTRAINT p3_authority_lineage_delegated_from_authority_lineage_id_fkey FOREIGN KEY (delegated_from_authority_lineage_id) REFERENCES public.p3_authority_lineage(authority_lineage_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_authority_lineage p3_authority_lineage_revoked_by_authority_lineage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_authority_lineage
+    ADD CONSTRAINT p3_authority_lineage_revoked_by_authority_lineage_id_fkey FOREIGN KEY (revoked_by_authority_lineage_id) REFERENCES public.p3_authority_lineage(authority_lineage_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_authority_scope_records p3_authority_scope_records_authority_lineage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_authority_scope_records
+    ADD CONSTRAINT p3_authority_scope_records_authority_lineage_id_fkey FOREIGN KEY (authority_lineage_id) REFERENCES public.p3_authority_lineage(authority_lineage_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_authority_scope_records p3_authority_scope_records_blocking_authority_lineage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_authority_scope_records
+    ADD CONSTRAINT p3_authority_scope_records_blocking_authority_lineage_id_fkey FOREIGN KEY (blocking_authority_lineage_id) REFERENCES public.p3_authority_lineage(authority_lineage_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_authority_scope_records p3_authority_scope_records_resolved_root_authority_lineage_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_authority_scope_records
+    ADD CONSTRAINT p3_authority_scope_records_resolved_root_authority_lineage_fkey FOREIGN KEY (resolved_root_authority_lineage_id) REFERENCES public.p3_authority_lineage(authority_lineage_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_authority_scope_records p3_authority_scope_records_supporting_dependency_node_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_authority_scope_records
+    ADD CONSTRAINT p3_authority_scope_records_supporting_dependency_node_id_fkey FOREIGN KEY (supporting_dependency_node_id) REFERENCES public.p3_dependency_nodes(node_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_authority_scope_records p3_authority_scope_records_supporting_policy_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_authority_scope_records
+    ADD CONSTRAINT p3_authority_scope_records_supporting_policy_artifact_id_fkey FOREIGN KEY (supporting_policy_artifact_id) REFERENCES public.p3_policy_artifacts(policy_artifact_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_conflict_relationships p3_conflict_relationships_source_authority_lineage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_conflict_relationships
+    ADD CONSTRAINT p3_conflict_relationships_source_authority_lineage_id_fkey FOREIGN KEY (source_authority_lineage_id) REFERENCES public.p3_authority_lineage(authority_lineage_id);
+
+
+--
+-- Name: p3_conflict_relationships p3_conflict_relationships_source_policy_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_conflict_relationships
+    ADD CONSTRAINT p3_conflict_relationships_source_policy_artifact_id_fkey FOREIGN KEY (source_policy_artifact_id) REFERENCES public.p3_policy_artifacts(policy_artifact_id);
+
+
+--
+-- Name: p3_contradiction_claims p3_contradiction_claims_projection_universe_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_contradiction_claims
+    ADD CONSTRAINT p3_contradiction_claims_projection_universe_id_fkey FOREIGN KEY (projection_universe_id) REFERENCES public.p3_projection_universes(projection_universe_id);
+
+
+--
+-- Name: p3_contradiction_claims p3_contradiction_claims_source_authority_lineage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_contradiction_claims
+    ADD CONSTRAINT p3_contradiction_claims_source_authority_lineage_id_fkey FOREIGN KEY (source_authority_lineage_id) REFERENCES public.p3_authority_lineage(authority_lineage_id);
+
+
+--
+-- Name: p3_contradiction_claims p3_contradiction_claims_source_dependency_node_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_contradiction_claims
+    ADD CONSTRAINT p3_contradiction_claims_source_dependency_node_id_fkey FOREIGN KEY (source_dependency_node_id) REFERENCES public.p3_dependency_nodes(node_id);
+
+
+--
+-- Name: p3_contradiction_claims p3_contradiction_claims_source_policy_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_contradiction_claims
+    ADD CONSTRAINT p3_contradiction_claims_source_policy_artifact_id_fkey FOREIGN KEY (source_policy_artifact_id) REFERENCES public.p3_policy_artifacts(policy_artifact_id);
+
+
+--
+-- Name: p3_contradiction_escalations p3_contradiction_escalations_contradiction_record_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_contradiction_escalations
+    ADD CONSTRAINT p3_contradiction_escalations_contradiction_record_id_fkey FOREIGN KEY (contradiction_record_id) REFERENCES public.p3_contradiction_records(contradiction_record_id);
+
+
+--
+-- Name: p3_contradiction_records p3_contradiction_records_conflicting_claim_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_contradiction_records
+    ADD CONSTRAINT p3_contradiction_records_conflicting_claim_id_fkey FOREIGN KEY (conflicting_claim_id) REFERENCES public.p3_contradiction_claims(contradiction_claim_id);
+
+
+--
+-- Name: p3_contradiction_records p3_contradiction_records_primary_claim_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_contradiction_records
+    ADD CONSTRAINT p3_contradiction_records_primary_claim_id_fkey FOREIGN KEY (primary_claim_id) REFERENCES public.p3_contradiction_claims(contradiction_claim_id);
+
+
+--
+-- Name: p3_contradiction_supersessions p3_contradiction_supersession_prior_contradiction_record_i_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_contradiction_supersessions
+    ADD CONSTRAINT p3_contradiction_supersession_prior_contradiction_record_i_fkey FOREIGN KEY (prior_contradiction_record_id) REFERENCES public.p3_contradiction_records(contradiction_record_id);
+
+
+--
+-- Name: p3_contradiction_supersessions p3_contradiction_supersession_superseding_contradiction_re_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_contradiction_supersessions
+    ADD CONSTRAINT p3_contradiction_supersession_superseding_contradiction_re_fkey FOREIGN KEY (superseding_contradiction_record_id) REFERENCES public.p3_contradiction_records(contradiction_record_id);
+
+
+--
+-- Name: p3_dependency_edges p3_dependency_edges_downstream_node_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_dependency_edges
+    ADD CONSTRAINT p3_dependency_edges_downstream_node_id_fkey FOREIGN KEY (downstream_node_id) REFERENCES public.p3_dependency_nodes(node_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_dependency_edges p3_dependency_edges_upstream_node_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_dependency_edges
+    ADD CONSTRAINT p3_dependency_edges_upstream_node_id_fkey FOREIGN KEY (upstream_node_id) REFERENCES public.p3_dependency_nodes(node_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_dwell_time_findings p3_dwell_time_findings_dwell_time_policy_input_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_dwell_time_findings
+    ADD CONSTRAINT p3_dwell_time_findings_dwell_time_policy_input_id_fkey FOREIGN KEY (dwell_time_policy_input_id) REFERENCES public.p3_dwell_time_policy_inputs(dwell_time_policy_input_id);
+
+
+--
+-- Name: p3_dwell_time_findings p3_dwell_time_findings_supersedes_dwell_time_finding_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_dwell_time_findings
+    ADD CONSTRAINT p3_dwell_time_findings_supersedes_dwell_time_finding_id_fkey FOREIGN KEY (supersedes_dwell_time_finding_id) REFERENCES public.p3_dwell_time_findings(dwell_time_finding_id);
+
+
+--
+-- Name: p3_dwell_time_policy_inputs p3_dwell_time_policy_inputs_source_authority_lineage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_dwell_time_policy_inputs
+    ADD CONSTRAINT p3_dwell_time_policy_inputs_source_authority_lineage_id_fkey FOREIGN KEY (source_authority_lineage_id) REFERENCES public.p3_authority_lineage(authority_lineage_id);
+
+
+--
+-- Name: p3_dwell_time_policy_inputs p3_dwell_time_policy_inputs_source_policy_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_dwell_time_policy_inputs
+    ADD CONSTRAINT p3_dwell_time_policy_inputs_source_policy_artifact_id_fkey FOREIGN KEY (source_policy_artifact_id) REFERENCES public.p3_policy_artifacts(policy_artifact_id);
+
+
+--
+-- Name: p3_failure_continuity_compensations p3_failure_continuity_compens_replacement_continuity_recor_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_failure_continuity_compensations
+    ADD CONSTRAINT p3_failure_continuity_compens_replacement_continuity_recor_fkey FOREIGN KEY (replacement_continuity_record_id) REFERENCES public.p3_provenance_continuity_records(continuity_record_id);
+
+
+--
+-- Name: p3_failure_continuity_compensations p3_failure_continuity_compensat_prior_continuity_record_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_failure_continuity_compensations
+    ADD CONSTRAINT p3_failure_continuity_compensat_prior_continuity_record_id_fkey FOREIGN KEY (prior_continuity_record_id) REFERENCES public.p3_provenance_continuity_records(continuity_record_id);
+
+
+--
+-- Name: p3_failure_records p3_failure_records_parent_failure_record_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_failure_records
+    ADD CONSTRAINT p3_failure_records_parent_failure_record_id_fkey FOREIGN KEY (parent_failure_record_id) REFERENCES public.p3_failure_records(failure_record_id);
+
+
+--
+-- Name: p3_failure_records p3_failure_records_root_failure_record_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_failure_records
+    ADD CONSTRAINT p3_failure_records_root_failure_record_id_fkey FOREIGN KEY (root_failure_record_id) REFERENCES public.p3_failure_records(failure_record_id);
+
+
+--
+-- Name: p3_failure_records p3_failure_records_source_authority_lineage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_failure_records
+    ADD CONSTRAINT p3_failure_records_source_authority_lineage_id_fkey FOREIGN KEY (source_authority_lineage_id) REFERENCES public.p3_authority_lineage(authority_lineage_id);
+
+
+--
+-- Name: p3_failure_records p3_failure_records_source_continuity_record_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_failure_records
+    ADD CONSTRAINT p3_failure_records_source_continuity_record_id_fkey FOREIGN KEY (source_continuity_record_id) REFERENCES public.p3_provenance_continuity_records(continuity_record_id);
+
+
+--
+-- Name: p3_failure_records p3_failure_records_source_contradiction_record_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_failure_records
+    ADD CONSTRAINT p3_failure_records_source_contradiction_record_id_fkey FOREIGN KEY (source_contradiction_record_id) REFERENCES public.p3_contradiction_records(contradiction_record_id);
+
+
+--
+-- Name: p3_failure_records p3_failure_records_source_dependency_node_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_failure_records
+    ADD CONSTRAINT p3_failure_records_source_dependency_node_id_fkey FOREIGN KEY (source_dependency_node_id) REFERENCES public.p3_dependency_nodes(node_id);
+
+
+--
+-- Name: p3_failure_records p3_failure_records_source_policy_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_failure_records
+    ADD CONSTRAINT p3_failure_records_source_policy_artifact_id_fkey FOREIGN KEY (source_policy_artifact_id) REFERENCES public.p3_policy_artifacts(policy_artifact_id);
+
+
+--
+-- Name: p3_failure_records p3_failure_records_source_projection_universe_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_failure_records
+    ADD CONSTRAINT p3_failure_records_source_projection_universe_id_fkey FOREIGN KEY (source_projection_universe_id) REFERENCES public.p3_projection_universes(projection_universe_id);
+
+
+--
+-- Name: p3_legitimacy_projection_records p3_legitimacy_projection_recor_source_authority_lineage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_legitimacy_projection_records
+    ADD CONSTRAINT p3_legitimacy_projection_recor_source_authority_lineage_id_fkey FOREIGN KEY (source_authority_lineage_id) REFERENCES public.p3_authority_lineage(authority_lineage_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_legitimacy_projection_records p3_legitimacy_projection_records_blocking_ancestor_node_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_legitimacy_projection_records
+    ADD CONSTRAINT p3_legitimacy_projection_records_blocking_ancestor_node_id_fkey FOREIGN KEY (blocking_ancestor_node_id) REFERENCES public.p3_dependency_nodes(node_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_legitimacy_projection_records p3_legitimacy_projection_records_projection_universe_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_legitimacy_projection_records
+    ADD CONSTRAINT p3_legitimacy_projection_records_projection_universe_id_fkey FOREIGN KEY (projection_universe_id) REFERENCES public.p3_projection_universes(projection_universe_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_legitimacy_projection_records p3_legitimacy_projection_records_source_policy_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_legitimacy_projection_records
+    ADD CONSTRAINT p3_legitimacy_projection_records_source_policy_artifact_id_fkey FOREIGN KEY (source_policy_artifact_id) REFERENCES public.p3_policy_artifacts(policy_artifact_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_legitimacy_projection_records p3_legitimacy_projection_records_subject_node_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_legitimacy_projection_records
+    ADD CONSTRAINT p3_legitimacy_projection_records_subject_node_id_fkey FOREIGN KEY (subject_node_id) REFERENCES public.p3_dependency_nodes(node_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_policy_artifacts p3_policy_artifacts_revoked_by_policy_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_policy_artifacts
+    ADD CONSTRAINT p3_policy_artifacts_revoked_by_policy_artifact_id_fkey FOREIGN KEY (revoked_by_policy_artifact_id) REFERENCES public.p3_policy_artifacts(policy_artifact_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_policy_artifacts p3_policy_artifacts_source_authority_lineage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_policy_artifacts
+    ADD CONSTRAINT p3_policy_artifacts_source_authority_lineage_id_fkey FOREIGN KEY (source_authority_lineage_id) REFERENCES public.p3_authority_lineage(authority_lineage_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_policy_artifacts p3_policy_artifacts_supersedes_policy_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_policy_artifacts
+    ADD CONSTRAINT p3_policy_artifacts_supersedes_policy_artifact_id_fkey FOREIGN KEY (supersedes_policy_artifact_id) REFERENCES public.p3_policy_artifacts(policy_artifact_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: p3_provenance_continuity_records p3_provenance_continuity_recor_parent_continuity_record_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_provenance_continuity_records
+    ADD CONSTRAINT p3_provenance_continuity_recor_parent_continuity_record_id_fkey FOREIGN KEY (parent_continuity_record_id) REFERENCES public.p3_provenance_continuity_records(continuity_record_id);
+
+
+--
+-- Name: p3_quarantine_records p3_quarantine_records_contradiction_record_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_quarantine_records
+    ADD CONSTRAINT p3_quarantine_records_contradiction_record_id_fkey FOREIGN KEY (contradiction_record_id) REFERENCES public.p3_contradiction_records(contradiction_record_id);
+
+
+--
+-- Name: p3_quarantine_records p3_quarantine_records_subject_claim_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_quarantine_records
+    ADD CONSTRAINT p3_quarantine_records_subject_claim_id_fkey FOREIGN KEY (subject_claim_id) REFERENCES public.p3_contradiction_claims(contradiction_claim_id);
+
+
+--
+-- Name: p3_regulator_partition_findings p3_regulator_partition_findings_counterpart_regime_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_regulator_partition_findings
+    ADD CONSTRAINT p3_regulator_partition_findings_counterpart_regime_id_fkey FOREIGN KEY (counterpart_regime_id) REFERENCES public.p3_regulator_regimes(regulator_regime_id);
+
+
+--
+-- Name: p3_regulator_partition_findings p3_regulator_partition_findings_precedence_rule_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_regulator_partition_findings
+    ADD CONSTRAINT p3_regulator_partition_findings_precedence_rule_id_fkey FOREIGN KEY (precedence_rule_id) REFERENCES public.p3_regulator_precedence_rules(precedence_rule_id);
+
+
+--
+-- Name: p3_regulator_partition_findings p3_regulator_partition_findings_subject_regime_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_regulator_partition_findings
+    ADD CONSTRAINT p3_regulator_partition_findings_subject_regime_id_fkey FOREIGN KEY (subject_regime_id) REFERENCES public.p3_regulator_regimes(regulator_regime_id);
+
+
+--
+-- Name: p3_regulator_precedence_rules p3_regulator_precedence_rules_higher_regime_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_regulator_precedence_rules
+    ADD CONSTRAINT p3_regulator_precedence_rules_higher_regime_id_fkey FOREIGN KEY (higher_regime_id) REFERENCES public.p3_regulator_regimes(regulator_regime_id);
+
+
+--
+-- Name: p3_regulator_precedence_rules p3_regulator_precedence_rules_lower_regime_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_regulator_precedence_rules
+    ADD CONSTRAINT p3_regulator_precedence_rules_lower_regime_id_fkey FOREIGN KEY (lower_regime_id) REFERENCES public.p3_regulator_regimes(regulator_regime_id);
+
+
+--
+-- Name: p3_regulator_precedence_rules p3_regulator_precedence_rules_source_authority_lineage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_regulator_precedence_rules
+    ADD CONSTRAINT p3_regulator_precedence_rules_source_authority_lineage_id_fkey FOREIGN KEY (source_authority_lineage_id) REFERENCES public.p3_authority_lineage(authority_lineage_id);
+
+
+--
+-- Name: p3_regulator_precedence_rules p3_regulator_precedence_rules_source_policy_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_regulator_precedence_rules
+    ADD CONSTRAINT p3_regulator_precedence_rules_source_policy_artifact_id_fkey FOREIGN KEY (source_policy_artifact_id) REFERENCES public.p3_policy_artifacts(policy_artifact_id);
+
+
+--
+-- Name: p3_regulator_regimes p3_regulator_regimes_source_authority_lineage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_regulator_regimes
+    ADD CONSTRAINT p3_regulator_regimes_source_authority_lineage_id_fkey FOREIGN KEY (source_authority_lineage_id) REFERENCES public.p3_authority_lineage(authority_lineage_id);
+
+
+--
+-- Name: p3_regulator_regimes p3_regulator_regimes_source_policy_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_regulator_regimes
+    ADD CONSTRAINT p3_regulator_regimes_source_policy_artifact_id_fkey FOREIGN KEY (source_policy_artifact_id) REFERENCES public.p3_policy_artifacts(policy_artifact_id);
+
+
+--
+-- Name: p3_spatial_dataset_declarations p3_spatial_dataset_declaration_source_authority_lineage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_spatial_dataset_declarations
+    ADD CONSTRAINT p3_spatial_dataset_declaration_source_authority_lineage_id_fkey FOREIGN KEY (source_authority_lineage_id) REFERENCES public.p3_authority_lineage(authority_lineage_id);
+
+
+--
+-- Name: p3_spatial_dataset_declarations p3_spatial_dataset_declarations_source_policy_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_spatial_dataset_declarations
+    ADD CONSTRAINT p3_spatial_dataset_declarations_source_policy_artifact_id_fkey FOREIGN KEY (source_policy_artifact_id) REFERENCES public.p3_policy_artifacts(policy_artifact_id);
+
+
+--
+-- Name: p3_spatial_legality_findings p3_spatial_legality_findings_spatial_dataset_declaration_i_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_spatial_legality_findings
+    ADD CONSTRAINT p3_spatial_legality_findings_spatial_dataset_declaration_i_fkey FOREIGN KEY (spatial_dataset_declaration_id) REFERENCES public.p3_spatial_dataset_declarations(spatial_dataset_declaration_id);
+
+
+--
+-- Name: p3_verifier_independence_records p3_verifier_independence_reco_source_conflict_relationship_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_verifier_independence_records
+    ADD CONSTRAINT p3_verifier_independence_reco_source_conflict_relationship_fkey FOREIGN KEY (source_conflict_relationship_id) REFERENCES public.p3_conflict_relationships(conflict_relationship_id);
+
+
+--
+-- Name: p3_verifier_independence_records p3_verifier_independence_recor_source_authority_lineage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_verifier_independence_records
+    ADD CONSTRAINT p3_verifier_independence_recor_source_authority_lineage_id_fkey FOREIGN KEY (source_authority_lineage_id) REFERENCES public.p3_authority_lineage(authority_lineage_id);
+
+
+--
+-- Name: p3_verifier_independence_records p3_verifier_independence_records_source_policy_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.p3_verifier_independence_records
+    ADD CONSTRAINT p3_verifier_independence_records_source_policy_artifact_id_fkey FOREIGN KEY (source_policy_artifact_id) REFERENCES public.p3_policy_artifacts(policy_artifact_id);
 
 
 --
@@ -14349,5 +18058,5 @@ ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict vv77v7OrE3cGKQDoOgK4rjcC5NFA8MmrbmPQgpoafMXnLftgNxdpzvVdUr66aMe
+\unrestrict uejCgsYlNQH0g556E9cduzTqkEftj53aNbiJl3AxJ4IIGg5g92c4q1GkNsLmzZv
 

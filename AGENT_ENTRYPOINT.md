@@ -84,3 +84,6 @@ Do not retry without remediation discipline.
 - `docs/operations/IMPLEMENTATION_PLAN_CREATION_PROCESS.md`
 - `docs/operations/TASK_CREATION_PROCESS.md`
 - `docs/operations/REMEDIATION_TRACE_WORKFLOW.md`
+- `docs/operations/SYMPHONY_TASK_IMPLEMENTATION_GUIDE.md`
+- `docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md`
+- `tasks/TSK-P2-240/meta.yml`

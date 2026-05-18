@@ -1,0 +1,32 @@
+{
+  "task_id": "TSK-P3-GOV-008",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-18T07:21:14Z",
+  "status": "PASS",
+  "checks": {
+    "stage_a_accepts_false_preci": {
+      "status": "PASS",
+      "detail": "Stage A approval passes without pre_ci_passed=true"
+    },
+    "stage_b_requires_preci": {
+      "status": "PASS",
+      "detail": "Stage B/final signoff still fails closed when pre_ci truth is missing"
+    },
+    "docs_and_schema_updated": {
+      "status": "PASS",
+      "detail": "manual and approval metadata schema distinguish Stage A from final signoff"
+    }
+  },
+  "observed_paths": [
+    "docs/operations/AI_AGENT_OPERATION_MANUAL.md",
+    "docs/operations/approval_metadata.schema.json",
+    "scripts/audit/verify_human_governance_review_signoff.sh",
+    "scripts/audit/verify_tsk_p3_gov_008_stage_a_preci_semantics.sh"
+  ],
+  "observed_hashes": {
+    "docs/operations/AI_AGENT_OPERATION_MANUAL.md": "b104121d6e1f8069e740dc8ed454adf3cbc4fdc7c6f3b94caa9b6954e85c6f11",
+    "docs/operations/approval_metadata.schema.json": "55737ef87e173b46e4a903ad821fce8bda4989582f8157c628e507016e6e7439",
+    "scripts/audit/verify_human_governance_review_signoff.sh": "7ca8b001e5a5f9d1b6c0e116e295c87cd7d843a6dbb01a13f7458be4302a509c",
+    "scripts/audit/verify_tsk_p3_gov_008_stage_a_preci_semantics.sh": "f36eb093c52573793545ea4c9de52702a9ef00290706c13d9d94fcd3988a118e"
+  }
+}

@@ -66,6 +66,24 @@ Instead of manually creating and syncing `meta.yml`, `PLAN.md`, and `EXEC_LOG.md
 - Add: `depends_on`, `touches`, `invariants`, `work`, `acceptance_criteria`, `verification`, `evidence`, `failure_modes`, `must_read`, `implementation_plan`, `implementation_log`, `client`, `assigned_agent`, `model`.
 - Every concrete path listed under `evidence:` must also appear in `touches`.
   Evidence paths close scope but do not determine `assigned_agent`.
+- For Phase 3 DB tasks, `touches` and `deliverable_files` must also include the
+  canonical DB governance closure surfaces when rebaseline work is required:
+  - `schema/migrations/MIGRATION_HEAD`
+  - `schema/baseline.sql`
+  - `schema/baselines/current/*` stable baseline pointers and metadata
+  - dated baseline outputs under the current run date directory
+  - `docs/decisions/ADR-0010-baseline-policy.md`
+  - `docs/contracts/sqlstate_map.yml`
+  - `docs/PHASE3/phase3_task_registry.yml`
+  - the correct human Phase 3 task index:
+    - `docs/tasks/PHASE3_RUNTIME_TASKS.md` for runtime/support implementation nodes
+    - `docs/tasks/PHASE3_TASKS.md` for non-runtime follow-up governance or repair nodes
+- For `DB_SCHEMA` / `DATABASE` tasks, `migration_dependencies` must be explicit.
+  The generator must not emit placeholders such as generic baseline references.
+  Every DB task must provide:
+  - `migration_dependencies.required_migrations`
+  - `migration_dependencies.table_dependencies`
+  - `migration_dependencies.verification_step`
 - If the task uses `blocked_by`, it must identify active impediments only:
   root wave gates, governance conflicts, missing doctrine, failed readiness
   checks, remediation blockers, or execution-envelope conflicts. Do not duplicate
@@ -84,12 +102,31 @@ Instead of manually creating and syncing `meta.yml`, `PLAN.md`, and `EXEC_LOG.md
 ### Step 6 — Register in human task index
 - Add task to the phase-appropriate index (for example `docs/tasks/PHASE0_TASKS.md` or `docs/tasks/PHASE1_GOVERNANCE_TASKS.md`).
 - Include required human fields: task id, title, owner, depends on, touches, invariants, work, acceptance criteria, verification, evidence, failure modes.
+- For Phase 3:
+  - runtime/support implementation nodes belong in `docs/tasks/PHASE3_RUNTIME_TASKS.md`
+  - non-runtime follow-up governance or repair nodes belong in `docs/tasks/PHASE3_TASKS.md`
 
-### Step 7 — Begin implementation
-- Implementation may begin only after Steps 1-6 exist and meta paths resolve.
-- Before calling a task `ready to implement`, run:
+### Step 7 — Close The Task-Pack Handoff
+- Steps 1-6 create a **task-packed** unit, not a completed implementation.
+- At this stage the task pack is allowed to declare future deliverables that do
+  not yet exist; those deliverables are created during `IMPLEMENT-TASK`, not
+  during `CREATE-TASK`.
+- Before calling a task `task-packed`, run:
   - `bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy tasks/<TASK_ID>/meta.yml`
   - `bash scripts/audit/verify_task_pack_readiness.sh --task <TASK_ID>`
+- The primary verifier command must be executable in principle and must not be:
+  - a shell comment;
+  - a quoted comment string;
+  - a placeholder command that exits successfully without performing the
+    declared check.
+- `CREATE-TASK` ends at `task-packed`.
+- Implementation may begin only after `RESUME-TASK` confirms the unit is
+  `resume-ready`.
+- Proof must precede closeout. The canonical lifecycle is:
+  - `task-packed`: task pack exists and passes structural gates
+  - `resume-ready`: dependencies and readiness gates permit implementation
+  - `proof-passed`: verifiers and evidence succeeded
+  - `completed`: proof-passed state is recorded into task truth surfaces
 
 ## 3) Agent assignment (permissions + roles)
 
@@ -123,6 +160,8 @@ Every task must:
 - Fail if verification or evidence is missing
 - Include a **failure mode** explicitly stating: `Evidence file missing`
 - Ensure the verification command **writes** the declared evidence (not just checks text)
+- Use executable verifier commands only; commented, quoted-comment, inert, or
+  decorative verifier entries are prohibited
 
 **Migration Surface Requirement:**
 If a task touches `schema/migrations/**`, the task MUST include `scripts/db/lint_migrations.sh` in its verification list. This catches migration formatting errors (e.g., top-level BEGIN/COMMIT statements) at task verification time, preventing nested transaction errors during migration application.
@@ -144,13 +183,23 @@ TABLE_EXISTS=$(psql -tAc "SELECT 1 FROM information_schema.tables WHERE table_na
 
 The agent creating the task must ensure verification scripts follow this pattern by default.
 
+**Baseline Date Pattern For DB Tasks:**
+When task packs declare dated baseline outputs, the date directory must be the
+current task-creation date (or an explicitly supplied override), not a stale
+hardcoded date copied from older tasks.
+
 Execution-readiness guard:
 - Schema-valid is not execution-ready.
 - Tasks with empty `acceptance_criteria`, shallow verification blocks, phase/path mismatches, or intent-marker filler in `work` must not start implementation.
+- Tasks with commented primary verifier entries, quoted shell comments, or
+  verifier contracts that cannot emit the declared evidence must not be treated
+  as `task-packed` or `resume-ready`.
 - Use `scripts/audit/verify_task_pack_readiness.sh` to enforce this before execution starts.
 
-**Mark completion** in `tasks/<TASK_ID>/meta.yml`:
-- `status: "completed"`
+**Mark completion** in `tasks/<TASK_ID>/meta.yml` only after proof succeeds:
+- `proof-passed` is the execution event where verifiers and evidence have
+  already succeeded
+- `status: "completed"` is the closeout recording step after proof-passed
 - `verification:` includes commands actually run
 - `evidence:` lists actual evidence artifacts
 

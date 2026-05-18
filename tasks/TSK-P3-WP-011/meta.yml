@@ -1,0 +1,139 @@
+schema_version: 1
+phase: '3'
+wave: 'WP'
+task_id: TSK-P3-WP-011
+title: "Verifier suite, CI wiring, evidence expectations, negative tests, invariant-to-verifier registry, capability-boundary contamination tests, and invariant promotion protocol"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+depends_on: ["TSK-P3-WP-001", "TSK-P3-WP-002", "TSK-P3-WP-003", "TSK-P3-WP-004", "TSK-P3-WP-005", "TSK-P3-WP-006", "TSK-P3-WP-007", "TSK-P3-WP-008", "TSK-P3-WP-009", "TSK-P3-WP-010", "TSK-P3-WP-012"]
+invariants: ["INV-301", "INV-302", "INV-303", "INV-304", "INV-305", "INV-306", "INV-307", "INV-308", "INV-309", "INV-310", "INV-311", "INV-312", "INV-313"]
+
+deliverable_files:
+  - docs/architecture/PHASE3_VERIFIER_CLOSURE_AND_CI_CONTRACT.md
+  - scripts/agent/verify_tsk_p3_wp_011_verifier_ci_closure.sh
+  - evidence/phase3/tsk_p3_wp_011_verifier_ci_closure.json
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/plans/phase3/TSK-P3-WP-011/PLAN.md
+  - docs/plans/phase3/TSK-P3-WP-011/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/agent/verify_tsk_p3_wp_011_verifier_ci_closure.sh
+    - evidence/phase3/tsk_p3_wp_011_verifier_ci_closure.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+  - "Doctrine creation by verifier or CI configuration."
+  - "Runtime/verifier trust-boundary implementation owned by P3-SURF-012."
+  - "User-facing documentation, workflow UX, or operator console behavior."
+stop_conditions:
+  - "If the verifier-closure artifact cannot remain one canonical closure contract for P3-SURF-011."
+  - "If the task leaves any enforceable invariant silently unmapped."
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON can prove that one canonical verifier-closure artifact exists, is machine-inspectable where inspected, and exhaustively dispositions the enforceable Phase 3 invariants into verifier-covered, deferred, or constitutionally exempted classes."
+  - "Evidence can prove that blocking CI posture, evidence expectations, negative-test expectations, and capability-boundary contamination checks are declared without local doctrine invention."
+proof_limitations:
+  - "Does not prove runtime implementation correctness of the previously created Phase 3 surfaces."
+  - "Does not prove runtime/verifier segregation mechanics beyond consuming the declared P3-SURF-012 boundary contract."
+  - "Does not prove user-facing documentation or workflow behavior."
+
+touches:
+  - docs/architecture/PHASE3_VERIFIER_CLOSURE_AND_CI_CONTRACT.md
+  - scripts/agent/verify_tsk_p3_wp_011_verifier_ci_closure.sh
+  - evidence/phase3/tsk_p3_wp_011_verifier_ci_closure.json
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - tasks/TSK-P3-WP-011/meta.yml
+  - docs/plans/phase3/TSK-P3-WP-011/PLAN.md
+  - docs/plans/phase3/TSK-P3-WP-011/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_wp_011_w01] Define one canonical verifier-closure artifact for exhaustive invariant-to-verifier disposition, blocking CI semantics, evidence expectations, negative-test expectations, and contamination-check obligations without importing runtime/verifier segregation implementation or local doctrine invention."
+  - "[ID tsk_p3_wp_011_w02] Bind the artifact to an explicit disposition model where every enforceable Phase 3 invariant is verifier-covered, constitutionally exempted, or formally deferred with justification, and where invariant promotion remains evidence-backed rather than prose-backed."
+  - "[ID tsk_p3_wp_011_w03] Add a deterministic verifier that proves the closure artifact is mechanically inspectable, exhaustive over the Phase 3 invariant set, and explicit about CI blocking posture and capability-boundary contamination checks under the declared structural contract."
+  - "[ID tsk_p3_wp_011_w04] Register the task in the active Phase 3 runtime task index and registry without altering unrelated Wave 5 segregation or documentation-closeout scope."
+
+acceptance_criteria:
+  - "[ID tsk_p3_wp_011_w01] One canonical verifier-closure artifact is declared for exhaustive Phase 3 invariant disposition and CI closure under P3-SURF-011."
+  - "[ID tsk_p3_wp_011_w02] The artifact declares blocking CI semantics, evidence expectations, negative-test expectations, contamination checks, and an explicit invariant disposition model covering every enforceable Phase 3 invariant."
+  - "[ID tsk_p3_wp_011_w03] The task declares a verifier and evidence path that honestly prove closure completeness without claiming runtime implementation of the previously created surfaces or ownership of runtime/verifier segregation mechanics."
+  - "[ID tsk_p3_wp_011_w04] The active runtime task index and Phase 3 task registry both point to the generated `TSK-P3-WP-011` task pack as the runtime source of truth."
+
+negative_tests:
+  - id: TSK-P3-WP-011-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: One canonical verifier-closure artifact is declared for exhaustive Phase 3 invariant disposition and CI closure under P3-SURF-011."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-WP-011-P1
+    description: "Verify that execution exits 0 on success path for: One canonical verifier-closure artifact is declared for exhaustive Phase 3 invariant disposition and CI closure under P3-SURF-011."
+    required: true
+
+verification:
+  - '[ID tsk_p3_wp_011_w01] [ID tsk_p3_wp_011_w02] [ID tsk_p3_wp_011_w03] [ID tsk_p3_wp_011_w04] test -x scripts/agent/verify_tsk_p3_wp_011_verifier_ci_closure.sh && bash scripts/agent/verify_tsk_p3_wp_011_verifier_ci_closure.sh > evidence/phase3/tsk_p3_wp_011_verifier_ci_closure.json || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-WP-011 --evidence evidence/phase3/tsk_p3_wp_011_verifier_ci_closure.json || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_wp_011_verifier_ci_closure.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+  - "Closure artifact omits one or more enforceable invariants from disposition => FAIL"
+  - "Artifact permits advisory-only CI, evidence emission before legality, or local doctrine invention => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/implementation_plans/TSK-P3-PLAN-005_wave5_verifier_segregation_closeout.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-011_verifier_ci.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-013_runtime_verifier_segregation.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-014_uncertainty_semantics.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-015_ai_governance_doctrine.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+  - docs/PHASE3/phase3_contract.yml
+  - docs/constitutional/TASK_GENERATION_CONSTITUTION.md
+  - docs/constitutional/EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+implementation_plan: docs/plans/phase3/TSK-P3-WP-011/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-WP-011/EXEC_LOG.md
+notes: 'Generated via Phase 3 task-pack creation workflow and narrowed to one canonical verifier-closure and CI contract serving P3-SURF-011 only.'
+client: cursor
+assigned_agent: architect
+model: gpt-5

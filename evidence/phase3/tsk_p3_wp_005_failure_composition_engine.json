@@ -1,0 +1,109 @@
+{
+  "task_id": "TSK-P3-WP-005",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-18T00:39:26Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "migration_head_forward_only",
+      "result": "PASS",
+      "detail": "MIGRATION_HEAD=0214 (>=0214)"
+    },
+    {
+      "id": "continuity_table_exists",
+      "result": "PASS",
+      "detail": "public.p3_provenance_continuity_records exists"
+    },
+    {
+      "id": "failure_table_exists",
+      "result": "PASS",
+      "detail": "public.p3_failure_records exists"
+    },
+    {
+      "id": "compensation_table_exists",
+      "result": "PASS",
+      "detail": "public.p3_failure_continuity_compensations exists"
+    },
+    {
+      "id": "manifest_exists",
+      "result": "PASS",
+      "detail": "public.p3_failure_composition_manifest exists"
+    },
+    {
+      "id": "assert_function_exists",
+      "result": "PASS",
+      "detail": "p3_assert_provenance_continuity exists"
+    },
+    {
+      "id": "append_failure_exists",
+      "result": "PASS",
+      "detail": "p3_append_failure_record exists"
+    },
+    {
+      "id": "append_continuity_exists",
+      "result": "PASS",
+      "detail": "p3_append_provenance_continuity_record exists"
+    },
+    {
+      "id": "category_enum_count",
+      "result": "PASS",
+      "detail": "p3_failure_category has 10 doctrine-declared values"
+    },
+    {
+      "id": "severity_enum_count",
+      "result": "PASS",
+      "detail": "p3_failure_severity has 4 doctrine-declared values"
+    },
+    {
+      "id": "boundary_enum_count",
+      "result": "PASS",
+      "detail": "p3_internal_boundary_kind has 4 declared internal boundaries"
+    },
+    {
+      "id": "failure_behavior",
+      "result": "PASS",
+      "detail": "failure tree composition preserves read-only contradiction references and broken internal provenance continuity fails closed with P3007"
+    },
+    {
+      "id": "sqlstate_map_registration",
+      "result": "PASS",
+      "detail": "sqlstate map registers P3007 for provenance continuity failure"
+    },
+    {
+      "id": "adr_rebaseline_note",
+      "result": "PASS",
+      "detail": "ADR-0010 records the failure-composition rebaseline closure"
+    },
+    {
+      "id": "runtime_index_registration",
+      "result": "PASS",
+      "detail": "runtime task index contains TSK-P3-WP-005"
+    },
+    {
+      "id": "registry_registration",
+      "result": "PASS",
+      "detail": "phase3 task registry marks TSK-P3-WP-005 completed"
+    }
+  ],
+  "observed_hashes": {
+    "schema/migrations/0214_p3_failure_composition_engine.sql": "20a64eb3894c9d935a5ed2173e70bcbd22d779b115f7fa93e91ba7628554e74b",
+    "scripts/audit/verify_p3_failure_composition_engine.sh": "99559e03efe88af53152c10375dd47dd7d219e7745611f6270b069cd42044064",
+    "schema/migrations/MIGRATION_HEAD": "ec308fbb4c684b285184f7e44cb1df43d61991652057c01dd725e44fc0c31a5f",
+    "docs/contracts/sqlstate_map.yml": "b2788a8c5ad973596feab7362c240e73cd1252f60b7bc6a3a568357699d99a12",
+    "docs/decisions/ADR-0010-baseline-policy.md": "9ba59718c1c7354df5bde6443c221fa7d1c1a0059c2c2f2969a58d355ec44385",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md": "791ab43edaf18a36f7ef55a4bf1906197b985c046903d6837c1ec6572e0e979c",
+    "docs/PHASE3/phase3_task_registry.yml": "b01bd5e63e87064767ac202b3f91634acf0474383a8d87b912455921fff4a4fc",
+    "tasks/TSK-P3-WP-005/meta.yml": "2780345ecd4b039cde799bee27ee9e472ffdef6008fe4d4d3333931b35269697",
+    "docs/plans/phase3/TSK-P3-WP-005/PLAN.md": "fa5a03c5fafc7c0b89b6d4829e018df5eaedddc0ad000e8a7331e0a9abdc0282",
+    "docs/plans/phase3/TSK-P3-WP-005/EXEC_LOG.md": "9560e540aca9254f8d9b959d45e0baa708a203451aa2879dd6b5c7ddd4596f83"
+  },
+  "command_outputs": [
+    "read schema/migrations/MIGRATION_HEAD => 0214",
+    "inspect failure composition substrate relations and functions",
+    "inspect failure enums and manifest kinds",
+    "exercise failure composition and continuity paths"
+  ],
+  "execution_trace": [
+    "start verifier for TSK-P3-WP-005"
+  ]
+}

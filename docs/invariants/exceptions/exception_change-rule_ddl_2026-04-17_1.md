@@ -6,6 +6,7 @@ follow_up_ticket: TSK-OPS-DRD-008
 reason: Full compliance rewrite of migration 0116 — ALTER TABLE instead of conflicting CREATE TABLE, REVOKE/GRANT posture, idempotent DO blocks.
 author: security_guardian
 created_at: 2026-04-17
+closed_at: 2026-04-17
 ---
 
 # Exception: ddl structural change without invariants linkage

@@ -1,0 +1,168 @@
+schema_version: 1
+phase: '3'
+wave: 'SUPPORT'
+task_id: TSK-P3-SUPPORT-DB-002
+title: "Make privilege-only migration effects visible to canonical baseline and drift governance"
+owner_role: DB_FOUNDATION
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DB_SCHEMA
+depends_on: ["TSK-P3-SUPPORT-SEC-001"]
+invariants: []
+
+deliverable_files:
+  - scripts/db/generate_baseline_snapshot.sh
+  - scripts/db/check_baseline_drift.sh
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-17/0001_baseline.sql
+  - schema/baselines/2026-05-17/baseline.normalized.sql
+  - schema/baselines/2026-05-17/baseline.cutoff
+  - schema/baselines/2026-05-17/baseline.meta.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/tasks/PHASE3_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/phase3_task_dag.yml
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - scripts/db/verify_tsk_p3_support_db_002_privilege_baseline_visibility.sh
+  - evidence/phase3/tsk_p3_support_db_002_privilege_baseline_visibility.json
+  - docs/plans/phase3/TSK-P3-SUPPORT-DB-002/PLAN.md
+  - docs/plans/phase3/TSK-P3-SUPPORT-DB-002/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - scripts/db/generate_baseline_snapshot.sh
+    - scripts/db/check_baseline_drift.sh
+    - scripts/db/verify_tsk_p3_support_db_002_privilege_baseline_visibility.sh
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - 0144: "Wave 5 remediation baseline"
+  table_dependencies:
+    - schema_migrations: "must track migrations"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+stop_conditions:
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON correctly demonstrates enforcement via state evaluation."
+proof_limitations:
+  - "Does not prove runtime API integration (deferred)."
+
+touches:
+  - scripts/db/generate_baseline_snapshot.sh
+  - scripts/db/check_baseline_drift.sh
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-17/0001_baseline.sql
+  - schema/baselines/2026-05-17/baseline.normalized.sql
+  - schema/baselines/2026-05-17/baseline.cutoff
+  - schema/baselines/2026-05-17/baseline.meta.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/tasks/PHASE3_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/phase3_task_dag.yml
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - scripts/db/verify_tsk_p3_support_db_002_privilege_baseline_visibility.sh
+  - evidence/phase3/tsk_p3_support_db_002_privilege_baseline_visibility.json
+  - tasks/TSK-P3-SUPPORT-DB-002/meta.yml
+  - docs/plans/phase3/TSK-P3-SUPPORT-DB-002/PLAN.md
+  - docs/plans/phase3/TSK-P3-SUPPORT-DB-002/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_support_db_002_w01] Extend the canonical baseline snapshot process so privilege-bearing schema state is captured in an admissible deterministic artifact instead of being erased by --no-privileges."
+  - "[ID tsk_p3_support_db_002_w02] Update baseline drift governance so privilege-only migrations cannot pass drift equivalence silently when runtime GRANT/REVOKE state changes."
+  - "[ID tsk_p3_support_db_002_w03] Record the updated baseline-governance contract in ADR-0010 and provide a deterministic verifier proving that a privilege-only change becomes visible to the baseline or its companion governance artifact."
+
+acceptance_criteria:
+  - "[ID tsk_p3_support_db_002_w01] The canonical baseline snapshot process emits an artifact or companion metadata that changes when privilege state changes, without reintroducing nondeterministic ownership noise."
+  - "[ID tsk_p3_support_db_002_w02] The baseline drift check fails or records a governed mismatch when privilege-only runtime state diverges from the canonical baseline truth."
+  - "[ID tsk_p3_support_db_002_w03] A deterministic verifier proves that a privilege-only migration is visible to the repaired baseline governance flow and emits evidence for the result."
+
+negative_tests:
+  - id: TSK-P3-SUPPORT-DB-002-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: The canonical baseline snapshot process emits an artifact or companion metadata that changes when privilege state changes, without reintroducing nondeterministic ownership noise."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-SUPPORT-DB-002-P1
+    description: "Verify that execution exits 0 on success path for: The canonical baseline snapshot process emits an artifact or companion metadata that changes when privilege state changes, without reintroducing nondeterministic ownership noise."
+    required: true
+
+verification:
+  - '[ID tsk_p3_support_db_002_w01] [ID tsk_p3_support_db_002_w02] [ID tsk_p3_support_db_002_w03] test -x scripts/db/verify_tsk_p3_support_db_002_privilege_baseline_visibility.sh && bash scripts/db/verify_tsk_p3_support_db_002_privilege_baseline_visibility.sh > evidence/phase3/tsk_p3_support_db_002_privilege_baseline_visibility.json || exit 1'
+  - 'bash scripts/db/lint_migrations.sh || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-SUPPORT-DB-002 --evidence evidence/phase3/tsk_p3_support_db_002_privilege_baseline_visibility.json || exit 1'
+  - 'bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P3-SUPPORT-DB-002 || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_support_db_002_privilege_baseline_visibility.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/plans/phase3/TSK-P3-SUPPORT-SEC-001/EXEC_LOG.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+implementation_plan: docs/plans/phase3/TSK-P3-SUPPORT-DB-002/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-SUPPORT-DB-002/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py'
+client: cursor
+assigned_agent: db_foundation
+model: claude-sonnet-4-20250514

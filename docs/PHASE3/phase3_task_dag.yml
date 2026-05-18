@@ -7,11 +7,11 @@ sequencing_authority: docs/PHASE3/PHASE3_TASK_DAG.md
 source_pack: docs/PHASE3/PHASE3_SOURCE_PACK.md
 execution_surface_map: docs/PHASE3/PHASE3_EXECUTION_SURFACE_MAP.md
 atomic_task_creation_allowed: false
+# status semantics:
+# - `tasks-created` means task-packed only
+# - it does not imply `resume-ready`, implemented, or evidence-complete
 blockers:
-  - id: TSK-P3-CLEAN-001
-    reason: phase3_contract.yml parse defect must be resolved before contract-driven task creation
-  - id: TSK-P3-CLEAN-004
-    reason: active execution envelope conflicts with Phase 3 opening/claimability posture
+  []
 nodes:
   - id: TSK-P3-CLEAN-001
     wave: 0
@@ -60,169 +60,236 @@ nodes:
     surface_ids: [P3-SURF-000]
     depends_on: [TSK-P3-CLEAN-001, TSK-P3-CLEAN-003]
     blocked_by: []
-    status: tasks-created
+    status: complete
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-CLEAN-008
     wave: 0
     surface_ids: [P3-SURF-000]
     depends_on: [TSK-P3-CLEAN-007]
     blocked_by: []
-    status: tasks-created
+    status: complete
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-ACT-001
     wave: 0
     surface_ids: [P3-SURF-000]
     depends_on: [TSK-P3-CLEAN-001, TSK-P3-CLEAN-002, TSK-P3-CLEAN-003, TSK-P3-CLEAN-004, TSK-P3-CLEAN-005, TSK-P3-CLEAN-006, TSK-P3-CLEAN-007, TSK-P3-CLEAN-008]
     blocked_by: []
-    status: planned
+    status: complete
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-ACT-002
     wave: 0
     surface_ids: [P3-SURF-000]
     depends_on: [TSK-P3-ACT-001]
     blocked_by: []
-    status: planned
+    status: complete
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-ACT-003
     wave: 0
     surface_ids: [P3-SURF-000]
     depends_on: [TSK-P3-ACT-001, TSK-P3-ACT-002]
     blocked_by: []
-    status: planned
+    status: complete
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-ACT-004
     wave: 0
     surface_ids: [P3-SURF-000]
     depends_on: [TSK-P3-ACT-003]
     blocked_by: []
-    status: planned
+    status: complete
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-ACT-005
     wave: 0
     surface_ids: [P3-SURF-000]
     depends_on: [TSK-P3-ACT-004]
     blocked_by: []
-    status: planned
+    status: complete
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-WP-001
     wave: 1
     surface_ids: [P3-SURF-001]
     depends_on: [TSK-P3-ACT-005]
-    status: planned
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-WP-002
     wave: 1
     surface_ids: [P3-SURF-002]
     depends_on: [TSK-P3-WP-001]
-    status: planned
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-SUPPORT-DB-001
     wave: 1
     surface_ids: [P3-SURF-001, P3-SURF-002]
     depends_on: [TSK-P3-WP-001, TSK-P3-WP-002]
-    status: planned
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-SUPPORT-SEC-001
     wave: 1
     surface_ids: [P3-SURF-001, P3-SURF-002]
     depends_on: [TSK-P3-SUPPORT-DB-001]
-    status: planned
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-SUPPORT-CONTRACT-001
     wave: 1
     surface_ids: [P3-SURF-001, P3-SURF-002]
     depends_on: [TSK-P3-WP-001, TSK-P3-WP-002]
-    status: planned
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-WP-003
     wave: 2
     surface_ids: [P3-SURF-003]
     depends_on: [TSK-P3-WP-001, TSK-P3-WP-002, TSK-P3-SUPPORT-CONTRACT-001]
-    status: planned
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-WP-006
     wave: 2
     surface_ids: [P3-SURF-006]
     depends_on: [TSK-P3-WP-002, TSK-P3-SUPPORT-SEC-001]
-    status: planned
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-SUPPORT-FIXTURE-001
     wave: 2
     surface_ids: [P3-SURF-001, P3-SURF-002, P3-SURF-003, P3-SURF-006]
     depends_on: [TSK-P3-WP-003, TSK-P3-WP-006]
-    status: planned
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-SUPPORT-VERSION-001
     wave: 2
     surface_ids: [P3-SURF-001, P3-SURF-002, P3-SURF-003]
     depends_on: [TSK-P3-WP-003]
-    status: planned
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-WP-004
     wave: 3
     surface_ids: [P3-SURF-004]
     depends_on: [TSK-P3-WP-003, TSK-P3-WP-006]
-    status: planned
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-WP-005
     wave: 3
     surface_ids: [P3-SURF-005]
     depends_on: [TSK-P3-WP-003, TSK-P3-WP-004]
-    status: planned
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-SUPPORT-MIG-001
     wave: 3
     surface_ids: [P3-SURF-001, P3-SURF-002, P3-SURF-003, P3-SURF-004, P3-SURF-005, P3-SURF-006]
     depends_on: [TSK-P3-SUPPORT-DB-001, TSK-P3-WP-005]
-    status: planned
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-WP-007
     wave: 4
     surface_ids: [P3-SURF-007]
     depends_on: [TSK-P3-WP-002, TSK-P3-WP-004]
-    status: planned
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-WP-008
     wave: 4
     surface_ids: [P3-SURF-008]
     depends_on: [TSK-P3-WP-006]
-    status: planned
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-WP-009
     wave: 4
     surface_ids: [P3-SURF-009]
     depends_on: [TSK-P3-WP-002, TSK-P3-WP-005]
-    status: planned
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-WP-010
     wave: 4
     surface_ids: [P3-SURF-010]
     depends_on: [TSK-P3-WP-003, TSK-P3-WP-004, TSK-P3-WP-005]
-    status: planned
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-SUPPORT-PERF-001
     wave: 4
     surface_ids: [P3-SURF-001, P3-SURF-003, P3-SURF-009]
     depends_on: [TSK-P3-WP-009, TSK-P3-WP-010]
-    status: planned
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-SUPPORT-OBS-001
     wave: 4
     surface_ids: [P3-SURF-003, P3-SURF-004, P3-SURF-005, P3-SURF-007, P3-SURF-009]
     depends_on: [TSK-P3-WP-007, TSK-P3-WP-009, TSK-P3-WP-010]
-    status: planned
+    status: completed
+    doctrine_gap_status: IMPLEMENT
+  - id: TSK-P3-WP-012
+    wave: 5
+    surface_ids: [P3-SURF-012]
+    depends_on: [TSK-P3-WP-005, TSK-P3-WP-006, TSK-P3-WP-008]
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-WP-011
     wave: 5
     surface_ids: [P3-SURF-011]
-    depends_on: [TSK-P3-WP-001, TSK-P3-WP-002, TSK-P3-WP-003, TSK-P3-WP-004, TSK-P3-WP-005, TSK-P3-WP-006, TSK-P3-WP-007, TSK-P3-WP-008, TSK-P3-WP-009, TSK-P3-WP-010]
-    status: planned
+    depends_on: [TSK-P3-WP-001, TSK-P3-WP-002, TSK-P3-WP-003, TSK-P3-WP-004, TSK-P3-WP-005, TSK-P3-WP-006, TSK-P3-WP-007, TSK-P3-WP-008, TSK-P3-WP-009, TSK-P3-WP-010, TSK-P3-WP-012]
+    status: completed
+    doctrine_gap_status: IMPLEMENT
+  - id: TSK-P3-WP-013
+    wave: 5
+    surface_ids: [P3-SURF-013]
+    depends_on: [TSK-P3-WP-011, TSK-P3-WP-012]
+    status: completed
+    doctrine_gap_status: IMPLEMENT
+  - id: TSK-P3-GOV-005
+    wave: 5
+    surface_ids: [P3-SURF-000]
+    depends_on: [TSK-P3-WP-013]
+    status: completed
     doctrine_gap_status: IMPLEMENT
   - id: TSK-P3-SUPPORT-DOC-001
     wave: 5
-    surface_ids: [P3-SURF-000, P3-SURF-001, P3-SURF-002, P3-SURF-003, P3-SURF-004, P3-SURF-005, P3-SURF-006, P3-SURF-007, P3-SURF-008, P3-SURF-009, P3-SURF-010, P3-SURF-011]
-    depends_on: [TSK-P3-WP-011]
-    status: planned
+    surface_ids: [P3-SURF-000, P3-SURF-001, P3-SURF-002, P3-SURF-003, P3-SURF-004, P3-SURF-005, P3-SURF-006, P3-SURF-007, P3-SURF-008, P3-SURF-009, P3-SURF-010, P3-SURF-011, P3-SURF-012, P3-SURF-013]
+    depends_on: [TSK-P3-WP-011, TSK-P3-WP-012, TSK-P3-WP-013, TSK-P3-GOV-005]
+    status: completed
+    doctrine_gap_status: IMPLEMENT
+  - id: TSK-P3-GOV-004
+    wave: 5
+    surface_ids: [P3-SURF-000]
+    depends_on: []
+    blocked_by: []
+    status: completed
+    doctrine_gap_status: IMPLEMENT
+  - id: TSK-P3-SUPPORT-DB-002
+    wave: 5
+    surface_ids: [P3-SURF-000]
+    depends_on: [TSK-P3-SUPPORT-SEC-001]
+    blocked_by: []
+    status: completed
+    doctrine_gap_status: IMPLEMENT
+  - id: TSK-P3-SUPPORT-DB-003
+    wave: 5
+    surface_ids: [P3-SURF-000]
+    depends_on: []
+    blocked_by: []
+    status: completed
+    doctrine_gap_status: IMPLEMENT
+  - id: TSK-P3-GOV-006
+    wave: 5
+    surface_ids: [P3-SURF-000]
+    depends_on: []
+    blocked_by: []
+    status: completed
+    doctrine_gap_status: IMPLEMENT
+  - id: TSK-P3-GOV-007
+    wave: 5
+    surface_ids: [P3-SURF-000]
+    depends_on: [TSK-P3-GOV-004]
+    blocked_by: []
+    status: completed
+    doctrine_gap_status: IMPLEMENT
+  - id: TSK-P3-SUPPORT-DB-004
+    wave: 5
+    surface_ids: [P3-SURF-000]
+    depends_on: [TSK-P3-SUPPORT-DB-002]
+    blocked_by: []
+    status: completed
+    doctrine_gap_status: IMPLEMENT
+  - id: TSK-P3-GOV-008
+    wave: 5
+    surface_ids: [P3-SURF-000]
+    depends_on: []
+    blocked_by: []
+    status: completed
     doctrine_gap_status: IMPLEMENT
 future_phase_routing:
   - candidate: pii_erasure_workflows

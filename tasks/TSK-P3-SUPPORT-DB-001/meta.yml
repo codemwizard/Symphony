@@ -1,0 +1,178 @@
+schema_version: 1
+phase: '3'
+wave: 'SUPPORT'
+task_id: TSK-P3-SUPPORT-DB-001
+title: "Persistence model for dependency, policy, and authority lineage surfaces"
+owner_role: DB_FOUNDATION
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DB_SCHEMA
+depends_on: ["TSK-P3-WP-001", "TSK-P3-WP-002", "TSK-P3-SUPPORT-CONTRACT-001"]
+invariants: ["INV-302", "INV-305"]
+
+deliverable_files:
+  - schema/migrations/0209_p3_lineage_persistence_model.sql
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-17/0001_baseline.sql
+  - schema/baselines/2026-05-17/baseline.normalized.sql
+  - schema/baselines/2026-05-17/baseline.cutoff
+  - schema/baselines/2026-05-17/baseline.meta.json
+  - scripts/db/verify_p3_lineage_persistence_model.sh
+  - evidence/phase3/tsk_p3_support_db_001_persistence_model.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - docs/plans/phase3/TSK-P3-SUPPORT-DB-001/PLAN.md
+  - docs/plans/phase3/TSK-P3-SUPPORT-DB-001/EXEC_LOG.md
+
+regulated_surface_compliance:
+  enabled: true
+  approval_workflow: stage_a_stage_b
+  stage_a_required_before_edit: true
+  regulated_paths:
+    - schema/migrations/0209_p3_lineage_persistence_model.sql
+    - schema/migrations/MIGRATION_HEAD
+    - scripts/db/verify_p3_lineage_persistence_model.sh
+    - evidence/phase3/tsk_p3_support_db_001_persistence_model.json
+  must_read:
+    - docs/operations/REGULATED_SURFACE_PATHS.yml
+    - docs/operations/approval_metadata.schema.json
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - 0144: "Wave 5 remediation baseline"
+  table_dependencies:
+    - schema_migrations: "must track migrations"
+  verification_step: "Confirm all referenced tables exist in earlier migrations"
+
+out_of_scope:
+  - "Any scope outside the exact IDs declared in this task."
+  - "Legitimacy evaluation, contradiction logic, authority-scope enforcement, or regulator partition runtime semantics."
+  - "Product authorization, external integration persistence, or future-phase settlement and methodology surfaces."
+  - "Destructive mutation of historical lineage truth or unilateral persistence design for only one owning surface."
+stop_conditions:
+  - "If the persistence model cannot remain a single forward-only lineage-persistence slice serving both owning surfaces."
+  - "If the task requires legitimacy semantics, product-authorization semantics, or future-phase regulator meaning to express persistence structure."
+  - "If verification negative tests do not transactionally fail."
+proof_guarantees:
+  - "Evidence JSON can prove that a single shared persistence-model task declares lineage-only migration, verifier, and evidence paths covering dependency, policy, and authority lineage surfaces where inspected."
+  - "Evidence can prove the task pack reserves replay-stable provenance identifiers, cross-system evidence continuity preparation, and Phase 2 replay compatibility intent at the persistence-contract level."
+proof_limitations:
+  - "Does not prove runtime implementation of the persistence model itself."
+  - "Does not prove semantic legitimacy evaluation, regulator hierarchy semantics, or product authorization behavior."
+  - "Does not prove full Phase 2 replay equality; it proves persistence-model compatibility intent only."
+
+touches:
+  - schema/migrations/0209_p3_lineage_persistence_model.sql
+  - schema/migrations/MIGRATION_HEAD
+  - schema/baseline.sql
+  - schema/baselines/current/0001_baseline.sql
+  - schema/baselines/current/baseline.cutoff
+  - schema/baselines/current/baseline.meta.json
+  - schema/baselines/2026-05-17/0001_baseline.sql
+  - schema/baselines/2026-05-17/baseline.normalized.sql
+  - schema/baselines/2026-05-17/baseline.cutoff
+  - schema/baselines/2026-05-17/baseline.meta.json
+  - scripts/db/verify_p3_lineage_persistence_model.sh
+  - evidence/phase3/tsk_p3_support_db_001_persistence_model.json
+  - docs/decisions/ADR-0010-baseline-policy.md
+  - docs/tasks/PHASE3_RUNTIME_TASKS.md
+  - docs/PHASE3/phase3_task_registry.yml
+  - tasks/TSK-P3-SUPPORT-DB-001/meta.yml
+  - docs/plans/phase3/TSK-P3-SUPPORT-DB-001/PLAN.md
+  - docs/plans/phase3/TSK-P3-SUPPORT-DB-001/EXEC_LOG.md
+
+work:
+  - "[ID tsk_p3_support_db_001_w01] Define one forward-only persistence-model task for immutable dependency lineage and replay-authoritative policy and authority lineage without introducing legitimacy, product-authorization, or future-phase semantics."
+  - "[ID tsk_p3_support_db_001_w02] Declare canonical persistence requirements for typed dependency edges, policy artifact lineage, authority-source lineage, immutable provenance identifiers, and cross-system evidence continuity preparation needed by later INV-305 enforcement."
+  - "[ID tsk_p3_support_db_001_w03] Bind the persistence-model task to non-destructive replay compatibility expectations for the admissible Phase 2 proof substrate and deterministic reconstruction requirements for later verifier use."
+  - "[ID tsk_p3_support_db_001_w04] Add a deterministic verifier path and evidence contract for the persistence model and register the generated task pack in the active Phase 3 runtime task index and registry."
+
+acceptance_criteria:
+  - "[ID tsk_p3_support_db_001_w01] A single forward-only migration path is declared for the shared persistence model and is scoped to lineage-persistence structure only."
+  - "[ID tsk_p3_support_db_001_w02] The planned persistence model preserves immutable dependency, policy, and authority lineage with replay-stable provenance identifiers and no destructive mutation of historical truth."
+  - "[ID tsk_p3_support_db_001_w03] The task declares replay compatibility intent with the admissible Phase 2 proof substrate and deterministic reconstruction expectations for later verifiers."
+  - "[ID tsk_p3_support_db_001_w04] The active runtime task index and Phase 3 task registry both point to the generated `TSK-P3-SUPPORT-DB-001` task pack as the runtime source of truth."
+
+negative_tests:
+  - id: TSK-P3-SUPPORT-DB-001-N1
+    description: "Verify that execution fails transactionally when boundary conditions are violated for: A single forward-only migration path is declared for the shared persistence model and is scoped to lineage-persistence structure only."
+    required: true
+
+positive_tests:
+  - id: TSK-P3-SUPPORT-DB-001-P1
+    description: "Verify that execution exits 0 on success path for: A single forward-only migration path is declared for the shared persistence model and is scoped to lineage-persistence structure only."
+    required: true
+
+verification:
+  - '[ID tsk_p3_support_db_001_w01] [ID tsk_p3_support_db_001_w02] [ID tsk_p3_support_db_001_w03] [ID tsk_p3_support_db_001_w04] test -x scripts/db/verify_p3_lineage_persistence_model.sh && bash scripts/db/verify_p3_lineage_persistence_model.sh > evidence/phase3/tsk_p3_support_db_001_persistence_model.json || exit 1'
+  - 'bash scripts/db/lint_migrations.sh || exit 1'
+  - 'python3 scripts/audit/validate_evidence.py --task TSK-P3-SUPPORT-DB-001 --evidence evidence/phase3/tsk_p3_support_db_001_persistence_model.json || exit 1'
+  - 'RUN_PHASE3_GATES=1 bash scripts/dev/pre_ci.sh || exit 1'
+
+evidence:
+  - path: evidence/phase3/tsk_p3_support_db_001_persistence_model.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_hashes
+
+failure_modes:
+  - "Evidence file missing => FAIL"
+  - "Verifier exits 0 on negative test => CRITICAL_FAIL"
+  - "Persistence model mutates historical lineage truth destructively => FAIL"
+  - "Shared persistence shape omits one owning surface or replay boundary => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/PHASE3/PHASE3_MASTER_IMPLEMENTATION_PLAN.md
+  - docs/PHASE3/PHASE3_TASK_DAG.md
+  - docs/PHASE3/implementation_plans/TSK-P3-PLAN-001_wave1_lineage_foundations.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-001_dependency_graph.md
+  - docs/PHASE3/implementation_plans/TSK-P3-CAP-002_policy_authority_lineage.md
+  - docs/constitutional/CONSTITUTIONAL_GRAPH.md
+  - docs/constitutional/POLICY_ARTIFACT_AND_AUTHORITY_LINEAGE_DOCTRINE.md
+  - docs/constitutional/LEGITIMACY_AND_REPLAY_PROJECTION_DOCTRINE.md
+  - docs/constitutional/EVIDENTIARY_ADMISSIBILITY_AND_PROVENANCE_DOCTRINE.md
+  - docs/operations/TASK_ID_NOMENCLATURE.md
+  - docs/PHASE3/PHASE3_CAPABILITY_BOUNDARY.md
+  - docs/PHASE3/PHASE3_INVARIANT_REGISTER.md
+implementation_plan: docs/plans/phase3/TSK-P3-SUPPORT-DB-001/PLAN.md
+implementation_log: docs/plans/phase3/TSK-P3-SUPPORT-DB-001/EXEC_LOG.md
+notes: 'Generated via scripts/agent/generate_task_pack.py and narrowed to one shared persistence-model slice jointly serving P3-SURF-001 and P3-SURF-002.'
+client: cursor
+assigned_agent: db_foundation
+model: claude-sonnet-4-20250514

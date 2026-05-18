@@ -1,0 +1,81 @@
+{
+  "task_id": "TSK-P3-SUPPORT-VERSION-001",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-17T19:33:17Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "VERSION-FILES-EXIST",
+      "result": "PASS",
+      "detail": "contract, verifier, runtime index, registry, meta, plan, and exec log exist"
+    },
+    {
+      "id": "VERSION-REQUIRED-TOKENS",
+      "result": "PASS",
+      "detail": "contract covers all owning surfaces and replay continuity anchors"
+    },
+    {
+      "id": "VERSION-HEADINGS",
+      "result": "PASS",
+      "detail": "contract includes required versioning sections"
+    },
+    {
+      "id": "VERSION-COMPATIBILITY-CLASSES",
+      "result": "PASS",
+      "detail": "contract declares all required compatibility classes"
+    },
+    {
+      "id": "VERSION-NON-GOALS",
+      "result": "PASS",
+      "detail": "contract explicitly excludes lifecycle and product-versioning drift"
+    },
+    {
+      "id": "VERSION-RUNTIME-INDEX",
+      "result": "PASS",
+      "detail": "runtime task index contains support version task"
+    },
+    {
+      "id": "VERSION-REGISTRY",
+      "result": "PASS",
+      "detail": "phase3 task registry contains support version task"
+    }
+  ],
+  "observed_paths": [
+    "docs/architecture/PHASE3_REPLAY_CONTINUITY_AND_VERSIONING_CONTRACT.md",
+    "scripts/agent/verify_tsk_p3_support_version_001.sh",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md",
+    "docs/PHASE3/phase3_task_registry.yml",
+    "tasks/TSK-P3-SUPPORT-VERSION-001/meta.yml",
+    "docs/plans/phase3/TSK-P3-SUPPORT-VERSION-001/PLAN.md",
+    "docs/plans/phase3/TSK-P3-SUPPORT-VERSION-001/EXEC_LOG.md"
+  ],
+  "observed_hashes": {
+    "docs/architecture/PHASE3_REPLAY_CONTINUITY_AND_VERSIONING_CONTRACT.md": "8be2a70a69e2d939b47dd225812bc197b2d2064f075c9c12e0275301da8d36c6",
+    "scripts/agent/verify_tsk_p3_support_version_001.sh": "9d4b14e4bd64a3bcf29753df44e1f462ec4abe9283048256578d13e10db94ed1",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md": "924789f772f1d7783fd711b92ed15ab19e42fda12b11ae8ce1094f54b7f0afe1",
+    "docs/PHASE3/phase3_task_registry.yml": "caedcc9f14853376ade5bfbe6a17010055d52b70313beab0364f0c8fb37a1faa",
+    "tasks/TSK-P3-SUPPORT-VERSION-001/meta.yml": "8811995bed1a212d494ca97b548b8b05d21ff64aefee2446f06fa542c2db5137",
+    "docs/plans/phase3/TSK-P3-SUPPORT-VERSION-001/PLAN.md": "739a215435d7a553104807a4d22f58a73fa14a7fe6cc2f27e517f02aa46c1867",
+    "docs/plans/phase3/TSK-P3-SUPPORT-VERSION-001/EXEC_LOG.md": "e8161543708511996c1f730babb01ed4cdc4d61cbb3915d16c9822c62dbf2da6"
+  },
+  "command_outputs": [
+    "git_sha=582e175ab813f643e3e8b6b8a47c901bc0d53755",
+    "timestamp_utc=2026-05-17T19:33:17Z",
+    "VERSION-FILES-EXIST=PASS",
+    "VERSION-REQUIRED-TOKENS=PASS",
+    "VERSION-HEADINGS=PASS",
+    "VERSION-COMPATIBILITY-CLASSES=PASS",
+    "VERSION-NON-GOALS=PASS",
+    "VERSION-RUNTIME-INDEX=PASS",
+    "VERSION-REGISTRY=PASS"
+  ],
+  "execution_trace": [
+    "VERSION-FILES-EXIST:PASS:contract, verifier, runtime index, registry, meta, plan, and exec log exist",
+    "VERSION-REQUIRED-TOKENS:PASS:contract covers all owning surfaces and replay continuity anchors",
+    "VERSION-HEADINGS:PASS:contract includes required versioning sections",
+    "VERSION-COMPATIBILITY-CLASSES:PASS:contract declares all required compatibility classes",
+    "VERSION-NON-GOALS:PASS:contract explicitly excludes lifecycle and product-versioning drift",
+    "VERSION-RUNTIME-INDEX:PASS:runtime task index contains support version task",
+    "VERSION-REGISTRY:PASS:phase3 task registry contains support version task"
+  ]
+}

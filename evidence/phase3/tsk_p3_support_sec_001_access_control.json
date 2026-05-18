@@ -1,0 +1,97 @@
+{
+  "task_id": "TSK-P3-SUPPORT-SEC-001",
+  "git_sha": "582e175ab813f643e3e8b6b8a47c901bc0d53755",
+  "timestamp_utc": "2026-05-17T11:22:52Z",
+  "status": "PASS",
+  "pass": true,
+  "checks": {
+    "migration_head_forward_only": {
+      "status": "PASS",
+      "detail": "MIGRATION_HEAD=0210 (>=0210)"
+    },
+    "readonly_manifest_read": {
+      "status": "PASS",
+      "detail": "symphony_readonly can SELECT the unified persistence manifest"
+    },
+    "auditor_manifest_read": {
+      "status": "PASS",
+      "detail": "symphony_auditor can SELECT the unified persistence manifest"
+    },
+    "executor_anchor_insert": {
+      "status": "PASS",
+      "detail": "symphony_executor can INSERT continuity anchors"
+    },
+    "readonly_no_insert": {
+      "status": "PASS",
+      "detail": "symphony_readonly cannot INSERT continuity anchors"
+    },
+    "readonly_reconstruction_execute": {
+      "status": "PASS",
+      "detail": "symphony_readonly can execute replay reconstruction functions"
+    },
+    "internal_mutation_function_not_public": {
+      "status": "PASS",
+      "detail": "public cannot EXECUTE p3_deny_lineage_mutation()"
+    },
+    "role_enforcement": {
+      "status": "PASS",
+      "detail": "readonly insert is denied and executor insert succeeds"
+    },
+    "runtime_index_registered": {
+      "status": "PASS",
+      "detail": "PHASE3 runtime index contains TSK-P3-SUPPORT-SEC-001"
+    },
+    "phase3_registry_registered": {
+      "status": "PASS",
+      "detail": "phase3_task_registry.yml contains TSK-P3-SUPPORT-SEC-001"
+    },
+    "adr_rebaseline_recorded": {
+      "status": "PASS",
+      "detail": "ADR-0010 references MIGRATION_HEAD 0210"
+    }
+  },
+  "observed_paths": [
+    "schema/migrations/0210_p3_lineage_access_control.sql",
+    "scripts/db/verify_p3_lineage_access_control.sh",
+    "schema/migrations/MIGRATION_HEAD",
+    "docs/decisions/ADR-0010-baseline-policy.md",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md",
+    "docs/PHASE3/phase3_task_registry.yml",
+    "tasks/TSK-P3-SUPPORT-SEC-001/meta.yml",
+    "docs/plans/phase3/TSK-P3-SUPPORT-SEC-001/PLAN.md",
+    "docs/plans/phase3/TSK-P3-SUPPORT-SEC-001/EXEC_LOG.md"
+  ],
+  "observed_hashes": {
+    "schema/migrations/0210_p3_lineage_access_control.sql": "2eee05c3d92d2186154e595cb090502975f568892d6b0f2dab5e5ddbf3fd55bd",
+    "scripts/db/verify_p3_lineage_access_control.sh": "35ce97d2819cc946bc9492810cd786315fce68fccb5a6ff035c0efb82d11768a",
+    "schema/migrations/MIGRATION_HEAD": "d61a06bc7fa978af7806a8cb6a4e575345596be2d446d79e15853dea3c2a6860",
+    "docs/decisions/ADR-0010-baseline-policy.md": "fc7485dcd9e96eeb77b84203cf7ae062264983efecca0703b03238ea33f40d35",
+    "docs/tasks/PHASE3_RUNTIME_TASKS.md": "c6c8d9cebc061e798bba95b4ca1ab697bdb274688b1445df5095ae53cee676a6",
+    "docs/PHASE3/phase3_task_registry.yml": "12072bb78ab9706b1dfb1cda2b9759d3e9d80b926f708eee8d9477c23be9ca33",
+    "tasks/TSK-P3-SUPPORT-SEC-001/meta.yml": "9a387e010bd15b3b5171dbc2ef1ad966c2dbe32fa76e8044c5e9ebb2f911f324",
+    "docs/plans/phase3/TSK-P3-SUPPORT-SEC-001/PLAN.md": "1a2b08864020ef7672da6137b3748986741f03ef514c86cddf7ccc757d888e02",
+    "docs/plans/phase3/TSK-P3-SUPPORT-SEC-001/EXEC_LOG.md": "cde109d2eebf1eab318b129c4f8f6189779d165eb78847e9df4b42dbe8bd4261"
+  },
+  "command_outputs": [
+    {
+      "command": "read schema/migrations/MIGRATION_HEAD => 0210",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect lineage privilege grants for writer/read roles and internal mutation function",
+      "status": "recorded"
+    },
+    {
+      "command": "exercise role-based insert denial for readonly and insert allowance for executor in a rollback transaction",
+      "status": "recorded"
+    },
+    {
+      "command": "inspect runtime task index, phase3 task registry, and ADR-0010 record",
+      "status": "recorded"
+    }
+  ],
+  "execution_trace": [
+    "start verifier for TSK-P3-SUPPORT-SEC-001",
+    "access-control exercise completed"
+  ]
+}
